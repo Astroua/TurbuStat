@@ -153,17 +153,3 @@ def padwithnans(vector,pad_width,iaxis,kwargs):
   vector[-pad_width[1]:] = np.NaN
   return vector
 
-
-class VCA_Distance(object):
-    """docstring for VCA_Distance"""
-    def __init__(self, arg):
-        super(VCA_Distance, self).__init__()
-        self.arg = arg
-        raise NotImplementedError("")
-
-class VCS_Distance(object):
-    """docstring for VCS_Distance"""
-    def __init__(self, arg):
-        super(VCS_Distance, self).__init__()
-        self.arg = arg
-        raise NotImplementedError("")

@@ -86,7 +86,7 @@ class PowerSpectrum(object):
 
         return self
 
-class PSpec_distance(object):
+class PSpec_Distance(object):
     """
 
     Distance metric for the spatial power spectrum and wrapper for whole analysis
@@ -119,7 +119,7 @@ class PSpec_distance(object):
     """
 
     def __init__(self, data1, data2):
-        super(PSpec_distance, self).__init__()
+        super(PSpec_Distance, self).__init__()
 
         self.data1 = data1
         self.data2 = data2

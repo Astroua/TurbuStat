@@ -34,15 +34,15 @@ class Genus(object):
     -------
 
     """
-    def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100, smoothing_radii=None, save_dendrograms=False, save_name=None):
+    def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100, smoothing_radii=None, save_name=None):
         super(Genus, self).__init__()
 
         self.img = img
 
-        self.save_name = save_name
-        if not self.save_name:
-            self.save_name = "untitled"
-
+        if save_name is None:
+            self.save_name = "Untitled"
+        else:
+            self.save_name = save_name
 
         self.nanflag = False
         if np.isnan(self.img).any():
@@ -59,16 +59,11 @@ class Genus(object):
             assert isinstance(smoothing_radii, list)
             self.smoothing_radii = smoothing_radii
         else:
-            self.smoothing_radii = np.linspace(1.0, 0.1*min(img.shape),10)
+            self.smoothing_radii = np.linspace(1.0, 0.1*min(img.shape),5)
 
         self.genus_stats = np.empty([numpts,len(self.smoothing_radii)])
-        # self.genus_roots = []
-        # self.variance = np.empty((1,len(self.smoothing_radii)))
         self.fft_images = []
         self.smoothed_images = []
-
-        self.dendrograms = []
-        self.save_dendrograms = save_dendrograms
 
 
     def make_smooth_arrays(self):
@@ -91,104 +86,26 @@ class Genus(object):
 
         return self
 
-    def initialize_dendrograms(self, verbose=False, save_dendrograms=False):
-
-        if self.save_dendrograms != save_dendrograms:
-            self.save_dendrograms = save_dendrograms
-
-        for j in range(len(self.smoothing_radii)):
-            try:
-                d = self.dendrograms[j]
-                self.save_dendrograms = False ## Override save flag if it already is
-            except IndexError:
-                d = Dendrogram.compute(self.smoothed_images[j], verbose=verbose)
-                self.dendrograms.append(d)
-
-            if self.save_dendrograms:
-                filename = "".join([self.save_name,"_smooth_radius_",str(self.smoothing_radii[j]),".hdf5"])
-                d.save_to(filename)
-
-        return self
-
-
     def make_genus_curve(self):
 
         self.genus_stats = compute_genus(self.smoothed_images, self.thresholds)
 
-        # for j in range(len(self.smoothing_radii)):
-        #     i = 0
-        #     depth = 0
-        #     while True:
-        #         if depth == 0:
-        #             structure = self.dendrograms[j].trunk[0]
-        #         else:
-        #             structure = next_branch
-        #         print structure
-        #         if structure.height < self.thresholds[i]:
-        #             self.genus_stats[i,j] = len(structure.children)
-
-        #         depth = structure.level + 1
-        #         i += 1
-        #         next_branch = [f for f in structure.children if not f.is_leaf]
-        #         if not next_branch or i >= len(self.thresholds):
-        #             break
-
         return self
-
-    # def fit_genus_curve(self):
-
-    #     for curve in self.genus_stats:
-    #         self.genus_roots.append(polyroots(self.thresholds, self.genus_stats))
-
-    #     return self
-
-    # def genus_variance(self):
-    #     from scipy.fftpack import ifft2
-    #     thresholds = np.linspace(-np.pi, np.pi, 100)
-
-    #     for k, ft_im in enumerate(self.fft_images):
-    #         rand_nu0 = np.empty((1,10))
-    #         for j in range(10):
-    #             rand_array = np.empty(self.img.shape)
-    #             rand_genus_stats = np.empty((1,len(thresholds)))
-    #             phase_array = ft_im.imag
-    #             phases = np.unique(phase_array)
-    #             for val in phases:
-    #                 rand_array[np.where(phase_array==val)] = np.random.uniform(-np.pi, np.pi)
-    #             rand_ifft = ifft2(rand_array).real
-
-    #             rand_genus_stats = compute_genus(rand_ifft, thresholds)
-    #             p.subplot(211)
-    #             p.imshow(rand_ifft)
-    #             p.subplot(212)
-    #             p.plot(thresholds, rand_genus_stats[0,:])
-    #             p.show()
-
-    #             nu0 = polyroots(thresholds, rand_genus_stats[0,:])
-    #             if len(nu0)!=0:
-    #                 rand_nu0[:,j] = nu0
-    #             else: # If there is no root...
-    #                 rand_nu0[:,j] = np.NaN
-
-    #         self.variance[:,k] = np.var(rand_nu0)
-    #     return self
 
     def run(self, verbose=True):
 
         self.make_smooth_arrays()
-        self.clean_fft()
-        # self.initialize_dendrograms(save_dendrograms=test.save_dendrogram)
+        # self.clean_fft()
         self.make_genus_curve()
-        # self.fit_genus_curve()
-
-        # print self.genus_roots
 
         if verbose:
             import matplotlib.pyplot as p
             num = len(self.smoothing_radii)
             for i in range(1, num+1):
                 p.subplot(num/2,2,i)
+                p.title("".join(["Smooth Size: ", str(self.smoothing_radii[i-1])]))
                 p.plot(self.thresholds, self.genus_stats[i-1], "bD")
+                p.grid(True)
             p.show()
 
 
@@ -321,9 +238,6 @@ def clip_genus(genus_curve, length_threshold=5):
 
 
     return genus_curve
-
-def check_saved_dendrograms():
-    raise NotImplementedError("")
 
 
 class GenusDistance(object):

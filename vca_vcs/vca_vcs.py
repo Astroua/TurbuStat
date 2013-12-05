@@ -130,6 +130,7 @@ class VCA(object):
             for i in range(1,num+1):
                 p.subplot(length,width,2*i-1)
                 p.loglog(self.freq, self.ps1D[i-1], "kD")
+                p.title("".join(["VCA with Thickness: ",str(self.slice_sizes[i-1])]))
                 p.xlabel(xlab)
                 p.ylabel(r"P$_2(K)$")
                 p.grid(True)
@@ -167,14 +168,15 @@ class VCS(object):
 
     """
 
-    def __init__(self, cube, header, slice_sizes=None, phys_units=True):
+    def __init__(self, cube, header, phys_units=True):
         super(VCS, self).__init__()
 
         self.header = header
         self.cube = cube
-        self.fftcubes = []
-        self.correlated_cubes = []
-        self.ps1D = []
+        self.fftcube = None
+        self.correlated_cube = None
+        self.ps1D = None
+        self.phys_units = phys_units
 
         if np.isnan(self.cube).any():
             self.cube[np.isnan(self.cube)] = 0
@@ -182,28 +184,19 @@ class VCS(object):
         else:
             self.good_channel_count = float(self.cube.shape[1] * self.cube.shape[2])
 
-        self.phys_units_flag = False
-        if phys_units:
-            self.phys_units_flag = True
 
         if np.abs(self.header["CDELT3"])> 1: ## Lazy check to make sure we have units of km/s
             self.vel_to_pix = np.abs(self.header["CDELT3"])/1000.
         else:
             self.vel_to_pix = np.abs(self.header["CDELT3"])
 
-        if slice_sizes is None:
-            self.slice_sizes = [1.0, 5.0, 10.0, 25.0]
+        self.vel_channels = np.arange(1, self.cube.shape[0], 1)
+
+        from numpy.fft import fftfreq
+        if self.phys_units:
+            self.vel_freqs = np.abs(fftfreq(self.cube.shape[0]))/self.vel_to_pix
         else:
-            self.slice_sizes = slice_sizes
-
-        self.degraded_cubes = []
-        self.vel_channels = []
-        self.vel_freqs = []
-
-        for size in self.slice_sizes:
-            deg_cube = change_slice_thickness(self.cube, slice_thickness=size)
-            self.degraded_cubes.append(deg_cube)
-            self.vel_channels.append(np.arange(1, deg_cube.shape[0], 1))
+            self.vel_freqs = np.abs(fftfreq(self.cube.shape[0]))
 
 
 
@@ -215,21 +208,9 @@ class VCS(object):
         '''
 
         import scipy.fftpack as fft
-        from numpy.fft import fftfreq
 
-        for deg_cube in self.degraded_cubes:
-            fftcube = fft.fftn(deg_cube.astype("f8"))
-            corr_cube = np.abs(fftcube)**2.
-
-            self.fftcubes.append(fftcube)
-            self.correlated_cubes.append(corr_cube)
-
-            if self.phys_units_flag:
-                freqs = np.abs(fftfreq(corr_cube.shape[0]))/self.vel_to_pix ## units of s/km
-            else:
-                freqs = np.abs(fftfreq(corr_cube.shape[0]))
-
-            self.vel_freqs.append(freqs)
+        self.fftcube = fft.fftn(self.cube.astype("f8"))
+        self.correlated_cube = np.abs(self.fftcube)**2.
 
         return self
 
@@ -241,8 +222,7 @@ class VCS(object):
 
         '''
 
-        for corr_cube in self.correlated_cubes:
-            self.ps1D.append(np.nansum(np.nansum(corr_cube, axis=2), axis=1)/self.good_channel_count)
+        self.ps1D = np.nansum(np.nansum(self.correlated_cube, axis=2), axis=1)/self.good_channel_count
 
         return self
 
@@ -254,30 +234,37 @@ class VCS(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            if self.phys_units_flag:
+            if self.phys_units:
                 xlab = r"log k$_v$ $(km^{-1}s)$"
             else:
                 xlab = r"log k (pixel$^{-1}$)"
 
-            num = len(self.slice_sizes)
-            for i in range(1,num+1):
-                p.subplot(num/2,2,i)
-                p.loglog(self.vel_freqs[i-1], self.ps1D[i-1], "kD")
-                p.xlabel(xlab )
-                p.ylabel(r"log P$_{1}$(k$_{v}$)")
-                p.grid(True)
+            p.loglog(self.vel_freqs, self.ps1D, "bD-")
+            p.xlabel(xlab)
+            p.ylabel(r"log P$_{1}$(k$_{v}$)")
+            p.grid(True)
             p.show()
 
         return self
 
 
 
-class VCA_VCS_Distance(object):
-    """
+class VCA_Distance(object):
+    """docstring for VCA_Distance"""
+    def __init__(self, cube1, cube2, slice_size):
+        super(VCA_Distance, self).__init__()
+        self.cube1, self.header1 = cube1
+        self.cube2, self.header2 = cube2
 
+    def distance(self, verbose=False):
 
-    """
-    def __init__(self):
-        super(VCA_VCS_Distance, self).__init__()
+        if verbose:
+            import matplotlib.pyplot as p
+            pass
 
-        raise NotImplementedError("Working on it...")
+class VCS_Distance(object):
+    """docstring for VCS_Distance"""
+    def __init__(self, arg):
+        super(VCS_Distance, self).__init__()
+        self.arg = arg
+        raise NotImplementedError("")

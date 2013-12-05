@@ -40,9 +40,9 @@ print "MVC Distance: %s" % (mvc_distance.distance)
 
 ## Spatial Power Spectrum/ Bispectrum
 
-from pspec_bispec import PSpec_distancem, BiSpec_Distance
+from pspec_bispec import PSpec_Distance, BiSpec_Distance
 
-pspec_distance = PSpec_distance(dataset1, dataset2).distance_metric(verbose=True)
+pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
