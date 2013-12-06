@@ -217,18 +217,39 @@ class BiSpectrum(object):
         super(BiSpectrum, self).__init__()
         self.img = img
         self.header = header
+        self.shape = img.shape
 
-        self.bispectrum = None
-        self.wavevectors = np.fft.fftfreq(min(img.shape)/2.)
+        # self.wavevectors = np.fft.fftfreq(min(img.shape)/2.)
+        self.kx = np.arange(0., self.shape[0]/2.,1)
+        self.ky = np.arange(0., self.shape[1]/2.,1)
+
+        max_size = np.sqrt(self.shape[0]**2. + self.shape[1]**2.)/2.
+        self.bispectrum = np.zeros((max_size, max_size))
+        self.bispectrum_amp = None
 
     def compute_bispectrum(self):
 
-        fft = fft2(self.img.astype("f8"))
-        fft.im = np.random.shuffle(fft.im)
+        import numpy.random as ra
+        fft = np.fft.fft2(self.img.astype("f8"))
 
-        for k1 in self.wavevectors:
-            for k2 in self.wavevectors:
-                break
+        ra.seed(1000)
+
+        for _ in range(5000000):
+            k1 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
+            k2 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
+            k3 = [i+j for i,j in zip(k1,k2)]
+
+            x_coord = int(np.sqrt(k1[0]**2. + k1[1]**2.))
+            y_coord = int(np.sqrt(k2[0]**2. + k2[1]**2.))
+
+            self.bispectrum[x_coord,y_coord] = fft[k1] * fft[k2] * np.conj(fft)[k3[0],k3[1]]
+        self.bispectrum_amp = np.log10(self.bispectrum**2.)
+
+        return self
+
+
+
+
 
 
 class BiSpec_Distance(object):
