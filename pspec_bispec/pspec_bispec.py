@@ -124,7 +124,7 @@ class PSpec_Distance(object):
         self.data1 = data1
         self.data2 = data2
         self.shape1 = data1["integrated_intensity"][0].shape
-        self.shape2 = data1["integrated_intensity"][0].shape
+        self.shape2 = data2["integrated_intensity"][0].shape
 
         self.pspec1 = PowerSpectrum(data1["integrated_intensity"][0]*data1["integrated_intensity_error"][0]**2., data1["integrated_intensity"][1])
         self.pspec2 = PowerSpectrum(data2["integrated_intensity"][0]*data2["integrated_intensity_error"][0]**2., data2["integrated_intensity"][1])
@@ -231,6 +231,7 @@ class BiSpectrum(object):
 
         import numpy.random as ra
         fft = np.fft.fft2(self.img.astype("f8"))
+        fft = np.fft.fftshift(fft)
 
         ra.seed(1000)
 

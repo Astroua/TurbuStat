@@ -11,8 +11,6 @@ import matplotlib.pyplot as p
 from scipy.stats import scoreatpercentile, nanmean, nanstd
 from skimage.morphology import remove_small_objects
 
-from astrodendro import Dendrogram
-
 class Genus(object):
     """
 

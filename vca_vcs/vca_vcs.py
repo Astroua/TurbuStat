@@ -37,7 +37,7 @@ class VCA(object):
     -------
 
     """
-    def __init__(self, cube, header, slice_sizes=None, phys_units=True):
+    def __init__(self, cube, header, slice_sizes=None, phys_units=False):
         super(VCA, self).__init__()
 
 
@@ -138,6 +138,10 @@ class VCA(object):
                 p.imshow(np.log10(self.ps2D)[i-1],interpolation="nearest",origin="lower")
                 p.colorbar()
             p.show()
+
+        if len(self.slice_sizes)==1:
+            self.ps1D = self.ps1D[0]
+            self.ps2D = self.ps2D[0]
 
         return self
 
@@ -251,16 +255,77 @@ class VCS(object):
 
 class VCA_Distance(object):
     """docstring for VCA_Distance"""
-    def __init__(self, cube1, cube2, slice_size):
+    def __init__(self, cube1, cube2, slice_size=1.0):
         super(VCA_Distance, self).__init__()
         self.cube1, self.header1 = cube1
         self.cube2, self.header2 = cube2
+        self.shape1 = self.cube1.shape[1:] # Shape of the plane
+        self.shape2 = self.cube2.shape[1:]
 
-    def distance(self, verbose=False):
+        assert isinstance(slice_size, float)
+        self.vca1 = VCA(self.cube1, self.header1, slice_sizes=[slice_size]).run()
+        self.vca2 = VCA(self.cube2, self.header2, slice_sizes=[slice_size]).run()
+
+    def distance_metric(self, verbose=False):
+        '''
+
+        Implements the distance metric for 2 VCA transforms, each with the same channel width.
+        We fit the linear portion of the transform to represent the powerlaw
+        A statistical comparison is used on the powerlaw indexes.
+
+        '''
+
+        import statsmodels.formula.api as sm
+        from pandas import Series, DataFrame
+
+        ## Clipping from 8 pixels to half the box size
+        ## Noise effects dominate outside this region
+        clip_mask1 = np.zeros((self.vca1.freq.shape))
+        for i,x in enumerate(self.vca1.freq):
+            if x>8.0 and x<self.shape1[0]/2.:
+                clip_mask1[i] = 1
+        clip_freq1 = self.vca1.freq[np.where(clip_mask1==1)]
+        clip_ps1D1 = self.vca1.ps1D[np.where(clip_mask1==1)]
+
+        clip_mask2 = np.zeros((self.vca2.freq.shape))
+        for i,x in enumerate(self.vca2.freq):
+            if x>8.0 and x<self.shape2[0]/2.:
+                clip_mask2[i] = 1
+        clip_freq2 = self.vca2.freq[np.where(clip_mask2==1)]
+        clip_ps1D2 = self.vca2.ps1D[np.where(clip_mask2==1)]
+
+
+        dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
+        x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
+        regressor = x.T * dummy
+        constant = np.array([[1] * (len(clip_freq1) + len(clip_freq2))])
+
+        log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
+
+        d = {"dummy": Series(dummy), "scales": Series(x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
+
+        df = DataFrame(d)
+
+        model = sm.ols(formula = "log_ps1D ~ dummy + scales + regressor", data = df)
+
+        self.results = model.fit()
+
+        self.distance = self.results.tvalues["regressor"]
 
         if verbose:
+
+            print self.results.summary()
+
             import matplotlib.pyplot as p
-            pass
+            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD", np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
+            p.plot(df["scales"][:len(clip_freq1)], self.results.fittedvalues[:len(clip_freq1)], "b", \
+                   df["scales"][-len(clip_freq2):], self.results.fittedvalues[-len(clip_freq2):], "g")
+            p.grid(True)
+            p.xlabel("log K")
+            p.ylabel(r"$P_{2}(K)$")
+            p.show()
+
+        return self
 
 class VCS_Distance(object):
     """docstring for VCS_Distance"""

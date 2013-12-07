@@ -221,7 +221,7 @@ class MVC_distance(object):
         self.data2 = data2
         self.distances = distances
         self.shape1 = data1["centroid"][0].shape
-        self.shape2 = data1["centroid"][0].shape
+        self.shape2 = data2["centroid"][0].shape
 
         self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0]**2., data1["moment0"][0] * data1["moment0_error"][0]**2., \
                          data1["linewidth"][0] * data1["linewidth_error"][0]**2., data1["centroid"][1], distances=distances)
