@@ -80,8 +80,8 @@ print "VCA Distance: %s" % (vca_distance.distance)
 
 ## Tsallis
 
-# from tsallis import Tsallis_Distance
+from tsallis import Tsallis_Distance
 
-# tsallis_distance= Tsallis_Distance()
+tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
-# print "Tsallis Distance: %s" % (tsallis_distance.distance)
+print "Tsallis Distance: %s" % (tsallis_distance.distance)
