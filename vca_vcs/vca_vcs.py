@@ -172,7 +172,7 @@ class VCS(object):
 
     """
 
-    def __init__(self, cube, header, phys_units=True):
+    def __init__(self, cube, header, phys_units=False):
         super(VCS, self).__init__()
 
         self.header = header
@@ -329,7 +329,96 @@ class VCA_Distance(object):
 
 class VCS_Distance(object):
     """docstring for VCS_Distance"""
-    def __init__(self, arg):
+    def __init__(self, cube1, cube2, slice_size=1.0):
         super(VCS_Distance, self).__init__()
-        self.arg = arg
-        raise NotImplementedError("")
+        self.cube1, self.header1 = cube1
+        self.cube2, self.header2 = cube2
+
+        assert isinstance(slice_size, float)
+        self.vcs1 = VCS(self.cube1, self.header1).run()
+        self.vcs2 = VCS(self.cube2, self.header2).run()
+
+    def distance_metric(self, verbose=False):
+        '''
+
+        Implements the distance metric for 2 VCS transforms.
+        We fit the linear portions of the transform to represent the powerlaws in the density and velocity
+        dominated regions. From inspection, we set the break at 30 $(km/s)^{-1}$ or 0.15 pix$^{-1}$. We cut off
+        points at the largest $k_v$ where noise dominates. For 500 chanels, this is at 0.45 pix$^{-1}$.
+        This distance is the t-statistic of the difference in the slopes.
+
+        '''
+        import statsmodels.formula.api as sm
+
+        vel_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
+        dens_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
+        for i,x in enumerate(self.vcs1.vel_freqs):
+            if x<0.1:
+                vel_mask1[i] = 1
+            elif x>0.15 and x<0.45:
+                dens_mask1[i] = 1
+        vel_freq1 = self.vcs1.vel_freqs[np.where(vel_mask1==1)]
+        vel_ps1D1 = self.vcs1.ps1D[np.where(vel_mask1==1)]
+        dens_freq1 = self.vcs1.vel_freqs[np.where(dens_mask1==1)]
+        dens_ps1D1 = self.vcs1.ps1D[np.where(dens_mask1==1)]
+
+        vel_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
+        dens_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
+        for i,x in enumerate(self.vcs2.vel_freqs):
+            if x<0.1:
+                vel_mask2[i] = 1
+            elif x>0.15 and x<0.45:
+                dens_mask2[i] = 1
+        vel_freq2 = self.vcs2.vel_freqs[np.where(vel_mask2==1)]
+        vel_ps1D2 = self.vcs2.ps1D[np.where(vel_mask2==1)]
+        dens_freq2 = self.vcs2.vel_freqs[np.where(dens_mask2==1)]
+        dens_ps1D2 = self.vcs2.ps1D[np.where(dens_mask2==1)]
+
+        df_vel = make_dataframe(vel_freq1, vel_ps1D1, vel_freq2, vel_ps1D2)
+        df_dens = make_dataframe(dens_freq1, dens_ps1D1, dens_freq2, dens_ps1D2)
+        self.vel_results = sm.ols(formula = "log_ps1D ~ dummy + scales + regressor", data = df_vel).fit()
+        self.dens_results = sm.ols(formula = "log_ps1D ~ dummy + scales + regressor", data = df_dens).fit()
+
+        self.distance = np.abs(self.vel_results.tvalues["regressor"]) + np.abs(self.dens_results.tvalues["regressor"])
+
+        if verbose:
+
+            print self.vel_results.summary()
+            print self.dens_results.summary()
+
+            import matplotlib.pyplot as p
+            p.plot(np.log10(vel_freq1), np.log10(vel_ps1D1), "bD", np.log10(vel_freq2), np.log10(vel_ps1D2), "gD")
+            p.plot(df_vel["scales"][:len(vel_freq1)], self.vel_results.fittedvalues[:len(vel_freq1)], "b", \
+                   df_vel["scales"][-len(vel_freq2):], self.vel_results.fittedvalues[-len(vel_freq2):], "g")
+            p.plot(np.log10(dens_freq1), np.log10(dens_ps1D1), "bD", np.log10(dens_freq2), np.log10(dens_ps1D2), "gD")
+            p.plot(df_dens["scales"][:len(dens_freq1)], self.dens_results.fittedvalues[:len(dens_freq1)], "b", \
+                   df_dens["scales"][-len(dens_freq2):], self.dens_results.fittedvalues[-len(dens_freq2):], "g")
+            p.grid(True)
+            # p.xlim()
+            p.xlabel(r"log k$_v$")
+            p.ylabel(r"$P_{1}(k_v)$")
+            p.show()
+
+        return self
+
+def make_dataframe(x1,y1,x2,y2):
+
+    from pandas import Series, DataFrame
+
+    # Rid infs, nans from the x sets
+    logx1 = np.log10(x1)[np.isfinite(np.log10(x1))]
+    logy1 = np.log10(y1)[np.isfinite(np.log10(x1))]
+    logx2 = np.log10(x2)[np.isfinite(np.log10(x2))]
+    logy2 = np.log10(y2)[np.isfinite(np.log10(x2))]
+
+    dummy = [0] * len(logx1) + [1] * len(logx2)
+    x = np.concatenate((logx1, logx2))
+    regressor = x.T * dummy
+    constant = np.array([[1] * (len(logx1) + len(logx2))])
+    log_ps1D = np.concatenate((logy1, logy2))
+
+    d = {"dummy": Series(dummy), "scales": Series(x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
+
+    df = DataFrame(d)
+
+    return df

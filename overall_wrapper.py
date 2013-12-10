@@ -70,9 +70,9 @@ print "Genus Distance: %s" % (genus_distance.distance)
 
 from vca_vcs import VCA_Distance, VCS_Distance
 
-# vcs_distance = VCS_Distance()
+vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
 
-# print "VCS Distance: %s" % (vcs_distance.distance)
+print "VCS Distance: %s" % (vcs_distance.distance)
 
 vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
 
