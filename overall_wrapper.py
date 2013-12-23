@@ -85,3 +85,13 @@ from tsallis import Tsallis_Distance
 tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
+
+## High-order stats
+
+from stat_moments import StatMomentsDistance
+
+moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric(verbose=True)
+
+print "Kurtosis Distance: %s" % (moment_distance.kurtosis_distance)
+
+print "Skewness Distance: %s" % (moment_distance.skewness_distance)

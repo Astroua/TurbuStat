@@ -246,8 +246,8 @@ class GenusDistance(object):
     """
     def __init__(self, img1, img2, smoothing_radii=None, verbose=False):
         super(GenusDistance, self).__init__()
-        self.genus1 = Genus(img1, smoothing_radii=smoothing_radii).run(verbose=verbose)
-        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii).run(verbose=verbose)
+        self.genus1 = Genus(img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
+        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
 
         self.distance = None
 

@@ -77,26 +77,26 @@ class StatMoments(object):
 
     def make_spatial_histograms(self):
         # Mean
-        mean_hist, edges = np.histogram(self.mean_array, self.bin_num)
+        mean_hist, edges = np.histogram(self.mean_array, self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.mean_hist = [bin_centres, mean_hist]
         # Variance
-        variance_hist, edges = np.histogram(self.variance_array, self.bin_num)
+        variance_hist, edges = np.histogram(self.variance_array, self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.variance_hist = [bin_centres, variance_hist]
         # Skewness
-        skewness_hist, edges = np.histogram(self.skewness_array, self.bin_num)
+        skewness_hist, edges = np.histogram(self.skewness_array, self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.skewness_hist = [bin_centres, skewness_hist]
         # Kurtosis
-        kurtosis_hist, edges = np.histogram(self.kurtosis_array, self.bin_num)
+        kurtosis_hist, edges = np.histogram(self.kurtosis_array, self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.kurtosis_hist = [bin_centres, kurtosis_hist]
 
         return self
 
 
-    def run(self, verbose=True):
+    def run(self, verbose=False):
 
         self.array_moments()
         self.compute_spatial_distrib()
@@ -127,6 +127,42 @@ class StatMoments(object):
             p.show()
         return self
 
+class StatMomentsDistance(object):
+    """docstring for StatMomentsDistance"""
+    def __init__(self, image1, image2, radius, verbose=False):
+        super(StatMomentsDistance, self).__init__()
+        self.image1 = image1
+        self.image2 = image2
+        self.radius = radius
+
+        self.moments1 = StatMoments(self.image1, self.radius).run(verbose=verbose)
+        self.moments2 = StatMoments(self.image2, self.radius).run(verbose=verbose)
+
+        self.kurtosis_distance = None
+        self.skewness_distance = None
+
+    def distance_metric(self, verbose=False):
+        self.kurtosis_distance = kl_divergence(self.moments1.kurtosis_hist[1],self.moments2.kurtosis_hist[1])
+        self.skewness_distance = kl_divergence(self.moments1.skewness_hist[1],self.moments2.skewness_hist[1])
+
+        if verbose:
+            import matplotlib.pyplot as p
+            p.subplot(121)
+            p.plot(self.moments1.kurtosis_hist[0],self.moments1.kurtosis_hist[1],'b', \
+                   self.moments2.kurtosis_hist[0],self.moments2.kurtosis_hist[1],'g')
+            p.fill(self.moments1.kurtosis_hist[0],self.moments1.kurtosis_hist[1],'b', \
+                   self.moments2.kurtosis_hist[0],self.moments2.kurtosis_hist[1],'g', alpha=0.5)
+            p.xlabel("Kurtosis")
+            p.subplot(122)
+            p.plot(self.moments1.skewness_hist[0],self.moments1.skewness_hist[1],'b', \
+                   self.moments2.skewness_hist[0],self.moments2.skewness_hist[1],'g')
+            p.fill(self.moments1.skewness_hist[0],self.moments1.skewness_hist[1],'b', \
+                   self.moments2.skewness_hist[0],self.moments2.skewness_hist[1],'g', alpha=0.5)
+            p.xlabel("Skewness")
+            p.show()
+
+        return self
+
 def circular_region(radius):
 
     xx, yy = np.mgrid[-radius:radius+1,-radius:radius+1]
@@ -135,7 +171,7 @@ def circular_region(radius):
     circle = circle < radius**2.
 
     circle = circle.astype(float)
-    circle[np.where(arr==0.)] = np.NaN
+    circle[np.where(circle==0.)] = np.NaN
 
     return circle
 
@@ -153,3 +189,16 @@ def padwithnans(vector,pad_width,iaxis,kwargs):
   vector[-pad_width[1]:] = np.NaN
   return vector
 
+def kl_divergence(P, Q):
+    '''
+    Kullback Leidler Divergence
+
+    INPUTS
+    ------
+
+    P,Q - array
+          Two Discrete Probability distributions
+    '''
+    P = P[np.isfinite(P)]
+    Q = Q[np.isfinite(Q)]
+    return np.sum(np.where(P!=0, P*np.log(P / Q), 0))
