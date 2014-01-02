@@ -95,8 +95,6 @@ class Tsallis_Distance(object):
 
     Distance Metric for the Tsallis Distribution.
 
-    The distance between two data cubes is defined as the sum of the difference of
-    the Tsallis fit parameters for a set of lags weighted by the $\Chi^2$ of the fit
 
     INPUTS
     ------
@@ -120,32 +118,31 @@ class Tsallis_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False):
+        '''
 
-        a1 = np.asarray([loga/(err**2.) for loga,err in zip(self.tsallis1.tsallis_fits[:,0],self.tsallis1.tsallis_fits[:,3])])
-        a2 = np.asarray([loga/(err**2.) for loga,err in zip(self.tsallis2.tsallis_fits[:,0],self.tsallis2.tsallis_fits[:,3])])
+        We do not consider the parameter a in the distance metric. Since we are fitting to a PDF, a is related
+        to the number of data points and is therefore not a true measure of the differences between the data sets.
+        The distance is computed by summing the squared difference of the parameters, normalized by the sums of the
+        squares, for each lag. The total distance the sum between the two parameters.
 
-        w1 = np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis1.tsallis_fits[:,1],self.tsallis1.tsallis_fits[:,4])])
-        w2 = np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis2.tsallis_fits[:,1],self.tsallis2.tsallis_fits[:,4])])
+        '''
 
-        q1 = np.asarray([q/err**2.for q,err in zip(self.tsallis1.tsallis_fits[:,2],self.tsallis1.tsallis_fits[:,5])])
-        q2 = np.asarray([q/err**2. for q,err in zip(self.tsallis2.tsallis_fits[:,2],self.tsallis2.tsallis_fits[:,5])])
 
-        diff_a = (a1-a2)**2.
-        diff_w = (w1-w2)**2.
-        diff_q = (q1-q2)**2.
+        w1 = self.tsallis1.tsallis_fits[:,1]#np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis1.tsallis_fits[:,1],self.tsallis1.tsallis_fits[:,4])])
+        w2 = self.tsallis2.tsallis_fits[:,1]#np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis2.tsallis_fits[:,1],self.tsallis2.tsallis_fits[:,4])])
 
-        print w1,w2
-        print a1,a2
-        print q1,q2
+        q1 = self.tsallis1.tsallis_fits[:,2]#np.asarray([q/err**2.for q,err in zip(self.tsallis1.tsallis_fits[:,2],self.tsallis1.tsallis_fits[:,5])])
+        q2 = self.tsallis2.tsallis_fits[:,2]#np.asarray([q/err**2. for q,err in zip(self.tsallis2.tsallis_fits[:,2],self.tsallis2.tsallis_fits[:,5])])
 
-        print diff_a, diff_w, diff_q
+        # diff_a = (a1-a2)**2.
+        diff_w = (w1-w2)**2./(w1**2. + w2**2.)
+        diff_q = (q1-q2)**2./(w1**2. + w2**2.)
 
-        self.distance = np.sum(diff_a + diff_w + diff_q)
+        self.distance = np.sum(diff_w + diff_q)
 
         if verbose:
             import matplotlib.pyplot as p
             lags = self.tsallis1.lags
-            p.plot(lags, diff_a, "bD", label="Difference of a")
             p.plot(lags, diff_w, "rD", label="Difference of w")
             p.plot(lags, diff_q, "gD", label="Difference of q")
             p.legend()
