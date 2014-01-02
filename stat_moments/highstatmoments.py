@@ -201,4 +201,4 @@ def kl_divergence(P, Q):
     '''
     P = P[np.isfinite(P)]
     Q = Q[np.isfinite(Q)]
-    return np.sum(np.where(P!=0, P*np.log(P / Q), 0))
+    return np.nansum(np.where(Q!=0, P*np.log(P / Q), 0))
