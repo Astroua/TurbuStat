@@ -224,26 +224,48 @@ class BiSpectrum(object):
         self.ky = np.arange(0., self.shape[1]/2.,1)
 
         max_size = np.sqrt(self.shape[0]**2. + self.shape[1]**2.)/2.
-        self.bispectrum = np.zeros((max_size, max_size))
+        self.bispectrum = np.zeros((max_size, max_size), dtype=np.complex)
         self.bispectrum_amp = None
+        self.tracker = np.zeros((max_size, max_size))
 
-    def compute_bispectrum(self):
+    def compute_bispectrum(self, nsamples=None, seed=1000):
 
         import numpy.random as ra
         fft = np.fft.fft2(self.img.astype("f8"))
-        fft = np.fft.fftshift(fft)
+        # fft = np.fft.fftshift(fft)
 
-        ra.seed(1000)
+        ra.seed(seed)
 
-        for _ in range(5000000):
-            k1 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
-            k2 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
-            k3 = [i+j for i,j in zip(k1,k2)]
+        if nsamples is None:
+            nsamples = self.shape[0]*self.shape[1]
 
-            x_coord = int(np.sqrt(k1[0]**2. + k1[1]**2.))
-            y_coord = int(np.sqrt(k2[0]**2. + k2[1]**2.))
+        norm_samples = ra.normal(0, 1, size=(4,nsamples)) # Normally distributed points in 4D
+        norm_samples = np.abs(norm_samples) / np.sqrt((norm_samples**2).sum(axis=0)) # Normalize onto the surface of a 4D sphere and confine to the positive quadrant
+        samples = np.empty(norm_samples.shape)
+        samples[:2,:] = (self.shape[0]/2.) * ra.uniform(0,1,nsamples) * norm_samples[:2,:]
+        samples[2:,:] = (self.shape[1]/2.) * ra.uniform(0,1,nsamples) * norm_samples[2:,:]
 
-            self.bispectrum[x_coord,y_coord] = fft[k1] * fft[k2] * np.conj(fft)[k3[0],k3[1]]
+        for i in range(samples.shape[1]):
+            k1x, k2x, k1y, k2y = [int(round(u)) for u in samples[:,i]]
+            k3x = k1x + k2x
+            k3y = k1y + k2y
+            if k3x>self.shape[0] or k3y>self.shape[1]:
+                print "BLAH"
+            x = int(np.sqrt(k1x**2. + k1y**2.))
+            y = int(np.sqrt(k2x**2. + k2y**2.))
+
+            self.bispectrum[x,y] = fft[k1x,k1y] * fft[k2x,k2y] * np.conj(fft)[k3x,k3y]
+            self.tracker[x,y] = True
+
+        # for _ in range(5000000):
+        #     k1 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
+        #     k2 = (int(ra.uniform(0,self.shape[0]/2)),int(ra.uniform(0,self.shape[1]/2)))
+        #     k3 = [i+j for i,j in zip(k1,k2)]
+
+
+
+        #     self.bispectrum[x_coord,y_coord] = fft[k1] * fft[k2] * np.conj(fft)[k3[0],k3[1]]
+
         self.bispectrum_amp = np.log10(self.bispectrum**2.)
 
         return self
