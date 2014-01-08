@@ -15,7 +15,7 @@ class DeltaVariance(object):
     docstring for DeltaVariance
 
     """
-    def __init__(self, img, header, weights, diam_ratio, lags = None):
+    def __init__(self, img, header, weights, diam_ratio=1.5, lags = None):
         super(DeltaVariance, self).__init__()
 
         self.img = img
