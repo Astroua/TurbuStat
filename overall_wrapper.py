@@ -1,7 +1,7 @@
 
 '''
 
-Overall Sim cloud stats package wrapper
+Overall TurbuStat package wrapper
 
 Goal is to input two folder names containing data for two runs and compare with all
 implemented distance metrics
