@@ -255,7 +255,7 @@ class VCS(object):
 
 class VCA_Distance(object):
     """docstring for VCA_Distance"""
-    def __init__(self, cube1, cube2, slice_size=1.0):
+    def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
         super(VCA_Distance, self).__init__()
         self.cube1, self.header1 = cube1
         self.cube2, self.header2 = cube2
@@ -263,7 +263,12 @@ class VCA_Distance(object):
         self.shape2 = self.cube2.shape[1:]
 
         assert isinstance(slice_size, float)
-        self.vca1 = VCA(self.cube1, self.header1, slice_sizes=[slice_size]).run()
+
+        if fiducial_model is not None:
+            self.vca1 = fiducial_model
+        else:
+            self.vca1 = VCA(self.cube1, self.header1, slice_sizes=[slice_size]).run()
+
         self.vca2 = VCA(self.cube2, self.header2, slice_sizes=[slice_size]).run()
 
     def distance_metric(self, verbose=False):
@@ -329,13 +334,18 @@ class VCA_Distance(object):
 
 class VCS_Distance(object):
     """docstring for VCS_Distance"""
-    def __init__(self, cube1, cube2, slice_size=1.0):
+    def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
         super(VCS_Distance, self).__init__()
         self.cube1, self.header1 = cube1
         self.cube2, self.header2 = cube2
 
         assert isinstance(slice_size, float)
-        self.vcs1 = VCS(self.cube1, self.header1).run()
+
+        if fiducial_model is not None:
+            self.vcs1 = fiducial_model
+        else:
+            self.vcs1 = VCS(self.cube1, self.header1).run()
+
         self.vcs2 = VCS(self.cube2, self.header2).run()
 
     def distance_metric(self, verbose=False):

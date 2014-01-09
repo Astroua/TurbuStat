@@ -214,7 +214,7 @@ class MVC_distance(object):
 
     """
 
-    def __init__(self, data1, data2, distances=None):
+    def __init__(self, data1, data2, distances=None, fiducial_model=None):
         # super(mvc_distance, self).__init__()
 
         self.data1 = data1
@@ -223,12 +223,15 @@ class MVC_distance(object):
         self.shape1 = data1["centroid"][0].shape
         self.shape2 = data2["centroid"][0].shape
 
-        self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0]**2., data1["moment0"][0] * data1["moment0_error"][0]**2., \
+        if fiducial_model is not None:
+            self.mvc1 = fiducial_model
+        else:
+            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0]**2., data1["moment0"][0] * data1["moment0_error"][0]**2., \
                          data1["linewidth"][0] * data1["linewidth_error"][0]**2., data1["centroid"][1], distances=distances)
+            self.mvc1.run()
+
         self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0]**2., data2["moment0"][0] * data2["moment0_error"][0]**2., \
                          data2["linewidth"][0] * data2["linewidth_error"][0]**2., data2["centroid"][1], distances=distances)
-
-        self.mvc1.run()
         self.mvc2.run()
 
         self.results = None

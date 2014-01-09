@@ -118,7 +118,7 @@ class PSpec_Distance(object):
 
     """
 
-    def __init__(self, data1, data2):
+    def __init__(self, data1, data2, fiducial_model=None):
         super(PSpec_Distance, self).__init__()
 
         self.data1 = data1
@@ -126,10 +126,13 @@ class PSpec_Distance(object):
         self.shape1 = data1["integrated_intensity"][0].shape
         self.shape2 = data2["integrated_intensity"][0].shape
 
-        self.pspec1 = PowerSpectrum(data1["integrated_intensity"][0]*data1["integrated_intensity_error"][0]**2., data1["integrated_intensity"][1])
-        self.pspec2 = PowerSpectrum(data2["integrated_intensity"][0]*data2["integrated_intensity_error"][0]**2., data2["integrated_intensity"][1])
+        if fiducial_model is None:
+            self.pspec1 = PowerSpectrum(data1["integrated_intensity"][0]*data1["integrated_intensity_error"][0]**2., data1["integrated_intensity"][1])
+            self.pspec1.run()
+        else:
+            self.pspec1 = fiducial_model
 
-        self.pspec1.run()
+        self.pspec2 = PowerSpectrum(data2["integrated_intensity"][0]*data2["integrated_intensity_error"][0]**2., data2["integrated_intensity"][1])
         self.pspec2.run()
 
         self.results = None

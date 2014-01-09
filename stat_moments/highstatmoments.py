@@ -129,13 +129,17 @@ class StatMoments(object):
 
 class StatMomentsDistance(object):
     """docstring for StatMomentsDistance"""
-    def __init__(self, image1, image2, radius, verbose=False):
+    def __init__(self, image1, image2, radius=5, fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
         self.image1 = image1
         self.image2 = image2
         self.radius = radius
 
-        self.moments1 = StatMoments(self.image1, self.radius).run(verbose=verbose)
+        if fiducial_model is not None:
+            self.moments1 = fiducial_model
+        else:
+            self.moments1 = StatMoments(self.image1, self.radius).run(verbose=verbose)
+
         self.moments2 = StatMoments(self.image2, self.radius).run(verbose=verbose)
 
         self.kurtosis_distance = None

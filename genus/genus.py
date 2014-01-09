@@ -244,9 +244,13 @@ class GenusDistance(object):
     Distance Metric for the Genus Statistic.
 
     """
-    def __init__(self, img1, img2, smoothing_radii=None, verbose=False):
+    def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
         super(GenusDistance, self).__init__()
-        self.genus1 = Genus(img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
+        if fiducial_model is not None:
+            self.genus1 = fiducial_model
+        else:
+            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
+
         self.genus2 = Genus(img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
 
         self.distance = None

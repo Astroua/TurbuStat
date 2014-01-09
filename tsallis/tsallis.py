@@ -107,12 +107,16 @@ class Tsallis_Distance(object):
 
 
     """
-    def __init__(self, array1, array2, lags=None, num_bins=500):
+    def __init__(self, array1, array2, lags=None, num_bins=500, fiducial_model=None):
         super(Tsallis_Distance, self).__init__()
         self.array1 = array1
         self.array2 = array2
 
-        self.tsallis1 = Tsallis(array1, lags=lags, num_bins=num_bins).run(verbose=False)
+        if fiducial_model is not None:
+            self.tsallis1 = fiducial_model
+        else:
+            self.tsallis1 = Tsallis(array1, lags=lags, num_bins=num_bins).run(verbose=False)
+
         self.tsallis2 = Tsallis(array2, lags=lags, num_bins=num_bins).run(verbose=False)
 
         self.distance = None
