@@ -90,7 +90,7 @@ class Genus(object):
 
         return self
 
-    def run(self, verbose=True):
+    def run(self, verbose=False):
 
         self.make_smooth_arrays()
         # self.clean_fft()
@@ -249,9 +249,9 @@ class GenusDistance(object):
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
-            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
+            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
 
-        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run(verbose=verbose)
+        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
 
         self.distance = None
 

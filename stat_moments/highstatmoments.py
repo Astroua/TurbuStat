@@ -138,9 +138,9 @@ class StatMomentsDistance(object):
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(self.image1, self.radius).run(verbose=verbose)
+            self.moments1 = StatMoments(self.image1, self.radius).run()
 
-        self.moments2 = StatMoments(self.image2, self.radius).run(verbose=verbose)
+        self.moments2 = StatMoments(self.image2, self.radius).run()
 
         self.kurtosis_distance = None
         self.skewness_distance = None

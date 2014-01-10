@@ -8,7 +8,7 @@ Utility Functions used for the simulation statistics suite
 
 import os
 
-def fromfits(folder,keywords,header=True, verbose=True):
+def fromfits(folder,keywords,header=True, verbose=False):
   '''
   Loads a fits file, prints size, bits per pixel, and array type
   Returns image and its header

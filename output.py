@@ -6,6 +6,7 @@ Function for calculating statistics for sensitivity analysis
 '''
 
 INTERACT = True ## Will prompt you for inputs if True
+PREFIX = "/srv/astro/erickoch/simcloud_stats/testing_folder"
 
 import numpy as np
 from utilities import fromfits
@@ -34,10 +35,12 @@ from tsallis import Tsallis_Distance
 
 from stat_moments import StatMomentsDistance
 
+os.chdir(PREFIX)
+
 ## Wrapper function
 def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
 
-    if not fiducial: # Calculate the fiducial case and return it for later use
+    if fiducial: # Calculate the fiducial case and return it for later use
         wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric()
         mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
         pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric()
@@ -49,19 +52,19 @@ def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
         tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
         moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric()
 
-        distances = np.asarray([wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance, # bispec_distance.distance, delvar_distance.distance, \
+        distances = np.asarray([ wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance, # bispec_distance.distance, delvar_distance.distance, \
                                 genus_distance.distance, vcs_distance.distance, vca_distance.distance, tsallis_distance.distance, \
                                 moment_distance.kurtosis_distance, moment_distance.skewness_distance])
 
         ## NEED TO ADD BISPEC AND DELVAR STILL
-        fiducial_models = [wavelet_distance.wt1, mvc_distance.mvc1, pspec_distance.pspec1, genus_distance.genus1,\
+        fiducial_models = [ wavelet_distance.wt1, mvc_distance.mvc1, pspec_distance.pspec1, genus_distance.genus1,\
                            vcs_distance.vcs1, vca_distance.vca1, tsallis_distance.tsallis1, moment_distance.moments1]
 
         return distances, fiducial_models
 
     else:
-        if not fiducial_data:
-            raise ValueError("Must provide fiducial models to run none fiducial case.")
+        if not fiducial_models:
+            raise ValueError("Must provide fiducial models to run non-fiducial case.")
 
         wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model=fiducial_models[0]).distance_metric()
         mvc_distance = MVC_distance(dataset1, dataset2, fiducial_model=fiducial_models[1]).distance_metric()
@@ -80,31 +83,32 @@ def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
 
 
 if INTERACT:
-    fiducial = raw_input("Input folder of fiducial: ")
+    fiducial = str(raw_input("Input folder of fiducial: "))
     num_statistics = int(raw_input("Number of Statistics? "))
 else:
-    fiducial = sys.argv[1]
+    fiducial = str(sys.argv[1])
     num_statistics = int(sys.argv[2])
 
-fiducial_timesteps = [x for x in os.listdir(fiducial) if os.path.isdir(x)]
+fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
 timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
 simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial]
-
+# simulation_runs.remove("hd22_arrays")
+print "Simulation runs to be analyzed: %s" % (simulation_runs)
 ## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
 distances_storage = np.zeros((num_statistics, len(simulation_runs), len(fiducial_timesteps)))
 
 for i, run in enumerate(simulation_runs):
-    timesteps = [x for x in os.listdir(run) if os.path.isdir(x)]
-    all_fiducial_models = []
+    timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
+    print i
     for ii, timestep in enumerate(timesteps):
         fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
         testing_dataset = fromfits(timestep, keywords)
         if i==0:
             distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset, fiducial=True)
-            all_fiducial_models.append(fiducial_models)
+            all_fiducial_models = fiducial_models
         else:
-            distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models[ii])
+            distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models)
         distances_storage[:,i,ii] = distances
 
 
@@ -112,7 +116,7 @@ for i, run in enumerate(simulation_runs):
 from pandas import Panel
 
 distances_storage = Panel(distances_storage, items=["Wavelet", "MVC", "Power Spec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis"],
-                          major_axis=timesteps_labels, minor_axis=simulation_runs)
+                          major_axis=simulation_runs, minor_axis=timesteps_labels)
 
-distances_storage.to_hdf("distance_results.hdf5", "w", format=t)
+distances_storage.to_hdf("distance_results.hdf5", "w", format="t")
 

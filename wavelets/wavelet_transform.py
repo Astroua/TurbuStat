@@ -220,7 +220,8 @@ class Wavelet_Distance(object):
                If no distance is provided, pixel units are used.
     """
 
-    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(), distance=None,scales=None, num=500, dx=0.25, dy=0.25):
+    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(), distance=None,scales=None, num=500, dx=0.25, dy=0.25, \
+                 fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
         self.array1 = dataset1[0]
@@ -246,8 +247,14 @@ class Wavelet_Distance(object):
                 self.imgscale2 = np.abs(dataset2[1]["CDELT2"]) * (np.pi/180.0) * distance
 
 
-        self.wt1 = wt2D(self.array1, self.scales1, wavelet = wavelet)
+        if fiducial_model is None:
+            self.wt1 = wt2D(self.array1, self.scales1, wavelet = wavelet)
+            self.wt1.run()
+        else:
+            self.wt1 = fiducial_model
+
         self.wt2 = wt2D(self.array2, self.scales2, wavelet = wavelet)
+        self.wt2.run()
 
 
         self.curve1 = None
@@ -286,8 +293,6 @@ class Wavelet_Distance(object):
 
         '''
 
-        self.wt1.run()
-        self.wt2.run()
 
         self.curve1 = transform((self.wt1.Wf, self.scales1), self.imgscale1)
         self.curve2 = transform((self.wt2.Wf, self.scales2), self.imgscale2)
