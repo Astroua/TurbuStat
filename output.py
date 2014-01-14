@@ -15,7 +15,7 @@ import os
 
 keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
-
+statistics = ["Wavelet", "MVC", "PSpec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis"]
 
 ## Load each statistic in
 
@@ -96,7 +96,8 @@ simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducia
 # simulation_runs.remove("hd22_arrays")
 print "Simulation runs to be analyzed: %s" % (simulation_runs)
 ## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
-distances_storage = np.zeros((num_statistics, len(simulation_runs), len(fiducial_timesteps)))
+# The +1 in the second dimensions is to include the fiducial case against itself
+distances_storage = np.zeros((num_statistics, len(simulation_runs)+1, len(fiducial_timesteps)))
 
 for i, run in enumerate(simulation_runs):
     timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
@@ -109,14 +110,17 @@ for i, run in enumerate(simulation_runs):
             all_fiducial_models = fiducial_models
         else:
             distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models)
-        distances_storage[:,i,ii] = distances
+        distances_storage[:,i+1,ii] = distances
 
 
-## Save it in a convenient pandas panel
-from pandas import Panel
+## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
+from pandas import DataFrame, HDFStore
 
-distances_storage = Panel(distances_storage, items=["Wavelet", "MVC", "Power Spec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis"],
-                          major_axis=simulation_runs, minor_axis=timesteps_labels)
+store = HDFStore("distance_results.h5")
 
-distances_storage.to_hdf("distance_results.hdf5", "w", format="t")
+for i in range(num_statistics):
+    df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
+    store[statistics[i]] = df
+
+store.close()
 
