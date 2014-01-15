@@ -7,28 +7,9 @@ to be examined.
 
 import numpy as np
 import matplotlib.pyplot as p
-from pandas import Panel, read_hdf, DataFrame
+from pandas import Panel, read_hdf, DataFrame, concat, Series
 import statsmodels.formula.api as sm
 
-model_matrix = np.array([[1,-1,1,1,1],
-                         [1,1,1,1,1],
-                         [1,-1,-1,1,1],
-                         [1,1,-1,1,1],
-                         [1,-1,1,-1,1],
-                         [1,1,1,-1,1],
-                         [1,-1,-1,-1,1],
-                         [1,1,-1,-1,1],
-                         [1,-1,1,1,-1],
-                         [1,1,1,1,-1],
-                         [1,-1,-1,1,-1],
-                         [1,1,-1,1,-1],
-                         [1,-1,1,-1,-1],
-                         [1,1,1,-1,-1],
-                         [1,-1,-1,-1,-1],
-                         [1,1,-1,-1,-1]
-                        ])
-
-model_matrix = DataFrame(model_matrix,columns=["Constant","Mach", "B-field", "Driving", "Temperature"])
 
 class LenthsMethod(object):
     """This implements Lenth's Method for use in the sensitivity analysis"""
@@ -55,47 +36,76 @@ class LenthsMethod(object):
         self.mean_signifig = []
         self.lnvar_signifig = []
 
+        self.model_matrix = np.array([[1,-1,1,1,1],
+                         [1,1,1,1,1]])#,
+                         # [1,-1,-1,1,1],
+                        #  [1,1,-1,1,1],
+                        #  [1,-1,1,-1,1],
+                        #  [1,1,1,-1,1],
+                        #  [1,-1,-1,-1,1],
+                        #  [1,1,-1,-1,1],
+                        #  [1,-1,1,1,-1],
+                        #  [1,1,1,1,-1],
+                        #  [1,-1,-1,1,-1],
+                        #  [1,1,-1,1,-1],
+                        #  [1,-1,1,-1,-1],
+                        #  [1,1,1,-1,-1],
+                        #  [1,-1,-1,-1,-1],
+                        #  [1,1,-1,-1,-1]
+                        # ])
+
+        self.model_matrix = DataFrame(self.model_matrix,columns=["Constant","Mach", "B_field", "Driving", "Temperature"])
+
     def make_response_vectors(self):
 
-        for stat in self.statistics:
+        for i, stat in enumerate(self.statistics):
             data = self.datafile(stat)
-            data = data[self.columns,self.rows]
+
+            if i==0:
+                self.model_matrix.index = data.index # Set the indexes to be the same
+
+            if self.columns is not None:
+                data = data[self.columns,:]
+            if self.rows is not None:
+                data = data[:,self.rows]
 
             ## Transform to orthogonal parameterization
             data = 2*data - 1
 
             # Two different ways to define the responses
             # Should yield a 16 element vector for each comparison statistic
-            self.mean_respvecs.append(data.mean(axis=0))
-            self.lnvar_respvecs.append(np.log(data.std(axis=0)**2.))
+            self.mean_respvecs.append(data.mean(axis=1))
+            self.lnvar_respvecs.append(np.log(data.std(axis=1)**2.))
 
         return self
 
     def fit_model(self, model=None, verbose= False):
 
         if model is None:
-            model = "Mach*B-field*Driving*Temperature"
+            model = "Mach*B_field*Driving*Temperature"
 
-        for i,stat, mean, lnvar in enumerate(zip(self.statistics, self.mean_respvecs, self.lnvar_respvecs)):
-            if i==0:
-                model_matrix.append({"mean_resp":mean, "lnvar_resp":lnvar})
-            else:
-                model_matrix["mean_resp"] = mean
-                model_matrix["lnvar_resp"] = lnvar
+        for i,(stat, mean, lnvar) in enumerate(zip(self.statistics, self.mean_respvecs, self.lnvar_respvecs)):
+            # if i==0:
+            #     # model_matrix.append({"mean_resp":mean, "lnvar_resp":lnvar})
+            #     self.model_matrix = concat(self.model_matrix[:],{"mean_resp":mean, "lnvar_resp":lnvar})
+            # else:
+            self.model_matrix["mean_resp"] = Series(mean, index=self.model_matrix.index)
+            self.model_matrix["lnvar_resp"] = Series(lnvar, index=self.model_matrix.index)
 
-            mean_model = sm.OLS("".join(["mean_resp~",model]),data = model_matrix)
-            lnvar_model = sm.OLS("".join(["lnvar_resp~",model]),data = model_matrix)
+            mean_model = sm.ols("".join(["mean_resp~",model]), data=self.model_matrix)
+            lnvar_model = sm.ols("".join(["lnvar_resp~",model]), data=self.model_matrix)
 
             mean_results = mean_model.fit()
             lnvar_results = lnvar_model.fit()
 
-            self.mean_fitparam.append(mean_results.params)
-            self.lnvar_fitparam.append(lnvar_results.params)
+            self.mean_fitparam.append(mean_results.params[1:])
+            self.lnvar_fitparam.append(lnvar_results.params[1:])
 
-            self.paramnames = mean_model.params
+            if i==0:
+                self.paramnames = mean_model.exog_names[1:] # Set the names of the coefficients
 
             if verbose:
-                print "Fits for %s" (stat)
+                print "Fits for "+ stat
                 print mean_results.summary()
                 print lnvar_results.summary()
         return self
@@ -109,8 +119,8 @@ class LenthsMethod(object):
             s0_mean = np.median(np.abs(mean))
             s0_lnvar = np.median(np.abs(lnvar))
 
-            pse_mean = 1.5*np.median(np.abs(mean[np.where(mean>2.5*s0_mean)]))
-            pse_lnvar = 1.5*np.median(np.abs(lnvar[np.where(lnvar>2.5*s0_lnvar)]))
+            pse_mean = 1.5*np.median(np.abs(mean)[np.where(np.abs(mean)<=2.5*s0_mean)[0]])
+            pse_lnvar = 1.5*np.median(np.abs(lnvar)[np.where(lnvar<=2.5*s0_lnvar)[0]])
 
             self.mean_signifig.append([mean/pse_mean,pse_mean*IER])
             self.lnvar_signifig.append([lnvar/pse_lnvar, pse_lnvar*IER])
@@ -120,18 +130,22 @@ class LenthsMethod(object):
     def make_plots(self):
         import matplotlib.pyplot as p
 
-        index = np.arange(len(self.statistics))
+        index = np.arange(len(self.paramnames))
         bar_width = 0.35
 
         for i,stat in enumerate(self.statistics):
             p.subplot(2,1,1)
-            p.bar(index, self.mean_signifig[i], color="b")
+            p.bar(index, self.mean_signifig[i][0], color="b")
+            p.plot([0.,index.max()+2*bar_width],[self.mean_signifig[i][1],self.mean_signifig[i][1]], "b-",
+                   [0.,index.max()+2*bar_width],[-self.mean_signifig[i][1],-self.mean_signifig[i][1]], "b-")
             p.xlabel("Effect Estimates")
             p.ylabel(stat)
             p.xticks(index+bar_width, self.paramnames, rotation="vertical", verticalalignment="bottom")
             p.tight_layout()
             p.subplot(2,1,2)
-            p.bar(index, self.lnvar_signifig[i], color="b")
+            p.bar(index, self.lnvar_signifig[i][0], color="b")
+            p.plot([0.,index.max()+2*bar_width],[self.lnvar_signifig[i][1],self.lnvar_signifig[i][1]], "b-",
+                   [0.,index.max()+2*bar_width],[-self.lnvar_signifig[i][1],-self.lnvar_signifig[i][1]], "b-")
             p.xlabel("Effect Estimates")
             p.ylabel(stat)
             p.xticks(index+bar_width, self.paramnames, rotation="vertical", verticalalignment="bottom")
