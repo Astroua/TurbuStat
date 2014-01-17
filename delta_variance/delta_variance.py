@@ -7,7 +7,7 @@ Implementation of the Delta-Variance Method from Stutzki et al. 1998.
 
 import numpy as np
 from scipy.stats import nanmean, nanstd
-from astropy.convolution import convolve_fft, MexicanHat2DKernel, add_kernel_arrays_2D
+from astropy.convolution import convolve_fft
 
 class DeltaVariance(object):
     """
@@ -15,11 +15,10 @@ class DeltaVariance(object):
     docstring for DeltaVariance
 
     """
-    def __init__(self, img, header, weights, diam_ratio=1.5, lags = None):
+    def __init__(self, img, weights, diam_ratio=1.5, lags = None):
         super(DeltaVariance, self).__init__()
 
         self.img = img
-        self.header = header
         self.weights = weights
         self.diam_ratio = diam_ratio
 
@@ -28,8 +27,7 @@ class DeltaVariance(object):
             self.nanflag = True
 
         if lags is None:
-            # Put in auto lag values scaled to img size
-            pass
+            self.lags = np.logspace(0., np.log10(min(self.img.shape)/2.), 25)
         else:
             self.lags = lags
 
@@ -77,7 +75,7 @@ class DeltaVariance(object):
 
         return self
 
-    def run(self, verbose=True):
+    def run(self, verbose=False):
 
         self.do_convolutions()
         self.compute_deltavar()
@@ -103,13 +101,13 @@ def core_kernel(lag, x_size, y_size):
     INPUTS
     ------
 
-    lag - float
+    lag : float
 
 
     OUTPUTS
     -------
 
-    MexicanHat2DKernel - class
+    kernel : numpy.ndarray
     '''
 
     x, y = np.meshgrid(np.arange(-x_size/2,x_size/2 +1,1), np.arange(-y_size/2,y_size/2 +1,1))
@@ -152,7 +150,42 @@ class DeltaVariance_Distance(object):
 
 
     """
-    def __init__(self):
+    def __init__(self, img1, weights1, img2, weights2, diam_ratio=1.5, lags=None, fiducal=None):
         super(DeltaVariance_Distance, self).__init__()
 
-        raise NotImplementedError("Working on it...")
+        self.img1 = img1
+        self.img2 = img2
+
+        if fiducal is not None:
+            self.delvar1 = fiducal
+        else:
+            self.delvar1 = DeltaVariance(img1, weights1, diam_ratio=diam_ratio,
+                lags=lags)
+            self.delvar1.run()
+
+        self.delvar2 = DeltaVariance(img2, weights2, diam_ratio=diam_ratio,
+                lags=lags)
+        self.delvar2.run()
+
+        self.distance = None
+
+    def distance_metric(self, verbose=False):
+
+        self.distance = np.linalg.norm(np.log10(self.delvar1.delta_var[0,:]) -
+                                       np.log10(self.delvar2.delta_var[0,:]))
+
+        if verbose:
+            import matplotlib.pyplot as p
+
+            print "Distance: %s" % (self.distance)
+
+            p.loglog(self.delvar1.lags, self.delvar1.delta_var[0,:], "bD-",
+                label="Delta Var 1")
+            p.loglog(self.delvar2.lags, self.delvar2.delta_var[0,:], "rD-",
+                label="Delta Var 2")
+            p.legend()
+            p.grid(True)
+            p.xlabel("Lag")
+            p.ylabel(r"$\sigma^{2}_{\Delta}$")
+
+            p.show()
