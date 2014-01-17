@@ -112,7 +112,7 @@ for i, run in enumerate(simulation_runs):
             distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models)
         distances_storage[:,i+1,ii] = distances
 
-
+simulation_runs.insert(0, fiducial)
 ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
 from pandas import DataFrame, HDFStore
 

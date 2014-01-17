@@ -37,8 +37,8 @@ class LenthsMethod(object):
         self.lnvar_signifig = []
 
         self.model_matrix = np.array([[1,-1,1,1,1],
-                         [1,1,1,1,1]])#,
-                         # [1,-1,-1,1,1],
+                         [1,1,1,1,1],
+                         [1,-1,-1,1,1]])#,
                         #  [1,1,-1,1,1],
                         #  [1,-1,1,-1,1],
                         #  [1,1,1,-1,1],
@@ -79,7 +79,7 @@ class LenthsMethod(object):
 
         return self
 
-    def fit_model(self, model=None, verbose= False):
+    def fit_model(self, model=None, verbose=False):
 
         if model is None:
             model = "Mach*B_field*Driving*Temperature"
