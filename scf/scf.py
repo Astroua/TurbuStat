@@ -89,7 +89,7 @@ class SCF_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            print "Distance: %s" % (self.distance)
+            # print "Distance: %s" % (self.distance)
 
             p.subplot(1,3,1)
             p.imshow(self.scf1.scf_surface, origin="lower", interpolation="nearest")
@@ -105,3 +105,5 @@ class SCF_Distance(object):
             p.colorbar()
 
             p.show()
+
+        return self

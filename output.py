@@ -15,7 +15,8 @@ import os
 
 keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
-statistics = ["Wavelet", "MVC", "PSpec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis"]
+statistics = ["Wavelet", "MVC", "PSpec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis",
+              "PCA", "SCF"]
 
 ## Load each statistic in
 
@@ -25,15 +26,19 @@ from mvc import MVC_distance
 
 from pspec_bispec import PSpec_Distance, BiSpec_Distance
 
-from genus.genus import GenusDistance
+from genus import GenusDistance
 
-# from delta_variance.delta_variance import DeltaVariance_Distance
+from delta_variance import DeltaVariance_Distance
 
 from vca_vcs import VCA_Distance, VCS_Distance
 
 from tsallis import Tsallis_Distance
 
 from stat_moments import StatMomentsDistance
+
+from pca import PCA_Distance
+
+from scf import SCF_Distance
 
 os.chdir(PREFIX)
 
@@ -45,12 +50,15 @@ def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
         mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
         pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric()
         # bispec_distance = BiSpec_Distance()
-        # delvar_distance = DeltaVariance_Distance()
+        delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
+                                            dataset2["integrated_intensity"][0], dataset2["integrated_intensity_error"][0]).distance_metric()
         genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
         vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
         vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
         tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
         moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric()
+        pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
+        scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
 
         distances = np.asarray([ wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance, # bispec_distance.distance, delvar_distance.distance, \
                                 genus_distance.distance, vcs_distance.distance, vca_distance.distance, tsallis_distance.distance, \
@@ -67,19 +75,38 @@ def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
             raise ValueError("Must provide fiducial models to run non-fiducial case.")
 
         wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model=fiducial_models[0]).distance_metric()
-        mvc_distance = MVC_distance(dataset1, dataset2, fiducial_model=fiducial_models[1]).distance_metric()
-        pspec_distance = PSpec_Distance(dataset1, dataset2, fiducial_model=fiducial_models[2]).distance_metric()
-        # bispec_distance = BiSpec_Distance(, fiducial_model=fiducial_models[3])
-        # delvar_distance = DeltaVariance_Distance(, fiducial_model=fiducial_models[4])
-        genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], fiducial_model=fiducial_models[3]).distance_metric()
-        vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[4]).distance_metric()
-        vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[5]).distance_metric()
-        tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], fiducial_model=fiducial_models[6]).distance_metric()
-        moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5, fiducial_model=fiducial_models[7]).distance_metric()
 
-        return np.asarray([wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance, # bispec_distance.distance, delvar_distance.distance, \
+        mvc_distance = MVC_distance(dataset1, dataset2, fiducial_model=fiducial_models[1]).distance_metric()
+
+        pspec_distance = PSpec_Distance(dataset1, dataset2, fiducial_model=fiducial_models[2]).distance_metric()
+
+        # bispec_distance = BiSpec_Distance(, fiducial_model=fiducial_models[3])
+
+        delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
+                                            dataset2["integrated_intensity"][0], dataset2["integrated_intensity_error"][0],
+                                            fiducial=fiducial_models[3]).distance_metric()
+
+        genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
+                                            fiducial_model=fiducial_models[4]).distance_metric()
+
+        vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[5]).distance_metric()
+
+        vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[6]).distance_metric()
+
+        tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
+                                            fiducial_model=fiducial_models[7]).distance_metric()
+
+        moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5,
+                                            fiducial_model=fiducial_models[8]).distance_metric()
+
+        pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0], fiducial=fiducial_models[9]).distance_metric()
+
+        scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0], fiducial=fiducial_models[10]).distance_metric()
+
+        return np.asarray([wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance,  delvar_distance.distance,# bispec_distance.distance, \
                                 genus_distance.distance, vcs_distance.distance, vca_distance.distance, tsallis_distance.distance, \
-                                moment_distance.kurtosis_distance, moment_distance.skewness_distance])
+                                moment_distance.kurtosis_distance, moment_distance.skewness_distance,
+                                pca_distance.distance, scf_distance.distance])
 
 
 if INTERACT:

@@ -66,10 +66,10 @@ class PCA_Distance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=True):
+    def distance_metric(self, verbose=False):
 
         difference = np.abs((self.pca1.eigvals - self.pca2.eigvals)**2.)
-        self.distance = np.sqrt(difference)
+        self.distance = np.sqrt(np.sum(difference))
 
         if verbose:
             import matplotlib.pyplot as p

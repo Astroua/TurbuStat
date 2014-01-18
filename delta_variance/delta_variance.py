@@ -177,7 +177,7 @@ class DeltaVariance_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            print "Distance: %s" % (self.distance)
+            # print "Distance: %s" % (self.distance)
 
             p.loglog(self.delvar1.lags, self.delvar1.delta_var[0,:], "bD-",
                 label="Delta Var 1")
@@ -189,3 +189,5 @@ class DeltaVariance_Distance(object):
             p.ylabel(r"$\sigma^{2}_{\Delta}$")
 
             p.show()
+
+        return self

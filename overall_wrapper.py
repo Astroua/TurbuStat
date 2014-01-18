@@ -52,7 +52,7 @@ print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
 ## Genus
 
-from genus.genus import GenusDistance
+from genus import GenusDistance
 
 genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
@@ -60,11 +60,13 @@ print "Genus Distance: %s" % (genus_distance.distance)
 
 ## Delta-Variance
 
-# from delta_variance.delta_variance import DeltaVariance_Distance
+from delta_variance import DeltaVariance_Distance
 
-# delvar_distance = DeltaVariance_Distance()
+delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0],
+            dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"][0],
+            dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
 
-# print "Delta-Variance Distance: %s" % (delvar_distance.distance)
+print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
 ## VCA/VCS
 
@@ -95,3 +97,19 @@ moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], datas
 print "Kurtosis Distance: %s" % (moment_distance.kurtosis_distance)
 
 print "Skewness Distance: %s" % (moment_distance.skewness_distance)
+
+## PCA
+
+from pca import PCA_Distance
+
+pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric(verbose=True)
+
+print "PCA Distance: %s" % (pca_distance.distance)
+
+## SCF
+
+from scf import SCF_Distance
+
+scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric(verbose=True)
+
+print "SCF Distance: %s" % (scf_distance.distance)
