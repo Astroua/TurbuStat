@@ -75,9 +75,9 @@ class VCA(object):
         from scipy.fftpack import fftn
 
         for cube in self.degraded_cubes:
-            mvc_fft = np.fft.fftshift(fftn(cube.astype("f8")))
+            vca_fft = np.fft.fftshift(fftn(cube.astype("f8")))
 
-            self.ps2D.append((np.abs(mvc_fft)**2.).sum(axis=0))
+            self.ps2D.append((np.abs(vca_fft)**2.).sum(axis=0))
 
         return self
 
@@ -257,19 +257,19 @@ class VCA_Distance(object):
     """docstring for VCA_Distance"""
     def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
         super(VCA_Distance, self).__init__()
-        self.cube1, self.header1 = cube1
-        self.cube2, self.header2 = cube2
-        self.shape1 = self.cube1.shape[1:] # Shape of the plane
-        self.shape2 = self.cube2.shape[1:]
+        cube1, header1 = cube1
+        cube2, header2 = cube2
+        self.shape1 = cube1.shape[1:] # Shape of the plane
+        self.shape2 = cube2.shape[1:]
 
         assert isinstance(slice_size, float)
 
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(self.cube1, self.header1, slice_sizes=[slice_size]).run()
+            self.vca1 = VCA(cube1, header1, slice_sizes=[slice_size]).run()
 
-        self.vca2 = VCA(self.cube2, self.header2, slice_sizes=[slice_size]).run()
+        self.vca2 = VCA(cube2, header2, slice_sizes=[slice_size]).run()
 
     def distance_metric(self, verbose=False):
         '''
@@ -315,7 +315,7 @@ class VCA_Distance(object):
 
         self.results = model.fit()
 
-        self.distance = self.results.tvalues["regressor"]
+        self.distance = np.abs(self.results.tvalues["regressor"])
 
         if verbose:
 

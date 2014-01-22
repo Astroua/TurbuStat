@@ -121,8 +121,6 @@ class PSpec_Distance(object):
     def __init__(self, data1, data2, fiducial_model=None):
         super(PSpec_Distance, self).__init__()
 
-        self.data1 = data1
-        self.data2 = data2
         self.shape1 = data1["integrated_intensity"][0].shape
         self.shape2 = data2["integrated_intensity"][0].shape
 
@@ -184,7 +182,7 @@ class PSpec_Distance(object):
 
         self.results = model.fit()
 
-        self.distance = self.results.tvalues["regressor"]
+        self.distance = np.abs(self.results.tvalues["regressor"])
 
         if verbose:
 

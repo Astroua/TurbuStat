@@ -15,8 +15,6 @@ import os
 
 keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
-statistics = ["Wavelet", "MVC", "PSpec", "Genus", "VCS", "VCA", "Tsallis", "Skewness", "Kurtosis",
-              "PCA", "SCF"]
 
 ## Load each statistic in
 
@@ -43,111 +41,199 @@ from scf import SCF_Distance
 os.chdir(PREFIX)
 
 ## Wrapper function
-def wrapper(dataset1, dataset2, fiducial=False, fiducial_models=False):
+def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None):
 
-    if fiducial: # Calculate the fiducial case and return it for later use
-        wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric()
-        mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
-        pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric()
-        # bispec_distance = BiSpec_Distance()
-        delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
+    if statistics is None: #Run them all
+        statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+               "Skewness", "Kurtosis"]
+    if any("Skewness" in s for s in statistics):
+        # There will be an indexing
+        # issue without this. This the lazy fix.
+        index = statistics.index("Skewness")
+        statistics.insert(len(statistics), statistics.pop(index))
+
+    distances = []
+
+    if fiducial_models is None: # Calculate the fiducial case and return it for later use
+
+        fiducial_models = {}
+
+        if any("Wavelet" in s for s in statistics):
+            wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric()
+            distances.append(wavelet_distance.distance)
+            fiducial_models["Wavelet"] = wavelet_distance.wt1
+
+        if any("MVC" in s for s in statistics):
+            mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
+            distances.append(mvc_distance.distance)
+            fiducial_models["MVC"] = mvc_distance.mvc1
+
+        if any("PSpec" in s for s in statistics):
+            pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric()
+            distances.append(pspec_distance.distance)
+            fiducial_models["PSpec"] = pspec_distance.pspec1
+
+        # if any("BiVariance" in s for s in statistics):
+            # bispec_distance = BiSpec_Distance()
+            # distances.append(bispec_distance.distance)
+            # fiducial_models.append(bispec_distance.bispec1)
+
+        if any("DeltaVariance" in s for s in statistics):
+            delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
                                             dataset2["integrated_intensity"][0], dataset2["integrated_intensity_error"][0]).distance_metric()
-        genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
-        vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
-        vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
-        tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
-        moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric()
-        pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
-        scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
+            distances.append(delvar_distance.distance)
+            fiducial_models["DeltaVariance"] = delvar_distance.delvar1
 
-        distances = np.asarray([ wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance, # bispec_distance.distance, delvar_distance.distance, \
-                                genus_distance.distance, vcs_distance.distance, vca_distance.distance, tsallis_distance.distance, \
-                                moment_distance.kurtosis_distance, moment_distance.skewness_distance])
+        if any("Genus" in s for s in statistics):
+            genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
+            distances.append(genus_distance.distance)
+            fiducial_models["Genus"] = genus_distance.genus1
 
-        ## NEED TO ADD BISPEC AND DELVAR STILL
-        fiducial_models = [ wavelet_distance.wt1, mvc_distance.mvc1, pspec_distance.pspec1, genus_distance.genus1,\
-                           vcs_distance.vcs1, vca_distance.vca1, tsallis_distance.tsallis1, moment_distance.moments1]
+        if any("VCS" in s for s in statistics):
+            vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
+            distances.append(vcs_distance.distance)
+            fiducial_models["VCS"] = vcs_distance.vcs1
+
+        if any("VCA" in s for s in statistics):
+            vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric()
+            distances.append(vca_distance.distance)
+            fiducial_models["VCA"] = vca_distance.vca1
+
+        if any("Tsallis" in s for s in statistics):
+            tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric()
+            distances.append(tsallis_distance.distance)
+            fiducial_models["Tsallis"] = tsallis_distance.tsallis1
+
+        if any("Skewness" in s for s in statistics) or any("Kurtosis" in s for s in statistics):
+            moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric()
+            distances.append(moment_distance.skewness_distance)
+            distances.append(moment_distance.kurtosis_distance)
+            fiducial_models["stat_moments"] = moment_distance.moments1
+
+        if any("PCA" in s for s in statistics):
+            pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
+            distances.append(pca_distance.distance)
+            fiducial_models["PCA"] = pca_distance.pca1
+
+        if any("SCF" in s for s in statistics):
+            scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric()
+            distances.append(scf_distance.distance)
+            fiducial_models["SCF"] = scf_distance.scf1
+
+        distances = np.asarray(distances)
 
         return distances, fiducial_models
 
     else:
-        if not fiducial_models:
-            raise ValueError("Must provide fiducial models to run non-fiducial case.")
 
-        wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model=fiducial_models[0]).distance_metric()
+        if any("Wavelet" in s for s in statistics):
+            wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"],
+                fiducial_model=fiducial_models["Wavelet"]).distance_metric()
+            distances.append(wavelet_distance.distance)
 
-        mvc_distance = MVC_distance(dataset1, dataset2, fiducial_model=fiducial_models[1]).distance_metric()
+        if any("MVC" in s for s in statistics):
+            mvc_distance = MVC_distance(dataset1, dataset2, fiducial_model=fiducial_models["MVC"]).distance_metric()
+            distances.append(mvc_distance.distance)
 
-        pspec_distance = PSpec_Distance(dataset1, dataset2, fiducial_model=fiducial_models[2]).distance_metric()
+        if any("PSpec" in s for s in statistics):
+            pspec_distance = PSpec_Distance(dataset1, dataset2, fiducial_model=fiducial_models["PSpec"]).distance_metric()
+            distances.append(pspec_distance.distance)
 
-        # bispec_distance = BiSpec_Distance(, fiducial_model=fiducial_models[3])
+        # if any("BiVariance" in s for s in statistics):
+            # bispec_distance = BiSpec_Distance()
+            # distances.append(bispec_distance.distance)
 
-        delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
+        if any("DeltaVariance" in s for s in statistics):
+            delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
                                             dataset2["integrated_intensity"][0], dataset2["integrated_intensity_error"][0],
-                                            fiducial=fiducial_models[3]).distance_metric()
+                                            fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
+            distances.append(delvar_distance.distance)
 
-        genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
-                                            fiducial_model=fiducial_models[4]).distance_metric()
+        if any("Genus" in s for s in statistics):
+            genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
+                fiducial_model=fiducial_models["Genus"]).distance_metric()
+            distances.append(genus_distance.distance)
 
-        vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[5]).distance_metric()
+        if any("VCS" in s for s in statistics):
+            vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"],
+                fiducial_model=fiducial_models["VCS"]).distance_metric()
+            distances.append(vcs_distance.distance)
 
-        vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"], fiducial_model=fiducial_models[6]).distance_metric()
+        if any("VCA" in s for s in statistics):
+            vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"],
+                fiducial_model=fiducial_models["VCA"]).distance_metric()
+            distances.append(vca_distance.distance)
 
-        tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
-                                            fiducial_model=fiducial_models[7]).distance_metric()
+        if any("Tsallis" in s for s in statistics):
+            tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0],
+                fiducial_model=fiducial_models["Tsallis"]).distance_metric()
+            distances.append(tsallis_distance.distance)
 
-        moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5,
-                                            fiducial_model=fiducial_models[8]).distance_metric()
+        if any("Skewness" in s for s in statistics) or any("Kurtosis" in s for s in statistics):
+            moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5,
+                fiducial_model=fiducial_models["stat_moments"]).distance_metric()
+            distances.append(moment_distance.skewness_distance)
+            distances.append(moment_distance.kurtosis_distance)
 
-        pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0], fiducial=fiducial_models[9]).distance_metric()
+        if any("PCA" in s for s in statistics):
+            pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0],
+                fiducial_model=fiducial_models["PCA"]).distance_metric()
+            distances.append(pca_distance.distance)
 
-        scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0], fiducial=fiducial_models[10]).distance_metric()
+        if any("SCF" in s for s in statistics):
+            scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0],
+                fiducial_model=fiducial_models["SCF"]).distance_metric()
+            distances.append(scf_distance.distance)
 
-        return np.asarray([wavelet_distance.distance, mvc_distance.distance, pspec_distance.distance,  delvar_distance.distance,# bispec_distance.distance, \
-                                genus_distance.distance, vcs_distance.distance, vca_distance.distance, tsallis_distance.distance, \
-                                moment_distance.kurtosis_distance, moment_distance.skewness_distance,
-                                pca_distance.distance, scf_distance.distance])
+        return np.asarray(distances)
 
+if __name__ == "__main__":
 
-if INTERACT:
-    fiducial = str(raw_input("Input folder of fiducial: "))
-    num_statistics = int(raw_input("Number of Statistics? "))
-else:
-    fiducial = str(sys.argv[1])
-    num_statistics = int(sys.argv[2])
+    statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+                   "Skewness", "Kurtosis"]
 
-fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
-timesteps_labels = [x[-8:] for x in fiducial_timesteps]
+    num_statistics = len(statistics)
 
-simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial]
-# simulation_runs.remove("hd22_arrays")
-print "Simulation runs to be analyzed: %s" % (simulation_runs)
-## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
-# The +1 in the second dimensions is to include the fiducial case against itself
-distances_storage = np.zeros((num_statistics, len(simulation_runs)+1, len(fiducial_timesteps)))
+    if INTERACT:
+        fiducial = str(raw_input("Input folder of fiducial: "))
+    else:
+        fiducial = str(sys.argv[1])
 
-for i, run in enumerate(simulation_runs):
-    timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
-    print i
-    for ii, timestep in enumerate(timesteps):
-        fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
-        testing_dataset = fromfits(timestep, keywords)
-        if i==0:
-            distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset, fiducial=True)
-            all_fiducial_models = fiducial_models
-        else:
-            distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models)
-        distances_storage[:,i+1,ii] = distances
+    fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
+    timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
-simulation_runs.insert(0, fiducial)
-## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
-from pandas import DataFrame, HDFStore
+    simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial]
+    # simulation_runs.remove("hd22_arrays")
+    print "Simulation runs to be analyzed: %s" % (simulation_runs)
+    ## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
+    # The +1 in the second dimensions is to include the fiducial case against itself
+    distances_storage = np.zeros((num_statistics, len(simulation_runs)+1, len(fiducial_timesteps)))
 
-store = HDFStore("distance_results.h5")
+    for i, run in enumerate(simulation_runs):
+        timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
+        print "On Simulation %s/%s" % (i+1,len(simulation_runs))
+        for ii, timestep in enumerate(timesteps):
+            fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
+            testing_dataset = fromfits(timestep, keywords)
+            if i==0:
+                distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset,
+                    statistics=statistics)
+                all_fiducial_models = fiducial_models
+            else:
+                distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models,
+                    statistics=statistics)
+            print distances
+            distances_storage[:,i+1,ii] = distances
 
-for i in range(num_statistics):
-    df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
-    store[statistics[i]] = df
+    simulation_runs.insert(0, fiducial)
+    ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
+    from pandas import DataFrame, HDFStore
 
-store.close()
+    store = HDFStore("distance_results.h5")
+
+    for i in range(num_statistics):
+        df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
+        store[statistics[i]] = df
+
+    store.close()
 

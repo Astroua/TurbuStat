@@ -132,11 +132,11 @@ class Tsallis_Distance(object):
         '''
 
 
-        w1 = self.tsallis1.tsallis_fits[:,1]#np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis1.tsallis_fits[:,1],self.tsallis1.tsallis_fits[:,4])])
-        w2 = self.tsallis2.tsallis_fits[:,1]#np.asarray([np.sqrt(w/err**2.) for w,err in zip(self.tsallis2.tsallis_fits[:,1],self.tsallis2.tsallis_fits[:,4])])
+        w1 = self.tsallis1.tsallis_fits[:,1]
+        w2 = self.tsallis2.tsallis_fits[:,1]
 
-        q1 = self.tsallis1.tsallis_fits[:,2]#np.asarray([q/err**2.for q,err in zip(self.tsallis1.tsallis_fits[:,2],self.tsallis1.tsallis_fits[:,5])])
-        q2 = self.tsallis2.tsallis_fits[:,2]#np.asarray([q/err**2. for q,err in zip(self.tsallis2.tsallis_fits[:,2],self.tsallis2.tsallis_fits[:,5])])
+        q1 = self.tsallis1.tsallis_fits[:,2]
+        q2 = self.tsallis2.tsallis_fits[:,2]
 
         # diff_a = (a1-a2)**2.
         diff_w = (w1-w2)**2./(w1**2. + w2**2.)

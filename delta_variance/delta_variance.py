@@ -150,20 +150,17 @@ class DeltaVariance_Distance(object):
 
 
     """
-    def __init__(self, img1, weights1, img2, weights2, diam_ratio=1.5, lags=None, fiducal=None):
+    def __init__(self, img1, weights1, img2, weights2, diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
-        self.img1 = img1
-        self.img2 = img2
-
-        if fiducal is not None:
-            self.delvar1 = fiducal
+        if fiducial_model is not None:
+            self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(img1, weights1, diam_ratio=diam_ratio,
+            self.delvar1 = DeltaVariance(img1, weights1, diam_ratio=diam_ratio,\
                 lags=lags)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(img2, weights2, diam_ratio=diam_ratio,
+        self.delvar2 = DeltaVariance(img2, weights2, diam_ratio=diam_ratio,\
                 lags=lags)
         self.delvar2.run()
 

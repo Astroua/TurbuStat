@@ -131,23 +131,20 @@ class StatMomentsDistance(object):
     """docstring for StatMomentsDistance"""
     def __init__(self, image1, image2, radius=5, fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
-        self.image1 = image1
-        self.image2 = image2
-        self.radius = radius
 
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(self.image1, self.radius).run()
+            self.moments1 = StatMoments(image1, radius).run()
 
-        self.moments2 = StatMoments(self.image2, self.radius).run()
+        self.moments2 = StatMoments(image2, radius).run()
 
         self.kurtosis_distance = None
         self.skewness_distance = None
 
     def distance_metric(self, verbose=False):
-        self.kurtosis_distance = kl_divergence(self.moments1.kurtosis_hist[1],self.moments2.kurtosis_hist[1])
-        self.skewness_distance = kl_divergence(self.moments1.skewness_hist[1],self.moments2.skewness_hist[1])
+        self.kurtosis_distance = np.abs(kl_divergence(self.moments1.kurtosis_hist[1],self.moments2.kurtosis_hist[1]))
+        self.skewness_distance = np.abs(kl_divergence(self.moments1.skewness_hist[1],self.moments2.skewness_hist[1]))
 
         if verbose:
             import matplotlib.pyplot as p

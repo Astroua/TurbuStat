@@ -63,14 +63,14 @@ class SCF(object):
 
 class SCF_Distance(object):
     """docstring for SCF_Distance"""
-    def __init__(self, cube1, cube2, size=11, fiducial=None):
+    def __init__(self, cube1, cube2, size=11, fiducial_model=None):
         super(SCF_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
         self.size = size
 
-        if fiducial is not None:
-            self.scf1 = fiducial
+        if fiducial_model is not None:
+            self.scf1 = fiducial_model
         else:
             self.scf1 = SCF(self.cube1, self.size)
             self.scf1.run()

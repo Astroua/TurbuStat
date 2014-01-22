@@ -217,9 +217,6 @@ class MVC_distance(object):
     def __init__(self, data1, data2, distances=None, fiducial_model=None):
         # super(mvc_distance, self).__init__()
 
-        self.data1 = data1
-        self.data2 = data2
-        self.distances = distances
         self.shape1 = data1["centroid"][0].shape
         self.shape2 = data2["centroid"][0].shape
 
@@ -283,7 +280,7 @@ class MVC_distance(object):
 
         self.results = model.fit()
 
-        self.distance = self.results.tvalues["regressor"]
+        self.distance = np.abs(self.results.tvalues["regressor"])
 
         if verbose:
 

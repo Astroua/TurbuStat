@@ -319,7 +319,7 @@ class Wavelet_Distance(object):
 
         self.results = model.fit()
 
-        self.distance = self.results.tvalues["regressor"]
+        self.distance = np.abs(self.results.tvalues["regressor"])
 
         if verbose:
             print self.results.summary()

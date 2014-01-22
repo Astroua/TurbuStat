@@ -50,13 +50,13 @@ class PCA(object):
 
 class PCA_Distance(object):
     """docstring for PCA_Distance"""
-    def __init__(self, cube1, cube2, n_eigs=50, fiducial=None):
+    def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
 
-        if fiducial is not None:
-            self.pca1 = fiducial
+        if fiducial_model is not None:
+            self.pca1 = fiducial_model
         else:
             self.pca1 = PCA(cube1, n_eigs=n_eigs)
             self.pca1.run()
