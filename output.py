@@ -5,8 +5,6 @@ Function for calculating statistics for sensitivity analysis
 
 '''
 
-INTERACT = True ## Will prompt you for inputs if True
-PREFIX = "/srv/astro/erickoch/simcloud_stats/testing_folder"
 
 import numpy as np
 from utilities import fromfits
@@ -38,10 +36,9 @@ from pca import PCA_Distance
 
 from scf import SCF_Distance
 
-os.chdir(PREFIX)
 
 ## Wrapper function
-def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None):
+def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False):
 
     if statistics is None: #Run them all
         statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
@@ -122,7 +119,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None):
 
         distances = np.asarray(distances)
 
-        return distances, fiducial_models
+        if multicore:
+            return distances
+        else:
+            return distances, fiducial_models
 
     else:
 
@@ -187,7 +187,30 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None):
 
         return np.asarray(distances)
 
+def timestep_wrapper(fiducial_timestep, testing_timestep, i):
+    keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
+             "linewidth_error", "moment0", "moment0_error", "cube"}
+    statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+                   "Skewness", "Kurtosis"]
+    fiducial_dataset = fromfits(fiducial_timestep, keywords)
+    testing_dataset = fromfits(testing_timestep, keywords)
+
+    distances = wrapper(fiducial_dataset, testing_dataset, statistics=statistics,
+        multicore=True)
+    return distances
+
+def single_input(a):
+    return timestep_wrapper(*a)
+
 if __name__ == "__main__":
+
+    from multiprocessing import Pool
+    from itertools import izip, repeat
+
+    INTERACT = True ## Will prompt you for inputs if True
+    PREFIX = "/srv/astro/erickoch/simcloud_stats/testing_folder"
+
+    os.chdir(PREFIX)
 
     statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
                    "Skewness", "Kurtosis"]
@@ -196,34 +219,49 @@ if __name__ == "__main__":
 
     if INTERACT:
         fiducial = str(raw_input("Input folder of fiducial: "))
+        MULTICORE = bool(raw_input("Run on multiplecores? (True/False): "))
+        if MULTICORE:
+            NCORES = int(raw_input("How many cores to use? "))
     else:
         fiducial = str(sys.argv[1])
+        MULTICORE = bool(sys.argv[2])
+        if MULTICORE:
+            NCORES = int(sys.argv[3])
 
     fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
     timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
     simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial]
     # simulation_runs.remove("hd22_arrays")
+
     print "Simulation runs to be analyzed: %s" % (simulation_runs)
+
     ## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
-    # The +1 in the second dimensions is to include the fiducial case against itself
+    ## The +1 in the second dimensions is to include the fiducial case against itself
     distances_storage = np.zeros((num_statistics, len(simulation_runs)+1, len(fiducial_timesteps)))
 
     for i, run in enumerate(simulation_runs):
         timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
         print "On Simulation %s/%s" % (i+1,len(simulation_runs))
-        for ii, timestep in enumerate(timesteps):
-            fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
-            testing_dataset = fromfits(timestep, keywords)
-            if i==0:
-                distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset,
-                    statistics=statistics)
-                all_fiducial_models = fiducial_models
-            else:
-                distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models,
-                    statistics=statistics)
-            print distances
-            distances_storage[:,i+1,ii] = distances
+        if MULTICORE:
+            pool = Pool(processes=NCORES)
+            distances = pool.map(single_input, izip(fiducial_timesteps, timesteps, range(len(timesteps))))
+            distances_storage[:,i+1,:] = np.asarray(distances).T
+            pool.close()
+            pool.join()
+        else:
+            for ii, timestep in enumerate(timesteps):
+                fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
+                testing_dataset = fromfits(timestep, keywords)
+                if i==0:
+                    distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset,
+                        statistics=statistics)
+                    all_fiducial_models = fiducial_models
+                else:
+                    distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models,
+                        statistics=statistics)
+                print distances
+                distances_storage[:,i+1,ii] = distances
 
     simulation_runs.insert(0, fiducial)
     ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
