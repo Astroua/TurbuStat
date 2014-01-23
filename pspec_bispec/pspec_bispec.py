@@ -262,6 +262,7 @@ class BiSpectrum(object):
            for k2mag in range(int(fft.shape[1]/2.)):
                phi1 = ra.uniform(0, 2*np.pi, nsamples)
                phi2  = ra.uniform(0,2*np.pi, nsamples)
+
                k1x =np.asarray([int(k1mag * np.cos(angle)) for angle in phi1])
                k2x =np.asarray([int(k2mag * np.cos(angle)) for angle in phi2])
                k1y =np.asarray([int(k1mag * np.sin(angle)) for angle in phi1])
@@ -273,14 +274,15 @@ class BiSpectrum(object):
                x = np.asarray([int(np.sqrt(i**2. + j**2.)) for i,j in zip(k1x,k1y)])
                y = np.asarray([int(np.sqrt(i**2. + j**2.)) for i,j in zip(k2x,k2y)])
 
-               self.bispectrum[x,y] += fft[k1x,k1y] * fft[k2x,k2y] * conjfft[k3x,k3y]
-               self.bicoherence[x,y] += np.abs(fft[k1x,k1y] * fft[k2x,k2y] * conjfft[k3x,k3y])
-               self.accumulator[x,y] += 1.
+               for n in range(nsamples):
+                    self.bispectrum[x[n],y[n]] += fft[k1x[n],k1y[n]] * fft[k2x[n],k2y[n]] * conjfft[k3x[n],k3y[n]]
+                    self.bicoherence[x[n],y[n]] += np.abs(fft[k1x[n],k1y[n]] * fft[k2x[n],k2y[n]] * conjfft[k3x[n],k3y[n]])
+                    self.accumulator[x[n],y[n]] += 1.
 
                # Track where we're sampling from in fourier space
-               self.tracker[k1x,k1y] += 1
-               self.tracker[k2x,k2y] += 1
-               self.tracker[k3x,k3y] += 1
+                    self.tracker[k1x[n],k1y[n]] += 1
+                    self.tracker[k2x[n],k2y[n]] += 1
+                    self.tracker[k3x[n],k3y[n]] += 1
 
         self.bicoherence = (np.abs(self.bispectrum)/self.bicoherence)
         self.bispectrum /= self.accumulator
