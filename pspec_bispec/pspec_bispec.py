@@ -220,7 +220,6 @@ class BiSpectrum(object):
         self.header = header
         self.shape = img.shape
 
-        # self.wavevectors = np.fft.fftfreq(min(img.shape)/2.)
         self.kx = np.arange(0., self.shape[0]/2.,1)
         self.ky = np.arange(0., self.shape[1]/2.,1)
 
@@ -238,25 +237,7 @@ class BiSpectrum(object):
         ra.seed(seed)
 
         if nsamples is None:
-            nsamples = 100#self.shape[0]*self.shape[1]
-
-        # norm_samples = ra.normal(0, 1, size=(4,nsamples)) # Normally distributed points in 4D
-        # norm_samples = np.abs(norm_samples) / np.sqrt((norm_samples**2).sum(axis=0)) # Normalize onto the surface of a 4D sphere and confine to the positive quadrant
-        # samples = np.empty(norm_samples.shape)
-        # samples[:2,:] = (self.shape[0]/2.) * ra.uniform(0,1,nsamples) * norm_samples[:2,:]
-        # samples[2:,:] = (self.shape[1]/2.) * ra.uniform(0,1,nsamples) * norm_samples[2:,:]
-
-        # for i in range(samples.shape[1]):
-        #     k1x, k2x, k1y, k2y = [int(round(u)) for u in samples[:,i]]
-        #     k3x = k1x + k2x
-        #     k3y = k1y + k2y
-        #     if k3x>self.shape[0] or k3y>self.shape[1]:
-        #         print "BLAH"
-        #     x = int(np.sqrt(k1x**2. + k1y**2.))
-        #     y = int(np.sqrt(k2x**2. + k2y**2.))
-
-        #     self.bispectrum[x,y] = fft[k1x,k1y] * fft[k2x,k2y] * conjfft[k3x,k3y]
-        #     self.accumulator[x,y] += 1.
+            nsamples = 100
 
         for k1mag in range(int(fft.shape[0]/2.)):
            for k2mag in range(int(fft.shape[1]/2.)):
@@ -290,14 +271,79 @@ class BiSpectrum(object):
 
         return self
 
+    def run(self, nsamples=None, verbose=False):
+
+        self.compute_bispectrum(nsamples=nsamples)
+
+        if verbose:
+            import matplotlib.pyplot as p
+
+            p.subplot(1,2,1)
+            p.title("Bispectrum")
+            p.imshow(self.bispectrum_amp, origin="lower", interpolation="nearest")
+            p.colorbar()
+            p.contour(self.bispectrum_amp, colors="k")
+            p.xlabel("k1")
+            p.ylabel("k2")
+
+            p.subplot(1,2,2)
+            p.title("Bicoherence")
+            p.imshow(self.bicoherence, origin="lower", interpolation="nearest")
+            p.colorbar()
+            p.xlabel("k1")
+            p.ylabel("k2")
+
+            p.show()
 
 
 
 
 
-class BiSpec_Distance(object):
+class BiSpectrum_Distance(object):
     """docstring for BiSpec_Distance"""
-    def __init__(self, arg):
-        super(BiSpec_Distance, self).__init__()
-        self.arg = arg
-        raise NotImplementedError("")
+    def __init__(self, img1, img2, nsamples=None, fiducial_model=None):
+        super(BiSpectrum_Distance, self).__init__()
+        header = None
+
+        if fiducial_model is not None:
+            self.bispec1 = fiducial_model
+        else:
+            self.bispec1 = BiSpectrum(img1, header)
+            self.bispec1.run()
+
+        self.bispec2 = BiSpectrum(img2, header)
+        self.bispec2.run()
+
+        self.distance = None
+
+    def distance_metric(self, verbose=False):
+
+        self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
+            self.bispec2.bicoherence.ravel())
+
+        if verbose:
+            import matplotlib.pyplot as p
+
+            p.subplot(1,3,1)
+            p.title("Bicoherence 1")
+            p.imshow(self.bispec1.bicoherence, origin="lower", interpolation="nearest")
+            p.colorbar()
+            p.xlabel("k1")
+            p.ylabel("k2")
+
+            p.subplot(1,3,2)
+            p.title("Bicoherence 2")
+            p.imshow(self.bispec2.bicoherence, origin="lower", interpolation="nearest")
+            p.colorbar()
+            p.xlabel("k1")
+            p.ylabel("k2")
+
+            p.subplot(1,3,3)
+            p.title("Difference")
+            p.imshow(np.abs(self.bispec1.bicoherence - self.bispec2.bicoherence), origin="lower", interpolation="nearest",
+                vmax=1.0, vmin=0.0)
+            p.colorbar()
+            p.xlabel("k1")
+            p.ylabel("k2")
+
+            p.show()
