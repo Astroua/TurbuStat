@@ -20,7 +20,7 @@ from wavelets import Wavelet_Distance
 
 from mvc import MVC_distance
 
-from pspec_bispec import PSpec_Distance, BiSpec_Distance
+from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
 
 from genus import GenusDistance
 
@@ -41,7 +41,7 @@ from scf import SCF_Distance
 def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False):
 
     if statistics is None: #Run them all
-        statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+        statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance", "Bispectrum","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
                "Skewness", "Kurtosis"]
     if any("Skewness" in s for s in statistics):
         # There will be an indexing
@@ -70,10 +70,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             distances.append(pspec_distance.distance)
             fiducial_models["PSpec"] = pspec_distance.pspec1
 
-        # if any("BiVariance" in s for s in statistics):
-            # bispec_distance = BiSpec_Distance()
-            # distances.append(bispec_distance.distance)
-            # fiducial_models.append(bispec_distance.bispec1)
+        if any("Bispectrum" in s for s in statistics):
+            bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric()
+            distances.append(bispec_distance.distance)
+            fiducial_models["Bispectrum"] = bispec_distance.bispec1
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
@@ -139,9 +139,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             pspec_distance = PSpec_Distance(dataset1, dataset2, fiducial_model=fiducial_models["PSpec"]).distance_metric()
             distances.append(pspec_distance.distance)
 
-        # if any("BiVariance" in s for s in statistics):
-            # bispec_distance = BiSpec_Distance()
-            # distances.append(bispec_distance.distance)
+        if any("Bispectrum" in s for s in statistics):
+            bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"],
+                fiducial_model=fiducial_models["Bispectrum"]).distance_metric()
+            distances.append(bispec_distance.distance)
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity_error"][0], \
@@ -187,10 +188,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
 
         return np.asarray(distances)
 
-def timestep_wrapper(fiducial_timestep, testing_timestep, i):
+def timestep_wrapper(fiducial_timestep, testing_timestep):
     keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
-    statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
                    "Skewness", "Kurtosis"]
     fiducial_dataset = fromfits(fiducial_timestep, keywords)
     testing_dataset = fromfits(testing_timestep, keywords)
@@ -212,15 +213,16 @@ if __name__ == "__main__":
 
     os.chdir(PREFIX)
 
-    statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
                    "Skewness", "Kurtosis"]
-
+    print statistics
     num_statistics = len(statistics)
 
     if INTERACT:
         fiducial = str(raw_input("Input folder of fiducial: "))
-        MULTICORE = bool(raw_input("Run on multiplecores? (True/False): "))
-        if MULTICORE:
+        MULTICORE = bool(raw_input("Run on multiplecores? (T or blank): "))
+
+        if MULTICORE :
             NCORES = int(raw_input("How many cores to use? "))
     else:
         fiducial = str(sys.argv[1])
@@ -242,10 +244,11 @@ if __name__ == "__main__":
 
     for i, run in enumerate(simulation_runs):
         timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
+
         print "On Simulation %s/%s" % (i+1,len(simulation_runs))
         if MULTICORE:
             pool = Pool(processes=NCORES)
-            distances = pool.map(single_input, izip(fiducial_timesteps, timesteps, range(len(timesteps))))
+            distances = pool.map(single_input, izip(fiducial_timesteps, timesteps))
             distances_storage[:,i+1,:] = np.asarray(distances).T
             pool.close()
             pool.join()
@@ -263,7 +266,7 @@ if __name__ == "__main__":
                 print distances
                 distances_storage[:,i+1,ii] = distances
 
-    simulation_runs.insert(0, fiducial)
+    # simulation_runs.insert(0, fiducial)
     ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
     from pandas import DataFrame, HDFStore
 

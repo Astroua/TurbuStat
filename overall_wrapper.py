@@ -40,15 +40,15 @@ print "MVC Distance: %s" % (mvc_distance.distance)
 
 ## Spatial Power Spectrum/ Bispectrum
 
-from pspec_bispec import PSpec_Distance, BiSpec_Distance
+from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
 
 pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
-# bispec_distance = BiSpec_Distance()
+bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
-# print " Bispectrum Distance: %s" % (bispec_distance.distance)
+print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
 ## Genus
 

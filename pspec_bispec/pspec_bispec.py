@@ -301,17 +301,17 @@ class BiSpectrum(object):
 
 class BiSpectrum_Distance(object):
     """docstring for BiSpec_Distance"""
-    def __init__(self, img1, img2, nsamples=None, fiducial_model=None):
+    def __init__(self, data1, data2, nsamples=None, fiducial_model=None):
         super(BiSpectrum_Distance, self).__init__()
         header = None
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
-            self.bispec1 = BiSpectrum(img1, header)
+            self.bispec1 = BiSpectrum(data1[0], data1[1])
             self.bispec1.run()
 
-        self.bispec2 = BiSpectrum(img2, header)
+        self.bispec2 = BiSpectrum(data2[0], data2[1])
         self.bispec2.run()
 
         self.distance = None
@@ -347,3 +347,5 @@ class BiSpectrum_Distance(object):
             p.ylabel("k2")
 
             p.show()
+
+        return self
