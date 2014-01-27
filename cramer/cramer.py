@@ -5,50 +5,104 @@ Implementation of the Cramer Statistic
 
 '''
 
+import numpy as np
+from scipy.stats import scoreatpercentile
+from sklearn.metrics.pairwise import pairwise_distances
+
 class Cramer_Distance(object):
     """docstring for Cramer_Distance"""
-    def __init__(self, cube1, cube2, data_format, nsamples, alpha):
+    def __init__(self, cube1, cube2, data_format="intensity"):
         super(Cramer_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
         self.data_format = data_format
-        self.nsamples = nsamples
-        self.alpha = alpha
 
-        self.data_matrix = None
-        self.cramer_distance = None
+        self.data_matrix1 = None
+        self.data_matrix2 = None
+        self.distance = None
 
-    def format_data(self):
-        pass
+    def format_data(self, data_format=None):
 
-    def bootstrap(self, nsamples=None, statistic, alpha):
-    """Returns bootstrap estimate of 100.0*(1-alpha) CI for statistic."""
-        if nsamples is not None:
-            self.nsamples = nsamples
+        if data_format is not None:
+            self.data_format = data_format
 
-        shape = self.data_matrix.shape
-        idx = []
-        for n in shape:
-            idx.append(np.random.randint(0, n, (self.nsamples, n)))
-        samples = self.data_matrix[idx]
-        stat = np.sort(self.statistic(samples))
-        self.cramer_distance = (stat[int((alpha/2.0)*self.nsamples)], \
-                stat[int((1-alpha/2.0)*self.nsamples)])
-        return self
+        if self.data_format=="spectra":
+            raise NotImplementedError("")
 
-    def run(self, verbose=False):
+        elif self.data_format=="intensity":
+            self.data_matrix1 = intensity_data(self.cube1)
+            self.data_matrix2 = intensity_data(self.cube2)
 
-        if verbose:
-            import matplotlib.pyplot as p
+        else:
+            raise NameError("data_format must be either 'spectra' or 'intensity'.")
 
         return self
 
-def cramer_statistic(lookup):
-    m, n = lookup.shape
+    def cramer_statistic(self, n_jobs=1):
+        '''
 
-    xind, yind = np.indices((m,n))
-    m, n = float(m), float(n)
+        '''
+        ## Adjust what we call n,m based on the larger dimension.
+        ## Then the looping below is valid.
+        if self.data_matrix1.shape[1]>=self.data_matrix2.shape[1]:
+            m = self.data_matrix1.shape[1]
+            n = self.data_matrix2.shape[1]
+        else:
+            n = self.data_matrix1.shape[1]
+            m = self.data_matrix2.shape[1]
 
-    term1 = (1/(m*n)) * np.sum()
+        term1 = 0.0
+        term2 = 0.0
+        term3 = 0.0
 
-    return (m*n/(m+n)) * (term1 + term2 + term3)
+        pairdist11 = pairwise_distances(self.data_matrix1.T, metric="euclidean", n_jobs=n_jobs)
+        pairdist22 = pairwise_distances(self.data_matrix2.T, metric="euclidean", n_jobs=n_jobs)
+        pairdist12 = pairwise_distances(self.data_matrix1.T, self.data_matrix2.T, metric="euclidean", n_jobs=n_jobs)
+
+        for i in range(m):
+            for j in range(n):
+                term1 += pairdist12[i,j]
+            for ii in range(m):
+                term2 += pairdist11[i,ii]
+
+            if i<=n:
+                for jj in range(n):
+                    term3 += pairdist22[i,jj]
+
+        m, n = float(m), float(n)
+
+        term1 *= (1/(m*n))
+        term2 *= (1/(2*m**2.))
+        term3 *= (1/(2*n**2.))
+
+        self.distance = (m*n/(m+n)) * (term1 - term2 - term3)
+
+        return self
+
+    def distance_metric(self, n_jobs=1):
+        '''
+
+        This serves as a simple wrapper in order to remain with the coding
+        convention used throughout the rest of this project.
+
+        '''
+
+        self.format_data()
+        self.cramer_statistic(n_jobs=n_jobs)
+
+        return self
+
+
+
+def intensity_data(cube, p=0.25):
+    '''
+    '''
+    vec_length = round(p*cube.shape[1]*cube.shape[2])
+    intensity_vecs = np.empty((cube.shape[0], vec_length))
+    for dv in range(cube.shape[0]):
+        vel_vec = cube[dv,:,:].ravel()
+        vel_vec.sort()
+        ## Return the normalized, shortened vector
+        intensity_vecs[dv,:] = vel_vec[:vec_length]/np.max(vel_vec[:vec_length]) #
+
+    return intensity_vecs
