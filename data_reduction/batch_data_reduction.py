@@ -15,11 +15,14 @@ import errno
 import shutil
 from datetime import datetime
 
+folder = sys.argv[1]
+os.chdir(folder)
 ## Read files in the folder
 data_cubes = [x for x in os.listdir(".") if os.path.isfile(x) and x[-4:]=="fits"]
+# [os.path.join(folder,x) for x in os.listdir(folder) if os.path.isfile(os.path.join(folder,x)) and x[-4:]=="fits"]
 print data_cubes
 
-logfile = open("".join([data_cubes[0][:-14],"_reductionlog",".txt"]), "w+")
+logfile = open("".join([folder[:-1],"_reductionlog",".txt"]), "w+")
 
 for fitscube in data_cubes:
 

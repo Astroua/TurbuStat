@@ -46,7 +46,7 @@ pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
-bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
+bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
 print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
@@ -113,3 +113,11 @@ from scf import SCF_Distance
 scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric(verbose=True)
 
 print "SCF Distance: %s" % (scf_distance.distance)
+
+## Cramer Statistic
+
+from cramer import Cramer_Distance
+
+cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
+
+print "Cramer Distance: %s" % (cramer_distance.distance)

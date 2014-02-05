@@ -10,6 +10,7 @@ import numpy as np
 from utilities import fromfits
 import sys
 import os
+from datetime import datetime
 
 keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
@@ -36,13 +37,14 @@ from pca import PCA_Distance
 
 from scf import SCF_Distance
 
+from cramer import Cramer_Distance
 
 ## Wrapper function
 def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False):
 
     if statistics is None: #Run them all
-        statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance", "Bispectrum","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-               "Skewness", "Kurtosis"]
+        statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+                   "Cramer","Skewness", "Kurtosis"]
     if any("Skewness" in s for s in statistics):
         # There will be an indexing
         # issue without this. This the lazy fix.
@@ -117,6 +119,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             distances.append(scf_distance.distance)
             fiducial_models["SCF"] = scf_distance.scf1
 
+        if any("Cramer" in s for s in statistics):
+            cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
+            distances.append(cramer_distance.distance)
+
         distances = np.asarray(distances)
 
         if multicore:
@@ -186,13 +192,17 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
                 fiducial_model=fiducial_models["SCF"]).distance_metric()
             distances.append(scf_distance.distance)
 
+        if any("Cramer" in s for s in statistics):
+            cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
+            distances.append(cramer_distance.distance)
+
         return np.asarray(distances)
 
 def timestep_wrapper(fiducial_timestep, testing_timestep):
     keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
              "linewidth_error", "moment0", "moment0_error", "cube"}
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                   "Skewness", "Kurtosis"]
+                   "Cramer","Skewness", "Kurtosis"]
     fiducial_dataset = fromfits(fiducial_timestep, keywords)
     testing_dataset = fromfits(testing_timestep, keywords)
 
@@ -209,47 +219,53 @@ if __name__ == "__main__":
     from itertools import izip, repeat
 
     INTERACT = True ## Will prompt you for inputs if True
-    PREFIX = "/srv/astro/erickoch/simcloud_stats/testing_folder"
+    PREFIX = "/srv/astro/erickoch/enzo_sims/"
 
     os.chdir(PREFIX)
 
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                   "Skewness", "Kurtosis"]
+                  "Cramer", "Skewness", "Kurtosis"]
     print statistics
     num_statistics = len(statistics)
 
     if INTERACT:
         fiducial = str(raw_input("Input folder of fiducial: "))
+        face = str(raw_input("Which face? (0 or 2): "))
+        save_name = str(raw_input("Save Name: "))
         MULTICORE = bool(raw_input("Run on multiplecores? (T or blank): "))
 
         if MULTICORE :
             NCORES = int(raw_input("How many cores to use? "))
     else:
         fiducial = str(sys.argv[1])
-        MULTICORE = bool(sys.argv[2])
+        face = str(sys.argv[2])
+        save_name = str(sys.argv[3])
+        MULTICORE = bool(sys.argv[4])
         if MULTICORE:
-            NCORES = int(sys.argv[3])
+            NCORES = int(sys.argv[5])
 
     fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
     timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
-    simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial]
+    simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial and x[-3]==face]
     # simulation_runs.remove("hd22_arrays")
 
     print "Simulation runs to be analyzed: %s" % (simulation_runs)
+    print "Started at "+str(datetime.now())
 
     ## Distances will be stored in an array of dimensions # statistics x # sim runs x # timesteps
     ## The +1 in the second dimensions is to include the fiducial case against itself
-    distances_storage = np.zeros((num_statistics, len(simulation_runs)+1, len(fiducial_timesteps)))
+    distances_storage = np.zeros((num_statistics, len(simulation_runs), len(fiducial_timesteps)))
 
     for i, run in enumerate(simulation_runs):
         timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
 
         print "On Simulation %s/%s" % (i+1,len(simulation_runs))
+        print str(datetime.now())
         if MULTICORE:
             pool = Pool(processes=NCORES)
             distances = pool.map(single_input, izip(fiducial_timesteps, timesteps))
-            distances_storage[:,i+1,:] = np.asarray(distances).T
+            distances_storage[:,i,:] = np.asarray(distances).T
             pool.close()
             pool.join()
         else:
@@ -264,13 +280,13 @@ if __name__ == "__main__":
                     distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models,
                         statistics=statistics)
                 print distances
-                distances_storage[:,i+1,ii] = distances
+                distances_storage[:,i,ii] = distances
 
     # simulation_runs.insert(0, fiducial)
     ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
     from pandas import DataFrame, HDFStore
 
-    store = HDFStore("distance_results.h5")
+    store = HDFStore(save_name+"_"+face+"_distance_results.h5")
 
     for i in range(num_statistics):
         df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
@@ -278,3 +294,4 @@ if __name__ == "__main__":
 
     store.close()
 
+print "Done at "+str(datetime.now())
