@@ -54,7 +54,11 @@ def fromfits(folder,keywords,header=True, verbose=False):
     path = "".join([folder,"/",img])
 
     match = find_word(path,keywords)
-    pixelarray, hdr = getdata(path, header=header)
+    try:
+      pixelarray, hdr = getdata(path, header=header)
+    except IOError:
+      raise IOError("Corrupt FITS file: "+path)
+
 
     shape = pixelarray.shape
 
@@ -112,6 +116,36 @@ def find_word(text,search):
       return match
    else:
       return False
+
+def append_to_hdf5(filename, new_data, col_label):
+  '''
+
+  This function appends a new column onto pre-existing data frames.
+  It allows missing comparisons to be added.
+
+  Parameters
+  **********
+
+  filename : str
+             File containing pre-existing data.
+
+  new_data : array
+             Array with shape (number of stats, timesteps)
+
+  col_labels : str
+               Label to be added for new column
+
+  '''
+  from pandas import HDFStore, concat
+
+  store = HDFStore(filename)
+
+  for i, key in enumerate(store.keys()):
+    df = store[key]
+    df = concat([df,new_data[i,:]])
+    store[key] = df
+
+  store.close()
 
 
 
