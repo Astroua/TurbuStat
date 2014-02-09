@@ -7,7 +7,7 @@ to be examined.
 
 import numpy as np
 import matplotlib.pyplot as p
-from pandas import Panel, read_hdf, DataFrame, concat, Series
+from pandas import read_hdf, DataFrame, Series
 import statsmodels.formula.api as sm
 import types
 
@@ -43,14 +43,14 @@ class LenthsMethod(object):
         self.signifig = []
         self.laststep_signifig = []
 
-        self.model_matrix = np.array([[1, 1, 1, 1, 1],
+        self.model_matrix = np.array([#[1, 1, 1, 1, 1],
                                       [1,-1,-1, 1, 1],
                                       [1, 1,-1, 1,-1],
-                                      [1,-1, 1, 1,-1],
-                                      [1, 1,-1,-1, 1]])#,
-                                      # [1,-1, 1,-1, 1],
-                                      # [1, 1, 1,-1,-1],
-                                      # [1,-1,-1,-1,-1]])
+                                      #[1,-1, 1, 1,-1],
+                                      [1, 1,-1,-1, 1],
+                                      [1,-1, 1,-1, 1],
+                                      [1, 1, 1,-1,-1],
+                                      [1,-1,-1,-1,-1]])
 
 
         self.model_matrix = DataFrame(self.model_matrix,columns=["Constant","M", "B", "k", "T"])
@@ -58,7 +58,7 @@ class LenthsMethod(object):
     def make_response_vectors(self):
 
         for i, stat in enumerate(self.statistics):
-            data = self.datafile(stat)
+            data = self.datafile(stat).sort(axis=0).sort(axis=1)
 
             if i==0:
                 self.model_matrix.index = data.index # Set the indexes to be the same
@@ -111,9 +111,10 @@ class LenthsMethod(object):
                 print laststep_results.summary()
         return self
 
-    def lenth(self, IER=2.16):
+    def lenth(self, IER=2.3):
         '''
          IER: Wu Hamada critical value 2.16 for 15 compared effect estimate with alpha 0.05
+         IER: Wu Hamada critical value 2.3 for 7 compared effect estimate with alpha 0.05
          '''
 
         for param, last in zip(self.fitparam, self.laststep_fitparam):
@@ -123,8 +124,8 @@ class LenthsMethod(object):
             pse = 1.5*np.median(np.abs(param)[np.where(np.abs(param)<=2.5*s0)[0]])
             pse_laststep = 1.5*np.median(np.abs(last)[np.where(last<=2.5*s0_laststep)[0]])
 
-            self.signifig.append([param/pse,pse*IER])
-            self.laststep_signifig.append([last/pse_laststep, pse_laststep*IER])
+            self.signifig.append([param,pse*IER])
+            self.laststep_signifig.append([last, pse_laststep*IER])
 
         return self
 
@@ -148,9 +149,9 @@ class LenthsMethod(object):
             p.tight_layout()
             p.show()
 
-    def run(self):
+    def run(self, model=None, verbose=False):
         self.make_response_vectors()
-        self.fit_model()
+        self.fit_model(model=model, verbose=verbose)
         self.lenth()
         self.make_plots()
 

@@ -247,7 +247,7 @@ if __name__ == "__main__":
     fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
     timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
-    simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x!=fiducial and x[-3]==face]
+    simulation_runs = ["Fiducial128_4.2.0"]#[x for x in os.listdir(".") if os.path.isdir(x) and x[:6]=="Design" and x[-3]==face]
     # simulation_runs.remove("hd22_arrays")
 
     print "Simulation runs to be analyzed: %s" % (simulation_runs)
@@ -287,11 +287,11 @@ if __name__ == "__main__":
     from pandas import DataFrame, HDFStore
 
     store = HDFStore(save_name+"_"+face+"_distance_results.h5")
-
+    simulation_runs = [sim+"to"+fiducial for sim in simulation_runs]
     for i in range(num_statistics):
         df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
         store[statistics[i]] = df
 
     store.close()
 
-print "Done at "+str(datetime.now())
+    print "Done at "+str(datetime.now())
