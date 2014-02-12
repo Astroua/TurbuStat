@@ -53,17 +53,18 @@ class property_arrays(object):
             if not kernel_size:
                 raise ValueError("Kernel Size must be given for moment masking.")
             self.noise_type_flag = 0
-            self.clean_cube, self.noise_array, self.sigma = moment_masking(self.cube, clip_level, kernel_size)
-            self.noise_mask = self.noise_array < (clip_level * self.sigma)
+            self.clean_cube, self.mask_cube, self.sigma = moment_masking(self.cube, clip_level, kernel_size)
+            # self.noise_mask = self.noise_array < (clip_level * self.sigma)
+            self.nan_mask += self.mask_cube
 
 
     def moment0(self):
 
         moment0_array = np.sum(self.clean_cube * self.nan_mask, axis=0)
-        moment0_array *= self.noise_mask
+        # moment0_array *= self.noise_mask
 
         error_array = self.sigma * np.sqrt(np.sum(self.nan_mask * (self.clean_cube>0), axis=0))
-        error_array *= self.noise_mask
+        # error_array *= self.noise_mask
 
         self.property_dict["moment0"] = moment0_array, error_array
 
@@ -72,12 +73,12 @@ class property_arrays(object):
     def centroid(self):
 
         centroid_array = np.sum(self.clean_cube * self.nan_mask * self.weight_cube, axis=0) / self.property_dict["moment0"][0]
-        centroid_array *= self.noise_mask
+        # centroid_array *= self.noise_mask
 
         first_err_term = self.sigma**2. * np.sqrt(np.sum(self.weight_cube[np.nonzero(self.clean_cube * self.nan_mask)], axis=0)) / self.property_dict["moment0"][0]**2.
         second_err_term = self.property_dict["moment0"][1]**2. / self.property_dict["moment0"][0]**2.
         error_array = np.sqrt(first_err_term + second_err_term)
-        error_array *= self.noise_mask
+        # error_array *= self.noise_mask
 
         self.property_dict["centroid"] = centroid_array, error_array
 
@@ -129,7 +130,7 @@ class property_arrays(object):
                 first_err_term = (2 * np.sum((weight_clean[:,i,j] - self.property_dict["centroid"][0][i,j]) * masked_clean[:,i,j]) * self.property_dict["centroid"][1][i,j]**2. +\
                              self.sigma**2. * np.sum((weight_clean[:,i,j] - self.property_dict["centroid"][0][i,j])**2.)) / \
                              np.sum((weight_clean[:,i,j] - self.property_dict["centroid"][0][i,j])**2. * masked_clean[:,i,j])**2.
-                second_err_term = self.sigma**2. * np.sum(self.nan_mask[i,j])**2. / self.property_dict["moment0"][0][i,j]**2.
+                second_err_term = self.sigma**2. * np.sum(self.nan_mask[:,i,j])**2. / self.property_dict["moment0"][0][i,j]**2.
                 error_array[i,j] = np.sqrt(first_err_term + second_err_term)
 
         self.property_dict["linewidth"] = linewidth_array, error_array
@@ -152,7 +153,7 @@ class property_arrays(object):
         first_err_term = self.sigma**2. * np.sqrt(np.sum(physical_weights * (self.clean_cube>0) * self.nan_mask, axis=0)) / self.property_dict["moment0"][0]**2.
         second_err_term = self.property_dict["moment0"][1]**2. / self.property_dict["moment0"][0]**2.
         cent_error_array = np.sqrt(first_err_term + second_err_term)
-        cent_error_array *= self.noise_mask
+        # cent_error_array *= self.noise_mask
 
         self.property_dict["centroid"] = (self.property_dict["centroid"][0] * vel_pix_division) + \
                                             reference_velocity - (vel_pix_division * self.header["CRPIX3"]), \
@@ -289,7 +290,14 @@ def __sigma__(data_cube, clip_level):
 def moment_masking(data_cube, clip_level, kernel_size):
     sigma_orig = __sigma__(data_cube, clip_level)
 
-    smooth_cube = nd.gaussian_filter(data_cube, kernel_size, mode="mirror")
+    if np.isnan(data_cube).any():
+        from astropy.convolution import convolve
+        print "Using astropy to convolve over nans"
+        kernel = gauss_kern(kernel_size, ysize=kernel_size, zsize=kernel_size)
+        smooth_cube = convolve(data_cube, kernel, normalize_kernel=True)
+    else:
+        smooth_cube = nd.gaussian_filter(data_cube, kernel_size, mode="mirror")
+
     sigma_smooth = __sigma__(smooth_cube, clip_level)
 
     mask_cube = smooth_cube > (clip_level * sigma_smooth)
@@ -299,9 +307,9 @@ def moment_masking(data_cube, clip_level, kernel_size):
 
     noise_cube = np.invert(mask_cube, dtype=bool) * data_cube
 
-    noise_array = np.max(np.abs(noise_cube), axis=0)
+    # noise_array = np.max(noise_cube, axis=0)
 
-    return (mask_cube * data_cube), noise_array, sigma_orig
+    return (mask_cube * data_cube), mask_cube, sigma_orig
 
 def pad_wrapper(array, boundary_size=5):
 
@@ -310,10 +318,26 @@ def pad_wrapper(array, boundary_size=5):
     reduced_array = array[boundary_size : xshape - boundary_size, boundary_size : yshape - boundary_size]
     pass
 
+def gauss_kern(size, ysize=None, zsize=None):
+    """ Returns a normalized 3D gauss kernel array for convolutions """
+    size = int(size)
+    if not ysize:
+        ysize = size
+    else:
+        ysize = int(ysize)
+    if not zsize:
+        zsize = size
+    else:
+        zsize = int(zsize)
+
+    x, y, z = np.mgrid[-size:size+1, -ysize:ysize+1, -zsize:zsize+1]
+    g = np.exp(-(x**2/float(size)+y**2/float(ysize)+z**2/float(zsize)))
+    return g / g.sum()
 
 if __name__=='__main__':
-  import sys
-  fib(int(sys.argv[1]))
+    pass
+  # import sys
+  # fib(int(sys.argv[1]))
 
   # from astropy.io.fits import getdata
   # cube, header = getdata("filename",header=True)

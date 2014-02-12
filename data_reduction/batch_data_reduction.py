@@ -16,6 +16,12 @@ import shutil
 from datetime import datetime
 
 folder = sys.argv[1]
+noise = sys.argv[2]
+if str(noise) == "None":
+    noise=None
+
+
+
 os.chdir(folder)
 ## Read files in the folder
 data_cubes = [x for x in os.listdir(".") if os.path.isfile(x) and x[-4:]=="fits"]
@@ -35,10 +41,11 @@ for fitscube in data_cubes:
     try:
         os.makedirs(fitscube[:-5])
     except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            logfile.write(OSError)
-            logfile.close()
-            raise
+        pass
+    #     if exception.errno != errno.EEXIST:
+    #         logfile.write(OSError)
+    #         logfile.close()
+    #         raise
 
 
     shutil.move(fitscube, fitscube[:-5])
@@ -51,7 +58,7 @@ for fitscube in data_cubes:
     # elif np.isnan(cube.sum(axis=0)[cube.shape[1],:]).shape[1] == cube.shape[1]:
     cube[:,cube.shape[1]-1,:] = cube[:,0,:]
 
-    reduction = property_arrays((cube,header), rms_noise=0.001, save_name=fitscube[:-5])
+    reduction = property_arrays((cube,header), rms_noise=noise, kernel_size=10, save_name=fitscube[:-5])
 
     reduction.return_all()
 
