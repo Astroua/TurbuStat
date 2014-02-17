@@ -10,7 +10,7 @@ import numpy as np
 
 class SCF(object):
     """docstring for SCF"""
-    def __init__(self, cube, size=11):
+    def __init__(self, cube, size=11, weighted=True):
         super(SCF, self).__init__()
         self.cube = cube
         if size%2==0:
@@ -18,9 +18,10 @@ class SCF(object):
             self.size = size - 1
         else:
             self.size = size
+        self.weighted = weighted
+
 
         self.scf_surface = np.zeros((self.size, self.size))
-        self.dist = None
 
     def compute_scf(self):
         '''
@@ -30,7 +31,11 @@ class SCF(object):
         dy = np.arange(self.size)-self.size/2
 
         a,b = np.meshgrid(dx,dy)
-        self.dist = np.sqrt(a**2+b**2)
+        if self.weighted:
+            dist_weight = 1/np.sqrt(a**2+b**2)
+            dist_weight[~np.isfinite(dist_weight)] = 1.0 # Centre pixel set to 1
+        else:
+            dist_weight = np.ones((self.size, self.size))
 
         for i in dx:
             for j in dy:
@@ -40,7 +45,8 @@ class SCF(object):
                                     (np.nansum(self.cube**2,axis=0) + np.nansum(tmp**2,axis=0))
 
                 scf_value = 1. - np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self.scf_surface[i+self.size/2,j+self.size/2] = scf_value
+                self.scf_surface[i+self.size/2,j+self.size/2] = scf_value *\
+                                 dist_weight[i+self.size/2,j+self.size/2]
 
         return self
 
