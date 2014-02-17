@@ -99,10 +99,18 @@ def intensity_data(cube, p=0.25):
     '''
     vec_length = round(p*cube.shape[1]*cube.shape[2])
     intensity_vecs = np.empty((cube.shape[0], vec_length))
+    cube[np.isnan(cube)] = 0.0
     for dv in range(cube.shape[0]):
         vel_vec = cube[dv,:,:].ravel()
         vel_vec.sort()
-        ## Return the normalized, shortened vector
-        intensity_vecs[dv,:] = vel_vec[:vec_length]/np.max(vel_vec[:vec_length]) #
+        if len(vel_vec)<vec_length:
+            diff = vec_length - len(vel_vec)
+            vel_vec = np.append(vel_vec, [0.0]*diff)
 
+        ## Return the normalized, shortened vector
+        maxval = np.max(vel_vec[:vec_length])
+        if maxval != 0.0:
+            intensity_vecs[dv,:] = vel_vec[:vec_length]/maxval
+        else:
+            intensity_vecs[dv,:] = vel_vec[:vec_length] ## Vector of zeros
     return intensity_vecs

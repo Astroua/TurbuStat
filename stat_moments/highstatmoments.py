@@ -64,32 +64,40 @@ class StatMoments(object):
         for i in range(self.radius,pad_img.shape[0]-self.radius):
             for j in range(self.radius,pad_img.shape[1]-self.radius):
                 img_slice = pad_img[i-self.radius:i+self.radius+1,j-self.radius:j+self.radius+1]
-                img_slice = img_slice*circle_mask
 
-                moments = compute_moments(img_slice)
+                if np.isnan(img_slice).all():
+                    self.mean_array[i-self.radius,j-self.radius] = np.NaN
+                    self.variance_array[i-self.radius,j-self.radius] = np.NaN
+                    self.skewness_array[i-self.radius,j-self.radius] = np.NaN
+                    self.kurtosis_array[i-self.radius,j-self.radius] = np.NaN
 
-                self.mean_array[i-self.radius,j-self.radius] = moments[0]
-                self.variance_array[i-self.radius,j-self.radius] = moments[1]
-                self.skewness_array[i-self.radius,j-self.radius] = moments[2]
-                self.kurtosis_array[i-self.radius,j-self.radius] = moments[3]
+                else:
+                    img_slice = img_slice*circle_mask
+
+                    moments = compute_moments(img_slice)
+
+                    self.mean_array[i-self.radius,j-self.radius] = moments[0]
+                    self.variance_array[i-self.radius,j-self.radius] = moments[1]
+                    self.skewness_array[i-self.radius,j-self.radius] = moments[2]
+                    self.kurtosis_array[i-self.radius,j-self.radius] = moments[3]
 
         return self
 
     def make_spatial_histograms(self):
         # Mean
-        mean_hist, edges = np.histogram(self.mean_array, self.bin_num, density=True)
+        mean_hist, edges = np.histogram(self.mean_array[~np.isnan(self.mean_array)], self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.mean_hist = [bin_centres, mean_hist]
         # Variance
-        variance_hist, edges = np.histogram(self.variance_array, self.bin_num, density=True)
+        variance_hist, edges = np.histogram(self.variance_array[~np.isnan(self.variance_array)], self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.variance_hist = [bin_centres, variance_hist]
         # Skewness
-        skewness_hist, edges = np.histogram(self.skewness_array, self.bin_num, density=True)
+        skewness_hist, edges = np.histogram(self.skewness_array[~np.isnan(self.skewness_array)], self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.skewness_hist = [bin_centres, skewness_hist]
         # Kurtosis
-        kurtosis_hist, edges = np.histogram(self.kurtosis_array, self.bin_num, density=True)
+        kurtosis_hist, edges = np.histogram(self.kurtosis_array[~np.isnan(self.kurtosis_array)], self.bin_num, density=True)
         bin_centres = (edges[:-1] + edges[1:])/2
         self.kurtosis_hist = [bin_centres, kurtosis_hist]
 
@@ -200,6 +208,8 @@ def kl_divergence(P, Q):
     P,Q - array
           Two Discrete Probability distributions
     '''
+    P = P[~np.isnan(P)]
+    Q = Q[~np.isnan(Q)]
     P = P[np.isfinite(P)]
     Q = Q[np.isfinite(Q)]
     return np.nansum(np.where(Q!=0, P*np.log(P / Q), 0))

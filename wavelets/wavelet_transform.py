@@ -50,6 +50,9 @@ class wt2D(object):
         self.scales = scales
         self.wavelet = wavelet
 
+        ### HEY YOU YOOK OUT NANS HERE ###
+        self.array[np.isnan(self.array)] = 0.0
+
         self.nan_flag = False
         if np.isnan(self.array).any():
             self.nan_flag = True
@@ -118,7 +121,7 @@ class wt2D(object):
 
 
     def astropy_cwt2d(self, dx=None, dy=None):
-        from astropy.convolution import convolve_fft, MexicanHat2DKernel
+        from astropy.convolution import convolve_fft, MexicanHat2DKernel, convolve
 
         try:
             from scipy.fftpack import fftn, ifftn
@@ -132,7 +135,7 @@ class wt2D(object):
             assert isinstance(dy, list)
             self.dx = dy
 
-        n0, m0 = self.data.shape
+        n0, m0 = self.array.shape
         N, M = 2 ** int(np.ceil(np.log2(n0))), 2 ** int(np.ceil(np.log2(m0)))
         if self.scales == None:
             self.scales = 2 ** np.arange(int(np.floor(np.log2(min(n0, m0)))))
@@ -140,9 +143,12 @@ class wt2D(object):
 
         self.Wf = np.zeros((A, N, M), 'complex')
 
-        for i, an in enumerate(a):
+        for i, an in enumerate(self.scales):
             psi = MexicanHat2DKernel(an, x_size=n0,y_size=m0)
-            self.Wf[i, :, :] = convolve_fft(data, psi, interpolate_nan=True, normalize_kernel=True,fftn=fftn, ifftn=ifftn)
+            self.Wf[i, :, :] = convolve_fft(self.array, psi, interpolate_nan=True, normalize_kernel=False,\
+                                            fftn=fftn, ifftn=ifftn)
+
+        self.Wf = self.Wf[:, :n0, :m0]
 
         return self
 
@@ -220,7 +226,7 @@ class Wavelet_Distance(object):
                If no distance is provided, pixel units are used.
     """
 
-    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(), distance=None,scales=None, num=500, dx=0.25, dy=0.25, \
+    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(), distance=None,scales=None, num=50, dx=0.25, dy=0.25, \
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 

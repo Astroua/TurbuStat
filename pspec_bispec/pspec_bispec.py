@@ -23,6 +23,9 @@ class PowerSpectrum(object):
     def __init__(self, img, header):
         super(PowerSpectrum, self).__init__()
         self.img = img
+        ## Get rid of nans
+        self.img[np.isnan(self.img)] = 0.0
+
         self.header = header
         self.degperpix = np.abs(header["CDELT2"])
 
