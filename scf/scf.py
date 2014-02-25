@@ -32,8 +32,10 @@ class SCF(object):
 
         a,b = np.meshgrid(dx,dy)
         if self.weighted:
+            # Centre pixel set to 1
+            a[np.where(a==0)] = 1.
+            b[np.where(b==0)] = 1.
             dist_weight = 1/np.sqrt(a**2+b**2)
-            dist_weight[~np.isfinite(dist_weight)] = 1.0 # Centre pixel set to 1
         else:
             dist_weight = np.ones((self.size, self.size))
 
