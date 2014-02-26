@@ -24,71 +24,71 @@ dataset2 = fromfits(folder2, keywords, verbose=False)
 
 ## Wavelet Transform
 
-from wavelets import Wavelet_Distance
+from wavelets import Wavelet_Distance#
 
-wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
+wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)#
 
-print "Wavelet Distance: %s" % (wavelet_distance.distance)
+print "Wavelet Distance: %s" % (wavelet_distance.distance)#
 
-## MVC
+## MVC#
 
-from mvc import MVC_distance
+from mvc import MVC_distance#
 
-mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)
+mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)#
 
-print "MVC Distance: %s" % (mvc_distance.distance)
+print "MVC Distance: %s" % (mvc_distance.distance)#
 
-## Spatial Power Spectrum/ Bispectrum
+## Spatial Power Spectrum/ Bispectrum#
 
-from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
+from pspec_bispec import PSpec_Distance, BiSpectrum_Distance#
 
-pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
+pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)#
 
-print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
+print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)#
 
-bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
+bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)#
 
-print "Bispectrum Distance: %s" % (bispec_distance.distance)
+print "Bispectrum Distance: %s" % (bispec_distance.distance)#
 
-## Genus
+## Genus#
 
-from genus import GenusDistance
+from genus import GenusDistance#
 
-genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
+genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)#
 
-print "Genus Distance: %s" % (genus_distance.distance)
+print "Genus Distance: %s" % (genus_distance.distance)#
 
-## Delta-Variance
+## Delta-Variance#
 
-from delta_variance import DeltaVariance_Distance
+from delta_variance import DeltaVariance_Distance#
 
 delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0],
             dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"][0],
-            dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
+            dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)#
 
-print "Delta-Variance Distance: %s" % (delvar_distance.distance)
+print "Delta-Variance Distance: %s" % (delvar_distance.distance)#
 
-## VCA/VCS
+## VCA/VCS#
 
-from vca_vcs import VCA_Distance, VCS_Distance
+from vca_vcs import VCA_Distance, VCS_Distance#
 
-vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
+vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)#
 
-print "VCS Distance: %s" % (vcs_distance.distance)
+print "VCS Distance: %s" % (vcs_distance.distance)#
 
-vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
+vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)#
 
-print "VCA Distance: %s" % (vca_distance.distance)
+print "VCA Distance: %s" % (vca_distance.distance)#
 
-## Tsallis
+## Tsallis#
 
-from tsallis import Tsallis_Distance
+from tsallis import Tsallis_Distance#
 
-tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
+tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)#
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
-## High-order stats
+# High-order stats
 
 from stat_moments import StatMomentsDistance
 

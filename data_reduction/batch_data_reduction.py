@@ -58,7 +58,7 @@ for fitscube in data_cubes:
     # elif np.isnan(cube.sum(axis=0)[cube.shape[1],:]).shape[1] == cube.shape[1]:
     cube[:,cube.shape[1]-1,:] = cube[:,0,:]
 
-    reduction = property_arrays((cube,header), rms_noise=noise, kernel_size=10, save_name=fitscube[:-5])
+    reduction = property_arrays((cube,header), rms_noise=0.001, kernel_size=10, save_name=fitscube[:-5])
 
     reduction.return_all()
 
