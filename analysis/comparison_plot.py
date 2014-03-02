@@ -27,6 +27,19 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
 
     data_files = [os.path.join(path,x) for x in os.listdir(path) if os.path.isfile(os.path.join(path,x)) \
                   and x[-2:]=="h5"]
+
+    ## Sort such that the Fiducials are properly labeled
+    for i in np.arange(1,7):
+        if i==1:
+            sorted_files = [f for f in data_files if f[-25]==str(i)]
+        else:
+            sorted_files.extend([f for f in data_files if f[-25]==str(i)])
+    sorted_files.extend([f for f in data_files if f[-48:-45]=="fid"])
+
+    assert len(data_files) == len(sorted_files)
+
+    data_files = sorted_files
+
     if len(data_files)==0:
         print "The inputed path contains no HDF5 files."
         return None
@@ -57,7 +70,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
             ## Face 0 to 0
             if data[-23:-20]=="0_0":
                 if data.split("/")[-1][:8]=="fiducial":
-                    num_fids = inverse_factorial(datum.shape[0])
+                    num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
                     for j in np.arange(num_fids,0, -1):
@@ -66,11 +79,11 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
 
                 else:
                     data_face0_0.append(datum.sort(axis=0))
-                    num_sims += 1
+                    num_sims = datum.shape[0]
             ## Face 2 to 2
             elif data[-23:-20]=="2_2":
                 if data.split("/")[-1][:8]=="fiducial":
-                    num_fids = inverse_factorial(datum.shape[0])
+                    num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
                     for j in np.arange(num_fids,0, -1):
@@ -78,11 +91,10 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
                         j_last = j
                 else:
                     data_face2_2.append(datum.sort(axis=0))
-                    num_sims += 1
             ## Face 0 to 2
             elif data[-23:-20]=="0_2":
                 if data.split("/")[-1][:8]=="fiducial":
-                    num_fids = inverse_factorial(datum.shape[0])
+                    num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
                     for j in np.arange(num_fids,0, -1):
@@ -93,7 +105,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
             ## Face 2 to 0
             elif data[-23:-20]=="2_0":
                 if data.split("/")[-1][:8]=="fiducial":
-                    num_fids = inverse_factorial(datum.shape[0])
+                    num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
                     for j in np.arange(num_fids,0, -1):
@@ -111,12 +123,13 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         xtick_labels = ["Design "+str(num) for num in range(1,num_sims+1)]
         xtick_labels = xtick_labels + labels[:-1]
 
-        colours = cm.rainbow(np.linspace(0, 1, len(data_face0_0)+3))
+        colours = cm.rainbow(np.linspace(0, 1, num_fids+1))
         ax1 = p.subplot(2,2,1)
-        for i, (df, col) in enumerate(zip(data_face0_0,colours[:num_sims+1])):
+
+        for i, (df, col) in enumerate(zip(data_face0_0,colours)):
             p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face0_0, colours[:3])):
+        for i, (df, col)in enumerate(zip(fid_data_face0_0, colours)):
             p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
                      color=col, label=labels[i+1])
         p.title("Face 0 to 0")
@@ -128,10 +141,10 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         ax2 = p.subplot(2,2,2)
         ax2.yaxis.tick_right()
         ax2.yaxis.set_label_position("right")
-        for i, (df, col) in enumerate(zip(data_face2_2,colours[:num_sims+1])):
+        for i, (df, col) in enumerate(zip(data_face2_2,colours)):
             p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face2_2, colours[:3])):
+        for i, (df, col)in enumerate(zip(fid_data_face2_2, colours)):
             p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
                      color=col, label=labels[i+1])
         p.title("Face 2 to 2")
@@ -141,10 +154,10 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         p.ylabel(stat+" Distance")
 
         ax3 = p.subplot(2,2,3)
-        for i, (df, col) in enumerate(zip(data_face0_2,colours[:num_sims+1])):
+        for i, (df, col) in enumerate(zip(data_face0_2,colours)):
             p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face0_2, colours[:3])):
+        for i, (df, col)in enumerate(zip(fid_data_face0_2, colours)):
             p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
                      color=col, label=labels[i+1])
         p.title("Face 0 to 2")
@@ -156,10 +169,10 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         ax4 = p.subplot(2,2,4)
         ax4.yaxis.tick_right()
         ax4.yaxis.set_label_position("right")
-        for i, (df, col) in enumerate(zip(data_face2_0,colours[:num_sims+1])):
+        for i, (df, col) in enumerate(zip(data_face2_0,colours)):
             p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face2_0, colours[:3])):
+        for i, (df, col)in enumerate(zip(fid_data_face2_0, colours)):
             p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
                      color=col, label=labels[i+1])
         p.title("Face 2 to 0")
@@ -215,3 +228,27 @@ def inverse_factorial(n):
         if x>n:
             return "n must be a valid whole number."
     return x
+
+def num_fiducials(N):
+    '''
+
+    Return the number of fiducials based on the number of lines in the
+    comparison file.
+
+    Parameters
+    **********
+
+    N : int
+        Number of rows in the data frame.
+
+    '''
+
+    n = 1
+
+    while n<N:
+        if n*(n-1) == 2*N:
+            return n-1
+        else:
+            n += 1
+
+    return "Doesn't factor into an integer value."
