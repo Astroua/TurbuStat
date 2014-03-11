@@ -147,8 +147,3 @@ def append_to_hdf5(filename, new_data, col_label):
 
   store.close()
 
-
-
-if __name__=='__main__':
-  import sys
-  fib(int(sys.argv[1]))

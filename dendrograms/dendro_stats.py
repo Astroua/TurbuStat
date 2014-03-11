@@ -15,160 +15,133 @@ import numpy as np
 from matplotlib import pyplot as p
 import matplotlib.cm as cm
 import os
+from pandas import HDFStore, Series, DataFrame
+import statsmodels.formula.api as sm
+from scipy.stats import nanmean, nanstd
+
+class DendroDistance(object):
+    """docstring for DendroDistance"""
+    def __init__(self, file1, file2, timestep):
+        super(DendroDistance, self).__init__()
 
 
-class DendroStats(object):
-    """
+        self.file1 = HDFStore(file1)
+        self.file2 = HDFStore(file2)
 
-    docstring for DendroStats
+        if timestep != "/": ## Saving in HDF5 adds this to the beginning
+            timestep = "/"+timestep
 
-    Parameters
-    **********
-
-    save : bool, optional
-          Sets whether each dendrogram should be saved (in HDF5). If True,
-          dendrograms are loaded in only when needed. If False, the entire
-          dendrogram is kept open.
-
-    """
-    def __init__(self, cube, header, deltas=None, save=True, save_name=None, \
-                 save_path=None, verbose=True):
-        super(DendroStats, self).__init__()
-        self.cube = cube
-        self.header = header
-        self.save = save
-
-        self.dendrograms = {}
-
-        if deltas is None:
-            pass
-            ## define some criterion to set uniform delta values to test
-        else:
-            assert isinstance(deltas, np.ndarray)
-            self.deltas = deltas
-
-        if self.save:
-            if save_name is None:
-                print "Specify save name for dendrogram output. Set to \
-                        generic name with header's object name if available."
-                try:
-                    save_name = header["OBJECT"]
-                except KeyError:
-                    print "No object name found in the header."
-                    save_name = "generic_savename"
+        assert timestep in self.file1.keys()
+        assert timestep in self.file2.keys()
 
 
-        for delta in self.deltas:
-            dendro_file = load_dendro(delta, save_name, save_path=save_path)
-            if save:
-                if dendro_file is None:
-                    self.dendrograms[delta] = compute_dendro(cube, header, delta,
-                                     save=save, save_name=save_name, save_path=save_path, verbose=verbose)
-                else:
-                    self.dendrograms[delta] = dendro_file
-            else:
-                if dendro_file is None:
-                    self.dendrograms[delta] = compute_dendro(cube, header, delta,
-                                     save=save, save_name=save_name, save_path=save_path, verbose=verbose)
-                else:
-                    self.dendrograms[delta] = Dendrogram.load_from(dendro_file)
+        self.file1 = self.file1[timestep]
+        self.file2 = self.file2[timestep]
 
+        assert (self.file1["Deltas"] == self.file2["Deltas"]).all()
+        self.deltas = self.file1["Deltas"]
 
-        self.num_features = np.empty((1, max(self.deltas.shape)))
-        self.histogram = {}
+        self.moments1 = {"mean": [], "variance": [], "skewness": [], "kurtosis": []}
+        self.moments2 = {"mean": [], "variance": [], "skewness": [], "kurtosis": []}
+        self.numdata1 = None
+        self.numdata2 = None
 
+        self.num_results = None
+        self.num_distance = None
+        self.hist_distance = None
 
-
-    def num_features(self):
+    def numfeature_stat(self, verbose=False):
+        '''
         '''
 
-        Compute the number of leaves and branches in a dendrogram at all
-        specified values of delta.
+        numdata1 = np.asarray([np.log10(self.deltas), np.log10(self.file1["Num Features"])])
+        numdata2 = np.asarray([np.log10(self.deltas), np.log10(self.file2["Num Features"])])
 
+        self.numdata1 = np.log10(self.file1["Num Features"].ix[np.where(np.log10(self.deltas)>-0.9)])
+        self.numdata2 = np.log10(self.file2["Num Features"].ix[np.where(np.log10(self.deltas)>-0.9)])
+        clip_delta = self.deltas.ix[np.where(np.log10(self.deltas)>-0.9)]
+        ## Set up columns for regression
+        dummy = [0] * len(clip_delta) + [1] * len(clip_delta)
+        x = np.concatenate((np.log10(clip_delta), np.log10(clip_delta)))
+        regressor = x.T * dummy
+        constant = np.array([[1] * (len(clip_delta) + len(clip_delta))])
+
+        numdata = np.concatenate((np.log10(self.numdata1), np.log10(self.numdata2)))
+
+        d = {"dummy": Series(dummy), "scales": Series(x), "log_numdata": Series(numdata), \
+             "regressor": Series(regressor)}
+
+        df = DataFrame(d)
+
+        model = sm.ols(formula = "log_numdata ~ dummy + scales + regressor", data = df)
+
+        self.num_results = model.fit()
+
+        self.num_distance = np.abs(self.num_results.tvalues["regressor"])
+
+        if verbose:
+
+            print self.num_results.summary()
+
+            import matplotlib.pyplot as p
+            p.plot(np.log10(clip_delta), np.log10(self.numdata1), "bD", \
+                    np.log10(clip_delta), np.log10(self.numdata2), "gD")
+            p.plot(df["scales"][:len(self.numdata1)], self.num_results.fittedvalues[:len(self.numdata1)], "b", \
+                   df["scales"][-len(self.numdata2):], self.num_results.fittedvalues[-len(self.numdata2):], "g")
+            p.grid(True)
+            p.xlabel(r"log $\delta$")
+            p.ylabel("log Number of Features")
+            p.show()
+
+    def histogram_stat(self, verbose=False):
+        '''
         '''
 
-        for delta, i in enumerate(self.deltas):
-            if self.save:
-               d  = Dendrogram.load_from(self.dendrograms[delta])
-            else:
-                d = self.dendrograms[delta]
+        for hist1, hist2 in zip(self.file1["Histograms"], self.file2["Histograms"]):
 
-            self.num_features[:,i] = d.__len__()
+            mean1, var1, skew1, kurt1 = compute_moments(hist1)
+            mean2, var2, skew2, kurt2 = compute_moments(hist2)
 
-        return self
+            self.moments1["mean"].append(mean1)
+            self.moments1["variance"].append(var1)
+            self.moments1["skewness"].append(skew1)
+            self.moments1["kurtosis"].append(kurt1)
 
-    def make_histogram(self):
-        '''
-
-        Returns a histogram of the intensities of the leaves and branches.
-
-        '''
-
-        for delta, i in enumerate(self.deltas):
-            if self.save:
-               d  = Dendrogram.load_from(self.dendrograms[delta])
-            else:
-                d = self.dendrograms[delta]
-
-            self.histogram[delta] =[value.vmax for value in d.branches]
-            self.histogram[delta].extend([value.vmax for value in d.leaves])
-
-
-        return self
-
-    def run(self, verbose=False):
-
-        self.num_features()
-        self.make_histogram()
+            self.moments2["mean"].append(mean2)
+            self.moments2["variance"].append(var2)
+            self.moments2["skewness"].append(skew2)
+            self.moments2["kurtosis"].append(kurt2)
 
         if verbose:
             import matplotlib.pyplot as p
-            colours = cm.rainbow(np.linspace(0, 1, num_fids+1))
-            p.subplot(2,1,1)
-            for delta,i in enumerate(deltas):
-                p.hist(self.histogram[delta], colours[i], bins=50, label=str(delta))
-            p.legend()
 
-            p.subplot(2,1,2)
-            p.plot(self.deltas, self.num_features, "kD-")
-
-            p.show
+            for i, key in enumerate(self.moments1.keys()):
+                p.subplot(2,2,i+1)
+                p.title(key)
+                p.xlabel("Delta")
+                p.ylabel(key)
+                p.plot(self.deltas, self.moments1[key], "bD-")
+                p.plot(self.deltas, self.moments2[key], "gD-")
+            p.show()
 
         return self
 
+    def distance_metric(self, verbose=False):
+        '''
+        '''
 
-def compute_dendro(cube, header, delta, save_name, verbose=False, save=True,\
-                   save_path=None): ## Pass **kwargs into Dendrogram class??
-    '''
+        self.numfeature_stat(verbose=verbose)
+        self.histogram_stat(verbose=verbose)
 
-    Computes a dendrogram and (optional) save it in HDF5 format.
+        return self
 
-    '''
-    dendrogram = Dendrogram.compute(cube, min_delta=delta, verbose=verbose, min_value=0.25, min_npix=10)
+def compute_moments(pdf):
 
-    if save:
-        dendrogram.save_to(save_name+"_"+str(delta)+"_dendrogram.hdf5")
+    mean = nanmean(pdf, axis=None)
+    variance = nanstd(pdf, axis=None)**2.
+    skewness = np.nansum(((pdf - mean)/np.sqrt(variance))**3.)/np.sum(~np.isnan(pdf))
+    kurtosis = np.nansum(((pdf - mean)/np.sqrt(variance))**4.)/np.sum(~np.isnan(pdf)) - 3
 
-        return os.path.join(save_path, save_name+"_"+str(delta)+"_dendrogram.hdf5")
+    return mean, variance, skewness, kurtosis
 
-    return dendrogram
-
-def load_dendro(delta, save_name, save_path=None):
-    '''
-
-    Returns the file name if the file exists.
-
-    '''
-
-    if save_path is None:
-        save_path = ""
-
-    if save_name+"_"+str(delta)+"_dendrogram.hdf5" in os.listdir(save_path):
-        dendrogram_files = os.join(save_path, save_name+"_"+str(delta)+"_dendrogram.hdf5")
-        return dendrogram_file
-    else:
-        return None
-
-def is_individual():
-        pass
 
