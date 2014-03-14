@@ -10,7 +10,7 @@ import numpy as np
 
 class SCF(object):
     """docstring for SCF"""
-    def __init__(self, cube, size=11, weighted=True):
+    def __init__(self, cube, size=11):
         super(SCF, self).__init__()
         self.cube = cube
         if size%2==0:
@@ -27,17 +27,6 @@ class SCF(object):
         '''
 
         '''
-        dx = np.arange(self.size)-self.size/2
-        dy = np.arange(self.size)-self.size/2
-
-        a,b = np.meshgrid(dx,dy)
-        if self.weighted:
-            # Centre pixel set to 1
-            a[np.where(a==0)] = 1.
-            b[np.where(b==0)] = 1.
-            dist_weight = 1/np.sqrt(a**2+b**2)
-        else:
-            dist_weight = np.ones((self.size, self.size))
 
         for i in dx:
             for j in dy:
@@ -47,8 +36,7 @@ class SCF(object):
                                     (np.nansum(self.cube**2,axis=0) + np.nansum(tmp**2,axis=0))
 
                 scf_value = 1. - np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self.scf_surface[i+self.size/2,j+self.size/2] = scf_value *\
-                                 dist_weight[i+self.size/2,j+self.size/2]
+                self.scf_surface[i+self.size/2,j+self.size/2] = scf_value
 
         return self
 
@@ -71,11 +59,12 @@ class SCF(object):
 
 class SCF_Distance(object):
     """docstring for SCF_Distance"""
-    def __init__(self, cube1, cube2, size=11, fiducial_model=None):
+    def __init__(self, cube1, cube2, size=11, fiducial_model=None, weighted=True):
         super(SCF_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
         self.size = size
+        self.weighted = weighted
 
         if fiducial_model is not None:
             self.scf1 = fiducial_model
@@ -91,7 +80,19 @@ class SCF_Distance(object):
 
     def distance_metric(self, verbose=False):
 
-        difference = (self.scf1.scf_surface - self.scf2.scf_surface)**2.
+        dx = np.arange(self.size)-self.size/2
+        dy = np.arange(self.size)-self.size/2
+
+        a,b = np.meshgrid(dx,dy)
+        if self.weighted:
+            # Centre pixel set to 1
+            a[np.where(a==0)] = 1.
+            b[np.where(b==0)] = 1.
+            dist_weight = 1/np.sqrt(a**2+b**2)
+        else:
+            dist_weight = np.ones((self.size, self.size))
+
+        difference = ((self.scf1.scf_surface - self.scf2.scf_surface)*dist_weight)**2.
         self.distance = np.sqrt(np.nansum(difference)/np.sum(np.isfinite(difference)))
 
         if verbose:
