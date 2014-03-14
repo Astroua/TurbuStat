@@ -18,7 +18,6 @@ class SCF(object):
             self.size = size - 1
         else:
             self.size = size
-        self.weighted = weighted
 
 
         self.scf_surface = np.zeros((self.size, self.size))
@@ -27,6 +26,9 @@ class SCF(object):
         '''
 
         '''
+
+        dx = np.arange(self.size)-self.size/2
+        dy = np.arange(self.size)-self.size/2
 
         for i in dx:
             for j in dy:
