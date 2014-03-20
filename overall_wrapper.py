@@ -24,67 +24,67 @@ dataset2 = fromfits(folder2, keywords, verbose=False)
 
 ## Wavelet Transform
 
-from wavelets import Wavelet_Distance#
+from wavelets import Wavelet_Distance
 
-wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)#
+wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
-print "Wavelet Distance: %s" % (wavelet_distance.distance)#
+print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
 ## MVC#
 
-from mvc import MVC_distance#
+from mvc import MVC_distance
 
-mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)#
+mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)
 
-print "MVC Distance: %s" % (mvc_distance.distance)#
+print "MVC Distance: %s" % (mvc_distance.distance)
 
 ## Spatial Power Spectrum/ Bispectrum#
 
-from pspec_bispec import PSpec_Distance, BiSpectrum_Distance#
+from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
 
-pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)#
+pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
 
-print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)#
+print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
-bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)#
+bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
-print "Bispectrum Distance: %s" % (bispec_distance.distance)#
+print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
 ## Genus#
 
-from genus import GenusDistance#
+from genus import GenusDistance
 
-genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)#
+genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
-print "Genus Distance: %s" % (genus_distance.distance)#
+print "Genus Distance: %s" % (genus_distance.distance)
 
-## Delta-Variance#
+## Delta-Variance
 
-from delta_variance import DeltaVariance_Distance#
+from delta_variance import DeltaVariance_Distance
 
 delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0],
             dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"][0],
-            dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)#
+            dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
 
-print "Delta-Variance Distance: %s" % (delvar_distance.distance)#
+print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
 ## VCA/VCS#
 
-from vca_vcs import VCA_Distance, VCS_Distance#
+from vca_vcs import VCA_Distance, VCS_Distance
 
-vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)#
+vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
 
-print "VCS Distance: %s" % (vcs_distance.distance)#
+print "VCS Distance: %s" % (vcs_distance.distance)
 
-vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)#
+vca_distance = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
 
-print "VCA Distance: %s" % (vca_distance.distance)#
+print "VCA Distance: %s" % (vca_distance.distance)
 
 ## Tsallis#
 
-from tsallis import Tsallis_Distance#
+from tsallis import Tsallis_Distance
 
-tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)#
+tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
@@ -121,3 +121,21 @@ from cramer import Cramer_Distance
 cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
 
 print "Cramer Distance: %s" % (cramer_distance.distance)
+
+## Dendrogram Stats
+
+from dendrograms import DendroDistance
+
+import os
+ ## This one just reads from a saved HDF file, so we need some adjustments first
+path1 = "/".join(folder1.split("/")[:-2])
+path2 = "/".join(folder2.split("/")[:-2])
+
+file1 = [os.path.join(path1, x) for x in os.listdir(path1) if x[-2:]=="h5"][0]
+file2 = [os.path.join(path2,x) for x in os.listdir(path2) if x[-2:]=="h5"][0]
+timestep = folder1[-9:-1]
+
+dendro_distance= DendroDistance(file1, file2, timestep).distance_metric(verbose=True)
+
+print dendro_distance.num_distance
+print dendro_distance.histogram_distance

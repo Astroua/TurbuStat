@@ -39,17 +39,14 @@ from scf import SCF_Distance
 
 from cramer import Cramer_Distance
 
+from dendrograms import DendroDistance
+
 ## Wrapper function
-def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False):
+def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False, filenames=None):
 
     if statistics is None: #Run them all
         statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                   "Cramer","Skewness", "Kurtosis", "SCF", "PCA"]
-    # if any("Skewness" in s for s in statistics):
-    #     # There will be an indexing
-    #     # issue without this. This the lazy fix.
-    #     index = statistics.index("Skewness")
-    #     statistics.insert(len(statistics), statistics.pop(index))
+                   "Cramer","Skewness", "Kurtosis", "SCF", "PCA", "Dendrogram_Hist", "Dendrogram_Num"]
 
     distances = {}
 
@@ -123,6 +120,18 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
+        if any("Dendrogram_Hist" in s for s in statistics) or any("Dendrogram_Num" in s for s in statistics):
+            ## This needs the same naming convention as prescribed in dendrograms/compute_dendro.py
+            ## B/c of how intensive the computing for this statistic is, I have them setup to run separately
+            ## and the results are simply read from the save file here.
+            file1 = "/".join(filenames[0].split("/")[:-1])+"/"+filenames[0].split("/")[-2]+"_dendrostats.h5"
+            file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
+            timestep = filenames[0][-8:]
+
+            moment_distance = DendroDistance(file1, file2, timestep).distance_metric()
+            distances["Dendrogram_Hist"] = moment_distance.histogram_distance
+            distances["Dendrogram_Num"] = moment_distance.num_distance
+
         if multicore:
             return distances
         else:
@@ -194,6 +203,17 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
+        if any("Dendrogram_Hist" in s for s in statistics) or any("Dendrogram_Num" in s for s in statistics):
+            ## This needs the same naming convention as prescribed in dendrograms/compute_dendro.py
+            ## B/c of how intensive the computing for this statistic is, I have them setup to run separately
+            ## and the results are simply read from the save file here.
+            file1 = filenames[0].split("/")[0]+"_dendrostats.h5"
+            file2 = filenames[1].split("/")[0]+"_dendrostats.h5"
+            timestep = filenames[0][-8:]
+            moment_distance = DendroDistance(file1, file2, timestep).distance_metric()
+            distances["Dendrogram_Hist"] = moment_distance.histogram_distance
+            distances["Dendrogram_Num"] = moment_distance.num_distance
+
         return distances
 
 def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
@@ -204,7 +224,7 @@ def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
     testing_dataset = fromfits(testing_timestep, keywords)
 
     distances = wrapper(fiducial_dataset, testing_dataset, statistics=statistics,
-        multicore=True)
+        multicore=True, filenames=[fiducial_timestep, testing_timestep])
     return distances
 
 def single_input(a):
@@ -212,7 +232,8 @@ def single_input(a):
 
 def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=True, ncores=10, verbose=True):
 
-    fiducial_timesteps = [os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))]
+    fiducial_timesteps = np.sort([os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))])
+
     timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
     if verbose:
@@ -224,7 +245,7 @@ def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=Tru
     distances_storage = np.zeros((len(statistics), len(simulation_runs), len(fiducial_timesteps)))
 
     for i, run in enumerate(simulation_runs):
-        timesteps = [os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))]
+        timesteps = np.sort([os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))])
         if verbose:
             print "On Simulation %s/%s" % (i+1,len(simulation_runs))
             print str(datetime.now())
@@ -269,7 +290,7 @@ if __name__ == "__main__":
     os.chdir(PREFIX)
 
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                  "Cramer", "Skewness", "Kurtosis"]
+                  "Cramer", "Skewness", "Kurtosis", "Dendrogram_Hist", "Dendrogram_Num"]
     print statistics
     num_statistics = len(statistics)
 
@@ -290,10 +311,30 @@ if __name__ == "__main__":
             NCORES = int(sys.argv[5])
 
 
-    if fiducial=="all": # Run all the comparisons of fiducials
+    if fiducial=="fid_comp": # Run all the comparisons of fiducials
+        if INTERACT:
+            cross_comp = bool(raw_input("Cross comparison? ("))
+        else:
+            cross_comp = bool(sys.argv[6])
+            if cross_comp is "F" or "False":
+                cross_comp = False
 
-        fiducials = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==face]
+        if cross_comp:
+            if face=="0":
+                comp_face = "2"
+            elif face=="2":
+                comp_face = "0"
+        else:
+            comp_face = face
+
+        fiducials = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==comp_face]
         fiducials = np.sort(fiducials)
+
+        fiducials_comp = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==face]
+        fiducials_comp = np.sort(fiducials_comp)
+
+        print fiducials_comp
+
         print "Fiducials to compare %s" % (fiducials)
         fiducial_labels = []
         num_comp = (len(fiducials)**2. - len(fiducials))/2 # number of comparisons b/w all fiducials
@@ -302,10 +343,10 @@ if __name__ == "__main__":
         for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1,0,-1)): # no need to loop over the last one
             fid_num = int(fid[-5])
             posn += i
-            partial_distances, timesteps_labels = run_all(fiducials[fid_num-1], fiducials[fid_num:], face, statistics, save_name)
+            partial_distances, timesteps_labels = run_all(fiducials[fid_num-1], fiducials_comp[fid_num:], face, statistics, save_name)
             distances_storage[:,prev:posn,:] = partial_distances
             prev += i
-            fiducial_labels.append([f+"to"+fid for f in fiducials[fid_num:]])
+            fiducial_labels.extend([f+"to"+fid for f in fiducials_comp[fid_num:]])
 
         simulation_runs = fiducial_labels ## consistent naming with non-fiducial case
     else: # Normal case of comparing to single fiducial
@@ -323,8 +364,7 @@ if __name__ == "__main__":
     ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
 
     store = HDFStore("results/"+filename)
-    # simulation_runs = [ u'Fiducial128_3.0.0toFiducial128_2.0.0',\
-                          # u'Fiducial128_4.0.0toFiducial128_2.0.0',]# u'Fiducial128_4.2.0toFiducial128_3.0.0']
+
     for i in range(num_statistics):
         df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
         if statistics[i] in store:
