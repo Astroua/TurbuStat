@@ -17,7 +17,7 @@ import matplotlib.cm as cm
 from pandas import Series, DataFrame
 
 ## Load in utilities. Change to import once installed as package
-execfile("../utilities.py")
+# execfile("../utilities.py")
 
 def DendroStats(path, min_deltas):
     '''
@@ -39,7 +39,7 @@ def DendroStats(path, min_deltas):
 
         numfeatures.append(d.__len__())
         histograms.append([branch.vmax for branch in d.branches]+[leaf.vmax for leaf in d.leaves])
-        # print "On %s/%s" % (i+1, len(min_deltas))
+        print "On %s/%s" % (i+1, len(min_deltas))
 
     min_deltas = Series(min_deltas)
     numfeatures = Series(numfeatures)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     path = sys.argv[1]
     ncores = int(sys.argv[2])
 
-    min_deltas = np.logspace(-1.5,-0.3,20)
+    min_deltas = list(np.logspace(-1.5,-0.7,8))+list(np.logspace(-0.6,-0.35,10))
 
     timesteps = [os.path.join(path,x) for x in os.listdir(path) if os.path.isdir(os.path.join(path,x))]
 

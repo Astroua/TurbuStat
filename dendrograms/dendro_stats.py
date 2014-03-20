@@ -18,17 +18,19 @@ import os
 from pandas import HDFStore, Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.stats import nanmean, nanstd
+from mecdf import mecdf
 
 class DendroDistance(object):
     """docstring for DendroDistance"""
-    def __init__(self, file1, file2, timestep):
+    def __init__(self, file1, file2, timestep, nbins="best", min_features=1000):
         super(DendroDistance, self).__init__()
 
 
         self.file1 = HDFStore(file1)
         self.file2 = HDFStore(file2)
+        self.nbins = nbins
 
-        if timestep != "/": ## Saving in HDF5 adds this to the beginning
+        if timestep[0] != "/": ## Saving in HDF5 adds this to the beginning
             timestep = "/"+timestep
 
         assert timestep in self.file1.keys()
@@ -41,25 +43,43 @@ class DendroDistance(object):
         assert (self.file1["Deltas"] == self.file2["Deltas"]).all()
         self.deltas = self.file1["Deltas"]
 
-        self.moments1 = {"mean": [], "variance": [], "skewness": [], "kurtosis": []}
-        self.moments2 = {"mean": [], "variance": [], "skewness": [], "kurtosis": []}
+        ## Set the minimum number of components to create a histogram
+        self.cutoff = min(np.argwhere((self.file1["Num Features"]<min_features)==1)[0], \
+                         np.argwhere((self.file2["Num Features"]<min_features)==1)[0])
+
+        self.histograms1 = None
+        self.histograms2 = None
+        self.bins = []
+        self.mecdf1 = None
+        self.mecdf2 = None
+
         self.numdata1 = None
         self.numdata2 = None
 
         self.num_results = None
         self.num_distance = None
-        self.hist_distance = None
+        self.histogram_distance = None
 
     def numfeature_stat(self, verbose=False):
         '''
         '''
 
-        numdata1 = np.asarray([np.log10(self.deltas), np.log10(self.file1["Num Features"])])
-        numdata2 = np.asarray([np.log10(self.deltas), np.log10(self.file2["Num Features"])])
+        self.numdata1 = np.log10(self.file1["Num Features"].ix[np.where(np.log10(self.deltas)>-0.6)])
+        self.numdata2 = np.log10(self.file2["Num Features"].ix[np.where(np.log10(self.deltas)>-0.6)])
+        clip_delta = self.deltas.ix[np.where(np.log10(self.deltas)>-0.6)]
 
-        self.numdata1 = np.log10(self.file1["Num Features"].ix[np.where(np.log10(self.deltas)>-0.9)])
-        self.numdata2 = np.log10(self.file2["Num Features"].ix[np.where(np.log10(self.deltas)>-0.9)])
-        clip_delta = self.deltas.ix[np.where(np.log10(self.deltas)>-0.9)]
+        if (self.numdata1==0).any() or (self.numdata2==0).any():
+            filter11 = self.numdata1[self.numdata1>0]
+            filter21 = self.numdata2[self.numdata1>0]
+            filter12 = filter11[self.numdata2>0]
+            filter22 = filter21[self.numdata2>0]
+
+            clip_delta = clip_delta[self.numdata1>0]
+            clip_delta = clip_delta[self.numdata2>0]
+
+            self.numdata1 = filter12
+            self.numdata2 = filter22
+
         ## Set up columns for regression
         dummy = [0] * len(clip_delta) + [1] * len(clip_delta)
         x = np.concatenate((np.log10(clip_delta), np.log10(clip_delta)))
@@ -82,6 +102,7 @@ class DendroDistance(object):
         if verbose:
 
             print self.num_results.summary()
+            print self.numdata1, self.numdata2
 
             import matplotlib.pyplot as p
             p.plot(np.log10(clip_delta), np.log10(self.numdata1), "bD", \
@@ -97,31 +118,57 @@ class DendroDistance(object):
         '''
         '''
 
-        for hist1, hist2 in zip(self.file1["Histograms"], self.file2["Histograms"]):
+        if self.nbins == "best":
+            self.nbins = [int(round(np.sqrt((n1+n2)/2.))) for n1, n2 in zip(self.file1["Num Features"][:self.cutoff], \
+                            self.file2["Num Features"][:self.cutoff])]
+        else:
+            self.nbins = [self.nbins] * len(self.deltas[:self.cutoff])
 
-            mean1, var1, skew1, kurt1 = compute_moments(hist1)
-            mean2, var2, skew2, kurt2 = compute_moments(hist2)
+        self.histograms1 = np.empty((len(self.deltas[:self.cutoff]), np.max(self.nbins)))
+        self.histograms2 = np.empty((len(self.deltas[:self.cutoff]), np.max(self.nbins)))
 
-            self.moments1["mean"].append(mean1)
-            self.moments1["variance"].append(var1)
-            self.moments1["skewness"].append(skew1)
-            self.moments1["kurtosis"].append(kurt1)
+        for n, (data1,data2,nbin) in enumerate(zip(self.file1["Histograms"][:self.cutoff], \
+                                      self.file2["Histograms"][:self.cutoff], self.nbins)):
+            hist1, bins = np.histogram(data1, bins=nbin, density=True, range=[0,1])[:2]
+            self.histograms1[n,:] = np.append(hist1, (np.max(self.nbins) - nbin) * [np.NaN])
+            self.bins.append(bins)
+            hist2 = np.histogram(data2, bins=nbin, density=True, range=[0,1])[0]
+            self.histograms2[n,:] = np.append(hist2, (np.max(self.nbins) - nbin) * [np.NaN])
 
-            self.moments2["mean"].append(mean2)
-            self.moments2["variance"].append(var2)
-            self.moments2["skewness"].append(skew2)
-            self.moments2["kurtosis"].append(kurt2)
+            ## Normalize
+            self.histograms1[n,:] /= np.nansum(self.histograms1[n,:])
+            self.histograms2[n,:] /= np.nansum(self.histograms2[n,:])
+
+        self.mecdf1 = mecdf(self.histograms1)
+        self.mecdf2 = mecdf(self.histograms2)
+
+        self.histogram_distance = hellinger_stat(self.histograms1, self.histograms2)
 
         if verbose:
             import matplotlib.pyplot as p
 
-            for i, key in enumerate(self.moments1.keys()):
-                p.subplot(2,2,i+1)
-                p.title(key)
-                p.xlabel("Delta")
-                p.ylabel(key)
-                p.plot(self.deltas, self.moments1[key], "bD-")
-                p.plot(self.deltas, self.moments2[key], "gD-")
+            p.subplot(2,2,1)
+            p.title("ECDF 1")
+            p.xlabel("Intensities")
+            for n in range(len(self.deltas[:self.cutoff])):
+                p.plot((self.bins[n][:-1] + self.bins[n][1:])/2, self.mecdf1[n,:][:self.nbins[n]])
+            p.subplot(2,2,2)
+            p.title("ECDF 2")
+            p.xlabel("Intensities")
+            for n in range(len(self.deltas[:self.cutoff])):
+                p.plot((self.bins[n][:-1] + self.bins[n][1:])/2, self.mecdf2[n,:][:self.nbins[n]])
+            p.subplot(2,2,3)
+            p.title("PDF 1")
+            for n in range(len(self.deltas[:self.cutoff])):
+                bin_width = self.bins[n][1]-self.bins[n][0]
+                p.bar((self.bins[n][:-1] + self.bins[n][1:])/2, self.histograms1[n,:][:self.nbins[n]], \
+                    align="center", width=bin_width, alpha=0.25)
+            p.subplot(2,2,4)
+            p.title("PDF 2")
+            for n in range(len(self.deltas[:self.cutoff])):
+                bin_width = self.bins[n][1]-self.bins[n][0]
+                p.bar((self.bins[n][:-1] + self.bins[n][1:])/2, self.histograms2[n,:][:self.nbins[n]], \
+                    align="center", width=bin_width, alpha=0.25)
             p.show()
 
         return self
@@ -135,13 +182,17 @@ class DendroDistance(object):
 
         return self
 
-def compute_moments(pdf):
 
-    mean = nanmean(pdf, axis=None)
-    variance = nanstd(pdf, axis=None)**2.
-    skewness = np.nansum(((pdf - mean)/np.sqrt(variance))**3.)/np.sum(~np.isnan(pdf))
-    kurtosis = np.nansum(((pdf - mean)/np.sqrt(variance))**4.)/np.sum(~np.isnan(pdf)) - 3
+def hellinger_stat(x, y):
 
-    return mean, variance, skewness, kurtosis
+    assert x.shape == y.shape
 
+    hellinger = lambda i,j : (1/np.sqrt(2)) * np.sqrt(np.nansum((np.sqrt(i) - np.sqrt(j))**2.))
 
+    if len(x.shape)==1:
+        return hellinger(x, y)
+    else:
+        dists = np.empty((x.shape[0], 1))
+        for n in range(x.shape[0]):
+            dists[n,0] = hellinger(x[n,:], y[n,:])
+        return np.mean(dists)
