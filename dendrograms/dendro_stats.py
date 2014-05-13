@@ -71,11 +71,11 @@ class DendroDistance(object):
         clip_delta2 = self.deltas2.ix[np.where(np.log10(self.deltas2)>-0.6)]
 
         if (self.numdata1==0).any() or (self.numdata2==0).any():
-            self.numdata1 = self.numdata1[self.numdata1>0]
-            self.numdata2 = self.numdata2[self.numdata2>0]
-
             clip_delta1 = clip_delta1[self.numdata1>0]
             clip_delta2 = clip_delta2[self.numdata2>0]
+
+            self.numdata1 = self.numdata1[self.numdata1>0]
+            self.numdata2 = self.numdata2[self.numdata2>0]
 
         ## Set up columns for regression
         dummy = [0] * len(clip_delta1) + [1] * len(clip_delta2)
