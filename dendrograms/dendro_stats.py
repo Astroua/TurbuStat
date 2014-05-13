@@ -45,7 +45,7 @@ class DendroDistance(object):
 
         ## Set the minimum number of components to create a histogram
         self.cutoff = min(np.argwhere((self.file1["Num Features"]<min_features)==1)[0], \
-                         np.argwhere((self.file2["Num Features"]<min_features)==1)[0])
+                         np.argwhere((self.file2["Num Features"]<min_features)==1)[0])[0]
 
         self.histograms1 = None
         self.histograms2 = None
@@ -77,6 +77,9 @@ class DendroDistance(object):
             clip_delta = clip_delta[self.numdata1>0]
             clip_delta = clip_delta[self.numdata2>0]
 
+            if filter12.empty or filter22.empty: ## If we can't compare at all, just exit.
+                self.num_distance = 0.0
+                return self
             self.numdata1 = filter12
             self.numdata2 = filter22
 
@@ -98,11 +101,9 @@ class DendroDistance(object):
         self.num_results = model.fit()
 
         self.num_distance = np.abs(self.num_results.tvalues["regressor"])
-
         if verbose:
 
             print self.num_results.summary()
-            print self.numdata1, self.numdata2
 
             import matplotlib.pyplot as p
             p.plot(np.log10(clip_delta), np.log10(self.numdata1), "bD", \
@@ -114,21 +115,23 @@ class DendroDistance(object):
             p.ylabel("log Number of Features")
             p.show()
 
+        return self
+
     def histogram_stat(self, verbose=False):
         '''
         '''
 
         if self.nbins == "best":
-            self.nbins = [int(round(np.sqrt((n1+n2)/2.))) for n1, n2 in zip(self.file1["Num Features"][:self.cutoff], \
-                            self.file2["Num Features"][:self.cutoff])]
+            self.nbins = [int(round(np.sqrt((n1+n2)/2.))) for n1, n2 in zip(self.file1["Num Features"].ix[:self.cutoff], \
+                            self.file2["Num Features"].ix[:self.cutoff])]
         else:
-            self.nbins = [self.nbins] * len(self.deltas[:self.cutoff])
+            self.nbins = [self.nbins] * len(self.deltas.ix[:self.cutoff])
 
-        self.histograms1 = np.empty((len(self.deltas[:self.cutoff]), np.max(self.nbins)))
-        self.histograms2 = np.empty((len(self.deltas[:self.cutoff]), np.max(self.nbins)))
+        self.histograms1 = np.empty((len(self.deltas.ix[:self.cutoff]), np.max(self.nbins)))
+        self.histograms2 = np.empty((len(self.deltas.ix[:self.cutoff]), np.max(self.nbins)))
 
-        for n, (data1,data2,nbin) in enumerate(zip(self.file1["Histograms"][:self.cutoff], \
-                                      self.file2["Histograms"][:self.cutoff], self.nbins)):
+        for n, (data1,data2,nbin) in enumerate(zip(self.file1["Histograms"].ix[:self.cutoff], \
+                                      self.file2["Histograms"].ix[:self.cutoff], self.nbins)):
             hist1, bins = np.histogram(data1, bins=nbin, density=True, range=[0,1])[:2]
             self.histograms1[n,:] = np.append(hist1, (np.max(self.nbins) - nbin) * [np.NaN])
             self.bins.append(bins)
