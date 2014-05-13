@@ -364,6 +364,7 @@ if __name__ == "__main__":
     else: # Normal case of comparing to single fiducial
 
         simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x[:6]=="Design" and x[-3]==face]
+        simulation_runs = np.sort(simulation_runs)
 
         distances_storage, timesteps_labels = run_all(fiducial, simulation_runs,
                                                        face, statistics, save_name,
@@ -385,8 +386,7 @@ if __name__ == "__main__":
         if statistics[i] in store:
             existing_df = store[statistics[i]]
             if len(existing_df.index) == len(df.index):
-                if (existing_df.index == df.index).all(): # Then replace the values
-                    store[statistics[i]] = df
+                store[statistics[i]] = df
             else: ## Append on
                 df = concat([existing_df, df])
                 store[statistics[i]] = df
