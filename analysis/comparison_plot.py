@@ -5,10 +5,10 @@ import types, os
 import matplotlib.pyplot as p
 import matplotlib.cm as cm
 
-def comparison_plot(path, analysis_fcn="mean", verbose=False, \
+def comparison_plot(path, analysis_fcn="mean", verbose=False, cross_compare=False,
                     statistics=["Wavelet", "MVC", "PSpec","Bispectrum","DeltaVariance", \
                     "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer", "Skewness", \
-                    "Kurtosis"]):
+                    "Kurtosis", "Dendrogram_Hist", "Dendrogram_Num"]):
     '''
 
     This function plots a comparison of the distances between the different simulations and
@@ -56,11 +56,12 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         data_face2_2 = []
         fid_data_face2_2 = []
 
-        data_face2_0 = []
-        fid_data_face2_0 = []
+        if cross_compare:
+            data_face2_0 = []
+            fid_data_face2_0 = []
 
-        data_face0_2 = []
-        fid_data_face0_2 = []
+            data_face0_2 = []
+            fid_data_face0_2 = []
 
         num_sims = 0
         num_fids = 0
@@ -92,7 +93,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
                 else:
                     data_face2_2.append(datum.sort(axis=0))
             ## Face 0 to 2
-            elif data[-23:-20]=="0_2":
+            elif cross_compare and data[-23:-20]=="0_2":
                 if data.split("/")[-1][:8]=="fiducial":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
@@ -103,7 +104,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
                 else:
                     data_face2_0.append(datum.sort(axis=0))
             ## Face 2 to 0
-            elif data[-23:-20]=="2_0":
+            elif cross_compare and data[-23:-20]=="2_0":
                 if data.split("/")[-1][:8]=="fiducial":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
@@ -114,9 +115,12 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
                 else:
                     data_face0_2.append(datum.sort(axis=0))
             else:
-                print "Check filename for position of face label. Currently works only for \
-                            the default output of output.py"
-                break
+                if not cross_compare:
+                    pass
+                else:
+                    print "Check filename for position of face label. Currently works only for \
+                           the default output of output.py"
+                    break
 
         ## Comparison across simulations
         labels = ["Fiducial "+str(num) for num in range(1,num_fids+2)]
@@ -124,62 +128,70 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, \
         xtick_labels = xtick_labels + labels[:-1]
 
         colours = cm.rainbow(np.linspace(0, 1, num_fids+1))
-        ax1 = p.subplot(2,2,1)
+        if cross_compare:
+            ax1 = p.subplot(2,2,1)
+        else:
+            ax1 = p.subplot(1,2,1)
 
         for i, (df, col) in enumerate(zip(data_face0_0,colours)):
-            p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
+            p.plot(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
         for i, (df, col)in enumerate(zip(fid_data_face0_0, colours)):
-            p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
-                     color=col, label=labels[i+1])
+            p.plot(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
+                     "ko", label=labels[i+1])
         p.title("Face 0 to 0")
         p.xlim(0, len(xtick_labels)+3)
         locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, rotation="vertical", size=8)
         p.setp(xlabels, rotation=70)
         p.ylabel(stat+" Distance")
 
-        ax2 = p.subplot(2,2,2)
+        if cross_compare:
+            ax2 = p.subplot(2,2,2)
+        else:
+            ax2 = p.subplot(1,2,2)
+
         ax2.yaxis.tick_right()
         ax2.yaxis.set_label_position("right")
         for i, (df, col) in enumerate(zip(data_face2_2,colours)):
-            p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
+            p.plot(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
         p.legend(prop={'size':8}) # make now to avoid repeats
         for i, (df, col)in enumerate(zip(fid_data_face2_2, colours)):
-            p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
-                     color=col, label=labels[i+1])
+            p.plot(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
+                     "ko", label=labels[i+1])
         p.title("Face 2 to 2")
         p.xlim(0, len(xtick_labels)+3)
         locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, size=8)
         p.setp(xlabels, rotation=70)
         p.ylabel(stat+" Distance")
 
-        ax3 = p.subplot(2,2,3)
-        for i, (df, col) in enumerate(zip(data_face0_2,colours)):
-            p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
-        p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face0_2, colours)):
-            p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
-                     color=col, label=labels[i+1])
-        p.title("Face 0 to 2")
-        p.xlim(0, len(xtick_labels)+3)
-        locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, size=8)
-        p.setp(xlabels, rotation=70)
-        p.ylabel(stat+" Distance")
+        if cross_compare:
+            ax3 = p.subplot(2,2,3)
+            for i, (df, col) in enumerate(zip(data_face0_2,colours)):
+                p.plot(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
+            p.legend(prop={'size':8}) # make now to avoid repeats
+            for i, (df, col)in enumerate(zip(fid_data_face0_2, colours)):
+                p.plot(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
+                         "ko", label=labels[i+1])
+            p.title("Face 0 to 2")
+            p.xlim(0, len(xtick_labels)+3)
+            locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, rotation="vertical", size=8)
+            p.setp(xlabels, rotation=70)
+            p.ylabel(stat+" Distance")
 
-        ax4 = p.subplot(2,2,4)
-        ax4.yaxis.tick_right()
-        ax4.yaxis.set_label_position("right")
-        for i, (df, col) in enumerate(zip(data_face2_0,colours)):
-            p.scatter(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), color=col, label=labels[i])
-        p.legend(prop={'size':8}) # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face2_0, colours)):
-            p.scatter(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
-                     color=col, label=labels[i+1])
-        p.title("Face 2 to 0")
-        p.xlim(0, len(xtick_labels)+3)
-        locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, size=8)
-        p.setp(xlabels, rotation=70)
-        p.ylabel(stat+" Distance")
+            ax4 = p.subplot(2,2,4)
+            ax4.yaxis.tick_right()
+            ax4.yaxis.set_label_position("right")
+            for i, (df, col) in enumerate(zip(data_face2_0,colours)):
+                p.plot(np.arange(1, df.shape[0]+1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
+            p.legend(prop={'size':8}) # make now to avoid repeats
+            for i, (df, col)in enumerate(zip(fid_data_face2_0, colours)):
+                p.plot(np.arange(num_sims+1, num_sims+(num_fids+1-i)), getattr(df, analysis_fcn)(axis=1),\
+                         "ko", label=labels[i+1])
+            p.title("Face 2 to 0")
+            p.xlim(0, len(xtick_labels)+3)
+            locs, xlabels = p.xticks(np.arange(1, len(xtick_labels)+1), xtick_labels, rotation="vertical", size=8)
+            p.setp(xlabels, rotation=70)
+            p.ylabel(stat+" Distance")
 
         if verbose:
             p.show()
