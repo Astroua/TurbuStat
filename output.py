@@ -127,7 +127,6 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             file1 = "/".join(filenames[0].split("/")[:-1])+"/"+filenames[0].split("/")[-2]+"_dendrostats.h5"
             file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
             timestep = filenames[0][-8:]
-
             dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
@@ -207,8 +206,8 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             ## This needs the same naming convention as prescribed in dendrograms/compute_dendro.py
             ## B/c of how intensive the computing for this statistic is, I have them setup to run separately
             ## and the results are simply read from the save file here.
-            file1 = filenames[0].split("/")[0]+"_dendrostats.h5"
-            file2 = filenames[1].split("/")[0]+"_dendrostats.h5"
+            file1 = "/".join(filenames[0].split("/")[:-1])+"/"+filenames[0].split("/")[-2]+"_dendrostats.h5"
+            file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
             timestep = filenames[0][-8:]
             dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
@@ -262,12 +261,16 @@ def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=Tru
                 testing_dataset = fromfits(timestep, keywords)
                 if i==0:
                     distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset,
-                        statistics=statistics)
+                                                         statistics=statistics,
+                                                         filenames=[fiducial_timesteps[ii], timestep])
                     all_fiducial_models = fiducial_models
                 else:
-                    distances = wrapper(fiducial_dataset, testing_dataset, fiducial_models=all_fiducial_models,
-                        statistics=statistics)
-                distances_storage[:,i,ii] = distances
+                    distances = wrapper(fiducial_dataset, testing_dataset,
+                                        fiducial_models=all_fiducial_models,
+                                        statistics=statistics,
+                                        filenames=[fiducial_timesteps[ii], timestep])
+                distances = [distances]
+                distances_storage[:,i,ii] = sort_distances(statistics,distances).T
 
     return distances_storage, timesteps_labels
 
@@ -285,12 +288,12 @@ if __name__ == "__main__":
     from itertools import izip, repeat
 
     INTERACT = False ## Will prompt you for inputs if True
-    PREFIX = "/srv/astro/erickoch/enzo_sims/"
+    PREFIX = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/"
 
     os.chdir(PREFIX)
 
-    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                  "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
+    statistics = ["Dendrogram_Num"]#["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+                  # "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
     print statistics
     num_statistics = len(statistics)
 
@@ -311,6 +314,7 @@ if __name__ == "__main__":
             MULTICORE = True
         else:
             MULTICORE = False
+            NCORES = 1 # Placeholder to pass into run_all
         if MULTICORE:
             NCORES = int(sys.argv[5])
 
@@ -348,7 +352,9 @@ if __name__ == "__main__":
         for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1,0,-1)): # no need to loop over the last one
             fid_num = int(fid[-5])
             posn += i
-            partial_distances, timesteps_labels = run_all(fiducials[fid_num-1], fiducials_comp[fid_num:], face, statistics, save_name)
+            partial_distances, timesteps_labels = run_all(fiducials[fid_num-1], fiducials_comp[fid_num:],
+                                                           face, statistics, save_name, multicore=MULTICORE,
+                                                           ncores=NCORES)
             distances_storage[:,prev:posn,:] = partial_distances
             prev += i
             fiducial_labels.extend([f+"to"+fid for f in fiducials_comp[fid_num:]])
@@ -359,7 +365,9 @@ if __name__ == "__main__":
 
         simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x[:6]=="Design" and x[-3]==face]
 
-        distances_storage, timesteps_labels = run_all(fiducial, simulation_runs, face, statistics, save_name)
+        distances_storage, timesteps_labels = run_all(fiducial, simulation_runs,
+                                                       face, statistics, save_name,
+                                                       multicore=MULTICORE, ncores=NCORES)
 
         simulation_runs = [sim+"to"+fiducial for sim in simulation_runs]
 
