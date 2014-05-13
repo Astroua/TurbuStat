@@ -128,9 +128,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
             timestep = filenames[0][-8:]
 
-            moment_distance = DendroDistance(file1, file2, timestep).distance_metric()
-            distances["Dendrogram_Hist"] = moment_distance.histogram_distance
-            distances["Dendrogram_Num"] = moment_distance.num_distance
+            dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
+            distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
+            distances["Dendrogram_Num"] = dendro_distance.num_distance
 
         if multicore:
             return distances
@@ -210,9 +210,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             file1 = filenames[0].split("/")[0]+"_dendrostats.h5"
             file2 = filenames[1].split("/")[0]+"_dendrostats.h5"
             timestep = filenames[0][-8:]
-            moment_distance = DendroDistance(file1, file2, timestep).distance_metric()
-            distances["Dendrogram_Hist"] = moment_distance.histogram_distance
-            distances["Dendrogram_Num"] = moment_distance.num_distance
+            dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
+            distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
+            distances["Dendrogram_Num"] = dendro_distance.num_distance
 
         return distances
 
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     os.chdir(PREFIX)
 
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                  "Cramer", "Skewness", "Kurtosis", "Dendrogram_Hist", "Dendrogram_Num"]
+                  "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
     print statistics
     num_statistics = len(statistics)
 
@@ -306,18 +306,25 @@ if __name__ == "__main__":
         fiducial = str(sys.argv[1])
         face = str(sys.argv[2])
         save_name = str(sys.argv[3])
-        MULTICORE = bool(sys.argv[4])
+        MULTICORE = str(sys.argv[4])
+        if MULTICORE=="T":
+            MULTICORE = True
+        else:
+            MULTICORE = False
         if MULTICORE:
             NCORES = int(sys.argv[5])
 
 
     if fiducial=="fid_comp": # Run all the comparisons of fiducials
         if INTERACT:
-            cross_comp = bool(raw_input("Cross comparison? ("))
+            cross_comp = str(raw_input("Cross comparison? "))
         else:
-            cross_comp = bool(sys.argv[6])
-            if cross_comp is "F" or "False":
-                cross_comp = False
+            cross_comp = str(sys.argv[6])
+
+        if cross_comp == "F":
+            cross_comp = False
+        else:
+            cross_comp = True
 
         if cross_comp:
             if face=="0":
@@ -333,8 +340,6 @@ if __name__ == "__main__":
         fiducials_comp = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==face]
         fiducials_comp = np.sort(fiducials_comp)
 
-        print fiducials_comp
-
         print "Fiducials to compare %s" % (fiducials)
         fiducial_labels = []
         num_comp = (len(fiducials)**2. - len(fiducials))/2 # number of comparisons b/w all fiducials
@@ -349,6 +354,7 @@ if __name__ == "__main__":
             fiducial_labels.extend([f+"to"+fid for f in fiducials_comp[fid_num:]])
 
         simulation_runs = fiducial_labels ## consistent naming with non-fiducial case
+        face = comp_face
     else: # Normal case of comparing to single fiducial
 
         simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x[:6]=="Design" and x[-3]==face]
@@ -359,6 +365,7 @@ if __name__ == "__main__":
 
 
     filename = save_name+"_"+face+"_distance_results.h5"
+    print filename
     from pandas import DataFrame, HDFStore, concat
 
     ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
