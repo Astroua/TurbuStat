@@ -97,7 +97,7 @@ class Cramer_Distance(object):
 def intensity_data(cube, p=0.25):
     '''
     '''
-    vec_length = round(p*cube.shape[1]*cube.shape[2])
+    vec_length = int(round(p*cube.shape[1]*cube.shape[2]))
     intensity_vecs = np.empty((cube.shape[0], vec_length))
     cube[np.isnan(cube)] = 0.0
     for dv in range(cube.shape[0]):
