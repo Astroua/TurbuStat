@@ -75,7 +75,7 @@ class DendroDistance(object):
             self.numdata2 = self.numdata2[self.numdata2>0]
 
             clip_delta1 = clip_delta1[self.numdata1>0]
-            clip_delta2 = clip_delt2[self.numdata2>0]
+            clip_delta2 = clip_delta2[self.numdata2>0]
 
         ## Set up columns for regression
         dummy = [0] * len(clip_delta1) + [1] * len(clip_delta2)
@@ -83,7 +83,7 @@ class DendroDistance(object):
         regressor = x.T * dummy
         constant = np.array([[1] * (len(clip_delta1) + len(clip_delta2))])
 
-        numdata = np.concatenate((np.log10(self.numdata1), np.log10(self.numdata2)))
+        numdata = np.concatenate((self.numdata1, self.numdata2))
 
         d = {"dummy": Series(dummy), "scales": Series(x), "log_numdata": Series(numdata), \
              "regressor": Series(regressor)}
@@ -100,8 +100,8 @@ class DendroDistance(object):
             print self.num_results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_delta1), np.log10(self.numdata1), "bD", \
-                    np.log10(clip_delta2), np.log10(self.numdata2), "gD")
+            p.plot(np.log10(clip_delta1), self.numdata1, "bD", \
+                    np.log10(clip_delta2), self.numdata2, "gD")
             p.plot(df["scales"][:len(self.numdata1)], self.num_results.fittedvalues[:len(self.numdata1)], "b", \
                    df["scales"][-len(self.numdata2):], self.num_results.fittedvalues[-len(self.numdata2):], "g")
             p.grid(True)
