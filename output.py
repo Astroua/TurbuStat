@@ -270,13 +270,17 @@ def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=Tru
                                         statistics=statistics,
                                         filenames=[fiducial_timesteps[ii], timestep])
                 distances = [distances]
-                distances_storage[:,i,ii] = sort_distances(statistics,distances).T
+                distances_storage[:,i,ii:ii+1] = sort_distances(statistics,distances).T
 
     return distances_storage, timesteps_labels
 
 
 def sort_distances(statistics,distances):
-    distance_array = np.empty((len(distances),len(statistics)))
+    if len(statistics)>1:
+        distance_array = np.empty((len(distances),len(statistics)))
+    elif len(statistics)==1:
+        distance_array = np.empty((len(distances), 1))
+
     for j, dist in enumerate(distances):
         distance_array[j,:] = [distances[j][stat] for stat in statistics]
 
@@ -288,12 +292,12 @@ if __name__ == "__main__":
     from itertools import izip, repeat
 
     INTERACT = False ## Will prompt you for inputs if True
-    PREFIX = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/"
+    PREFIX = "/srv/astro/erickoch/enzo_sims/latin_hypercube_set/"
 
     os.chdir(PREFIX)
 
-    statistics = ["Dendrogram_Num"]#["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                  # "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
+                  "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
     print statistics
     num_statistics = len(statistics)
 
