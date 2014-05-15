@@ -77,9 +77,9 @@ class MVC(object):
         self.center_pixel = []
         for i_shape in self.shape:
             if i_shape % 2. != 0:
-                self.center_pixel.append((i_shape-1)/2.)
+                self.center_pixel.append(int((i_shape-1)/2.))
             else:
-                self.center_pixel.append(i_shape/2.)
+                self.center_pixel.append(int(i_shape/2.))
 
         self.center_pixel = tuple(self.center_pixel)
         centering_array = np.ones(self.shape)

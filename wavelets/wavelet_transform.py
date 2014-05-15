@@ -388,7 +388,7 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
 
     # Ends go back to being ~ linear, so clip them off
     if ends_clipped > 0.0:
-        clipped_pts = num_pts * ends_clipped
+        clipped_pts = int(num_pts * ends_clipped)
 
         sec_deriv = sec_deriv[clipped_pts: num_pts - clipped_pts]
         y = y[clipped_pts: num_pts - clipped_pts]
