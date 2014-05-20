@@ -10,7 +10,6 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 
 '''
 
-from astrodendro import Dendrogram
 import numpy as np
 from matplotlib import pyplot as p
 import matplotlib.cm as cm
@@ -18,6 +17,7 @@ import os
 from pandas import HDFStore, Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.stats import nanmean, nanstd
+from scipy.optimize import curve_fit
 from mecdf import mecdf
 
 class DendroDistance(object):
@@ -41,8 +41,11 @@ class DendroDistance(object):
         self.file2 = self.file2[timestep]
 
         assert (self.file1["Deltas"] == self.file2["Deltas"]).all()
-        self.deltas1 = self.file1["Deltas"]
-        self.deltas2 = self.file2["Deltas"]
+        self.deltas1 = np.log10(self.file1["Deltas"])
+        self.deltas2 = np.log10(self.file2["Deltas"])
+        self.numdata1 = np.log10(self.file1["Num Features"])
+        self.numdata2 = np.log10(self.file2["Num Features"])
+
 
         ## Set the minimum number of components to create a histogram
         self.cutoff = min(np.argwhere((self.file1["Num Features"]<min_features)==1)[0], \
@@ -54,9 +57,6 @@ class DendroDistance(object):
         self.mecdf1 = None
         self.mecdf2 = None
 
-        self.numdata1 = None
-        self.numdata2 = None
-
         self.num_results = None
         self.num_distance = None
         self.histogram_distance = None
@@ -65,21 +65,27 @@ class DendroDistance(object):
         '''
         '''
 
-        self.numdata1 = np.log10(self.file1["Num Features"].ix[np.where(np.log10(self.deltas1)>-0.6)])
-        self.numdata2 = np.log10(self.file2["Num Features"].ix[np.where(np.log10(self.deltas2)>-0.6)])
-        clip_delta1 = self.deltas1.ix[np.where(np.log10(self.deltas1)>-0.6)]
-        clip_delta2 = self.deltas2.ix[np.where(np.log10(self.deltas2)>-0.6)]
-
+        # Remove points where log(numdata)=0
         if (self.numdata1==0).any() or (self.numdata2==0).any():
-            clip_delta1 = clip_delta1[self.numdata1>0]
-            clip_delta2 = clip_delta2[self.numdata2>0]
+            self.deltas1 = self.deltas1[self.numdata1>0]
+            self.deltas2 = self.deltas2[self.numdata2>0]
 
             self.numdata1 = self.numdata1[self.numdata1>0]
             self.numdata2 = self.numdata2[self.numdata2>0]
 
+        # Approximate knot location using linear splines with minimal smoothing
+        break1 = break_spline(self.deltas1, self.numdata1, k=1, s=1)
+        break2 = break_spline(self.deltas2, self.numdata2, k=1, s=1)
+
+        self.numdata1 = self.numdata1.ix[np.where(self.deltas1>break1)]
+        self.numdata2 = self.numdata2.ix[np.where(self.deltas2>break2)]
+        clip_delta1 = self.deltas1.ix[np.where(self.deltas1>break1)]
+        clip_delta2 = self.deltas2.ix[np.where(self.deltas2>break2)]
+
+
         ## Set up columns for regression
         dummy = [0] * len(clip_delta1) + [1] * len(clip_delta2)
-        x = np.concatenate((np.log10(clip_delta1), np.log10(clip_delta2)))
+        x = np.concatenate((clip_delta1, clip_delta2))
         regressor = x.T * dummy
         constant = np.array([[1] * (len(clip_delta1) + len(clip_delta2))])
 
@@ -100,8 +106,8 @@ class DendroDistance(object):
             print self.num_results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_delta1), self.numdata1, "bD", \
-                    np.log10(clip_delta2), self.numdata2, "gD")
+            p.plot(clip_delta1, self.numdata1, "bD",
+                    clip_delta2, self.numdata2, "gD")
             p.plot(df["scales"][:len(self.numdata1)], self.num_results.fittedvalues[:len(self.numdata1)], "b", \
                    df["scales"][-len(self.numdata2):], self.num_results.fittedvalues[-len(self.numdata2):], "g")
             p.grid(True)
@@ -174,8 +180,8 @@ class DendroDistance(object):
         '''
         '''
 
-        self.numfeature_stat(verbose=verbose)
         self.histogram_stat(verbose=verbose)
+        self.numfeature_stat(verbose=verbose)
 
         return self
 
@@ -193,3 +199,23 @@ def hellinger_stat(x, y):
         for n in range(x.shape[0]):
             dists[n,0] = hellinger(x[n,:], y[n,:])
         return np.mean(dists)
+
+
+def break_spline(x, y, **kwargs):
+    from scipy.interpolate import UnivariateSpline
+
+    s = UnivariateSpline(x, y, **kwargs)
+    knots =  s.get_knots()
+
+    if len(knots) > 3:
+        print "Many knots"
+        knot_expec = -0.8
+        posn = np.argmin(knots - knot_expec)
+        return knots[posn]  # Return the knot closest to the expected value
+
+    elif len(knots) == 2:
+        print "No knots"
+        return -0.6  # Set the threshold at the expected
+
+    else:
+        return knots[1]
