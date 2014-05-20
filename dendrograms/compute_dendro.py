@@ -17,7 +17,7 @@ import matplotlib.cm as cm
 from pandas import Series, DataFrame
 
 ## Load in utilities. Change to import once installed as package
-# execfile("../utilities.py")
+execfile("../utilities.py")
 
 def DendroStats(path, min_deltas):
     '''
