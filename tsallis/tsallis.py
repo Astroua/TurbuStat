@@ -140,7 +140,7 @@ class Tsallis_Distance(object):
 
         # diff_a = (a1-a2)**2.
         diff_w = (w1-w2)**2./(w1**2. + w2**2.)
-        diff_q = (q1-q2)**2./(w1**2. + w2**2.)
+        diff_q = (q1-q2)**2./(q1**2. + q2**2.)
 
         self.distance = np.sum(diff_w + diff_q)
 
