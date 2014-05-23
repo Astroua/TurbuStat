@@ -68,7 +68,7 @@ class Genus(object):
         from astropy.convolution import Gaussian2DKernel, convolve_fft
 
         for i, width in enumerate(self.smoothing_radii):
-            kernel = Gaussian2DKernel(width=width, x_size=self.img.shape[0], y_size=self.img.shape[1])
+            kernel = Gaussian2DKernel(width, x_size=self.img.shape[0], y_size=self.img.shape[1])
             if self.nanflag:
                 self.smoothed_images.append(convolve_fft(self.img, kernel, normalize_kernel=True, interpolate_nan=True))
             else:
