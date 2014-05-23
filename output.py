@@ -342,19 +342,19 @@ if __name__ == "__main__":
         else:
             comp_face = face
 
-        fiducials = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==comp_face]
+        fiducials = [x for x in os.listdir(".") if os.path.isdir(x) and x[:8]=="Fiducial" and x[-3]==comp_face]
         fiducials = np.sort(fiducials)
 
-        fiducials_comp = [x for x in os.listdir(".") if os.path.isdir(x) and x[:11]=="Fiducial128" and x[-3]==face]
+        fiducials_comp = [x for x in os.listdir(".") if os.path.isdir(x) and x[:8]=="Fiducial" and x[-3]==face]
         fiducials_comp = np.sort(fiducials_comp)
 
         print "Fiducials to compare %s" % (fiducials)
         fiducial_labels = []
         num_comp = (len(fiducials)**2. - len(fiducials))/2 # number of comparisons b/w all fiducials
-        distances_storage = np.zeros((num_statistics, num_comp, 10))
+        distances_storage = np.zeros((num_statistics, num_comp, 1)) # Change dim 2 to match number of time steps
         posn = 0; prev = 0
         for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1,0,-1)): # no need to loop over the last one
-            fid_num = int(fid[-5])
+            fid_num = int(fid[-5])+1
             posn += i
             partial_distances, timesteps_labels = run_all(fiducials[fid_num-1], fiducials_comp[fid_num:],
                                                            face, statistics, save_name, multicore=MULTICORE,
