@@ -33,7 +33,7 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
 
     '''
 
-    files = [path+f for f in os.listdir(path) if os.path.isfile(path+f) and str(face1)+"_"+str(face2) in f and f[:8]!="fiducial"]
+    files = [path+f for f in os.listdir(path) if os.path.isfile(path+f) and str(face1)+"_"+str(face2) in f and f[:9]!="fiducial_"]
     print "Files used: %s" % (files)
 
     if isinstance(design, str):
@@ -53,13 +53,14 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
         # Get data from HDF5
         for key in store.keys():
             data = store[key].sort(axis=0).sort(axis=1)
+            index =  data.index
             mean_data = data.mean(axis=1)
             data_columns[key[1:]] = mean_data
-            index = mean_data.index
         store.close()
 
         # Add on design matrix
         for key in design_df:
+            design_df = design_df.dropna()  # can get nans if the file was made in excel
             design_df.index = index
             data_columns[key] = design_df[key]
 
