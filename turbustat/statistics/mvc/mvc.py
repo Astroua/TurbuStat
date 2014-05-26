@@ -8,7 +8,7 @@ Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
 import numpy as np
 import scipy.ndimage as nd
 from itertools import izip
-from psds import pspec
+from ..psds import pspec
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
 

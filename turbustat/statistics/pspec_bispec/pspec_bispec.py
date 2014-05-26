@@ -6,7 +6,7 @@ Implementation of Spatial Power Spectrum and Bispectrum as described in Burkhart
 
 import numpy as np
 import numpy.random as ra
-from psds import pspec
+from ..psds import pspec
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
 
