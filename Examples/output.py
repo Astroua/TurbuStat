@@ -7,7 +7,7 @@ Function for calculating statistics for sensitivity analysis
 
 
 import numpy as np
-from utilities import fromfits
+from turbustat.io import fromfits
 import sys
 import os
 from datetime import datetime

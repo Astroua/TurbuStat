@@ -1,0 +1,1 @@
+from data_reduc import property_arrays

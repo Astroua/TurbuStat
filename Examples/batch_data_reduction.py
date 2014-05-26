@@ -7,7 +7,7 @@ Run from folder containing data cubes
 
 '''
 
-from data_reduc import *
+from turbustat.data_reduction import *
 from astropy.io.fits import getdata
 import os
 import sys
