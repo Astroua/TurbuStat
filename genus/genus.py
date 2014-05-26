@@ -9,7 +9,17 @@ import numpy as np
 import scipy.ndimage as nd
 import matplotlib.pyplot as p
 from scipy.stats import scoreatpercentile, nanmean, nanstd
+from scipy.interpolate import UnivariateSpline
 from skimage.morphology import remove_small_objects
+from astropy.convolution import Gaussian2DKernel, convolve_fft
+from operator import itemgetter
+from itertools import groupby
+
+try:
+    from scipy.fftpack import fft2, fftfreq
+except ImportError:
+    from numpy.fft import fft2, fftfreq
+
 
 class Genus(object):
     """
@@ -65,7 +75,6 @@ class Genus(object):
 
 
     def make_smooth_arrays(self):
-        from astropy.convolution import Gaussian2DKernel, convolve_fft
 
         for i, width in enumerate(self.smoothing_radii):
             kernel = Gaussian2DKernel(width, x_size=self.img.shape[0], y_size=self.img.shape[1])
@@ -76,8 +85,6 @@ class Genus(object):
         return self
 
     def clean_fft(self):
-        from scipy.fftpack import fft2
-        from numpy.fft import fftfreq
 
         for j, image in enumerate(self.smoothed_images):
             self.fft_images.append(fft2(image))
@@ -217,10 +224,6 @@ def clip_genus(genus_curve, length_threshold=5):
 
     '''
 
-    from operator import itemgetter
-    from itertools import groupby
-
-
     zeros = np.where(genus_curve==0)
     continuous_sections = []
     for _, g in groupby(enumerate(zeros[0]), lambda (i,x): i-x):
@@ -263,7 +266,6 @@ class GenusDistance(object):
         The distance is the difference between cubic splines.
 
         '''
-        from scipy.interpolate import UnivariateSpline
 
         norm1 = normalize(self.genus1.genus_stats[0,:])
         norm2 = normalize(self.genus2.genus_stats[0,:])

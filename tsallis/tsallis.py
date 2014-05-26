@@ -7,6 +7,8 @@ Implementation of the Tsallis Distribution from Tofflemire et al. (2011)
 
 import numpy as np
 from scipy.stats import nanmean, nanstd, chisquare
+from scipy.optimize import curve_fit
+
 
 class Tsallis(object):
     """
@@ -56,14 +58,14 @@ class Tsallis(object):
         return self
 
     def fit_tsallis(self):
-        from scipy.optimize import curve_fit
+
         for i, dist in enumerate(self.tsallis_distrib):
             clipped = clip_to_good(dist[0], dist[1])
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1], p0=(-np.max(clipped[1]),1.,2.),maxfev=100*len(dist[0]))
             fitted_vals = tsallis_function(clipped[0],*params)
             self.tsallis_fits[i,:3] = params
             self.tsallis_fits[i,3:6] = np.diag(pcov)
-            self.tsallis_fits[i,6] = chisquare(np.exp(fitted_vals),f_exp=np.exp(clipped[1]),ddof=3)[0]#np.nansum((clipped[1] - fitted_vals)**2.)/np.nansum(fitted_vals)
+            self.tsallis_fits[i,6] = chisquare(np.exp(fitted_vals),f_exp=np.exp(clipped[1]),ddof=3)[0]
 
     def run(self, verbose=False):
 

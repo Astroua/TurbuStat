@@ -5,6 +5,15 @@ Implementation of Spatial Power Spectrum and Bispectrum as described in Burkhart
 '''
 
 import numpy as np
+import numpy.random as ra
+from psds import pspec
+import statsmodels.formula.api as sm
+from pandas import Series, DataFrame
+
+try:
+    from scipy.fftpack import fft2, fftshift
+except ImportError:
+    from numpy.fft import fft2, fftshift
 
 class PowerSpectrum(object):
     """
@@ -38,8 +47,6 @@ class PowerSpectrum(object):
         Compute the power spectrum of MVC
         '''
 
-        from scipy.fftpack import fft2, fftshift
-
         mvc_fft = fftshift(fft2(self.img.astype("f8")))
 
         self.ps2D = np.abs(mvc_fft)**2.
@@ -55,8 +62,6 @@ class PowerSpectrum(object):
         Based on Adam Ginsburg's code
 
         '''
-
-        from psds import pspec
 
         self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index, wavenumber=wavenumber, \
                                       return_stddev=return_stddev, azbins=azbins, binsize=binsize,\
@@ -150,9 +155,6 @@ class PSpec_Distance(object):
 
         '''
 
-        import statsmodels.formula.api as sm
-        from pandas import Series, DataFrame
-
         ## Clipping from 8 pixels to half the box size
         ## Noise effects dominate outside this region
         clip_mask1 = np.zeros((self.pspec1.freq.shape))
@@ -234,7 +236,6 @@ class BiSpectrum(object):
 
     def compute_bispectrum(self, nsamples=None, seed=1000):
 
-        import numpy.random as ra
         fft = np.fft.fft2(self.img.astype("f8"))
         conjfft = np.conj(fft)
         ra.seed(seed)

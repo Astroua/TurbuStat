@@ -9,9 +9,14 @@ Based on code from kPyWavelet and astropy.nddata.convolution.convolve
 '''
 
 import numpy as np
-from numpy.fft import fft2, ifft2, fftfreq
-from pylab import find
-import warnings
+from astropy.convolution import convolve_fft, MexicanHat2DKernel
+import statsmodels.formula.api as sm
+from pandas import Series, DataFrame
+
+try:
+    from scipy.fftpack import fftn, ifftn, fftfreq
+except ImportError:
+    from numpy.fft import fftn, ifftn, fftfreq
 
 
 class Mexican_hat():
@@ -46,7 +51,7 @@ class wt2D(object):
     """docstring for wt2D"""
     def __init__(self, array, scales, dx=0.25, dy=0.25, wavelet=Mexican_hat()):
         super(wt2D, self).__init__()
-        self.array = array
+        self.array = array.astype("f8")
         self.scales = scales
         self.wavelet = wavelet
 
@@ -107,13 +112,13 @@ class wt2D(object):
 
 
         # Calculates the Fourier transform of the input signal.
-        f_ft = fft2(self.array, s=(N, M))
+        f_ft = fftn(self.array, shape=(N, M))
         # Creates empty wavelet transform array and fills it for every discrete
         # scale using the convolution theorem.
         self.Wf = np.zeros((A, N, M), 'complex')
         for i, an in enumerate(self.scales):
             psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
-            self.Wf[i, :, :] = ifft2(f_ft * psi_ft_bar, s=(N, M))
+            self.Wf[i, :, :] = ifftn(f_ft * psi_ft_bar, shape=(N, M))
 
         self.Wf = self.Wf[:, :n0, :m0]
 
@@ -121,12 +126,6 @@ class wt2D(object):
 
 
     def astropy_cwt2d(self, dx=None, dy=None):
-        from astropy.convolution import convolve_fft, MexicanHat2DKernel, convolve
-
-        try:
-            from scipy.fftpack import fftn, ifftn
-        except ImportError:
-            from numpy.fft import fftn, ifftn
 
         if dx != None:
             assert isinstance(dx, list)
@@ -189,8 +188,8 @@ class wt2D(object):
         self.iWf = np.zeros((m0, L, K), 'complex')
         for i, an in enumerate(self.scales):
             psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
-            W_ft = fft2(self.Wf[i, :, :], s=(L, K))
-            self.iWf[i, :, :] = ifft2(W_ft * psi_ft_bar, s=(L, K)) * da / an ** 2.
+            W_ft = fftn(self.Wf[i, :, :], s=(L, K))
+            self.iWf[i, :, :] = ifftn(W_ft * psi_ft_bar, s=(L, K)) * da / an ** 2.
 
         self.iWf = self.iWf[:, :l0, :k0].real.sum(axis=0) / self.wavelet.cpsi
 
@@ -302,9 +301,6 @@ class Wavelet_Distance(object):
 
         self.curve1 = transform((self.wt1.Wf, self.scales1), self.imgscale1)
         self.curve2 = transform((self.wt2.Wf, self.scales2), self.imgscale2)
-
-        import statsmodels.formula.api as sm
-        from pandas import Series, DataFrame
 
         if non_linear:
             self.curve1 = clip_to_linear(self.curve1)

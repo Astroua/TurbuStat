@@ -7,6 +7,16 @@ Implementation of the VCA & VCS techniques (Lazarian & Pogosyan)
 
 import numpy as np
 import scipy.ndimage as nd
+from scipy.fftpack import fftn
+from psds import pspec
+import statsmodels.formula.api as sm
+from pandas import Series, DataFrame
+
+try:
+    from scipy.fftpack import fftn, fftfreq, fftshift
+except ImportError:
+    from numpy.fft import fftn, fftfreq, fftshift
+
 
 from slice_thickness import change_slice_thickness
 
@@ -72,10 +82,8 @@ class VCA(object):
         Compute the power spectrum of
         '''
 
-        from scipy.fftpack import fftn
-
         for cube in self.degraded_cubes:
-            vca_fft = np.fft.fftshift(fftn(cube.astype("f8")))
+            vca_fft = fftshift(fftn(cube.astype("f8")))
 
             self.ps2D.append((np.abs(vca_fft)**2.).sum(axis=0))
 
@@ -89,8 +97,6 @@ class VCA(object):
         Based on Adam Ginsburg's code
 
         '''
-
-        from psds import pspec
 
         for ps in self.ps2D:
             self.freq, ps1D = pspec(ps, return_index=return_index, wavenumber=wavenumber, \
@@ -196,7 +202,6 @@ class VCS(object):
 
         self.vel_channels = np.arange(1, self.cube.shape[0], 1)
 
-        from numpy.fft import fftfreq
         if self.phys_units:
             self.vel_freqs = np.abs(fftfreq(self.cube.shape[0]))/self.vel_to_pix
         else:
@@ -280,9 +285,6 @@ class VCA_Distance(object):
 
         '''
 
-        import statsmodels.formula.api as sm
-        from pandas import Series, DataFrame
-
         ## Clipping from 8 pixels to half the box size
         ## Noise effects dominate outside this region
         clip_mask1 = np.zeros((self.vca1.freq.shape))
@@ -358,7 +360,6 @@ class VCS_Distance(object):
         This distance is the t-statistic of the difference in the slopes.
 
         '''
-        import statsmodels.formula.api as sm
 
         vel_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
         dens_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
@@ -412,8 +413,6 @@ class VCS_Distance(object):
         return self
 
 def make_dataframe(x1,y1,x2,y2):
-
-    from pandas import Series, DataFrame
 
     # Rid infs, nans from the x sets
     logx1 = np.log10(x1)[np.isfinite(np.log10(x1))]

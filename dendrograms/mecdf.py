@@ -7,7 +7,6 @@ Limited to step function for now.
 '''
 
 import numpy as np
-from statsmodels.distributions import ECDF
 
 def mecdf(arr):
     '''

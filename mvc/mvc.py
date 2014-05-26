@@ -7,6 +7,15 @@ Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
 
 import numpy as np
 import scipy.ndimage as nd
+from itertools import izip
+from psds import pspec
+import statsmodels.formula.api as sm
+from pandas import Series, DataFrame
+
+try:
+    from scipy.fftpack import fft2, fftshift
+except ImportError:
+    from numpy.fft import fft2, fftshift
 
 class MVC(object):
     """
@@ -111,7 +120,6 @@ class MVC(object):
         center_centroid = (self.centroid[self.center_pixel]*self.moment0[self.center_pixel])
         center_intensity = self.moment0[self.center_pixel]
 
-        from itertools import izip
         for i,j in izip(points[0],points[1]):
             first_term = (center_centroid - self.centroid[i,j]*self.moment0[i,j])**2.
             second_term = self.linewidth[i,j] * (center_intensity - self.moment0[i,j])**2.
@@ -124,8 +132,6 @@ class MVC(object):
         '''
         Compute the power spectrum of MVC
         '''
-
-        from scipy.fftpack import fft2, fftshift
 
         mvc_fft = fft2(self.centroid.astype("f8")) - self.linewidth * fft2(self.moment0.astype("f8"))
         mvc_fft = fftshift(mvc_fft)
@@ -143,8 +149,6 @@ class MVC(object):
         Based on Adam Ginsburg's code
 
         '''
-
-        from psds import pspec
 
         self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index, wavenumber=wavenumber, \
                                       return_stddev=return_stddev, azbins=azbins, binsize=binsize,\
@@ -249,9 +253,6 @@ class MVC_distance(object):
         A statistical comparison is used on the powerlaw indexes.
 
         '''
-
-        import statsmodels.formula.api as sm
-        from pandas import Series, DataFrame
 
         ## Clipping from 8 pixels to half the box size
         ## Noise effects dominate outside this region

@@ -18,6 +18,7 @@ from pandas import HDFStore, Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.stats import nanmean, nanstd
 from scipy.optimize import curve_fit
+from scipy.interpolate import UnivariateSpline
 from mecdf import mecdf
 
 class DendroDistance(object):
@@ -183,6 +184,10 @@ class DendroDistance(object):
         self.histogram_stat(verbose=verbose)
         self.numfeature_stat(verbose=verbose)
 
+        # Close HDF5 files
+        self.file1.close()
+        self.file2.close()
+
         return self
 
 
@@ -202,7 +207,6 @@ def hellinger_stat(x, y):
 
 
 def break_spline(x, y, **kwargs):
-    from scipy.interpolate import UnivariateSpline
 
     s = UnivariateSpline(x, y, **kwargs)
     knots =  s.get_knots()

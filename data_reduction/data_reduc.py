@@ -8,6 +8,13 @@ Data Reduction Routines for PPV data cubes
 
 import numpy as np
 from scipy import ndimage as nd
+from operator import itemgetter
+from itertools import groupby
+from astropy.io import fits
+import copy
+from scipy.optimize import curve_fit
+from astropy.convolution import convolve
+
 
 class property_arrays(object):
     '''
@@ -85,8 +92,6 @@ class property_arrays(object):
         return self
 
     def integrated_intensity(self):
-        from operator import itemgetter
-        from itertools import groupby
 
         masked_clean = self.clean_cube * self.nan_mask
         int_intensity_array = np.ones(self.array_shape)
@@ -170,8 +175,6 @@ class property_arrays(object):
         return self
 
     def save_fits(self, save_path=None):
-        from astropy.io import fits
-        import copy
 
         new_hdr = copy.deepcopy(self.header)
         del new_hdr["NAXIS3"],new_hdr["CRVAL3"],new_hdr["CRPIX3"],new_hdr['CDELT3'], new_hdr['CTYPE3']
@@ -278,7 +281,6 @@ def __sigma__(data_cube, clip_level):
 
     p0 = (np.max(hist), 1.0, centres[np.argmax(hist)])
 
-    from scipy.optimize import curve_fit
 
     opts, cov = curve_fit(gaussian, centres, hist, p0, maxfev=(100*len(hist))+1)
 
@@ -291,7 +293,6 @@ def moment_masking(data_cube, clip_level, kernel_size):
     sigma_orig = __sigma__(data_cube, clip_level)
 
     if np.isnan(data_cube).any():
-        from astropy.convolution import convolve
         print "Using astropy to convolve over nans"
         kernel = gauss_kern(kernel_size, ysize=kernel_size, zsize=kernel_size)
         smooth_cube = convolve(data_cube, kernel, normalize_kernel=True)
