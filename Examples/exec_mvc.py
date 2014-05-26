@@ -5,8 +5,6 @@ Execute MVC
 
 '''
 
-execfile("mvc.py")
-
 from astropy.io.fits import getdata
 import numpy as np
 import matplotlib.pyplot as p
@@ -27,6 +25,8 @@ int_intensity_err, hdr_lwerr = getdata("../../../../simcloud_stats/run_128_12_5_
 
 
 distances = np.arange(1,20,1)
+
+from turbustat.statistics import MVC
 
 test = MVC(centroid * centroid_err**2., int_intensity * int_intensity_err**2., linewidth * linewidth_err**2., distances=None)
 

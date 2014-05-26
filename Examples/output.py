@@ -17,29 +17,29 @@ keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_in
 
 ## Load each statistic in
 
-from wavelets import Wavelet_Distance
+from turbustat.statistics import Wavelet_Distance
 
-from mvc import MVC_distance
+from turbustat.statistics import MVC_distance
 
-from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
+from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-from genus import GenusDistance
+from turbustat.statistics import GenusDistance
 
-from delta_variance import DeltaVariance_Distance
+from turbustat.statistics import DeltaVariance_Distance
 
-from vca_vcs import VCA_Distance, VCS_Distance
+from turbustat.statistics import VCA_Distance, VCS_Distance
 
-from tsallis import Tsallis_Distance
+from turbustat.statistics import Tsallis_Distance
 
-from stat_moments import StatMomentsDistance
+from turbustat.statistics import StatMomentsDistance
 
-from pca import PCA_Distance
+from turbustat.statistics import PCA_Distance
 
-from scf import SCF_Distance
+from turbustat.statistics import SCF_Distance
 
-from cramer import Cramer_Distance
+from turbustat.statistics import Cramer_Distance
 
-from dendrograms import DendroDistance
+from turbustat.statistics import DendroDistance
 
 ## Wrapper function
 def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore=False, filenames=None):
@@ -298,7 +298,7 @@ if __name__ == "__main__":
 
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
                   "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
-    print statistics
+    print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
     if INTERACT:

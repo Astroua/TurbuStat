@@ -9,7 +9,7 @@ implemented distance metrics
 '''
 
 import numpy as np
-from utilities import fromfits
+from turbustat.io import fromfits
 import sys
 
 keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
@@ -24,7 +24,7 @@ dataset2 = fromfits(folder2, keywords, verbose=False)
 
 ## Wavelet Transform
 
-from wavelets import Wavelet_Distance
+from turbustat.statistics import Wavelet_Distance
 
 wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
@@ -32,7 +32,7 @@ print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
 ## MVC#
 
-from mvc import MVC_distance
+from turbustat.statistics import MVC_distance
 
 mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)
 
@@ -40,7 +40,7 @@ print "MVC Distance: %s" % (mvc_distance.distance)
 
 ## Spatial Power Spectrum/ Bispectrum#
 
-from pspec_bispec import PSpec_Distance, BiSpectrum_Distance
+from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
 pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
 
@@ -52,7 +52,7 @@ print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
 ## Genus#
 
-from genus import GenusDistance
+from turbustat.statistics import GenusDistance
 
 genus_distance = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
@@ -60,7 +60,7 @@ print "Genus Distance: %s" % (genus_distance.distance)
 
 ## Delta-Variance
 
-from delta_variance import DeltaVariance_Distance
+from turbustat.statistics import DeltaVariance_Distance
 
 delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0],
             dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"][0],
@@ -70,7 +70,7 @@ print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
 ## VCA/VCS#
 
-from vca_vcs import VCA_Distance, VCS_Distance
+from turbustat.statistics import VCA_Distance, VCS_Distance
 
 vcs_distance = VCS_Distance(dataset1["cube"],dataset2["cube"]).distance_metric(verbose=True)
 
@@ -82,7 +82,7 @@ print "VCA Distance: %s" % (vca_distance.distance)
 
 ## Tsallis#
 
-from tsallis import Tsallis_Distance
+from turbustat.statistics import Tsallis_Distance
 
 tsallis_distance= Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
@@ -90,7 +90,7 @@ print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
 # High-order stats
 
-from stat_moments import StatMomentsDistance
+from turbustat.statistics import StatMomentsDistance
 
 moment_distance = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric(verbose=True)
 
@@ -100,7 +100,7 @@ print "Skewness Distance: %s" % (moment_distance.skewness_distance)
 
 ## PCA
 
-from pca import PCA_Distance
+from turbustat.statistics import PCA_Distance
 
 pca_distance = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric(verbose=True)
 
@@ -108,7 +108,7 @@ print "PCA Distance: %s" % (pca_distance.distance)
 
 ## SCF
 
-from scf import SCF_Distance
+from turbustat.statistics import SCF_Distance
 
 scf_distance = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric(verbose=True)
 
@@ -116,7 +116,7 @@ print "SCF Distance: %s" % (scf_distance.distance)
 
 ## Cramer Statistic
 
-from cramer import Cramer_Distance
+from turbustat.statistics import Cramer_Distance
 
 cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
 
@@ -124,7 +124,7 @@ print "Cramer Distance: %s" % (cramer_distance.distance)
 
 ## Dendrogram Stats
 
-from dendrograms import DendroDistance
+from turbustat.statistics import DendroDistance
 
 import os
  ## This one just reads from a saved HDF file, so we need some adjustments first

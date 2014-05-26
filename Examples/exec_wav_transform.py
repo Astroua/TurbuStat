@@ -6,12 +6,11 @@ Perform a 2D Wavelet Transform on images
 
 '''
 
-# from kPyWavelet import twod as twodwt
 from astropy.io.fits import getdata
 import matplotlib.pyplot as p
 import numpy as np
 
-from wavelet_transform import *
+from turbustat.statistics import Wavelet_Distance
 
 img1, hdr1 = getdata("../../../../simcloud_stats/hd22_arrays/hd22.13co.centroid.fits", header=True)
 err_img1, err_hdr1 = getdata("../../../../simcloud_stats/hd22_arrays/hd22.13co.centroid.error.fits", header=True)
