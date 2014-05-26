@@ -392,8 +392,12 @@ if __name__ == "__main__":
             if len(existing_df.index) == len(df.index):
                 store[statistics[i]] = df
             else: ## Append on
-                df = concat([existing_df, df])
-                store[statistics[i]] = df
+                for ind in df.index:
+                    if ind in list(existing_df.index):
+                        existing_df.ix[ind] = df.ix[ind]
+                    else:
+                        existing_df = concat([existing_df, df])
+                    store[statistics[i]] = existing_df
         else:
             store[statistics[i]] = df
 
