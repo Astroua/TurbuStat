@@ -8,6 +8,7 @@ Limited to step function for now.
 
 import numpy as np
 
+
 def mecdf(arr):
     '''
 
@@ -27,12 +28,9 @@ def mecdf(arr):
     assert isinstance(arr, np.ndarray)
 
     nrows = arr.shape[0]
-    ncol = arr.shape[1]
     ecdf = np.empty(arr.shape)
 
     for n in range(nrows):
-        ecdf[n,:] = np.cumsum(arr[n,:]/np.sum(arr[n,:].astype(float)))
+        ecdf[n, :] = np.cumsum(arr[n, :]/np.sum(arr[n, :].astype(float)))
 
     return ecdf
-
-

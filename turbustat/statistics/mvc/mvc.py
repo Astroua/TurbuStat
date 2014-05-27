@@ -17,7 +17,9 @@ try:
 except ImportError:
     from numpy.fft import fft2, fftshift
 
+
 class MVC(object):
+
     """
     Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
 
@@ -35,7 +37,8 @@ class MVC(object):
 
     distances   - list
                   List of distances vector lengths
-                  If None, MVC is computed using the distances in the distance array
+                  If None, MVC is computed using the distances in the distance
+                  array.
 
     FUNCTIONS
     ---------
@@ -67,28 +70,28 @@ class MVC(object):
 
     """
 
-
     def __init__(self, centroid, moment0, linewidth, header, distances=None):
         # super(MVC, self).__init__()
         self.centroid = centroid
         self.moment0 = moment0
         self.linewidth = linewidth
 
-        ## Get rid of nans.
+        # Get rid of nans.
         self.centroid[np.isnan(self.centroid)] = 0.0
         self.moment0[np.isnan(self.moment0)] = 0.0
         self.linewidth[np.isnan(self.linewidth)] = 0.0
         self.degperpix = np.abs(header["CDELT2"])
 
-        assert self.centroid.shape == self.moment0.shape == self.linewidth.shape
+        assert self.centroid.shape == self.moment0.shape
+        assert self.centroid.shape == self.linewidth.shape
         self.shape = self.centroid.shape
 
         self.center_pixel = []
         for i_shape in self.shape:
             if i_shape % 2. != 0:
-                self.center_pixel.append(int((i_shape-1)/2.))
+                self.center_pixel.append(int((i_shape - 1) / 2.))
             else:
-                self.center_pixel.append(int(i_shape/2.))
+                self.center_pixel.append(int(i_shape / 2.))
 
         self.center_pixel = tuple(self.center_pixel)
         centering_array = np.ones(self.shape)
@@ -97,18 +100,17 @@ class MVC(object):
         self.distance_array = nd.distance_transform_edt(centering_array)
 
         if not distances:
-            self.distances = np.unique(self.distance_array[np.nonzero(self.distance_array)])
+            self.distances = np.unique(
+                self.distance_array[np.nonzero(self.distance_array)])
         else:
             assert isinstance(distances, list)
             self.distances = distances
 
-
         self.correlation_array = np.ones(self.shape)
-        self.correlation_spectrum = np.zeros((1,len(self.distances)))
+        self.correlation_spectrum = np.zeros((1, len(self.distances)))
         self.ps2D = None
         self.ps1D = None
         self.freq = None
-
 
     def correlation_function(self, points):
         '''
@@ -117,14 +119,18 @@ class MVC(object):
 
         '''
 
-        center_centroid = (self.centroid[self.center_pixel]*self.moment0[self.center_pixel])
+        center_centroid = (
+            self.centroid[self.center_pixel] * self.moment0[self.center_pixel])
         center_intensity = self.moment0[self.center_pixel]
 
-        for i,j in izip(points[0],points[1]):
-            first_term = (center_centroid - self.centroid[i,j]*self.moment0[i,j])**2.
-            second_term = self.linewidth[i,j] * (center_intensity - self.moment0[i,j])**2.
+        for i, j in izip(points[0], points[1]):
+            first_term = (
+                center_centroid - self.centroid[i, j] *
+                self.moment0[i, j]) ** 2.
+            second_term = self.linewidth[
+                i, j] * (center_intensity - self.moment0[i, j]) ** 2.
 
-            self.correlation_array[i,j] = first_term - second_term
+            self.correlation_array[i, j] = first_term - second_term
 
         return self
 
@@ -133,16 +139,17 @@ class MVC(object):
         Compute the power spectrum of MVC
         '''
 
-        mvc_fft = fft2(self.centroid.astype("f8")) - self.linewidth * fft2(self.moment0.astype("f8"))
+        mvc_fft = fft2(self.centroid.astype("f8")) - \
+            self.linewidth * fft2(self.moment0.astype("f8"))
         mvc_fft = fftshift(mvc_fft)
 
-        self.ps2D = np.abs(mvc_fft)**2.
-
+        self.ps2D = np.abs(mvc_fft) ** 2.
 
         return self
 
-    def compute_radial_pspec(self, return_index=True, wavenumber=False, return_stddev=False, azbins=1, \
-                             binsize=1.0, view=False, **kwargs):
+    def compute_radial_pspec(self, return_index=True, wavenumber=False,
+                             return_stddev=False, azbins=1, binsize=1.0,
+                             view=False, **kwargs):
         '''
 
         Computes the radially averaged power spectrum
@@ -150,13 +157,15 @@ class MVC(object):
 
         '''
 
-        self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index, wavenumber=wavenumber, \
-                                      return_stddev=return_stddev, azbins=azbins, binsize=binsize,\
-                                      view=view, **kwargs)
+        self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index,
+                                     wavenumber=wavenumber,
+                                     return_stddev=return_stddev,
+                                     azbins=azbins, binsize=binsize,
+                                     view=view, **kwargs)
 
         return self
 
-    def run(self, distances = None, phys_units=False, verbose=False):
+    def run(self, distances=None, phys_units=False, verbose=False):
         '''
         Full computation of MVC
         '''
@@ -170,18 +179,20 @@ class MVC(object):
         for n, distance in enumerate(self.distances):
             points = np.where(self.distance_array == distance)
             self.correlation_function(points)
-            self.correlation_spectrum[0, n] = np.sum(self.correlation_array[points]) / len(points[0])
+            self.correlation_spectrum[0, n] = np.sum(
+                self.correlation_array[points]) / len(points[0])
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=True)
 
         if phys_units:
-            self.freqs *= self.degperpix**-1
+            self.freqs *= self.degperpix ** -1
 
         if verbose:
             import matplotlib.pyplot as p
             p.subplot(121)
-            p.imshow(np.log10(self.ps2D), origin="lower", interpolation="nearest")
+            p.imshow(
+                np.log10(self.ps2D), origin="lower", interpolation="nearest")
             p.colorbar()
             p.subplot(122)
             p.loglog(self.freq, self.ps1D, "bD-")
@@ -189,7 +200,9 @@ class MVC(object):
 
         return self
 
+
 class MVC_distance(object):
+
     """
 
     Distance metric for MVC and wrapper for whole analysis
@@ -232,18 +245,20 @@ class MVC_distance(object):
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
         else:
-            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0]**2., data1["moment0"][0] * data1["moment0_error"][0]**2., \
-                         data1["linewidth"][0] * data1["linewidth_error"][0]**2., data1["centroid"][1], distances=distances)
+            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0] ** 2.,
+                            data1["moment0"][0] * data1["moment0_error"][0] ** 2.,
+                            data1["linewidth"][0] * data1["linewidth_error"][0] ** 2.,
+                            data1["centroid"][1], distances=distances)
             self.mvc1.run()
 
-        self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0]**2., data2["moment0"][0] * data2["moment0_error"][0]**2., \
-                         data2["linewidth"][0] * data2["linewidth_error"][0]**2., data2["centroid"][1], distances=distances)
+        self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** 2.,
+                        data2["moment0"][0] * data2["moment0_error"][0] ** 2.,
+                        data2["linewidth"][0] * data2["linewidth_error"][0] ** 2.,
+                        data2["centroid"][1], distances=distances)
         self.mvc2.run()
 
         self.results = None
         self.distance = None
-
-
 
     def distance_metric(self, verbose=False):
         '''
@@ -254,35 +269,35 @@ class MVC_distance(object):
 
         '''
 
-        ## Clipping from 8 pixels to half the box size
-        ## Noise effects dominate outside this region
+        # Clipping from 8 pixels to half the box size
+        # Noise effects dominate outside this region
         clip_mask1 = np.zeros((self.mvc1.freq.shape))
-        for i,x in enumerate(self.mvc1.freq):
-            if x>8.0 and x<self.shape1[0]/2.:
+        for i, x in enumerate(self.mvc1.freq):
+            if x > 8.0 and x < self.shape1[0] / 2.:
                 clip_mask1[i] = 1
-        clip_freq1 = self.mvc1.freq[np.where(clip_mask1==1)]
-        clip_ps1D1 = self.mvc1.ps1D[np.where(clip_mask1==1)]
+        clip_freq1 = self.mvc1.freq[np.where(clip_mask1 == 1)]
+        clip_ps1D1 = self.mvc1.ps1D[np.where(clip_mask1 == 1)]
 
         clip_mask2 = np.zeros((self.mvc2.freq.shape))
-        for i,x in enumerate(self.mvc2.freq):
-            if x>8.0 and x<self.shape2[0]/2.:
+        for i, x in enumerate(self.mvc2.freq):
+            if x > 8.0 and x < self.shape2[0] / 2.:
                 clip_mask2[i] = 1
-        clip_freq2 = self.mvc2.freq[np.where(clip_mask2==1)]
-        clip_ps1D2 = self.mvc2.ps1D[np.where(clip_mask2==1)]
-
+        clip_freq2 = self.mvc2.freq[np.where(clip_mask2 == 1)]
+        clip_ps1D2 = self.mvc2.ps1D[np.where(clip_mask2 == 1)]
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
         regressor = x.T * dummy
-        constant = np.array([[1] * (len(clip_freq1) + len(clip_freq2))])
 
         log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
 
-        d = {"dummy": Series(dummy), "scales": Series(x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
+        d = {"dummy": Series(dummy), "scales": Series(
+            x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
 
         df = DataFrame(d)
 
-        model = sm.ols(formula = "log_ps1D ~ dummy + scales + regressor", data = df)
+        model = sm.ols(
+            formula="log_ps1D ~ dummy + scales + regressor", data=df)
 
         self.results = model.fit()
 
@@ -293,9 +308,12 @@ class MVC_distance(object):
             print self.results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD", np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
-            p.plot(df["scales"][:len(clip_freq1)], self.results.fittedvalues[:len(clip_freq1)], "b", \
-                   df["scales"][-len(clip_freq2):], self.results.fittedvalues[-len(clip_freq2):], "g")
+            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
+                   np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
+            p.plot(df["scales"][:len(clip_freq1)],
+                   self.results.fittedvalues[:len(clip_freq1)], "b",
+                   df["scales"][-len(clip_freq2):],
+                   self.results.fittedvalues[-len(clip_freq2):], "g")
             p.grid(True)
             p.xlabel("log K")
             p.ylabel("MVC Power (K)")

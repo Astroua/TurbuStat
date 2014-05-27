@@ -1,7 +1,7 @@
 
 '''
 
-Applying 2D Continuous Wavelet Transform to data cuve properties as shown in
+Applying 2D Continuous Wavelet Transform to data curve properties as shown in
 Gill and Henriksen, 1990
 
 Based on code from kPyWavelet and astropy.nddata.convolution.convolve
@@ -20,6 +20,7 @@ except ImportError:
 
 
 class Mexican_hat():
+
     """
 
     Implements the Mexican hat wavelet class.
@@ -31,7 +32,7 @@ class Mexican_hat():
 
     def __init__(self):
         # Reconstruction factor $C_{\psi, \delta}$
-        self.cpsi = 1. # pi
+        self.cpsi = 1.  # pi
 
     def psi_ft(self, k, l):
         """
@@ -47,8 +48,11 @@ class Mexican_hat():
         X, Y = np.meshgrid(x, y)
         return (2. - (X ** 2. + Y ** 2.)) * np.exp(-0.5 * (X ** 2. + Y ** 2.))
 
+
 class wt2D(object):
+
     """docstring for wt2D"""
+
     def __init__(self, array, scales, dx=0.25, dy=0.25, wavelet=Mexican_hat()):
         super(wt2D, self).__init__()
         self.array = array.astype("f8")
@@ -62,8 +66,7 @@ class wt2D(object):
         if np.isnan(self.array).any():
             self.nan_flag = True
 
-
-        a_min = 5/3. ## Minimum scale size given by Gill and Henriksen (90)
+        a_min = 5 / 3.  # Minimum scale size given by Gill and Henriksen (90)
         self.dx = dx * a_min
         self.dy = dy * a_min
 
@@ -91,25 +94,21 @@ class wt2D(object):
 
         """
 
-        if dx != None:
+        if dx is not None:
             assert isinstance(dx, list)
             self.dx = dx
-        if dy != None:
+        if dy is not None:
             assert isinstance(dy, list)
             self.dx = dy
-
 
         # Determines the shape of the arrays and the discrete scales.
         n0, m0 = self.array.shape
         N, M = 2 ** int(np.ceil(np.log2(n0))), 2 ** int(np.ceil(np.log2(m0)))
-        if self.scales == None:
+        if self.scales is None:
             self.scales = 2 ** np.arange(int(np.floor(np.log2(min(n0, m0)))))
         A = len(self.scales)
         # Calculates the zonal and meridional wave numbers.
         l, k = fftfreq(N, self.dy), fftfreq(M, self.dx)
-
-
-
 
         # Calculates the Fourier transform of the input signal.
         f_ft = fftn(self.array, shape=(N, M))
@@ -124,35 +123,33 @@ class wt2D(object):
 
         return self
 
-
     def astropy_cwt2d(self, dx=None, dy=None):
 
-        if dx != None:
+        if dx is not None:
             assert isinstance(dx, list)
             self.dx = dx
-        if dy != None:
+        if dy is not None:
             assert isinstance(dy, list)
             self.dx = dy
 
         n0, m0 = self.array.shape
         N, M = 2 ** int(np.ceil(np.log2(n0))), 2 ** int(np.ceil(np.log2(m0)))
-        if self.scales == None:
+        if self.scales is None:
             self.scales = 2 ** np.arange(int(np.floor(np.log2(min(n0, m0)))))
         A = len(self.scales)
 
         self.Wf = np.zeros((A, N, M), 'complex')
 
         for i, an in enumerate(self.scales):
-            psi = MexicanHat2DKernel(an, x_size=n0,y_size=m0)
-            self.Wf[i, :, :] = convolve_fft(self.array, psi, interpolate_nan=True, normalize_kernel=False,\
+            psi = MexicanHat2DKernel(an, x_size=n0, y_size=m0)
+            self.Wf[i, :, :] = convolve_fft(self.array, psi,
+                                            interpolate_nan=True,
+                                            normalize_kernel=False,
                                             fftn=fftn, ifftn=ifftn)
 
         self.Wf = self.Wf[:, :n0, :m0]
 
         return self
-
-
-
 
     def icwt2d(self, da=0.25):
         """
@@ -174,11 +171,11 @@ class wt2D(object):
         """
         if self.Wf is None:
             raise TypeError("Run cwt2D before icwt2D")
-        m0, l0, k0 =  self.Wf.shape
+        m0, l0, k0 = self.Wf.shape
 
         if m0 != self.scales.size:
-            raise Warning, 'Scale parameter array shape does not match wavelet' \
-                           ' transform array shape.'
+            raise Warning('Scale parameter array shape does not match\
+                           wavelet transform array shape.')
         # Calculates the zonal and meridional wave numters.
         L, K = 2 ** int(np.ceil(np.log2(l0))), 2 ** int(np.ceil(np.log2(k0)))
         # Calculates the zonal and meridional wave numbers.
@@ -189,7 +186,8 @@ class wt2D(object):
         for i, an in enumerate(self.scales):
             psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
             W_ft = fftn(self.Wf[i, :, :], s=(L, K))
-            self.iWf[i, :, :] = ifftn(W_ft * psi_ft_bar, s=(L, K)) * da / an ** 2.
+            self.iWf[i, :, :] = ifftn(W_ft * psi_ft_bar, s=(L, K)) *\
+                da / an ** 2.
 
         self.iWf = self.iWf[:, :l0, :k0].real.sum(axis=0) / self.wavelet.cpsi
 
@@ -201,7 +199,9 @@ class wt2D(object):
         else:
             self.cwt2d()
 
+
 class Wavelet_Distance(object):
+
     """
 
     docstring for Wavelet_Distance
@@ -225,7 +225,8 @@ class Wavelet_Distance(object):
                If no distance is provided, pixel units are used.
     """
 
-    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(), distance=None,scales=None, num=50, dx=0.25, dy=0.25, \
+    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(),
+                 distance=None, scales=None, num=50, dx=0.25, dy=0.25,
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
@@ -233,9 +234,11 @@ class Wavelet_Distance(object):
         self.array2 = dataset2[0]
         self.wavelet = wavelet
         if scales is None:
-            a_min = round((5./3.),3) ## Smallest scale given by paper
-            self.scales1 = np.logspace(np.log10(a_min), np.log10(min(self.array1.shape)), num)
-            self.scales2 = np.logspace(np.log10(a_min), np.log10(min(self.array2.shape)), num)
+            a_min = round((5. / 3.), 3)  # Smallest scale given by paper
+            self.scales1 = np.logspace(
+                np.log10(a_min), np.log10(min(self.array1.shape)), num)
+            self.scales2 = np.logspace(
+                np.log10(a_min), np.log10(min(self.array2.shape)), num)
         else:
             self.scales1 = scales
             self.scales2 = scales
@@ -245,30 +248,30 @@ class Wavelet_Distance(object):
             self.imgscale2 = 1.0
         else:
             if isinstance(distance, list):
-                self.imgscale1 = np.abs(dataset1[1]["CDELT2"]) * (np.pi/180.0) * distance[0]
-                self.imgscale2 = np.abs(dataset2[1]["CDELT2"]) * (np.pi/180.0) * distance[1]
+                self.imgscale1 = np.abs(
+                    dataset1[1]["CDELT2"]) * (np.pi / 180.0) * distance[0]
+                self.imgscale2 = np.abs(
+                    dataset2[1]["CDELT2"]) * (np.pi / 180.0) * distance[1]
             else:
-                self.imgscale1 = np.abs(dataset1[1]["CDELT2"]) * (np.pi/180.0) * distance
-                self.imgscale2 = np.abs(dataset2[1]["CDELT2"]) * (np.pi/180.0) * distance
-
+                self.imgscale1 = np.abs(
+                    dataset1[1]["CDELT2"]) * (np.pi / 180.0) * distance
+                self.imgscale2 = np.abs(
+                    dataset2[1]["CDELT2"]) * (np.pi / 180.0) * distance
 
         if fiducial_model is None:
-            self.wt1 = wt2D(self.array1, self.scales1, wavelet = wavelet)
+            self.wt1 = wt2D(self.array1, self.scales1, wavelet=wavelet)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = wt2D(self.array2, self.scales2, wavelet = wavelet)
+        self.wt2 = wt2D(self.array2, self.scales2, wavelet=wavelet)
         self.wt2.run()
-
 
         self.curve1 = None
         self.curve2 = None
 
         self.results = None
         self.distance = None
-
-
 
     def distance_metric(self, non_linear=True, verbose=False):
         '''
@@ -289,7 +292,8 @@ class Wavelet_Distance(object):
 
         non_linear - bool
                      flag if portion of data is non-linear
-                     runs the clip_to_linear function to only use the linear portion in the model
+                     runs the clip_to_linear function to only use the linear
+                     portion in the model
 
         OUTPUTS
         -------
@@ -298,7 +302,6 @@ class Wavelet_Distance(object):
 
         '''
 
-
         self.curve1 = transform((self.wt1.Wf, self.scales1), self.imgscale1)
         self.curve2 = transform((self.wt2.Wf, self.scales2), self.imgscale2)
 
@@ -306,18 +309,18 @@ class Wavelet_Distance(object):
             self.curve1 = clip_to_linear(self.curve1)
             self.curve2 = clip_to_linear(self.curve2)
 
-        dummy = [0] * len(self.curve1[0,:]) + [1] * len(self.curve2[0,:])
-        x = np.concatenate((self.curve1[1,:], self.curve2[1,:]))
+        dummy = [0] * len(self.curve1[0, :]) + [1] * len(self.curve2[0, :])
+        x = np.concatenate((self.curve1[1, :], self.curve2[1, :]))
         regressor = x.T * dummy
-        constant = np.array([[1] * (len(self.curve1[0,:]) + len(self.curve2[0,:]))])
 
-        log_T_g = np.concatenate((self.curve1[0,:], self.curve2[0,:]))
+        log_T_g = np.concatenate((self.curve1[0, :], self.curve2[0, :]))
 
-        d = {"dummy": Series(dummy), "scales": Series(x), "log_T_g": Series(log_T_g), "regressor": Series(regressor)}
+        d = {"dummy": Series(dummy), "scales": Series(
+            x), "log_T_g": Series(log_T_g), "regressor": Series(regressor)}
 
         df = DataFrame(d)
 
-        model = sm.ols(formula = "log_T_g ~ dummy + scales + regressor", data = df)
+        model = sm.ols(formula="log_T_g ~ dummy + scales + regressor", data=df)
 
         self.results = model.fit()
 
@@ -327,16 +330,16 @@ class Wavelet_Distance(object):
             print self.results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(self.curve1[1,:], self.curve1[0,:], 'bD', self.curve2[1,:], self.curve2[0,:], 'gD')
-            p.plot(self.curve1[1,:], self.results.fittedvalues[:len(self.curve1[0,:])], "b", \
-                   self.curve2[1,:], self.results.fittedvalues[-len(self.curve2[0,:]):], "g")
+            p.plot(self.curve1[1, :], self.curve1[0, :], 'bD',
+                   self.curve2[1, :], self.curve2[0, :], 'gD')
+            p.plot(self.curve1[1, :],
+                   self.results.fittedvalues[:len(self.curve1[0, :])], "b",
+                   self.curve2[1, :],
+                   self.results.fittedvalues[-len(self.curve2[0, :]):], "g")
             p.grid(True)
             p.xlabel("log a")
             p.ylabel(r"log $T_g$")
             p.show()
-
-
-
 
         return self
 
@@ -360,7 +363,8 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
                    kernel width set to this percentage of the data length
 
     ends_clipped - float
-                   percentage of data to clip off at the ends. End points have residual effects from the convolution.
+                   Percentage of data to clip off at the ends.
+                   End points have residual effects from the convolution.
 
     OUTPUTS
     -------
@@ -372,9 +376,8 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
 
     from scipy.signal import ricker
 
-
-    y = data[1,:]
-    x = data[0,:]
+    y = data[1, :]
+    x = data[0, :]
 
     num_pts = len(y)
 
@@ -390,10 +393,10 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
         y = y[clipped_pts: num_pts - clipped_pts]
         x = x[clipped_pts: num_pts - clipped_pts]
 
-    linear_pts = np.abs(sec_deriv)<threshold
+    linear_pts = np.abs(sec_deriv) < threshold
 
     data_clipped = np.empty((2, len(y[linear_pts])))
-    data_clipped[:,:] = x[linear_pts],y[linear_pts]
+    data_clipped[:, :] = x[linear_pts], y[linear_pts]
 
     return data_clipped
 
@@ -424,12 +427,12 @@ def transform(data, imgscale):
 
     log_av_T_g = []
     for i in range(len(scales)):
-        average_Tg_i = np.log10(np.abs(wav_arrays[i,:,:][wav_arrays[i,:,:]>0]).mean())
+        average_Tg_i = np.log10(np.abs(wav_arrays[i, :, :]
+                                [wav_arrays[i, :, :] > 0]).mean())
         log_av_T_g.append(average_Tg_i)
 
-    physical_scales = np.log10(scales*imgscale)
+    physical_scales = np.log10(scales * imgscale)
 
     data_1D = np.array([physical_scales, log_av_T_g])
 
     return data_1D
-

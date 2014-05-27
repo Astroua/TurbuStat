@@ -7,6 +7,7 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import nanmean
 
+
 def pdf(img, num_bins=1000, verbose=True):
     '''
 
@@ -23,10 +24,10 @@ def pdf(img, num_bins=1000, verbose=True):
 
     '''
 
-    img_av = nanmean(img, axis=None)  ## normalize by average
-    hist, edges = np.histogram(img/img_av,bins=num_bins,density=True)
+    img_av = nanmean(img, axis=None)  # normalize by average
+    hist, edges = np.histogram(img / img_av, bins=num_bins, density=True)
     hist /= np.sum(~np.isnan(img))
-    bin_centres = (edges[:-1] + edges[1:])/2
+    bin_centres = (edges[:-1] + edges[1:]) / 2
 
     if verbose:
         import matplotlib.pyplot as p

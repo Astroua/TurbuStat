@@ -7,8 +7,11 @@ Implementation of Principal Component Analysis (Heyer & Brunt, 2002)
 
 import numpy as np
 
+
 class PCA(object):
+
     """docstring for PCA"""
+
     def __init__(self, cube, n_eigs=50):
         super(PCA, self).__init__()
         self.cube = cube
@@ -17,22 +20,23 @@ class PCA(object):
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
-        self.pca_matrix = np.zeros((self.n_velchan,self.n_velchan))
+        self.pca_matrix = np.zeros((self.n_velchan, self.n_velchan))
         self.eigvals = None
 
     def compute_pca(self):
 
-        cube_mean = np.nansum(self.cube)/np.sum(np.isfinite(self.cube))
+        cube_mean = np.nansum(self.cube) / np.sum(np.isfinite(self.cube))
         norm_cube = self.cube - cube_mean
 
         for i in range(self.n_velchan):
             for j in range(i):
-                self.pca_matrix[i,j] = np.nansum(norm_cube[i,:,:]*norm_cube[j,:,:])/\
-                np.sum(np.isfinite(norm_cube[i,:,:]*norm_cube[j,:,:]))
+                self.pca_matrix[i, j] = np.nansum(norm_cube[i, :, :] *
+                                                  norm_cube[j, :, :])/\
+                                        np.sum(np.isfinite(norm_cube[i, :, :] * norm_cube[j, :, :]))
         self.pca_matrix = self.pca_matrix + self.pca_matrix.T
 
         all_eigsvals, eigvecs = np.linalg.eig(self.pca_matrix)
-        all_eigsvals.sort() # Sort by maximum
+        all_eigsvals.sort()  # Sort by maximum
         self.eigvals = all_eigsvals[:self.n_eigs]
 
         return self
@@ -48,8 +52,11 @@ class PCA(object):
             p.colorbar()
             p.show()
 
+
 class PCA_Distance(object):
+
     """docstring for PCA_Distance"""
+
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
@@ -68,19 +75,21 @@ class PCA_Distance(object):
 
     def distance_metric(self, verbose=False):
 
-        difference = np.abs((self.pca1.eigvals - self.pca2.eigvals)**2.)
+        difference = np.abs((self.pca1.eigvals - self.pca2.eigvals) ** 2.)
         self.distance = np.sqrt(np.sum(difference))
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(1,2,1)
-            p.imshow(self.pca1.pca_matrix, origin="lower", interpolation="nearest")
+            p.subplot(1, 2, 1)
+            p.imshow(
+                self.pca1.pca_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA1")
 
-            p.subplot(1,2,2)
-            p.imshow(self.pca2.pca_matrix, origin="lower", interpolation="nearest")
+            p.subplot(1, 2, 2)
+            p.imshow(
+                self.pca2.pca_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA2")
 
