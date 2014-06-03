@@ -77,9 +77,9 @@ class MVC(object):
         self.linewidth = linewidth
 
         # Get rid of nans.
-        self.centroid[np.isnan(self.centroid)] = 0.0
-        self.moment0[np.isnan(self.moment0)] = 0.0
-        self.linewidth[np.isnan(self.linewidth)] = 0.0
+        self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
+        self.moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
+        self.linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
         self.degperpix = np.abs(header["CDELT2"])
 
         assert self.centroid.shape == self.moment0.shape
