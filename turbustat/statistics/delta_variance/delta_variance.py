@@ -8,7 +8,7 @@ Implementation of the Delta-Variance Method from Stutzki et al. 1998.
 import numpy as np
 from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
-
+from astropy import units as u
 
 class DeltaVariance(object):
 
@@ -18,10 +18,11 @@ class DeltaVariance(object):
 
     """
 
-    def __init__(self, img, weights, diam_ratio=1.5, lags=None):
+    def __init__(self, img, header, weights, diam_ratio=1.5, lags=None):
         super(DeltaVariance, self).__init__()
 
         self.img = img
+        self.header = header
         self.weights = weights
         self.diam_ratio = diam_ratio
 
@@ -30,7 +31,16 @@ class DeltaVariance(object):
             self.nanflag = True
 
         if lags is None:
-            self.lags = np.logspace(0., np.log10(min(self.img.shape) / 2.), 25)
+            try:
+                ang_size = self.header["CDELT2"] * u.deg
+                min_size = (0.1 * u.arcmin) / ang_size.to(u.arcmin)
+                # Can't be smaller than one pixel, set to 3 to avoid noisy pixels
+                if min_size < 3.0:
+                    min_size = 3.0
+            except KeyError:
+                print "No CDELT2 in header. Using pixel scales."
+                min_size = 1
+            self.lags = np.logspace(np.log10(min_size), np.log10(min(self.img.shape) / 2.), 25)
         else:
             self.lags = lags
 
@@ -179,18 +189,18 @@ class DeltaVariance_Distance(object):
 
     """
 
-    def __init__(self, img1, weights1, img2, weights2, diam_ratio=1.5,
+    def __init__(self, dataset1, weights1, dataset2, weights2, diam_ratio=1.5,
                  lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(img1, weights1, diam_ratio=diam_ratio,
+            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1], weights1, diam_ratio=diam_ratio,
                                          lags=lags)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(img2, weights2, diam_ratio=diam_ratio,
+        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1], weights2, diam_ratio=diam_ratio,
                                      lags=lags)
         self.delvar2.run()
 
