@@ -55,16 +55,20 @@ class DeltaVariance(object):
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
             weights_annulus[np.where(weights_annulus == 0)] = np.NaN
@@ -80,6 +84,7 @@ class DeltaVariance(object):
         for i, (convolved_array, convolved_weight) in enumerate(zip(self.convolved_arrays, self.convolved_weights)):
             avg_value = nanmean(convolved_array, axis=None)
 
+            print np.nansum(np.power(convolved_array - avg_value, 2) * convolved_weight)
             delta_var_val = np.nansum(
                 (convolved_array - avg_value) ** 2. * convolved_weight) / \
                 np.nansum(convolved_weight)
