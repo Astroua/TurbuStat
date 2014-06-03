@@ -241,6 +241,9 @@ class BiSpectrum(object):
         self.header = header
         self.shape = img.shape
 
+        # Set nans to min
+        self.img[np.isnan(self.img)] = np.nanmin(self.img)
+
         self.kx = np.arange(0., self.shape[0] / 2., 1)
         self.ky = np.arange(0., self.shape[1] / 2., 1)
 
