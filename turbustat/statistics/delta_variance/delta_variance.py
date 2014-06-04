@@ -32,14 +32,15 @@ class DeltaVariance(object):
 
         if lags is None:
             try:
-                ang_size = self.header["CDELT2"] * u.deg
-                min_size = (0.1 * u.arcmin) / ang_size.to(u.arcmin)
+                self.ang_size = self.header["CDELT2"] * u.deg
+                min_size = (0.1 * u.arcmin) / self.ang_size.to(u.arcmin)
                 # Can't be smaller than one pixel, set to 3 to avoid noisy pixels
                 if min_size < 3.0:
                     min_size = 3.0
             except KeyError:
                 print "No CDELT2 in header. Using pixel scales."
-                min_size = 1
+                self.ang_size = 1.0 * u.astrophys.pixel
+                min_size = 3.0
             self.lags = np.logspace(np.log10(min_size), np.log10(min(self.img.shape) / 2.), 25)
         else:
             self.lags = lags
@@ -94,7 +95,6 @@ class DeltaVariance(object):
         for i, (convolved_array, convolved_weight) in enumerate(zip(self.convolved_arrays, self.convolved_weights)):
             avg_value = nanmean(convolved_array, axis=None)
 
-            print np.nansum(np.power(convolved_array - avg_value, 2) * convolved_weight)
             delta_var_val = np.nansum(
                 (convolved_array - avg_value) ** 2. * convolved_weight) / \
                 np.nansum(convolved_weight)
@@ -108,17 +108,20 @@ class DeltaVariance(object):
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, ang_units=True):
 
         self.do_convolutions()
         self.compute_deltavar()
+
+        if ang_units:
+            self.lags *= self.ang_size
 
         if verbose:
             import matplotlib.pyplot as p
             # p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error)
             p.loglog(self.lags, self.delta_var[0, :], "bD-")
             p.grid(True)
-            p.xlabel("Lag")
+            p.xlabel("Lag (arcmin)")
             p.ylabel(r"$\sigma^{2}_{\Delta}$")
             p.show()
 
@@ -222,7 +225,7 @@ class DeltaVariance_Distance(object):
                      label="Delta Var 2")
             p.legend()
             p.grid(True)
-            p.xlabel("Lag")
+            p.xlabel("Lag (arcmin)")
             p.ylabel(r"$\sigma^{2}_{\Delta}$")
 
             p.show()
