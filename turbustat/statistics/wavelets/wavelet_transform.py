@@ -59,8 +59,9 @@ class wt2D(object):
         self.scales = scales
         self.wavelet = wavelet
 
-        ### HEY YOU YOOK OUT NANS HERE ###
-        self.array[np.isnan(self.array)] = 0.0
+        ### NOTE: can't use nan_interpolating from astropy until the normalization
+        ### for sum to zeros kernels is fixed!!!
+        self.array[np.isnan(self.array)] = np.nanmin(self.array)
 
         self.nan_flag = False
         if np.isnan(self.array).any():
@@ -144,7 +145,7 @@ class wt2D(object):
             psi = MexicanHat2DKernel(an, x_size=n0, y_size=m0)
             self.Wf[i, :, :] = convolve_fft(self.array, psi,
                                             interpolate_nan=True,
-                                            normalize_kernel=False,
+                                            normalize_kernel=True,
                                             fftn=fftn, ifftn=ifftn)
 
         self.Wf = self.Wf[:, :n0, :m0]
@@ -310,10 +311,10 @@ class Wavelet_Distance(object):
             self.curve2 = clip_to_linear(self.curve2)
 
         dummy = [0] * len(self.curve1[0, :]) + [1] * len(self.curve2[0, :])
-        x = np.concatenate((self.curve1[1, :], self.curve2[1, :]))
+        x = np.concatenate((self.curve1[0, :], self.curve2[0, :]))
         regressor = x.T * dummy
 
-        log_T_g = np.concatenate((self.curve1[0, :], self.curve2[0, :]))
+        log_T_g = np.concatenate((self.curve1[1, :], self.curve2[1, :]))
 
         d = {"dummy": Series(dummy), "scales": Series(
             x), "log_T_g": Series(log_T_g), "regressor": Series(regressor)}
@@ -330,12 +331,12 @@ class Wavelet_Distance(object):
             print self.results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(self.curve1[1, :], self.curve1[0, :], 'bD',
-                   self.curve2[1, :], self.curve2[0, :], 'gD')
-            p.plot(self.curve1[1, :],
-                   self.results.fittedvalues[:len(self.curve1[0, :])], "b",
-                   self.curve2[1, :],
-                   self.results.fittedvalues[-len(self.curve2[0, :]):], "g")
+            p.plot(self.curve1[0, :], self.curve1[1, :], 'bD',
+                   self.curve2[0, :], self.curve2[1, :], 'gD')
+            p.plot(self.curve1[0, :],
+                   self.results.fittedvalues[:len(self.curve1[1, :])], "b",
+                   self.curve2[0, :],
+                   self.results.fittedvalues[-len(self.curve2[1, :]):], "g")
             p.grid(True)
             p.xlabel("log a")
             p.ylabel(r"log $T_g$")

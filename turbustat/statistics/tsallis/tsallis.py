@@ -27,10 +27,17 @@ class Tsallis(object):
 
     """
 
-    def __init__(self, img, lags=None, num_bins=500):
+    def __init__(self, img, lags=None, num_bins=500, periodic=False):
+        '''
+        Parameters
+        ----------
 
+        periodic : bool, optional
+                   Use for simulations with periodic boundaries.
+        '''
         self.img = img
         self.num_bins = num_bins
+        self.periodic = periodic
 
         if lags is None:
             self.lags = [1, 2, 4, 8, 16, 32, 64]
@@ -43,20 +50,33 @@ class Tsallis(object):
         self.tsallis_fits = np.empty((len(self.lags), 7))
 
     def make_tsallis(self):
+
         for i, lag in enumerate(self.lags):
-            pad_img = self.img  # np.pad(self.img, 2*lag, padwithzeros)
+            if self.periodic:
+                pad_img = self.img
+            else:
+                pad_img = np.pad(self.img, lag, padwithzeros)
             rolls = np.roll(pad_img, lag, axis=0) +\
                 np.roll(pad_img, (-1) * lag, axis=0) +\
                 np.roll(pad_img, lag, axis=1) +\
                 np.roll(pad_img, (-1) * lag, axis=1)
 
-            self.tsallis_arrays[i, :] = normalize((rolls / 4.) - self.img)
+            #  Remove the padding
+            if self.periodic:
+                clip_resulting = (rolls / 4.) - pad_img
+            else:
+                clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) - pad_img[lag:-lag, lag:-lag]
+            # Normalize the data
+            data = normalize(clip_resulting)
 
-            hist, bin_edges = np.histogram(
-                self.tsallis_arrays[i, :].ravel(), bins=self.num_bins)
+            # Ignore nans for the histogram
+            hist, bin_edges = np.histogram(data[~np.isnan(data)],
+                                           bins=self.num_bins)
             bin_centres = (bin_edges[:-1] + bin_edges[1:]) / 2
             normlog_hist = np.log10(hist / np.sum(hist, dtype="float"))
 
+            # Keep results
+            self.tsallis_arrays[i, :] = data
             self.tsallis_distrib[i, 0, :] = bin_centres
             self.tsallis_distrib[i, 1, :] = normlog_hist
 
@@ -125,7 +145,7 @@ class Tsallis_Distance(object):
     """
 
     def __init__(self, array1, array2, lags=None, num_bins=500,
-                 fiducial_model=None):
+                 fiducial_model=None, periodic=False):
         super(Tsallis_Distance, self).__init__()
         self.array1 = array1
         self.array2 = array2
@@ -134,10 +154,12 @@ class Tsallis_Distance(object):
             self.tsallis1 = fiducial_model
         else:
             self.tsallis1 = Tsallis(
-                array1, lags=lags, num_bins=num_bins).run(verbose=False)
+                array1, lags=lags, num_bins=num_bins,
+                periodic=periodic).run(verbose=False)
 
         self.tsallis2 = Tsallis(
-            array2, lags=lags, num_bins=num_bins).run(verbose=False)
+            array2, lags=lags, num_bins=num_bins,
+            periodic=periodic).run(verbose=False)
 
         self.distance = None
 
@@ -171,6 +193,8 @@ class Tsallis_Distance(object):
             p.plot(lags, diff_w, "rD", label="Difference of w")
             p.plot(lags, diff_q, "gD", label="Difference of q")
             p.legend()
+            p.xscale('log', basex=2)
+            p.grid(True)
             p.show()
 
         return self

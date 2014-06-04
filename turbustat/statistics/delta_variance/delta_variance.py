@@ -8,7 +8,7 @@ Implementation of the Delta-Variance Method from Stutzki et al. 1998.
 import numpy as np
 from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
-
+from astropy import units as u
 
 class DeltaVariance(object):
 
@@ -18,10 +18,11 @@ class DeltaVariance(object):
 
     """
 
-    def __init__(self, img, weights, diam_ratio=1.5, lags=None):
+    def __init__(self, img, header, weights, diam_ratio=1.5, lags=None):
         super(DeltaVariance, self).__init__()
 
         self.img = img
+        self.header = header
         self.weights = weights
         self.diam_ratio = diam_ratio
 
@@ -30,7 +31,17 @@ class DeltaVariance(object):
             self.nanflag = True
 
         if lags is None:
-            self.lags = np.logspace(0., np.log10(min(self.img.shape) / 2.), 25)
+            try:
+                self.ang_size = self.header["CDELT2"] * u.deg
+                min_size = (0.1 * u.arcmin) / self.ang_size.to(u.arcmin)
+                # Can't be smaller than one pixel, set to 3 to avoid noisy pixels
+                if min_size < 3.0:
+                    min_size = 3.0
+            except KeyError:
+                print "No CDELT2 in header. Using pixel scales."
+                self.ang_size = 1.0 * u.astrophys.pixel
+                min_size = 3.0
+            self.lags = np.logspace(np.log10(min_size), np.log10(min(self.img.shape) / 2.), 25)
         else:
             self.lags = lags
 
@@ -55,16 +66,20 @@ class DeltaVariance(object):
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan)
+                interpolate_nan=interpolate_nan,
+                ignore_edge_zeros=True)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
             weights_annulus[np.where(weights_annulus == 0)] = np.NaN
@@ -93,17 +108,20 @@ class DeltaVariance(object):
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, ang_units=True):
 
         self.do_convolutions()
         self.compute_deltavar()
+
+        if ang_units:
+            self.lags *= self.ang_size
 
         if verbose:
             import matplotlib.pyplot as p
             # p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error)
             p.loglog(self.lags, self.delta_var[0, :], "bD-")
             p.grid(True)
-            p.xlabel("Lag")
+            p.xlabel("Lag (arcmin)")
             p.ylabel(r"$\sigma^{2}_{\Delta}$")
             p.show()
 
@@ -174,18 +192,18 @@ class DeltaVariance_Distance(object):
 
     """
 
-    def __init__(self, img1, weights1, img2, weights2, diam_ratio=1.5,
+    def __init__(self, dataset1, weights1, dataset2, weights2, diam_ratio=1.5,
                  lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(img1, weights1, diam_ratio=diam_ratio,
+            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1], weights1, diam_ratio=diam_ratio,
                                          lags=lags)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(img2, weights2, diam_ratio=diam_ratio,
+        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1], weights2, diam_ratio=diam_ratio,
                                      lags=lags)
         self.delvar2.run()
 
@@ -207,7 +225,7 @@ class DeltaVariance_Distance(object):
                      label="Delta Var 2")
             p.legend()
             p.grid(True)
-            p.xlabel("Lag")
+            p.xlabel("Lag (arcmin)")
             p.ylabel(r"$\sigma^{2}_{\Delta}$")
 
             p.show()
