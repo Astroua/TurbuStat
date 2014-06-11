@@ -17,3 +17,5 @@ Requires:
  *   pandas
  *   statsmodels
  *   astrodendro
+ *   signal-id
+ *   spectral-cube
