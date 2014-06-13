@@ -15,41 +15,93 @@ from pandas import HDFStore, Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.interpolate import UnivariateSpline
 from mecdf import mecdf
+from astrodendro import pruning, Dendrogram
 
+class Dendrogram_Stats(object):
+    """docstring for Dendrogram_Stats"""
+    def __init__(self, cube, min_deltas=None, dendro_params=None):
+        super(Dendrogram_Stats, self).__init__()
+        self.cube = cube
+        self.min_deltas = min_deltas
+
+        if dendro_params is None:
+            self.dendro_params = {"min_npix": 10,
+                                  "min_value": 0.001}
+        else:
+            poss_keys = dir(pruning)
+            for key in dendro_params.keys():
+                if key not in poss_keys:
+                    raise KeyError(key + " is not a valid pruning parameter.")
+            self.dendro_params = dendro_params
+
+        self.numfeatures = np.empty(self.min_deltas.shape)
+        self.values = []
+        self.histograms = []
+
+    def compute_dendro(self, verbose=False):
+        '''
+        ** min_deltas must be in ascending order! **
+        '''
+        d = Dendrogram.compute(self.cube, verbose=verbose, min_delta = self.min_deltas[0],
+                               min_value=self.dendro_params["min_value"],
+                               min_npix=self.dendro_params["min_npix"])
+        self.numfeatures[0] = len(d)
+        self.values.append(np.asarray([struct.vmax for struct in d.all_structures]))
+
+        for i, delta in enumerate(self.min_deltas[1:]):
+            if verbose:
+                print "On %s of %s" % (i+1, len(self.min_deltas[1:]))
+            d.prune(min_delta=delta)
+            self.numfeatures[i + 1] = len(d)
+            self.values.append([struct.vmax for struct in d.all_structures])
+
+        return self
+
+    def run(self, verbose=False):
+        self.compute_dendro(verbose=verbose)
+
+        if verbose:
+             import matplotlib.pyplot as p
+             pass  # Write up some quick plots.
 
 class DendroDistance(object):
 
     """docstring for DendroDistance"""
 
-    def __init__(self, file1, file2, timestep, nbins="best",
-                 min_features=1000):
+    def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
+                 min_features=1000, fiducial_model=None, dendro_params=None):
         super(DendroDistance, self).__init__()
 
-        self.file1 = HDFStore(file1)
-        self.file2 = HDFStore(file2)
         self.nbins = nbins
 
-        if timestep[0] != "/":  # Saving in HDF5 adds this to the beginning
-            timestep = "/" + timestep
+        if min_deltas is None:
+            min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
+                         np.logspace(-0.6, -0.35, 10))
 
-        assert timestep in self.file1.keys()
-        assert timestep in self.file2.keys()
+        if fiducial_model is not None:
+            self.dendro1 = fiducial_model
+        else:
+            self.dendro1 = Dendrogram_Stats(cube1, min_deltas=min_deltas, dendro_params=dendro_params)
+            self.dendro1.run(verbose=True)
 
-        self.file1 = self.file1[timestep]
-        self.file2 = self.file2[timestep]
+        self.dendro2 = Dendrogram_Stats(cube2, min_deltas=min_deltas, dendro_params=dendro_params)
+        self.dendro2.run(verbose=True)
 
-        assert (self.file1["Deltas"] == self.file2["Deltas"]).all()
-        self.deltas1 = np.log10(self.file1["Deltas"])
-        self.deltas2 = np.log10(self.file2["Deltas"])
-        self.numdata1 = np.log10(self.file1["Num Features"])
-        self.numdata2 = np.log10(self.file2["Num Features"])
 
         # Set the minimum number of components to create a histogram
-        self.cutoff = min(np.argwhere((self.file1["Num Features"] < min_features) == 1)[0],
-                          np.argwhere((self.file2["Num Features"] < min_features) == 1)[0])[0]
+        cutoff1 = np.argwhere(self.dendro1.numfeatures < min_features)
+        cutoff2 = np.argwhere(self.dendro2.numfeatures < min_features)
+        if cutoff1.any():
+            cutoff1 = cutoff1[0]
+        else:
+            cutoff1 = len(self.dendro1.numfeatures)
+        if cutoff2.any():
+            cutoff2 = cutoff2[0]
+        else:
+            cutoff2 = len(self.dendro2.numfeatures)
 
-        self.histograms1 = None
-        self.histograms2 = None
+        self.cutoff = min(cutoff1, cutoff2)
+
         self.bins = []
         self.mecdf1 = None
         self.mecdf2 = None
@@ -63,28 +115,28 @@ class DendroDistance(object):
         '''
 
         # Remove points where log(numdata)=0
-        if (self.numdata1 == 0).any() or (self.numdata2 == 0).any():
-            self.deltas1 = self.deltas1[self.numdata1 > 0]
-            self.deltas2 = self.deltas2[self.numdata2 > 0]
+        deltas1 = np.log10(self.dendro1.min_deltas[self.dendro1.numfeatures > 1])
+        numfeatures1 = np.log10(self.dendro1.numfeatures[self.dendro1.numfeatures > 1])
 
-            self.numdata1 = self.numdata1[self.numdata1 > 0]
-            self.numdata2 = self.numdata2[self.numdata2 > 0]
+        deltas2 = np.log10(self.dendro2.min_deltas[self.dendro2.numfeatures > 1])
+        numfeatures2 = np.log10(self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
 
         # Approximate knot location using linear splines with minimal smoothing
-        break1 = break_spline(self.deltas1, self.numdata1, k=1, s=1)
-        break2 = break_spline(self.deltas2, self.numdata2, k=1, s=1)
+        break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
+        break2 = break_spline(deltas2, numfeatures2, k=1, s=1)
 
-        self.numdata1 = self.numdata1.ix[np.where(self.deltas1 > break1)]
-        self.numdata2 = self.numdata2.ix[np.where(self.deltas2 > break2)]
-        clip_delta1 = self.deltas1.ix[np.where(self.deltas1 > break1)]
-        clip_delta2 = self.deltas2.ix[np.where(self.deltas2 > break2)]
+        # Keep values after the break
+        numfeatures1 = numfeatures1[np.where(deltas1 > break1)]
+        numfeatures2 = numfeatures2[np.where(deltas2 > break2)]
+        clip_delta1 = deltas1[np.where(deltas1 > break1)]
+        clip_delta2 = deltas2[np.where(deltas2 > break2)]
 
         # Set up columns for regression
         dummy = [0] * len(clip_delta1) + [1] * len(clip_delta2)
         x = np.concatenate((clip_delta1, clip_delta2))
         regressor = x.T * dummy
 
-        numdata = np.concatenate((self.numdata1, self.numdata2))
+        numdata = np.concatenate((numfeatures1, numfeatures2))
 
         d = {"dummy": Series(dummy), "scales": Series(x),
              "log_numdata": Series(numdata), "regressor": Series(regressor)}
@@ -102,12 +154,12 @@ class DendroDistance(object):
             print self.num_results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(clip_delta1, self.numdata1, "bD",
-                   clip_delta2, self.numdata2, "gD")
-            p.plot(df["scales"][:len(self.numdata1)],
-                   self.num_results.fittedvalues[:len(self.numdata1)], "b",
-                   df["scales"][-len(self.numdata2):],
-                   self.num_results.fittedvalues[-len(self.numdata2):], "g")
+            p.plot(clip_delta1, numfeatures1, "bD",
+                   clip_delta2, numfeatures2, "gD")
+            p.plot(df["scales"][:len(numfeatures1)],
+                   self.num_results.fittedvalues[:len(numfeatures1)], "b",
+                   df["scales"][-len(numfeatures2):],
+                   self.num_results.fittedvalues[-len(numfeatures2):], "g")
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
@@ -121,19 +173,19 @@ class DendroDistance(object):
 
         if self.nbins == "best":
             self.nbins = [int(round(np.sqrt((n1 + n2) / 2.))) for n1, n2 in
-                          zip(self.file1["Num Features"].ix[:self.cutoff],
-                              self.file2["Num Features"].ix[:self.cutoff])]
+                          zip(self.dendro1.numfeatures[:self.cutoff],
+                              self.dendro2.numfeatures[:self.cutoff])]
         else:
-            self.nbins = [self.nbins] * len(self.deltas1.ix[:self.cutoff])
+            self.nbins = [self.nbins] * len(self.dendro1.numfeatures[:self.cutoff])
 
         self.histograms1 = np.empty(
-            (len(self.deltas1.ix[:self.cutoff]), np.max(self.nbins)))
+            (len(self.dendro1.numfeatures[:self.cutoff]), np.max(self.nbins)))
         self.histograms2 = np.empty(
-            (len(self.deltas2.ix[:self.cutoff]), np.max(self.nbins)))
+            (len(self.dendro2.numfeatures[:self.cutoff]), np.max(self.nbins)))
 
         for n, (data1, data2, nbin) in enumerate(
-                zip(self.file1["Histograms"].ix[:self.cutoff],
-                    self.file2["Histograms"].ix[:self.cutoff], self.nbins)):
+                zip(self.dendro1.values[:self.cutoff],
+                    self.dendro2.values[:self.cutoff], self.nbins)):
             hist1, bins = np.histogram(
                 data1, bins=nbin, density=True, range=[0, 1])[:2]
             self.histograms1[n, :] = \
@@ -191,12 +243,8 @@ class DendroDistance(object):
         '''
         '''
 
-        self.histogram_stat(verbose=verbose)
+        # self.histogram_stat(verbose=verbose)
         self.numfeature_stat(verbose=verbose)
-
-        # Close HDF5 files
-        self.file1.close()
-        self.file2.close()
 
         return self
 

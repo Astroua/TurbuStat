@@ -24,7 +24,7 @@ dataset2 = fromfits(folder2, keywords, verbose=False)
 
 ## Wavelet Transform
 
-from turbustat.statistics import Wavelet_Distance
+# from turbustat.statistics import Wavelet_Distance
 
 wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
@@ -62,8 +62,8 @@ print "Genus Distance: %s" % (genus_distance.distance)
 
 from turbustat.statistics import DeltaVariance_Distance
 
-delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"][0],
-            dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"][0],
+delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"],
+            dataset1["integrated_intensity_error"][0], dataset2["integrated_intensity"],
             dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
 
 print "Delta-Variance Distance: %s" % (delvar_distance.distance)
@@ -122,20 +122,11 @@ cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).dist
 
 print "Cramer Distance: %s" % (cramer_distance.distance)
 
-## Dendrogram Stats
+# ## Dendrogram Stats
 
 from turbustat.statistics import DendroDistance
 
-import os
- ## This one just reads from a saved HDF file, so we need some adjustments first
-path1 = "/".join(folder1.split("/")[:-2])
-path2 = "/".join(folder2.split("/")[:-2])
-
-file1 = [os.path.join(path1, x) for x in os.listdir(path1) if x[-2:]=="h5"][0]
-file2 = [os.path.join(path2,x) for x in os.listdir(path2) if x[-2:]=="h5"][0]
-timestep = folder1[-9:-1]
-
-dendro_distance= DendroDistance(file1, file2, timestep).distance_metric(verbose=True)
+dendro_distance= DendroDistance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric(verbose=True)
 
 print dendro_distance.num_distance
 print dendro_distance.histogram_distance
