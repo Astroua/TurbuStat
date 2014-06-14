@@ -59,7 +59,6 @@ class Dendrogram_Stats(object):
 
     def run(self, verbose=False):
         self.compute_dendro(verbose=verbose)
-
         if verbose:
              import matplotlib.pyplot as p
              pass  # Write up some quick plots.
@@ -69,7 +68,7 @@ class DendroDistance(object):
     """docstring for DendroDistance"""
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
-                 min_features=1000, fiducial_model=None, dendro_params=None):
+                 min_features=100, fiducial_model=None, dendro_params=None):
         super(DendroDistance, self).__init__()
 
         self.nbins = nbins
@@ -187,12 +186,12 @@ class DendroDistance(object):
                 zip(self.dendro1.values[:self.cutoff],
                     self.dendro2.values[:self.cutoff], self.nbins)):
             hist1, bins = np.histogram(
-                data1, bins=nbin, density=True, range=[0, 1])[:2]
+                data1, bins=nbin, density=True)[:2]
             self.histograms1[n, :] = \
                 np.append(hist1, (np.max(self.nbins) - nbin) * [np.NaN])
             self.bins.append(bins)
             hist2 = np.histogram(
-                data2, bins=nbin, density=True, range=[0, 1])[0]
+                data2, bins=nbin, density=True)[0]
             self.histograms2[n, :] = \
                 np.append(hist2, (np.max(self.nbins) - nbin) * [np.NaN])
 
@@ -212,25 +211,25 @@ class DendroDistance(object):
             p.subplot(2, 2, 1)
             p.title("ECDF 1")
             p.xlabel("Intensities")
-            for n in range(len(self.deltas1[:self.cutoff])):
+            for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 p.plot((self.bins[n][:-1] + self.bins[n][1:])/2,
                        self.mecdf1[n, :][:self.nbins[n]])
             p.subplot(2, 2, 2)
             p.title("ECDF 2")
             p.xlabel("Intensities")
-            for n in range(len(self.deltas2[:self.cutoff])):
+            for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 p.plot((self.bins[n][:-1] + self.bins[n][1:])/2,
                        self.mecdf2[n, :][:self.nbins[n]])
             p.subplot(2, 2, 3)
             p.title("PDF 1")
-            for n in range(len(self.deltas1[:self.cutoff])):
+            for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
                 p.bar((self.bins[n][:-1] + self.bins[n][1:])/2,
                       self.histograms1[n, :][:self.nbins[n]],
                       align="center", width=bin_width, alpha=0.25)
             p.subplot(2, 2, 4)
             p.title("PDF 2")
-            for n in range(len(self.deltas2[:self.cutoff])):
+            for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
                 p.bar((self.bins[n][:-1] + self.bins[n][1:])/2,
                       self.histograms2[n, :][:self.nbins[n]],
@@ -243,7 +242,7 @@ class DendroDistance(object):
         '''
         '''
 
-        # self.histogram_stat(verbose=verbose)
+        self.histogram_stat(verbose=verbose)
         self.numfeature_stat(verbose=verbose)
 
         return self
