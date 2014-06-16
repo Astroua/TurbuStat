@@ -95,8 +95,6 @@ class Cramer_Distance(object):
         '''
 
         self.format_data()
-        print self.data_matrix1.shape
-        print self.data_matrix2.shape
         self.cramer_statistic(n_jobs=n_jobs)
 
         return self
