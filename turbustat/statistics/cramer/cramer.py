@@ -105,7 +105,7 @@ def intensity_data(cube, p=0.25, noise_lim=0.1):
     '''
     vec_length = int(round(p * cube.shape[1] * cube.shape[2]))
     intensity_vecs = np.empty((cube.shape[0], vec_length))
-    # cube[np.isnan(cube)] = 0.0
+
     for dv in range(cube.shape[0]):
         vec_vec = cube[dv, :, :]
         # Remove nans from the slice
