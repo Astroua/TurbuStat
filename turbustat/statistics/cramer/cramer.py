@@ -47,23 +47,23 @@ class Cramer_Distance(object):
         '''
         # Adjust what we call n,m based on the larger dimension.
         # Then the looping below is valid.
-        if self.data_matrix1.shape[1] >= self.data_matrix2.shape[1]:
-            m = self.data_matrix1.shape[1]
-            n = self.data_matrix2.shape[1]
+        if self.data_matrix1.shape[0] >= self.data_matrix2.shape[0]:
+            m = self.data_matrix1.shape[0]
+            n = self.data_matrix2.shape[0]
         else:
-            n = self.data_matrix1.shape[1]
-            m = self.data_matrix2.shape[1]
+            n = self.data_matrix1.shape[0]
+            m = self.data_matrix2.shape[0]
 
         term1 = 0.0
         term2 = 0.0
         term3 = 0.0
 
         pairdist11 = pairwise_distances(
-            self.data_matrix1.T, metric="euclidean", n_jobs=n_jobs)
+            self.data_matrix1, metric="euclidean", n_jobs=n_jobs)
         pairdist22 = pairwise_distances(
-            self.data_matrix2.T, metric="euclidean", n_jobs=n_jobs)
+            self.data_matrix2, metric="euclidean", n_jobs=n_jobs)
         pairdist12 = pairwise_distances(
-            self.data_matrix1.T, self.data_matrix2.T,
+            self.data_matrix1, self.data_matrix2,
             metric="euclidean", n_jobs=n_jobs)
 
         for i in range(m):
@@ -72,7 +72,7 @@ class Cramer_Distance(object):
             for ii in range(m):
                 term2 += pairdist11[i, ii]
 
-            if i <= n:
+            if i < n:
                 for jj in range(n):
                     term3 += pairdist22[i, jj]
 
@@ -95,16 +95,20 @@ class Cramer_Distance(object):
         '''
 
         self.format_data()
+        print self.data_matrix1.shape
+        print self.data_matrix2.shape
         self.cramer_statistic(n_jobs=n_jobs)
 
         return self
 
 
-def intensity_data(cube, p=0.25, noise_lim=0.1):
+def intensity_data(cube, p=0.1, noise_lim=0.1):
     '''
     '''
     vec_length = int(round(p * cube.shape[1] * cube.shape[2]))
     intensity_vecs = np.empty((cube.shape[0], vec_length))
+
+    delete_channels = []
 
     for dv in range(cube.shape[0]):
         vec_vec = cube[dv, :, :]
@@ -124,5 +128,8 @@ def intensity_data(cube, p=0.25, noise_lim=0.1):
         if maxval != 0.0:
             intensity_vecs[dv, :] = vel_vec / maxval
         else:
-            np.delete(intensity_vecs, dv)
+            delete_channels.append(dv)
+    # Remove channels
+    intensity_vecs = np.delete(intensity_vecs, delete_channels, axis=0)
+
     return intensity_vecs
