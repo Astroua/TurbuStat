@@ -185,13 +185,22 @@ class DendroDistance(object):
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
                     self.dendro2.values[:self.cutoff], self.nbins)):
-            hist1, bins = np.histogram(
-                data1, bins=nbin, density=True)[:2]
+
+            stand_data1 = standardize(data1)
+            stand_data2 = standardize(data2)
+
+            # Create bins for both from the relative minimum and maximum.
+            bins = np.linspace(np.min(np.append(stand_data1, stand_data2)),
+                               np.max(np.append(stand_data1, stand_data2)), nbin + 1)
+            self.bins.append(bins)
+
+            hist1 = np.histogram(
+                stand_data1, bins=bins, density=True)[0]
             self.histograms1[n, :] = \
                 np.append(hist1, (np.max(self.nbins) - nbin) * [np.NaN])
-            self.bins.append(bins)
+
             hist2 = np.histogram(
-                data2, bins=nbin, density=True)[0]
+                stand_data2, bins=bins, density=True)[0]
             self.histograms2[n, :] = \
                 np.append(hist2, (np.max(self.nbins) - nbin) * [np.NaN])
 
@@ -281,3 +290,6 @@ def break_spline(x, y, **kwargs):
 
     else:
         return knots[1]
+
+def standardize(x):
+    return (x - np.nanmean(x)) / np.nanstd(x)
