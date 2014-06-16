@@ -100,23 +100,29 @@ class Cramer_Distance(object):
         return self
 
 
-def intensity_data(cube, p=0.25):
+def intensity_data(cube, p=0.25, noise_lim=0.1):
     '''
     '''
     vec_length = int(round(p * cube.shape[1] * cube.shape[2]))
     intensity_vecs = np.empty((cube.shape[0], vec_length))
-    cube[np.isnan(cube)] = 0.0
+    # cube[np.isnan(cube)] = 0.0
     for dv in range(cube.shape[0]):
-        vel_vec = cube[dv, :, :].ravel()
+        vec_vec = cube[dv, :, :]
+        # Remove nans from the slice
+        vel_vec = vec_vec[np.isfinite(vec_vec)]
+        # Apply noise limit
+        vel_vec = vel_vec[vel_vec > noise_lim]
         vel_vec.sort()
         if len(vel_vec) < vec_length:
             diff = vec_length - len(vel_vec)
             vel_vec = np.append(vel_vec, [0.0] * diff)
+        else:
+            vel_vec = vel_vec[:vec_length]
 
         # Return the normalized, shortened vector
-        maxval = np.max(vel_vec[:vec_length])
+        maxval = np.max(vel_vec)
         if maxval != 0.0:
-            intensity_vecs[dv, :] = vel_vec[:vec_length]/maxval
+            intensity_vecs[dv, :] = vel_vec / maxval
         else:
-            intensity_vecs[dv, :] = vel_vec[:vec_length]  # Vector of zeros
+            np.delete(intensity_vecs, dv)
     return intensity_vecs
