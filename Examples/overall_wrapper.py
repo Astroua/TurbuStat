@@ -24,7 +24,7 @@ dataset2 = fromfits(folder2, keywords, verbose=False)
 
 ## Wavelet Transform
 
-# from turbustat.statistics import Wavelet_Distance
+from turbustat.statistics import Wavelet_Distance
 
 wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric(verbose=True)
 

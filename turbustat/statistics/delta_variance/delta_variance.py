@@ -35,7 +35,8 @@ class DeltaVariance(object):
                 self.ang_size = self.header["CDELT2"] * u.deg
                 min_size = (0.1 * u.arcmin) / self.ang_size.to(u.arcmin)
                 # Can't be smaller than one pixel, set to 3 to avoid noisy pixels
-                if min_size < 3.0:
+                # Can't be bigger than half the image (deals with issue from sim cubes)
+                if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
                     min_size = 3.0
             except KeyError:
                 print "No CDELT2 in header. Using pixel scales."
