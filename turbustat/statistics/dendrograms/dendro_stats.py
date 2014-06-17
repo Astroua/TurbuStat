@@ -29,9 +29,9 @@ class Dendrogram_Stats(object):
                                   "min_value": 0.001}
         else:
             poss_keys = dir(pruning)
-            for key in dendro_params.keys():
-                if key not in poss_keys:
-                    raise KeyError(key + " is not a valid pruning parameter.")
+            # for key in dendro_params.keys():
+            #     if key not in poss_keys:
+            #         raise KeyError(key + " is not a valid pruning parameter.")
             self.dendro_params = dendro_params
 
         self.numfeatures = np.empty(self.min_deltas.shape)
@@ -86,20 +86,25 @@ class DendroDistance(object):
         self.dendro2 = Dendrogram_Stats(cube2, min_deltas=min_deltas, dendro_params=dendro_params)
         self.dendro2.run(verbose=True)
 
-
         # Set the minimum number of components to create a histogram
-        cutoff1 = np.argwhere(self.dendro1.numfeatures < min_features)
-        cutoff2 = np.argwhere(self.dendro2.numfeatures < min_features)
+        cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
+        cutoff2 = np.argwhere(self.dendro2.numfeatures > min_features)
         if cutoff1.any():
-            cutoff1 = cutoff1[0]
+            cutoff1 = cutoff1[-1]
         else:
-            cutoff1 = len(self.dendro1.numfeatures)
+            raise ValueError("The dendrogram from cube1 does not contain the \
+                              necessary number of features, %s. Lower \
+                              min_features or alter min_deltas."
+                              % (min_features))
         if cutoff2.any():
-            cutoff2 = cutoff2[0]
+            cutoff2 = cutoff2[-1]
         else:
-            cutoff2 = len(self.dendro2.numfeatures)
+            raise ValueError("The dendrogram from cube2 does not contain the \
+                              necessary number of features, %s. Lower \
+                              min_features or alter min_deltas."
+                              % (min_features))
 
-        self.cutoff = min(cutoff1, cutoff2)
+        self.cutoff = np.min([cutoff1, cutoff2])
 
         self.bins = []
         self.mecdf1 = None
