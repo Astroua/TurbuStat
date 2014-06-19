@@ -57,3 +57,5 @@ docs/_build/
 *project
 *workspace
 *.pyc
+
+*.DS_Store

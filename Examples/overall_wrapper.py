@@ -130,3 +130,5 @@ dendro_distance= DendroDistance(dataset1["cube"][0], dataset2["cube"][0]).distan
 
 print dendro_distance.num_distance
 print dendro_distance.histogram_distance
+
+np.savez('computed_distances', mvc_distance = mvc_distance.distance, pca_distance = pca_distance.distance, vca_distance = vca_distance.distance, pspec_distance = pspec_distance.distance, scf_distance = scf_distance.distance, wavelet_distance=wavelet_distance.distance, delvar_distance=delvar_distance.distance, tsallis_distance=tsallis_distance.distance, kurtosis_distance=moment_distance.kurtosis_distance, skewness_distance=moment_distance.skewness_distance, cramer_distance=cramer_distance.distance, genus_distance=genus_distance.distance, vcs_distance=vcs_distance.distance, bispec_distance=bispec_distance.distance)
