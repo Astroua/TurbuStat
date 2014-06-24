@@ -24,4 +24,4 @@ class testBispec():
 
     def test_Bispec_distance(self):
         self.tester_dist = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model = self.tester).distance_metric().distance
-    	assert np.allclose(self.tester_dist, self.computed_distances['bispec_distance'])
+        assert np.allclose(self.tester_dist, self.computed_distances['bispec_distance'])
