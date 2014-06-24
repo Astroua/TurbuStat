@@ -15,6 +15,7 @@ class testDelVar():
         self.dataset2 = dataset2
         self.computed_data = computed_data
         self.computed_distances = computed_distances
+        self.tester = None
 
     def test_DelVar_method(self):
         self.tester = DeltaVariance(dataset1["integrated_intensity"][0], dataset1["integrated_intensity"][1], dataset1["integrated_intensity_error"][0], diam_ratio=1.5, lags=None)
