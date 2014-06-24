@@ -18,6 +18,6 @@ class testCramer():
         self.tester = None
 
     def test_Cramer_distance(self):
-    	self.tester = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0])
+        self.tester = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0])
         self.tester = self.tester.distance_metric()
-    	assert self.tester.distance == self.computed_distances['cramer_distance']
+        assert self.tester.distance == self.computed_distances['cramer_distance']
