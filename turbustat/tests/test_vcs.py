@@ -22,5 +22,6 @@ class testVCS():
         assert np.allclose(self.tester.ps1D, self.computed_data['vcs_val'])
 
     def test_VCS_distance(self):
-        self.tester_dist = VCS_Distance(dataset1["cube"],dataset2["cube"], fiducial_model = self.tester).distance_metric().distance
+        self.tester_dist = VCS_Distance(dataset1["cube"],dataset2["cube"], fiducial_model = self.tester)
+        self.tester_dist = self.tester_dist.self.distance_metric().distance
         assert np.allclose(self.tester_dist, self.computed_distances['vcs_distance'])

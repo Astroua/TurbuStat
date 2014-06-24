@@ -25,3 +25,4 @@ class testMVC():
     def test_MVC_distance(self):
     	self.tester_dist = MVC_distance(dataset1, dataset2, fiducial_model = self.tester).distance_metric().distance
     	assert np.allclose(self.tester_dist, self.computed_distances['mvc_distance'])
+

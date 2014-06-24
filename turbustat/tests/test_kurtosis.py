@@ -23,3 +23,4 @@ class testKurtosis():
 
     def test_Kurtosis_distance(self):
         assert np.allclose(self.tester.distance_metric().kurtosis_distance, self.computed_distances['kurtosis_distance'])
+

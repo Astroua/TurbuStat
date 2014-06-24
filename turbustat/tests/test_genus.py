@@ -24,3 +24,4 @@ class testGenus():
     def test_Genus_distance(self):
         self.tester_dist = GenusDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], fiducial_model = self.tester).distance_metric().distance
         assert np.allclose(self.tester_dist, self.computed_distances['genus_distance'])
+

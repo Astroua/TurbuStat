@@ -25,3 +25,4 @@ class testTsallis():
     def test_Tsallis_distance(self):
         self.tester_dist = Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], fiducial_model = self.tester).distance_metric().distance
         assert np.allclose(self.tester_dist, self.computed_distances['tsallis_distance'])
+
