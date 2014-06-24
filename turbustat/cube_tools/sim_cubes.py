@@ -16,13 +16,15 @@ except ImportError:
 
 class SimCube(object):
 
-    def __init__(self, cube, beam=None, method="MAD", compute=True):
+    def __init__(self, cube, beam=None, mask=None, method="MAD", compute=True):
 
         # Initialize cube object
         self.cube = SpectralCube.read(cube)
 
         # Initialize noise object
         self.noise = Noise(self.cube, beam=beam, method=method)
+
+        self.mask = mask
 
     def add_noise(self):
 
@@ -38,10 +40,16 @@ class SimCube(object):
 
     def apply_mask(self, mask=None):
 
-        # Create the mask, auto masking nan values
-        mask = np.isfinite(self.cube)
+        # Update mask
         if mask is not None:
-            mask *= mask
+            self.mask = mask
+
+        # Create the mask, auto masking nan values
+        default_mask = np.isfinite(self.cube)
+        if self.mask is not None:
+            self.mask *= default_mask
+        else:
+            self.mask = default_mask
 
         # Apply mask to spectral cube object
         self.cube = self.cube.with_mask(mask)
