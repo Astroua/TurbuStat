@@ -19,3 +19,4 @@ dataset2 = fromfits(folder2, keywords)
 computed_data = np.load("/srv/astro/caleb/checkVals.npz")
 
 computed_distances = np.load("/srv/astro/caleb/computed_distances.npz")
+

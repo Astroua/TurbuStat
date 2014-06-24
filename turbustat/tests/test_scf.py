@@ -18,8 +18,9 @@ class testSCF():
         self.tester = None
 
     def test_SCF_method(self):
-        self.tester = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).scf1.scf_surface
-        assert np.allclose(self.tester, self.computed_data['scf_val'])
+        self.tester = SCF(dataset1["cube"][0], size = 11)
+        self.tester.run()
+        assert np.allclose(self.tester.scf_surface, self.computed_data['scf_val'])
     def test_SCF_distance(self):
         self.tester = SCF_Distance(dataset1["cube"][0],dataset2["cube"][0]).distance_metric().distance
         assert np.allclose(self.tester, self.computed_distances['scf_distance'])

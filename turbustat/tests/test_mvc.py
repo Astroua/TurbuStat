@@ -18,9 +18,10 @@ class testMVC():
         self.tester = None
 
     def test_MVC_method(self):
-        self.tester = MVC(dataset1["centroid"][0], dataset1["moment0"][0], dataset1["linewidth"][0], dataset1["centroid"][1]).run().ps1D
-        assert np.allclose(self.tester, self.computed_data['mvc_val'])
+        self.tester = MVC(dataset1["centroid"][0], dataset1["moment0"][0], dataset1["linewidth"][0], dataset1["centroid"][1])
+        self.tester.run()
+        assert np.allclose(self.tester.ps1D, self.computed_data['mvc_val'])
 
     def test_MVC_distance(self):
-    	self.tester = MVC_distance(dataset1, dataset2).distance_metric().distance
-    	assert np.allclose(self.tester, self.computed_distances['mvc_distance'])
+    	self.tester_dist = MVC_distance(dataset1, dataset2, fiducial_model = self.tester).distance_metric().distance
+    	assert np.allclose(self.tester_dist, self.computed_distances['mvc_distance'])

@@ -18,9 +18,10 @@ class testBispec():
         self.tester = None
 
     def test_Bispec_method(self):
-        self.tester = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).bispec1.bicoherence
-        assert np.allclose(self.tester, self.computed_data['bispec_val'])
+        self.tester = BiSpectrum(dataset1["integrated_intensity"][0], dataset1["integrated_intensity"][1])
+        self.tester.run()
+        assert np.allclose(self.tester.bicoherence, self.computed_data['bispec_val'])
 
     def test_Bispec_distance(self):
-    	self.tester = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric().distance
-    	assert np.allclose(self.tester, self.computed_distances['bispec_distance'])
+        self.tester_dist = BiSpectrum_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model = self.tester).distance_metric().distance
+    	assert np.allclose(self.tester_dist, self.computed_distances['bispec_distance'])

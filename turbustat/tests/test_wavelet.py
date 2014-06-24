@@ -17,9 +17,9 @@ class testWavelet():
 		self.tester = None
 
 	def test_Wavelet_method(self):
-		self.tester = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).wt1.Wf
-		assert np.allclose(self.tester, self.computed_data['wavelet_val'])
+		self.tester = wt2D(dataset1["integrated_intensity"][0], np.logspace(np.log10(round((5. / 3.), 3)), np.log10(min(dataset1["integrated_intensity"][0].shape)), 50))
+		assert np.allclose(self.tester.Wf, self.computed_data['wavelet_val'])
 
 	def test_Wavelet_distance(self):
-		self.tester = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"]).distance_metric().distance
-		assert np.allclose(self.tester, self.computed_distances['wavelet_distance'])
+		self.tester_dist = Wavelet_Distance(dataset1["integrated_intensity"], dataset2["integrated_intensity"], fiducial_model = self.tester).distance_metric().distance
+		assert np.allclose(self.tester_dist, self.computed_distances['wavelet_distance'])

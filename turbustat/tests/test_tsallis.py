@@ -18,9 +18,10 @@ class testTsallis():
         self.tester = None
 
     def test_Tsallis_method(self):
-        self.tester = Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).tsallis1.tsallis_fits
-        assert np.allclose(self.tester, self.computed_data['tsallis_val'])
+        self.tester = Tsallis(dataset1["integrated_intensity"][0])
+        self.tester.run()
+        assert np.allclose(self.tester.tsallis_fits, self.computed_data['tsallis_val'])
 
     def test_Tsallis_distance(self):
-        self.tester = Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0]).distance_metric().distance
-        assert np.allclose(self.tester, self.computed_distances['tsallis_distance'])
+        self.tester_dist = Tsallis_Distance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], fiducial_model = self.tester).distance_metric().distance
+        assert np.allclose(self.tester_dist, self.computed_distances['tsallis_distance'])

@@ -17,9 +17,8 @@ class testSkewness():
         self.tester = None
 
     def test_Skewness_method(self):
-        self.tester = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).moments1.skewness_array 
-        assert np.allclose(self.tester, self.computed_data['skewness_val'])
+        self.tester = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5)
+        assert np.allclose(self.tester.skewness_array , self.computed_data['skewness_val'])
 
     def test_Skewness_distance(self):
-        self.tester = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric().skewness_distance
-        assert np.allclose(self.tester, self.computed_distances['skewness_distance'])
+        assert np.allclose(self.tester.distance_metric().skewness_distance, self.computed_distances['skewness_distance'])

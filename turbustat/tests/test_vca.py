@@ -17,9 +17,13 @@ class testVCA():
 		self.tester = None
 
 	def test_VCA_method(self):
-		self.tester = VCA_Distance(dataset1["cube"],dataset2["cube"]).vca1.ps1D
-		assert np.allclose(self.tester, self.computed_data['vca_val'])
+		self.tester = VCA(dataset1["cube"][0],dataset1["cube"][1])
+		self.tester.run()
+		print self.tester.ps1D
+		print self.computed_distances['vca_val']
+		assert np.allclose(self.tester.ps1D, self.computed_data['vca_val'])
 
 	def test_VCA_distance(self):
-		self.tester = VCA_Distance(dataset1["cube"],dataset2["cube"]).distance_metric().distance
-		assert np.allclose(self.tester, self.computed_distances['vca_distance'])
+		self.tester_dist = VCA_Distance(dataset1["cube"],dataset2["cube"], fiducial_model = self.tester).distance_metric().distance
+
+		assert np.allclose(self.tester_dist, self.computed_distances['vca_distance'])
