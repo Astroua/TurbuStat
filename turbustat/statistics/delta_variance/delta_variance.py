@@ -8,6 +8,7 @@ Implementation of the Delta-Variance Method from Stutzki et al. 1998.
 
 import numpy as np
 from scipy.stats import nanmean
+from scipy.spatial.distance import euclidean
 from astropy.convolution import convolve_fft
 from astropy import units as u
 
@@ -36,15 +37,17 @@ class DeltaVariance(object):
             try:
                 self.ang_size = self.header["CDELT2"] * u.deg
                 min_size = (0.1 * u.arcmin) / self.ang_size.to(u.arcmin)
-                # Can't be smaller than one pixel, set to 3 to avoid noisy pixels
-                # Can't be bigger than half the image (deals with issue from sim cubes)
+                # Can't be smaller than one pixel, set to 3 to
+                # avoid noisy pixels. Can't be bigger than half the image
+                #(deals with issue from sim cubes).
                 if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
                     min_size = 3.0
             except KeyError:
                 print "No CDELT2 in header. Using pixel scales."
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
-            self.lags = np.logspace(np.log10(min_size), np.log10(min(self.img.shape) / 2.), 25)
+            self.lags = np.logspace(np.log10(min_size),
+                                    np.log10(min(self.img.shape) / 2.), 25)
         else:
             self.lags = lags
 
@@ -95,7 +98,8 @@ class DeltaVariance(object):
 
     def compute_deltavar(self, nsamples=5000, alpha=0.05):
 
-        for i, (convolved_array, convolved_weight) in enumerate(zip(self.convolved_arrays, self.convolved_weights)):
+        for i, (convolved_array, convolved_weight) in \
+         enumerate(zip(self.convolved_arrays, self.convolved_weights)):
 
             delta_var_val = _delvar(convolved_array, convolved_weight)
 
@@ -107,8 +111,7 @@ class DeltaVariance(object):
 
             stat = np.sort(bootstrap_delvar)
             error = (stat[int((alpha/2.0)*nsamples)],
-                    stat[int((1-alpha/2.0)*nsamples)])
-
+                     stat[int((1-alpha/2.0)*nsamples)])
 
             self.delta_var[i] = delta_var_val
             self.delta_var_error[:, i] = error
@@ -128,8 +131,11 @@ class DeltaVariance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            p.errorbar(self.lags, self.delta_var, yerr=[np.abs(self.delta_var - self.delta_var_error[0, :]),
-                       np.abs(self.delta_var + self.delta_var_error[1, :])], fmt="bD-")
+            error_bar = [np.abs(self.delta_var -
+                                self.delta_var_error[0, :]),
+                         np.abs(self.delta_var +
+                                self.delta_var_error[1, :])]
+            p.errorbar(self.lags, self.delta_var, yerr=error_bar, fmt="bD-")
             ax.grid(True)
             ax.set_xlabel("Lag (arcmin)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
@@ -209,20 +215,25 @@ class DeltaVariance_Distance(object):
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1], weights1, diam_ratio=diam_ratio,
-                                         lags=lags)
+            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1], weights1,
+                                         diam_ratio=diam_ratio, lags=lags)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1], weights2, diam_ratio=diam_ratio,
-                                     lags=lags)
+        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1], weights2,
+                                     diam_ratio=diam_ratio, lags=lags)
         self.delvar2.run()
 
         self.distance = None
 
     def distance_metric(self, verbose=False):
 
-        self.distance = np.linalg.norm(np.log10(self.delvar1.delta_var) -
-                                       np.log10(self.delvar2.delta_var))
+        errors1 = np.abs(self.delvar1.delta_var_error[1, :] -
+                         self.delvar1.delta_var_error[0, :])
+        errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
+                         self.delvar2.delta_var_error[0, :])
+
+        self.distance = euclidean(np.log10(self.delvar1.delta_var / errors1),
+                                  np.log10(self.delvar2.delta_var / errors2))
 
         if verbose:
             import matplotlib.pyplot as p
@@ -231,13 +242,19 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
+            error_bar1 = [np.abs(self.delvar1.delta_var -
+                                 self.delvar1.delta_var_error[0, :]),
+                          np.abs(self.delvar1.delta_var +
+                                 self.delvar1.delta_var_error[1, :])]
             p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
-                       yerr=[np.abs(self.delvar1.delta_var - self.delvar1.delta_var_error[0, :]),
-                       np.abs(self.delvar1.delta_var + self.delvar1.delta_var_error[1, :])], fmt="bD-",
+                       yerr=error_bar1, fmt="bD-",
                        label="Delta Var 1")
+            error_bar2 = [np.abs(self.delvar2.delta_var -
+                                 self.delvar2.delta_var_error[0, :]),
+                          np.abs(self.delvar2.delta_var +
+                                 self.delvar2.delta_var_error[1, :])]
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
-                       yerr=[np.abs(self.delvar2.delta_var - self.delvar2.delta_var_error[0, :]),
-                       np.abs(self.delvar2.delta_var + self.delvar2.delta_var_error[1, :])], fmt="gD-",
+                       yerr=error_bar2, fmt="gD-",
                        label="Delta Var 2")
             ax.legend(loc='best')
             ax.grid(True)
@@ -255,7 +272,7 @@ def _delvar(array, weight):
     avg_value = nanmean(array, axis=None)
 
     val = np.nansum((array - avg_value) ** 2. * weight) /\
-          np.nansum(weight)
+        np.nansum(weight)
 
     return val
 
