@@ -12,8 +12,9 @@ import sys
 import os
 from datetime import datetime
 
-keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
-             "linewidth_error", "moment0", "moment0_error", "cube"}
+keywords = {"centroid", "centroid_error", "integrated_intensity",
+            "integrated_intensity_error", "linewidth",
+            "linewidth_error", "moment0", "moment0_error", "cube"}
 
 ## Load each statistic in
 
@@ -120,14 +121,12 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
-        if any("Dendrogram_Hist" in s for s in statistics) or any("Dendrogram_Num" in s for s in statistics):
-            ## This needs the same naming convention as prescribed in dendrograms/compute_dendro.py
-            ## B/c of how intensive the computing for this statistic is, I have them setup to run separately
-            ## and the results are simply read from the save file here.
-            file1 = "/".join(filenames[0].split("/")[:-1])+"/"+filenames[0].split("/")[-2]+"_dendrostats.h5"
-            file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
-            timestep = filenames[0][-8:]
-            dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
+        if any("Dendrogram_Hist" in s for s in statistics) or \
+           any("Dendrogram_Num" in s for s in statistics):
+            dendro_distance = DendroDistance(dataset1["cube"][0],
+                                             dataset2["cube"][0])
+            dendro_distance.distance_metric(verbose=True)
+
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
 
@@ -202,36 +201,41 @@ def wrapper(dataset1, dataset2, fiducial_models=None, statistics=None, multicore
             cramer_distance = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
-        if any("Dendrogram_Hist" in s for s in statistics) or any("Dendrogram_Num" in s for s in statistics):
-            ## This needs the same naming convention as prescribed in dendrograms/compute_dendro.py
-            ## B/c of how intensive the computing for this statistic is, I have them setup to run separately
-            ## and the results are simply read from the save file here.
-            file1 = "/".join(filenames[0].split("/")[:-1])+"/"+filenames[0].split("/")[-2]+"_dendrostats.h5"
-            file2 = "/".join(filenames[1].split("/")[:-1])+"/"+filenames[1].split("/")[-2]+"_dendrostats.h5"
-            timestep = filenames[0][-8:]
-            dendro_distance = DendroDistance(file1, file2, timestep).distance_metric()
+        if any("Dendrogram_Hist" in s for s in statistics) or \
+           any("Dendrogram_Num" in s for s in statistics):
+            dendro_distance = DendroDistance(dataset1["cube"][0],
+                                             dataset2["cube"][0])
+            dendro_distance.distance_metric(verbose=True)
+
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
 
         return distances
 
+
 def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
-    keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
-             "linewidth_error", "moment0", "moment0_error", "cube"}
+    keywords = {"centroid", "centroid_error", "integrated_intensity",
+                "integrated_intensity_error", "linewidth",
+                "linewidth_error", "moment0", "moment0_error", "cube"}
 
     fiducial_dataset = fromfits(fiducial_timestep, keywords)
     testing_dataset = fromfits(testing_timestep, keywords)
 
-    distances = wrapper(fiducial_dataset, testing_dataset, statistics=statistics,
-        multicore=True, filenames=[fiducial_timestep, testing_timestep])
+    distances = wrapper(fiducial_dataset, testing_dataset,
+                        statistics=statistics, multicore=True,
+                        filenames=[fiducial_timestep, testing_timestep])
     return distances
+
 
 def single_input(a):
     return timestep_wrapper(*a)
 
-def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=True, ncores=10, verbose=True):
 
-    fiducial_timesteps = np.sort([os.path.join(fiducial,x) for x in os.listdir(fiducial) if os.path.isdir(os.path.join(fiducial,x))])
+def run_all(fiducial, simulation_runs, face, statistics, savename,
+            multicore=True, ncores=10, verbose=True):
+
+    fiducial_timesteps = np.sort([os.path.join(fiducial, x) for x in os.listdir(fiducial)
+                                  if os.path.isdir(os.path.join(fiducial, x))])
 
     timesteps_labels = [x[-8:] for x in fiducial_timesteps]
 
@@ -244,22 +248,22 @@ def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=Tru
     distances_storage = np.zeros((len(statistics), len(simulation_runs), len(fiducial_timesteps)))
 
     for i, run in enumerate(simulation_runs):
-        timesteps = np.sort([os.path.join(run,x) for x in os.listdir(run) if os.path.isdir(os.path.join(run,x))])
+        timesteps = np.sort([os.path.join(run, x) for x in os.listdir(run) if os.path.isdir(os.path.join(run, x))])
         if verbose:
-            print "On Simulation %s/%s" % (i+1,len(simulation_runs))
+            print "On Simulation %s/%s" % (i+1, len(simulation_runs))
             print str(datetime.now())
         if multicore:
             pool = Pool(processes=ncores)
             distances = pool.map(single_input, izip(fiducial_timesteps, timesteps, repeat(statistics)))
             pool.close()
             pool.join()
-            distances_storage[:,i,:] = sort_distances(statistics,distances).T
+            distances_storage[:, i, :] = sort_distances(statistics, distances).T
 
         else:
             for ii, timestep in enumerate(timesteps):
                 fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
                 testing_dataset = fromfits(timestep, keywords)
-                if i==0:
+                if i == 0:
                     distances, fiducial_models = wrapper(fiducial_dataset, testing_dataset,
                                                          statistics=statistics,
                                                          filenames=[fiducial_timesteps[ii], timestep])
@@ -270,19 +274,19 @@ def run_all(fiducial, simulation_runs, face, statistics, savename, multicore=Tru
                                         statistics=statistics,
                                         filenames=[fiducial_timesteps[ii], timestep])
                 distances = [distances]
-                distances_storage[:,i,ii:ii+1] = sort_distances(statistics,distances).T
+                distances_storage[:, i, ii:ii+1] = sort_distances(statistics, distances).T
 
     return distances_storage, timesteps_labels
 
 
-def sort_distances(statistics,distances):
-    if len(statistics)>1:
-        distance_array = np.empty((len(distances),len(statistics)))
-    elif len(statistics)==1:
+def sort_distances(statistics, distances):
+    if len(statistics) > 1:
+        distance_array = np.empty((len(distances), len(statistics)))
+    elif len(statistics) == 1:
         distance_array = np.empty((len(distances), 1))
 
     for j, dist in enumerate(distances):
-        distance_array[j,:] = [distances[j][stat] for stat in statistics]
+        distance_array[j, :] = [distances[j][stat] for stat in statistics]
 
     return distance_array
 
@@ -291,13 +295,14 @@ if __name__ == "__main__":
     from multiprocessing import Pool
     from itertools import izip, repeat
 
-    INTERACT = False ## Will prompt you for inputs if True
+    INTERACT = False  ## Will prompt you for inputs if True
     PREFIX = "/srv/astro/erickoch/enzo_sims/latin_hypercube_set/"
 
     os.chdir(PREFIX)
 
-    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum","DeltaVariance","Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF",
-                  "Cramer", "Skewness", "Kurtosis"]#, "Dendrogram_Hist", "Dendrogram_Num"]
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
+                  "Skewness", "Kurtosis", "Dendrogram_Hist", "Dendrogram_Num"]
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
@@ -307,23 +312,22 @@ if __name__ == "__main__":
         save_name = str(raw_input("Save Name: "))
         MULTICORE = bool(raw_input("Run on multiple cores? (T or blank): "))
 
-        if MULTICORE :
+        if MULTICORE:
             NCORES = int(raw_input("How many cores to use? "))
     else:
         fiducial = str(sys.argv[1])
         face = str(sys.argv[2])
         save_name = str(sys.argv[3])
         MULTICORE = str(sys.argv[4])
-        if MULTICORE=="T":
+        if MULTICORE == "T":
             MULTICORE = True
         else:
             MULTICORE = False
-            NCORES = 1 # Placeholder to pass into run_all
+            NCORES = 1  # Placeholder to pass into run_all
         if MULTICORE:
             NCORES = int(sys.argv[5])
 
-
-    if fiducial=="fid_comp": # Run all the comparisons of fiducials
+    if fiducial == "fid_comp":  # Run all the comparisons of fiducials
         if INTERACT:
             cross_comp = str(raw_input("Cross comparison? "))
         else:
@@ -335,9 +339,9 @@ if __name__ == "__main__":
             cross_comp = True
 
         if cross_comp:
-            if face=="0":
+            if face == "0":
                 comp_face = "2"
-            elif face=="2":
+            elif face == "2":
                 comp_face = "0"
         else:
             comp_face = face
@@ -363,9 +367,9 @@ if __name__ == "__main__":
             prev += i
             fiducial_labels.extend([f+"to"+fid for f in fiducials_comp[fid_num:]])
 
-        simulation_runs = fiducial_labels ## consistent naming with non-fiducial case
+        simulation_runs = fiducial_labels  # consistent naming with non-fiducial case
         face = comp_face
-    else: # Normal case of comparing to single fiducial
+    else:  # Normal case of comparing to single fiducial
 
         simulation_runs = [x for x in os.listdir(".") if os.path.isdir(x) and x[:6]=="Design" and x[-3]==face]
         simulation_runs = np.sort(simulation_runs)
@@ -376,22 +380,23 @@ if __name__ == "__main__":
 
         simulation_runs = [sim+"to"+fiducial for sim in simulation_runs]
 
-
-    filename = save_name+"_"+face+"_distance_results.h5"
+    filename = save_name + "_" + face + "_distance_results.h5"
     print filename
     from pandas import DataFrame, HDFStore, concat
 
-    ## Save data for each statistic in a dataframe. Each dataframe is saved in a single hdf5 file
+    ## Save data for each statistic in a dataframe.
+    ## Each dataframe is saved in a single hdf5 file
 
     store = HDFStore("results/"+filename)
 
     for i in range(num_statistics):
-        df = DataFrame(distances_storage[i,:,:], index=simulation_runs, columns=timesteps_labels)
+        df = DataFrame(distances_storage[i, :, :], index=simulation_runs,
+                       columns=timesteps_labels)
         if statistics[i] in store:
             existing_df = store[statistics[i]]
             if len(existing_df.index) == len(df.index):
                 store[statistics[i]] = df
-            else: ## Append on
+            else:  # Append on
                 for ind in df.index:
                     if ind in list(existing_df.index):
                         existing_df.ix[ind] = df.ix[ind]
@@ -405,4 +410,4 @@ if __name__ == "__main__":
 
 
 
-    print "Done at "+str(datetime.now())
+    print "Done at " + str(datetime.now())
