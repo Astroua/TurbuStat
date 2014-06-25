@@ -10,8 +10,11 @@ import spectral_cube as SpectralCube
 try:
     from signal_id import Noise
 except ImportError:
+    pass
     prefix = "/srv/astro/erickoch/"  # Adjust if you're not me!
     execfile(prefix + "Dropbox/code_development/signal-id/noise.py")
+
+from cube_utils import _check_mask, _check_beam
 
 
 class SimCube(object):
@@ -21,10 +24,15 @@ class SimCube(object):
         # Initialize cube object
         self.cube = SpectralCube.read(cube)
 
+        if mask is not None:
+            _check_mask(mask)
+        self.mask = mask
+
+        if beam is not None:
+            _check_beam(mask)
+
         # Initialize noise object
         self.noise = Noise(self.cube, beam=beam, method=method)
-
-        self.mask = mask
 
     def add_noise(self):
 
@@ -42,6 +50,7 @@ class SimCube(object):
 
         # Update mask
         if mask is not None:
+            _check_mask(mask)
             self.mask = mask
 
         # Create the mask, auto masking nan values
