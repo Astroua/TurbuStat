@@ -1,4 +1,5 @@
 
+
 '''
 
 Dendrogram statistics as described in Burkhart et al. (2013)
@@ -11,14 +12,17 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from pandas import HDFStore, Series, DataFrame
+from pandas import Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.interpolate import UnivariateSpline
 from mecdf import mecdf
 from astrodendro import pruning, Dendrogram
 
+
 class Dendrogram_Stats(object):
+
     """docstring for Dendrogram_Stats"""
+
     def __init__(self, cube, min_deltas=None, dendro_params=None):
         super(Dendrogram_Stats, self).__init__()
         self.cube = cube
@@ -28,7 +32,7 @@ class Dendrogram_Stats(object):
             self.dendro_params = {"min_npix": 10,
                                   "min_value": 0.001}
         else:
-            poss_keys = dir(pruning)
+            # poss_keys = dir(pruning)
             # for key in dendro_params.keys():
             #     if key not in poss_keys:
             #         raise KeyError(key + " is not a valid pruning parameter.")
@@ -42,15 +46,17 @@ class Dendrogram_Stats(object):
         '''
         ** min_deltas must be in ascending order! **
         '''
-        d = Dendrogram.compute(self.cube, verbose=verbose, min_delta = self.min_deltas[0],
+        d = Dendrogram.compute(self.cube, verbose=verbose,
+                               min_delta=self.min_deltas[0],
                                min_value=self.dendro_params["min_value"],
                                min_npix=self.dendro_params["min_npix"])
         self.numfeatures[0] = len(d)
-        self.values.append(np.asarray([struct.vmax for struct in d.all_structures]))
+        self.values.append(
+            np.asarray([struct.vmax for struct in d.all_structures]))
 
         for i, delta in enumerate(self.min_deltas[1:]):
             if verbose:
-                print "On %s of %s" % (i+1, len(self.min_deltas[1:]))
+                print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
             d.prune(min_delta=delta)
             self.numfeatures[i + 1] = len(d)
             self.values.append([struct.vmax for struct in d.all_structures])
@@ -60,8 +66,9 @@ class Dendrogram_Stats(object):
     def run(self, verbose=False):
         self.compute_dendro(verbose=verbose)
         if verbose:
-             import matplotlib.pyplot as p
-             pass  # Write up some quick plots.
+            # import matplotlib.pyplot as p
+            pass  # Write up some quick plots.
+
 
 class DendroDistance(object):
 
@@ -75,15 +82,17 @@ class DendroDistance(object):
 
         if min_deltas is None:
             min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
-                         np.logspace(-0.6, -0.35, 10))
+                                   np.logspace(-0.6, -0.35, 10))
 
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
         else:
-            self.dendro1 = Dendrogram_Stats(cube1, min_deltas=min_deltas, dendro_params=dendro_params)
+            self.dendro1 = Dendrogram_Stats(
+                cube1, min_deltas=min_deltas, dendro_params=dendro_params)
             self.dendro1.run(verbose=True)
 
-        self.dendro2 = Dendrogram_Stats(cube2, min_deltas=min_deltas, dendro_params=dendro_params)
+        self.dendro2 = Dendrogram_Stats(
+            cube2, min_deltas=min_deltas, dendro_params=dendro_params)
         self.dendro2.run(verbose=True)
 
         # Set the minimum number of components to create a histogram
@@ -95,14 +104,14 @@ class DendroDistance(object):
             raise ValueError("The dendrogram from cube1 does not contain the \
                               necessary number of features, %s. Lower \
                               min_features or alter min_deltas."
-                              % (min_features))
+                             % (min_features))
         if cutoff2.any():
             cutoff2 = cutoff2[-1]
         else:
             raise ValueError("The dendrogram from cube2 does not contain the \
                               necessary number of features, %s. Lower \
                               min_features or alter min_deltas."
-                              % (min_features))
+                             % (min_features))
 
         self.cutoff = np.min([cutoff1, cutoff2])
 
@@ -119,11 +128,15 @@ class DendroDistance(object):
         '''
 
         # Remove points where log(numdata)=0
-        deltas1 = np.log10(self.dendro1.min_deltas[self.dendro1.numfeatures > 1])
-        numfeatures1 = np.log10(self.dendro1.numfeatures[self.dendro1.numfeatures > 1])
+        deltas1 = np.log10(
+            self.dendro1.min_deltas[self.dendro1.numfeatures > 1])
+        numfeatures1 = np.log10(
+            self.dendro1.numfeatures[self.dendro1.numfeatures > 1])
 
-        deltas2 = np.log10(self.dendro2.min_deltas[self.dendro2.numfeatures > 1])
-        numfeatures2 = np.log10(self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
+        deltas2 = np.log10(
+            self.dendro2.min_deltas[self.dendro2.numfeatures > 1])
+        numfeatures2 = np.log10(
+            self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
 
         # Approximate knot location using linear splines with minimal smoothing
         break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
@@ -180,7 +193,8 @@ class DendroDistance(object):
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
-            self.nbins = [self.nbins] * len(self.dendro1.numfeatures[:self.cutoff])
+            self.nbins = [self.nbins] * \
+                len(self.dendro1.numfeatures[:self.cutoff])
 
         self.histograms1 = np.empty(
             (len(self.dendro1.numfeatures[:self.cutoff]), np.max(self.nbins)))
@@ -196,7 +210,8 @@ class DendroDistance(object):
 
             # Create bins for both from the relative minimum and maximum.
             bins = np.linspace(np.min(np.append(stand_data1, stand_data2)),
-                               np.max(np.append(stand_data1, stand_data2)), nbin + 1)
+                               np.max(np.append(stand_data1, stand_data2)),
+                               nbin + 1)
             self.bins.append(bins)
 
             hist1 = np.histogram(
@@ -226,26 +241,26 @@ class DendroDistance(object):
             p.title("ECDF 1")
             p.xlabel("Intensities")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:])/2,
+                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                        self.mecdf1[n, :][:self.nbins[n]])
             p.subplot(2, 2, 2)
             p.title("ECDF 2")
             p.xlabel("Intensities")
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:])/2,
+                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                        self.mecdf2[n, :][:self.nbins[n]])
             p.subplot(2, 2, 3)
             p.title("PDF 1")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:])/2,
+                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                       self.histograms1[n, :][:self.nbins[n]],
                       align="center", width=bin_width, alpha=0.25)
             p.subplot(2, 2, 4)
             p.title("PDF 2")
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:])/2,
+                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                       self.histograms2[n, :][:self.nbins[n]],
                       align="center", width=bin_width, alpha=0.25)
             p.show()
@@ -295,6 +310,7 @@ def break_spline(x, y, **kwargs):
 
     else:
         return knots[1]
+
 
 def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
