@@ -87,9 +87,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
-                DeltaVariance_Distance(dataset1["integrated_intensity"][0],
+                DeltaVariance_Distance(dataset1["integrated_intensity"],
                                        dataset1["integrated_intensity_error"][0],
-                                       dataset2["integrated_intensity"][0],
+                                       dataset2["integrated_intensity"],
                                        dataset2["integrated_intensity_error"][0]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
             fiducial_models["DeltaVariance"] = delvar_distance.delvar1
@@ -196,9 +196,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
-                DeltaVariance_Distance(dataset1["integrated_intensity"][0],
+                DeltaVariance_Distance(dataset1["integrated_intensity"],
                                        dataset1["integrated_intensity_error"][0], \
-                                       dataset2["integrated_intensity"][0],
+                                       dataset2["integrated_intensity"],
                                        dataset2["integrated_intensity_error"][0],
                                        fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
@@ -368,7 +368,7 @@ if __name__ == "__main__":
     from itertools import izip, repeat
 
     INTERACT = False  # Will prompt you for inputs if True
-    PREFIX = "/srv/astro/erickoch/enzo_sims/frac_factorial/"
+    PREFIX = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/"
 
     os.chdir(PREFIX)
 
