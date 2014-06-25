@@ -19,6 +19,8 @@ class testGenus():
     def test_Genus_method(self):
         self.tester = Genus(dataset1["integrated_intensity"][0])
         self.tester.run()
+        print self.tester.thresholds
+        print self.computed_data['genus_val']
         assert np.allclose(self.tester.thresholds, self.computed_data['genus_val'])
 
     def test_Genus_distance(self):
