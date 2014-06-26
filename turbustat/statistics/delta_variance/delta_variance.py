@@ -42,7 +42,7 @@ class DeltaVariance(object):
                 #(deals with issue from sim cubes).
                 if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
                     min_size = 3.0
-            except KeyError:
+            except ValueError:
                 print "No CDELT2 in header. Using pixel scales."
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
