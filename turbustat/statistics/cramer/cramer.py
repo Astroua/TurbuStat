@@ -50,22 +50,25 @@ class Cramer_Distance(object):
         if self.data_matrix1.shape[0] >= self.data_matrix2.shape[0]:
             m = self.data_matrix1.shape[0]
             n = self.data_matrix2.shape[0]
+            larger = self.data_matrix1
+            smaller = self.data_matrix2
         else:
             n = self.data_matrix1.shape[0]
             m = self.data_matrix2.shape[0]
+            larger = self.data_matrix2
+            smaller = self.data_matrix1
+
+        pairdist11 = pairwise_distances(
+            larger, metric="euclidean", n_jobs=n_jobs)
+        pairdist22 = pairwise_distances(
+            smaller, metric="euclidean", n_jobs=n_jobs)
+        pairdist12 = pairwise_distances(
+            larger, smaller,
+            metric="euclidean", n_jobs=n_jobs)
 
         term1 = 0.0
         term2 = 0.0
         term3 = 0.0
-
-        pairdist11 = pairwise_distances(
-            self.data_matrix1, metric="euclidean", n_jobs=n_jobs)
-        pairdist22 = pairwise_distances(
-            self.data_matrix2, metric="euclidean", n_jobs=n_jobs)
-        pairdist12 = pairwise_distances(
-            self.data_matrix1, self.data_matrix2,
-            metric="euclidean", n_jobs=n_jobs)
-
         for i in range(m):
             for j in range(n):
                 term1 += pairdist12[i, j]
