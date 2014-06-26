@@ -13,11 +13,15 @@ class Cramer_Distance(object):
 
     """docstring for Cramer_Distance"""
 
-    def __init__(self, cube1, cube2, data_format="intensity"):
+    def __init__(self, cube1, cube2, noise_value1=0.1,
+                 noise_value2=0.1, data_format="intensity"):
         super(Cramer_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
         self.data_format = data_format
+
+        self.noise_value1 = noise_value1
+        self.noise_value2 = noise_value2
 
         self.data_matrix1 = None
         self.data_matrix2 = None
@@ -32,8 +36,10 @@ class Cramer_Distance(object):
             raise NotImplementedError("")
 
         elif self.data_format == "intensity":
-            self.data_matrix1 = intensity_data(self.cube1)
-            self.data_matrix2 = intensity_data(self.cube2)
+            self.data_matrix1 = intensity_data(self.cube1,
+                                               noise_lim=self.noise_value1)
+            self.data_matrix2 = intensity_data(self.cube2,
+                                               noise_lim=self.noise_value2)
 
         else:
             raise NameError(
