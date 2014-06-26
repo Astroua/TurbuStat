@@ -96,7 +96,7 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, nsamples=5000, alpha=0.05):
+    def compute_deltavar(self, nsamples=100, alpha=0.05):
 
         for i, (convolved_array, convolved_weight) in \
          enumerate(zip(self.convolved_arrays, self.convolved_weights)):
@@ -236,8 +236,6 @@ class DeltaVariance_Distance(object):
                                   np.log10(self.delvar2.delta_var / errors2))
 
         if verbose:
-            import matplotlib.pyplot as p
-
             import matplotlib.pyplot as p
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
