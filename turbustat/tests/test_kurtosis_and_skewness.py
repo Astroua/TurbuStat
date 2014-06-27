@@ -27,7 +27,10 @@ class testKurtSkew():
         assert np.allclose(self.tester_dist.kurtosis_distance, self.computed_distances['kurtosis_distance'])
 
     def test_Skewness_method(self):
+        self.tester = StatMoments(dataset1["integrated_intensity"][0], 5)
+        self.tester.run()
         assert np.allclose(self.tester.skewness_array , self.computed_data['skewness_val'])
 
     def test_Skewness_distance(self):
+        self.tester_dist = StatMomentsDistance(dataset1["integrated_intensity"][0], dataset2["integrated_intensity"][0], 5).distance_metric(verbose=False)
         assert np.allclose(self.tester_dist.distance_metric().skewness_distance, self.computed_distances['skewness_distance'])

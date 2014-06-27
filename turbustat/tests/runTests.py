@@ -15,7 +15,6 @@ from .test_wavelet import testWavelet
 testBispec().test_Bispec_method()
 testBispec().test_Bispec_distance()
 
-testCramer().test_Cramer_method()
 testCramer().test_Cramer_distance()
 
 testDelVar().test_DelVar_method()
