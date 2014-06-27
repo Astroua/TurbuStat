@@ -5,15 +5,19 @@ Wrapper class for handling observational datasets
 
 import numpy as np
 
-import spectral_cube as sc
+from spectral_cube import SpectralCube, CompositeMask
 
 try:
-    from signal_id import Mask, Noise
+    from signal_id import Noise
 except:
     print("No signal_id package!")
+    pass
+    prefix = "/srv/astro/erickoch/"  # Adjust if you're not me!
+    execfile(prefix + "Dropbox/code_development/signal-id/signal_id/noise.py")
 
+
+from cube_utils import _check_mask, _check_beam, _get_int_intensity
 #  from cleaning_algs import *
-from cube_utils import _check_mask, _check_beam # , _update
 
 
 class ObsCube(object):
@@ -56,42 +60,65 @@ class ObsCube(object):
             _check_beam(beam)
         self.noise = Noise(self.cube, beam=beam)
 
-    def apply_cleaning(self):
-
-        # self = _update(data=data, wcs=wcs)
-
-        return self
+    def clean_cube(self, algorithm=None):
+        raise NotImplementedError("")
 
     def apply_mask(self, mask=None):
-        # self.cube = Mask(self.cube)
+        '''
+        Check if the given mask is acceptable abd apply to
+        SpectralCube.
+        '''
+
+        # Update mask
         if mask is not None:
             _check_mask(mask)
             self.mask = mask
 
-        default_mask = np.isfinite(self.cube)
-        ## ADD a snr check to the default mask
-        default_mask *= self.noise.spectral_norm > self.noise.scale
-        if self.mask is None:
-            self.mask = default_mask
+        # Create the mask, auto masking nan values
+        default_mask = np.isfinite(self.cube.filled_data[:])
+        if self.mask is not None:
+            self.mask = CompositeMask(default_mask, self.mask)
         else:
-            self.mask *= default_mask
+            self.mask = default_mask
 
-        self.cube.apply_mask(self.mask)
+        # Apply mask to spectral cube object
+        self.cube = self.cube.with_mask(mask)
 
         return self
 
+    def _update(self, data=None, wcs=None, beam=None, method="MAD"):
+        '''
+        Helper function to update classes.
+        '''
+
+        # Check if we need a new SpectralCube
+        if data is None and wcs is None:
+            pass
+        else:
+            if data is None:
+                data = self.cube.unmasked_data[:]
+            if wcs is None:
+                wcs = self.cube.wcs
+            # Make new SpectralCube object
+            self.cube = SpectralCube(data=data, wcs=wcs)
+
+        if beam is not None:
+            _check_beam(beam)
+            self.noise = Noise(self.cube, beam=beam, method=method)
+
     def compute_properties(self):
         '''
-        Compute the properties of the cube.
+        Use SpectralCube to compute the moments. Also compute the integrated
+        intensity based on the noise properties from Noise.
         '''
 
-        self._moment0 = self.cube.moment0()
+        self._moment0 = self.cube.moment0().value
 
-        self._moment1 = self.cube.moment1()
+        self._moment1 = self.cube.moment1().value
 
-        self._moment2 = self.cube.moment2()
+        self._moment2 = self.cube.moment2().value
 
-        self._intint = self.get_int_intensity()
+        _get_int_intensity(self)
 
         return self
 
@@ -111,20 +138,15 @@ class ObsCube(object):
     def intint(self):
         return self._intint
 
-    def get_int_intensity(self):
+    def prep(self, mask=None, algorithm=None):
         '''
-        Get an integrated intensity image of the cube.
+        Prepares the cube to be compared to another cube.
         '''
 
-        good_channels = self.noise.spectral_norm > self.noise.scale
+        if not mask is None:
+            self.apply_mask()
 
-        channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
-
-        channel_size = np.abs(self.cube.spectral_axis[1] -
-                              self.cube.spectral_axis[0])
-
-        slab = self.cube.spectral_slab(*channel_range).filled_data[:]
-
-        self._intint = np.nansum(slab, axis=0) * channel_size
+        self.clean_cube()
+        self.compute_properties()
 
         return self

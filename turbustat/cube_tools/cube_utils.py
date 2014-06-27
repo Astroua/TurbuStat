@@ -21,11 +21,6 @@ def _check_mask(mask):
     Checks to make sure mask is of an appropriate form.
     '''
 
-    ndim = len(mask.shape)
-
-    if ndim < 2 or ndim > 4:
-        raise ValueError("mask must have dimensions between 2 and 4.")
-
     if isinstance(mask, np.ndarray):
         pass
     elif isinstance(mask, sc.LazyMask):
@@ -53,3 +48,27 @@ def _check_beam(beam):
     else:
         raise TypeError("beam of type %s is not an accepted type" %
                         (type(beam)))
+
+
+def _get_int_intensity(cube_class):
+    '''
+    Get an integrated intensity image of the cube.
+
+    Parameters
+    ----------
+
+    cube_class - SimCube or ObsCube class
+    '''
+
+    good_channels = cube_class.noise.spectral_norm > cube_class.noise.scale
+
+    channel_range = cube_class.cube.spectral_axis[good_channels][[0, -1]]
+
+    channel_size = np.abs(cube_class.cube.spectral_axis[1] -
+                          cube_class.cube.spectral_axis[0])
+
+    slab = cube_class.cube.spectral_slab(*channel_range).filled_data[:]
+
+    cube_class._intint = np.nansum(slab, axis=0) * channel_size
+
+    return cube_class
