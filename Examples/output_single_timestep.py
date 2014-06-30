@@ -291,17 +291,17 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
         return distances
 
 
-def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
+def timestep_wrapper(fiducial, design, statistics):
     keywords = {"centroid", "centroid_error", "integrated_intensity",
                 "integrated_intensity_error", "linewidth",
                 "linewidth_error", "moment0", "moment0_error", "cube"}
 
-    fiducial_dataset = fromfits(fiducial_timestep, keywords)
-    testing_dataset = fromfits(testing_timestep, keywords)
+    fiducial_dataset = fromfits(fiducial, keywords)
+    design_dataset = fromfits(design, keywords)
 
-    distances = wrapper(fiducial_dataset, testing_dataset,
+    distances = wrapper(fiducial_dataset, design_dataset,
                         statistics=statistics, multicore=True,
-                        filenames=[fiducial_timestep, testing_timestep])
+                        filenames=[fiducial, design])
     return distances
 
 
@@ -312,12 +312,6 @@ def single_input(a):
 def run_all(fiducial, simulation_runs, face, statistics, savename,
             multicore=True, ncores=10, verbose=True):
 
-    fiducial_timesteps = np.sort([os.path.join(fiducial, x)
-                                  for x in os.listdir(fiducial)
-                                  if os.path.isdir(os.path.join(fiducial, x))])
-
-    timesteps_labels = [x[-8:] for x in fiducial_timesteps]
-
     if verbose:
         print "Simulation runs to be analyzed: %s" % (simulation_runs)
         print "Started at "+str(datetime.now())
@@ -327,46 +321,38 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
     # The +1 in the second dimensions is to include the
     # fiducial case against itself.
     distances_storage = np.zeros((len(statistics),
-                                  len(simulation_runs),
-                                  len(fiducial_timesteps)))
+                                  len(simulation_runs)))
 
-    for i, run in enumerate(simulation_runs):
-        timesteps = np.sort([os.path.join(run, x) for x in os.listdir(run)
-                             if os.path.isdir(os.path.join(run, x))])
-        if verbose:
-            print "On Simulation %s/%s" % (i+1, len(simulation_runs))
-            print str(datetime.now())
-        if multicore:
-            pool = Pool(processes=ncores)
-            distances = pool.map(single_input, izip(fiducial_timesteps,
-                                                    timesteps,
-                                                    repeat(statistics)))
-            pool.close()
-            pool.join()
-            distances_storage[:, i, :] = \
+    if multicore:
+        pool = Pool(processes=ncores)
+        distances = pool.map(single_input, izip(repeat(fiducial),
+                                                simulation_runs,
+                                                repeat(statistics)))
+        pool.close()
+        pool.join()
+        distances_storage = sort_distances(statistics, distances).T
+
+    else:
+        for ii, design in enumerate(simulation_runs):
+            fiducial_dataset = fromfits(fiducial[ii], keywords)
+            testing_dataset = fromfits(design, keywords)
+            if i == 0:
+                distances, fiducial_models = \
+                    wrapper(fiducial_dataset, testing_dataset,
+                            statistics=statistics,
+                            filenames=[fiducial[ii], design])
+                all_fiducial_models = fiducial_models
+            else:
+                distances = \
+                    wrapper(fiducial_dataset, testing_dataset,
+                            fiducial_models=all_fiducial_models,
+                            statistics=statistics,
+                            filenames=[fiducial[ii], design])
+            distances = [distances]
+            distances_storage[:, ii:ii+1] = \
                 sort_distances(statistics, distances).T
 
-        else:
-            for ii, timestep in enumerate(timesteps):
-                fiducial_dataset = fromfits(fiducial_timesteps[ii], keywords)
-                testing_dataset = fromfits(timestep, keywords)
-                if i == 0:
-                    distances, fiducial_models = \
-                        wrapper(fiducial_dataset, testing_dataset,
-                                statistics=statistics,
-                                filenames=[fiducial_timesteps[ii], timestep])
-                    all_fiducial_models = fiducial_models
-                else:
-                    distances = \
-                        wrapper(fiducial_dataset, testing_dataset,
-                                fiducial_models=all_fiducial_models,
-                                statistics=statistics,
-                                filenames=[fiducial_timesteps[ii], timestep])
-                distances = [distances]
-                distances_storage[:, i, ii:ii+1] = \
-                    sort_distances(statistics, distances).T
-
-    return distances_storage, timesteps_labels
+    return distances_storage
 
 
 def sort_distances(statistics, distances):
@@ -390,16 +376,16 @@ if __name__ == "__main__":
 
     os.chdir(PREFIX)
 
-    statistics = ["DeltaVariance"]#"Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                  # "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                  # "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity"]
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
+                  "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity"]
                   #, "Dendrogram_Hist", "Dendrogram_Num"]
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
     if INTERACT:
         fiducial = str(raw_input("Input folder of fiducial: "))
-        face = str(raw_input("Which face? (0 or 2): "))
+        face = str(raw_input("Which face? (0 or 1 or 2): "))
         save_name = str(raw_input("Save Name: "))
         MULTICORE = bool(raw_input("Run on multiple cores? (T or blank): "))
 
@@ -450,14 +436,15 @@ if __name__ == "__main__":
         # number of comparisons b/w all fiducials
         num_comp = (len(fiducials)**2. - len(fiducials))/2
         # Change dim 2 to match number of time steps
-        distances_storage = np.zeros((num_statistics, num_comp, 10))
+        distances_storage = np.zeros((num_statistics, num_comp, 1))
         posn = 0
         prev = 0
         # no need to loop over the last one
         for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1, 0, -1)):
-            fid_num = int(fid[-5])#+1 #### THIS NEED TO BE CHANGED BASED ON THE FIDUCIAL NUMBERING!!!!!!!
+            #### THIS NEED TO BE CHANGED BASED ON THE FIDUCIAL NUMBERING!!!!!!!
+            fid_num = int(fid[-5]) + 1
             posn += i
-            partial_distances, timesteps_labels = \
+            partial_distances = \
                 run_all(fiducials[fid_num-1], fiducials_comp[fid_num:],
                         face, statistics, save_name, multicore=MULTICORE,
                         ncores=NCORES)
@@ -475,7 +462,7 @@ if __name__ == "__main__":
                            and x[:6] == "Design" and x[-3] == face]
         simulation_runs = np.sort(simulation_runs)
 
-        distances_storage, timesteps_labels = \
+        distances_storage = \
             run_all(fiducial, simulation_runs,
                     face, statistics, save_name,
                     multicore=MULTICORE, ncores=NCORES)
@@ -493,7 +480,7 @@ if __name__ == "__main__":
 
     for i in range(num_statistics):
         df = DataFrame(distances_storage[i, :, :], index=simulation_runs,
-                       columns=timesteps_labels)
+                       columns=fiducial)
         if statistics[i] in store:
             existing_df = store[statistics[i]]
             if len(existing_df.index) == len(df.index):

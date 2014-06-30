@@ -12,28 +12,25 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
     them into a single file.
 
     Parameters
-    **********
-
+    ----------
     path : str
-
+        Path where files are located.
     design : str or pandas.DataFrame
              If str, assumes a 'csv' file.
-
     face1 : int
-
+        Face of the cube.
     face2: int
-
+        Face of the cube compared to.
     output_type : str, optional
            Type of file to output.
-
     parameters : list, optional
-                 Contains column names of design that are the parameters varied in the set.
-                 If None, all columns are appended to the output file.
-
-
+                 Contains column names of design that are the parameters
+                 varied in the set. If None, all columns are appended to
+                 the output file.
     '''
 
-    files = [path+f for f in os.listdir(path) if os.path.isfile(path+f) and str(face1)+"_"+str(face2) in f and f[:9]!="fiducial_"]
+    files = [path + f for f in os.listdir(path) if os.path.isfile(path + f)
+             and str(face1) + "_" + str(face2) in f and f[:9] != "fiducial_"]
     print "Files used: %s" % (files)
 
     if isinstance(design, str):
@@ -53,14 +50,15 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
         # Get data from HDF5
         for key in store.keys():
             data = store[key].sort(axis=0).sort(axis=1)
-            index =  data.index
+            index = data.index
             mean_data = data.mean(axis=1)
             data_columns[key[1:]] = mean_data
         store.close()
 
         # Add on design matrix
         for key in design_df:
-            design_df = design_df.dropna()  # can get nans if the file was made in excel
+            # can get nans if the file was made in excel
+            design_df = design_df.dropna()
             design_df.index = index
             data_columns[key] = design_df[key]
 
@@ -74,3 +72,30 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
 
     if output_type == "csv":
         df.to_csv(path+filename+".csv")
+
+
+def convert_fiducial(filename, output_type="csv"):
+    '''
+    Converts the fiducial comparison HDF5 files into a CSV file.
+
+    Parameters
+    ----------
+    filename : str
+        HDF5 file.
+    output_type : str, optional
+           Type of file to output.
+    '''
+
+    store = HDFStore(filename)
+    data_columns = dict()
+    for key in store.keys():
+        data = store[key].sort(axis=0).sort(axis=1)
+        mean_data = data.mean(axis=1)
+        data_columns[key[1:]] = mean_data
+    store.close()
+
+    df = DataFrame(data_columns)
+
+    output_name = "".join(filename.split(".")[:-1]) + "." + output_type
+
+    df.to_csv(output_name)

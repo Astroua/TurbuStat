@@ -428,8 +428,12 @@ class VCS_Distance(object):
             formula="log_ps1D ~ dummy + scales + regressor",
             data=df_dens).fit()
 
-        self.distance = np.abs(self.vel_results.tvalues["regressor"]) +\
-            np.abs(self.dens_results.tvalues["regressor"])
+        # Get the distance of each fit
+        self.density_distance = np.abs(self.dens_results.tvalues["regressor"])
+        self.velocity_distance = np.abs(self.vel_results.tvalues["regressor"])
+
+        # The overall distance is the sum from the two models
+        self.distance = self.velocity_distance + self.density_distance
 
         if verbose:
 

@@ -110,7 +110,7 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, nsamples=100, alpha=0.05):
+    def compute_deltavar(self, bootstrap=True, nsamples=100, alpha=0.05):
 
         for i, (convolved_array, convolved_weight) in \
          enumerate(zip(self.convolved_arrays, self.convolved_weights)):
@@ -118,24 +118,27 @@ class DeltaVariance(object):
             delta_var_val = _delvar(convolved_array, convolved_weight)
 
             # bootstrap to find an error
-            bootstrap_delvar = np.empty((nsamples, ))
-            for n in range(nsamples):
-                resample = bootstrap_resample(convolved_array)
-                bootstrap_delvar[n] = _delvar(resample, convolved_weight)
+            if bootstrap:
+                bootstrap_delvar = np.empty((nsamples, ))
+                for n in range(nsamples):
+                    resample = bootstrap_resample(convolved_array)
+                    bootstrap_delvar[n] = _delvar(resample, convolved_weight)
 
-            stat = np.sort(bootstrap_delvar)
-            error = (stat[int((alpha/2.0)*nsamples)],
-                     stat[int((1-alpha/2.0)*nsamples)])
+                stat = np.sort(bootstrap_delvar)
+                error = (stat[int((alpha/2.0)*nsamples)],
+                         stat[int((1-alpha/2.0)*nsamples)])
+            else:
+                error = (0.0, 0.0)
 
             self.delta_var[i] = delta_var_val
             self.delta_var_error[:, i] = error
 
         return self
 
-    def run(self, verbose=False, ang_units=True):
+    def run(self, bootstrap=False, verbose=False, ang_units=True):
 
         self.do_convolutions()
-        self.compute_deltavar()
+        self.compute_deltavar(bootstrap=bootstrap)
 
         if ang_units:
             self.lags *= self.ang_size
@@ -288,8 +291,8 @@ class DeltaVariance_Distance(object):
         errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
                          self.delvar2.delta_var_error[0, :])
 
-        self.distance = euclidean(np.log10(self.delvar1.delta_var / errors1),
-                                  np.log10(self.delvar2.delta_var / errors2))
+        self.distance = np.linalg.norm(np.log10(self.delvar1.delta_var) -
+                                  np.log10(self.delvar2.delta_var))
 
         if verbose:
             import matplotlib.pyplot as p

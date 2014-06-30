@@ -1,8 +1,5 @@
 
 import numpy as np
-import scipy.ndimage as nd
-from itertools import izip
-from ..psds import pspec
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
 
@@ -10,6 +7,8 @@ try:
     from scipy.fftpack import fft2, fftshift
 except ImportError:
     from numpy.fft import fft2, fftshift
+
+from ..psds import pspec
 
 
 class MVC(object):
