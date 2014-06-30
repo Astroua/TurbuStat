@@ -70,7 +70,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, cross_compare=Fals
             datum = loader(data, stat).sort(axis=1)
             ## Face 0 to 0
             if data[-23:-20]=="0_0":
-                if data.split("/")[-1][:8]=="fiducial":
+                if data.split("/")[-1][:13]=="fiducial_comp":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
@@ -83,7 +83,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, cross_compare=Fals
                     num_sims = datum.shape[0]
             ## Face 2 to 2
             elif data[-23:-20]=="2_2":
-                if data.split("/")[-1][:8]=="fiducial":
+                if data.split("/")[-1][:13]=="fiducial_comp":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
@@ -94,7 +94,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, cross_compare=Fals
                     data_face2_2.append(datum.sort(axis=0))
             ## Face 0 to 2
             elif cross_compare and data[-23:-20]=="0_2":
-                if data.split("/")[-1][:8]=="fiducial":
+                if data.split("/")[-1][:13]=="fiducial_comp":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
@@ -105,7 +105,7 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False, cross_compare=Fals
                     data_face2_0.append(datum.sort(axis=0))
             ## Face 2 to 0
             elif cross_compare and data[-23:-20]=="2_0":
-                if data.split("/")[-1][:8]=="fiducial":
+                if data.split("/")[-1][:13]=="fiducial_comp":
                     num_fids = num_fiducials(datum.shape[0])
                     assert isinstance(num_fids, int)
                     j_last = 0
