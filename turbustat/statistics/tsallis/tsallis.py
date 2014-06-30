@@ -1,10 +1,4 @@
 
-'''
-
-Implementation of the Tsallis Distribution from Tofflemire et al. (2011)
-
-'''
-
 import numpy as np
 from scipy.stats import nanmean, nanstd, chisquare
 from scipy.optimize import curve_fit
@@ -14,17 +8,18 @@ class Tsallis(object):
 
     """
 
-    The Tsallis Distribution
+    The Tsallis Distribution (see Tofflemire et al., 2011)
 
-    INPUTS
-    ------
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
-
+    Parameters
+    ----------
+    img : numpy.ndarray
+        2D image.
+    lags : numpy.ndarray or list
+        Lags to calculate at.
+    num_bins : int, optional
+        Number of bins to use in the histograms.
+    periodic : bool, optional
+        Sets whether the boundaries are periodic.
     """
 
     def __init__(self, img, lags=None, num_bins=500, periodic=False):
@@ -50,6 +45,11 @@ class Tsallis(object):
         self.tsallis_fits = np.empty((len(self.lags), 7))
 
     def make_tsallis(self):
+        '''
+        Calculate the Tsallis distribution at each lag.
+        We standardize each distribution such that it has a mean of zero and
+        variance of one.
+        '''
 
         for i, lag in enumerate(self.lags):
             if self.periodic:
@@ -65,7 +65,8 @@ class Tsallis(object):
             if self.periodic:
                 clip_resulting = (rolls / 4.) - pad_img
             else:
-                clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) - pad_img[lag:-lag, lag:-lag]
+                clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) -\
+                    pad_img[lag:-lag, lag:-lag]
             # Normalize the data
             data = normalize(clip_resulting)
 
@@ -82,10 +83,18 @@ class Tsallis(object):
 
         return self
 
-    def fit_tsallis(self):
+    def fit_tsallis(self, sigma=2):
+        '''
+        Fit the Tsallis distributions.
+
+        Parameters
+        ----------
+        sigma : float
+            Sets the sigma value to clip data at.
+        '''
 
         for i, dist in enumerate(self.tsallis_distrib):
-            clipped = clip_to_good(dist[0], dist[1])
+            clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma)
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1],
                                      p0=(-np.max(clipped[1]), 1., 2.),
                                      maxfev=100 * len(dist[0]))
@@ -96,6 +105,14 @@ class Tsallis(object):
                 np.exp(fitted_vals), f_exp=np.exp(clipped[1]), ddof=3)[0]
 
     def run(self, verbose=False):
+        '''
+        Run all steps.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         self.make_tsallis()
         self.fit_tsallis()
@@ -127,22 +144,24 @@ class Tsallis(object):
 
 class Tsallis_Distance(object):
 
-    """
-
+    '''
     Distance Metric for the Tsallis Distribution.
 
-
-    INPUTS
-    ------
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
-
-
-    """
+    Parameters
+    ----------
+    array1 : numpy.ndarray
+        2D image.
+    array2 : numpy.ndarray
+        2D image.
+    lags : numpy.ndarray or list
+        Lags to calculate at.
+    num_bins : int, optional
+        Number of bins to use in the histograms.
+    fiducial_model : Tsallis
+        Computed Tsallis object. use to avoid recomputing.
+    periodic : bool, optional
+        Sets whether the boundaries are periodic.
+    '''
 
     def __init__(self, array1, array2, lags=None, num_bins=500,
                  fiducial_model=None, periodic=False):
@@ -173,6 +192,11 @@ class Tsallis_Distance(object):
         the parameters, normalized by the sums of the squares, for each lag.
         The total distance the sum between the two parameters.
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+
         '''
 
         w1 = self.tsallis1.tsallis_fits[:, 1]
@@ -202,33 +226,35 @@ class Tsallis_Distance(object):
 
 def tsallis_function(x, *p):
     '''
-
     Tsallis distribution function as given in Tofflemire
     Implemented in log form
 
-    INPUTS
-    ------
-
-    x - array or list
+    Parameters
+    ----------
+    x : numpy.ndarray or list
         x-data
-
-    params - array or list
-             contains the three parameter values
+    params : list
+        Contains the three parameter values.
     '''
     loga, wsquare, q = p
     return (-1 / (q - 1)) * (np.log10(1 + (q - 1) *
            (x ** 2. / wsquare)) + loga)
 
 
-def clip_to_good(x, y):
+def clip_to_sigma(x, y, sigma=2):
     '''
+    Clip to values between -2 and 2 sigma.
 
-    Clip to values between -2 and 2
-
+    Parameters
+    ----------
+    x : numpy.ndarray
+        x-data
+    y : numpy.ndarray
+        y-data
     '''
     clip_mask = np.zeros(x.shape)
     for i, val in enumerate(x):
-        if val < 2.0 or val > -2.0:
+        if val < sigma or val > -sigma:
             clip_mask[i] = 1
     clip_x = x[np.where(clip_mask == 1)]
     clip_y = y[np.where(clip_mask == 1)]
@@ -237,6 +263,14 @@ def clip_to_good(x, y):
 
 
 def normalize(data):
+    '''
+    Standardize the data.
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Data to standardize.
+    '''
 
     av_val = nanmean(data, axis=None)
     st_dev = nanstd(data, axis=None)

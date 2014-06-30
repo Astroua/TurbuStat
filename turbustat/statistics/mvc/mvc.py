@@ -1,10 +1,4 @@
 
-'''
-
-Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
-
-'''
-
 import numpy as np
 import scipy.ndimage as nd
 from itertools import izip
@@ -23,54 +17,25 @@ class MVC(object):
     """
     Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    centroid   - array
-                 Normalized first moment array
+    centroid : numpy.ndarray
+        Normalized first moment array.
 
-    moment0  - array
-                     Intensity array
+    moment0 : numpy.ndarray
+        Moment 0 array.
 
-    linewidth   - array
-                  Normalized second moment array
+    linewidth : numpy.ndarray
+        Normalized second moment array
 
-    distances   - list
-                  List of distances vector lengths
-                  If None, MVC is computed using the distances in the distance
-                  array.
-
-    FUNCTIONS
-    ---------
-
-    correlation_function - computes the MVC function
-
-    run_mvc - calls correlation_function for each distance
-
-    compute_pspec - computes the power spectrum
-
-    compute_radial_pspec - computes the radially-averaged power spectrum
-
-    OUTPUTS
-    -------
-
-    correlation_array - array
-                           Resultant 2D array from mvc
-
-    correlation_spectrum - array
-                           1D array of average value at each distance
-
-    ps1D - array
-           1D array of the radially-averaged power spectrum
-
-    ps2D - array
-           2D array of the power spectrum
-
-    freq - spatial frequencies used to compute ps1D
+    header : FITS header
+        Header of any of the arrays. Used only to get the
+        spatial scale.
 
     """
 
-    def __init__(self, centroid, moment0, linewidth, header, distances=None):
+    def __init__(self, centroid, moment0, linewidth, header):
         # super(MVC, self).__init__()
         self.centroid = centroid
         self.moment0 = moment0
@@ -86,57 +51,13 @@ class MVC(object):
         assert self.centroid.shape == self.linewidth.shape
         self.shape = self.centroid.shape
 
-        self.center_pixel = []
-        for i_shape in self.shape:
-            if i_shape % 2. != 0:
-                self.center_pixel.append(int((i_shape - 1) / 2.))
-            else:
-                self.center_pixel.append(int(i_shape / 2.))
-
-        self.center_pixel = tuple(self.center_pixel)
-        centering_array = np.ones(self.shape)
-        centering_array[self.center_pixel] = 0
-
-        self.distance_array = nd.distance_transform_edt(centering_array)
-
-        if not distances:
-            self.distances = np.unique(
-                self.distance_array[np.nonzero(self.distance_array)])
-        else:
-            assert isinstance(distances, list)
-            self.distances = distances
-
-        self.correlation_array = np.ones(self.shape)
-        self.correlation_spectrum = np.zeros((1, len(self.distances)))
         self.ps2D = None
         self.ps1D = None
         self.freq = None
 
-    def correlation_function(self, points):
-        '''
-
-        Function which performs the correlation
-
-        '''
-
-        center_centroid = (
-            self.centroid[self.center_pixel] * self.moment0[self.center_pixel])
-        center_intensity = self.moment0[self.center_pixel]
-
-        for i, j in izip(points[0], points[1]):
-            first_term = (
-                center_centroid - self.centroid[i, j] *
-                self.moment0[i, j]) ** 2.
-            second_term = self.linewidth[
-                i, j] * (center_intensity - self.moment0[i, j]) ** 2.
-
-            self.correlation_array[i, j] = first_term - second_term
-
-        return self
-
     def compute_pspec(self):
         '''
-        Compute the power spectrum of MVC
+        Compute the 2D power spectrum.
         '''
 
         mvc_fft = fft2(self.centroid.astype("f8")) - \
@@ -151,10 +72,9 @@ class MVC(object):
                              return_stddev=False, azbins=1, binsize=1.0,
                              view=False, **kwargs):
         '''
-
-        Computes the radially averaged power spectrum
-        Based on Adam Ginsburg's code
-
+        Computes the radially averaged power spectrum.
+        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
+        See the above url for parameter explanations.
         '''
 
         self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index,
@@ -165,22 +85,17 @@ class MVC(object):
 
         return self
 
-    def run(self, distances=None, phys_units=False, verbose=False):
+    def run(self, phys_units=False, verbose=False):
         '''
-        Full computation of MVC
+        Full computation of MVC.
+
+        Parameters
+        ----------
+        phys_units : bool, optional
+            Sets frequency scale to physical units.
+        verbose: bool, optional
+            Enables plotting.
         '''
-
-        if not distances:
-            pass
-        else:
-            assert isinstance(distances, list)
-            self.distances = distances
-
-        for n, distance in enumerate(self.distances):
-            points = np.where(self.distance_array == distance)
-            self.correlation_function(points)
-            self.correlation_spectrum[0, n] = np.sum(
-                self.correlation_array[points]) / len(points[0])
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=True)
@@ -207,36 +122,18 @@ class MVC_distance(object):
 
     Distance metric for MVC and wrapper for whole analysis
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    data1 - dictionary
-            dictionary containing necessary property arrays
-
-    data2 - dictionary
-            dictionary containing necessary property arrays
-
-    distances - list
-                passed to MVC class
-
-
-    FUNCTIONS
-    ---------
-
-    mvc_distance - computes the distance metric for 2 datasets
-
-    OUTPUTS
-    -------
-
-    distance - float
-               value of distance metric
-
-    results  - statsmodels class
-               results of the linear fit
-
+    data1 : dict
+        dictionary containing necessary property arrays
+    data2 : dict
+        dictionary containing necessary property arrays
+    fiducial_model : MVC
+        Computed MVC object. use to avoid recomputing.
     """
 
-    def __init__(self, data1, data2, distances=None, fiducial_model=None):
+    def __init__(self, data1, data2, fiducial_model=None):
         # super(mvc_distance, self).__init__()
 
         self.shape1 = data1["centroid"][0].shape
@@ -248,13 +145,13 @@ class MVC_distance(object):
             self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0] ** 2.,
                             data1["moment0"][0] * data1["moment0_error"][0] ** 2.,
                             data1["linewidth"][0] * data1["linewidth_error"][0] ** 2.,
-                            data1["centroid"][1], distances=distances)
+                            data1["centroid"][1])
             self.mvc1.run()
 
         self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** 2.,
                         data2["moment0"][0] * data2["moment0_error"][0] ** 2.,
                         data2["linewidth"][0] * data2["linewidth_error"][0] ** 2.,
-                        data2["centroid"][1], distances=distances)
+                        data2["centroid"][1])
         self.mvc2.run()
 
         self.results = None
@@ -265,8 +162,13 @@ class MVC_distance(object):
 
         Implements the distance metric for 2 MVC transforms.
         We fit the linear portion of the transform to represent the powerlaw
-        A statistical comparison is used on the powerlaw indexes.
+        A linear model with an interaction term is fit to the two powerlaws.
+        The distance is the t-statistic of the interaction.
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         # Clipping from 8 pixels to half the box size

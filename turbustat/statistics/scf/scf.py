@@ -1,17 +1,20 @@
 
-'''
-
-Implements the Spectral Correlation Function and its Distance
-Metric (Rosolowsky et al, 1999).
-
-'''
-
 import numpy as np
 
 
 class SCF(object):
 
-    """docstring for SCF"""
+    '''
+    Computes the Spectral Correlation Function of a data cube
+    (Rosolowsky et al, 1999).
+
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        Data cube.
+    size : int, optional
+        Maximum size roll over which SCF will be calculated.
+    '''
 
     def __init__(self, cube, size=11):
         super(SCF, self).__init__()
@@ -26,7 +29,7 @@ class SCF(object):
 
     def compute_scf(self):
         '''
-
+        Compute the SCF up to the given size.
         '''
 
         dx = np.arange(self.size) - self.size / 2
@@ -48,6 +51,15 @@ class SCF(object):
         return self
 
     def run(self, verbose=False):
+        '''
+        Computes the SCF. Necessary to maintain package standards.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+
+        '''
 
         self.compute_scf()
 
@@ -66,7 +78,25 @@ class SCF(object):
 
 class SCF_Distance(object):
 
-    """docstring for SCF_Distance"""
+    '''
+    Calculates the distance between two data cubes based on their SCF surfaces.
+    The distance is the L2 norm between the surfaces. We weight the surface by
+    1/r^2 where r is the distance from the centre.
+
+    Parameters
+    ----------
+    cube1 : numpy.ndarray
+        Data cube.
+    cube2 : numpy.ndarray
+        Data cube.
+    size : int, optional
+        Maximum size roll over which SCF will be calculated.
+    fiducial_model : SCF
+        Computed SCF object. Use to avoid recomputing.
+    weighted : bool, optional
+        Sets whether to apply the 1/r^2 weighting to the distance.
+
+    '''
 
     def __init__(self, cube1, cube2, size=11, fiducial_model=None,
                  weighted=True):
@@ -88,6 +118,15 @@ class SCF_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False):
+        '''
+        Compute the distance between the surfaces.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+
+        '''
 
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2

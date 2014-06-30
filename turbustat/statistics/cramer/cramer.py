@@ -10,8 +10,26 @@ from sklearn.metrics.pairwise import pairwise_distances
 
 
 class Cramer_Distance(object):
+    """
+    Compute the Cramer distance between two data cubes. The data cubes
+    are flattened spatially to give 2D objects. We clip off empty channels
+    and keep only the top quartile in the remaining channels.
 
-    """docstring for Cramer_Distance"""
+    Parameters
+    ----------
+
+    cube1 : numpy.ndarray
+        First cube to compare.
+    cube2 : numpy.ndarray
+        Second cube to compare.
+    noise_value1 : float, optional
+        Noise level in the first cube.
+    noise_value2 : float, optional
+        Noise level in the second cube.
+    data_format : str, optional
+        Method to arange cube into 2D. Only 'intensity' is currently
+        implemented.
+    """
 
     def __init__(self, cube1, cube2, noise_value1=0.1,
                  noise_value2=0.1, data_format="intensity"):
@@ -28,6 +46,9 @@ class Cramer_Distance(object):
         self.distance = None
 
     def format_data(self, data_format=None):
+        '''
+        Rearrange data into a 2D object using the given format.
+        '''
 
         if data_format is not None:
             self.data_format = data_format
@@ -49,7 +70,14 @@ class Cramer_Distance(object):
 
     def cramer_statistic(self, n_jobs=1):
         '''
+        Applies the Cramer Statistic to the datasets.
 
+        Parameters
+        ----------
+
+        n_jobs : int, optional
+            Sets the number of cores to use to calculate
+            pairwise distances
         '''
         # Adjust what we call n,m based on the larger dimension.
         # Then the looping below is valid.
@@ -111,6 +139,23 @@ class Cramer_Distance(object):
 
 def intensity_data(cube, p=0.1, noise_lim=0.1):
     '''
+    Clips off channels below the given noise limit and keep the
+    upper percentile specified.
+
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        Data cube.
+    p : float, optional
+        Sets the fraction of data to keep in each channel.
+    noise_lim : float, optional
+        The noise limit used to reject channels in the cube.
+
+    Returns
+    -------
+
+    intensity_vecs : numpy.ndarray
+        2D dataset of size (# channels, p * cube.shape[1] * cube.shape[2]).
     '''
     vec_length = int(round(p * cube.shape[1] * cube.shape[2]))
     intensity_vecs = np.empty((cube.shape[0], vec_length))

@@ -17,7 +17,21 @@ class DeltaVariance(object):
 
     """
 
-    docstring for DeltaVariance
+    The delta-variance technique as described in Ossenkopf et al. (2008).
+
+    Parameters
+    ----------
+
+    img : numpy.ndarray
+        The image calculate the delta-variance of.
+    header : FITS header
+        Image header.
+    weights : numpy.ndarray
+        Weights to be used.
+    diam_ratio : float, optional
+        The ratio between the kernel sizes.
+    lags : numpy.ndarray or list, optional
+        The pixel scales to compute the delta-variance at.
 
     """
 
@@ -148,16 +162,21 @@ def core_kernel(lag, x_size, y_size):
     '''
     Core Kernel for convolution.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    lag : float
+    lag : int
+        Size of the lag. Set the kernel size.
+    x_size : int
+        Grid size to use in the x direction
+    y_size_size : int
+        Grid size to use in the y_size direction
 
-
-    OUTPUTS
+    Returns
     -------
 
     kernel : numpy.ndarray
+        Normalized kernel.
     '''
 
     x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
@@ -173,15 +192,22 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
 
     Annulus Kernel for convolution.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
+    lag : int
+        Size of the lag. Set the kernel size.
+    diam_ratio : float
+                 Ratio between kernel diameters.
+    x_size : int
+        Grid size to use in the x direction
+    y_size_size : int
+        Grid size to use in the y_size direction
 
-    lag - float
-          size of kernel, same as width
+    Returns
+    -------
 
-    diam_ratio - float
-                 ratio between kernel diameters
-
+    kernel : numpy.ndarray
+        Normalized kernel.
     '''
 
     x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
@@ -196,6 +222,9 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
 
 
 def padwithzeros(vector, pad_width, iaxis, kwargs):
+    '''
+    Pad array with zeros.
+    '''
     vector[:pad_width[0]] = 0
     vector[-pad_width[1]:] = 0
     return vector
@@ -204,8 +233,27 @@ def padwithzeros(vector, pad_width, iaxis, kwargs):
 class DeltaVariance_Distance(object):
 
     """
+    Compares 2 datasets using delta-variance. The distance between them is
+    given by the Euclidean distance between the curves weighted by the
+    bootstrapped errors.
 
+    Parameters
+    ----------
 
+    dataset1 : FITS hdu
+        Contains the data and header for one dataset.
+    dataset2 : FITS hdu
+        See above.
+    weights1 : numpy.ndarray
+        Weights for dataset1.
+    weights2 : numpy.ndarray
+        See above.
+    diam_ratio : float, optional
+        The ratio between the kernel sizes.
+    lags : numpy.ndarray or list, optional
+        The pixel scales to compute the delta-variance at.
+    fiducial_model : DeltaVariance
+        A computed DeltaVariance model. Used to avoid recomputing.
     """
 
     def __init__(self, dataset1, weights1, dataset2, weights2, diam_ratio=1.5,
@@ -226,6 +274,14 @@ class DeltaVariance_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False):
+        '''
+        Applies the Euclidean distance to the delta-variance curves.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         errors1 = np.abs(self.delvar1.delta_var_error[1, :] -
                          self.delvar1.delta_var_error[0, :])
@@ -285,7 +341,8 @@ def bootstrap_resample(X, n=None):
       data to resample
     n : int, optional
       length of resampled array, equal to len(X) if n==None
-    Results
+
+    Returns
     -------
     returns X_resamples
     """
