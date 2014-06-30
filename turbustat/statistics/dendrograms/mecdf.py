@@ -13,13 +13,13 @@ def mecdf(arr):
     '''
 
     Parameters
-    **********
+    ----------
 
     arr : np.ndarray
           Array containing where each row is a PDF.
 
-    Output
-    ******
+    Returns
+    -------
 
     ecdf - np.ndarray
            Array containing the ECDF of each row.

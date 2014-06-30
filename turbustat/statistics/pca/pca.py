@@ -1,16 +1,21 @@
 
-'''
-
-Implementation of Principal Component Analysis (Heyer & Brunt, 2002)
-
-'''
 
 import numpy as np
 
 
 class PCA(object):
 
-    """docstring for PCA"""
+    '''
+    Implementation of Principal Component Analysis (Heyer & Brunt, 2002)
+
+    Parameters
+    ----------
+
+    cube : numpy.ndarray
+        Data cube.
+    n_eigs : int
+        Number of eigenvalues to compute.
+    '''
 
     def __init__(self, cube, n_eigs=50):
         super(PCA, self).__init__()
@@ -24,6 +29,9 @@ class PCA(object):
         self.eigvals = None
 
     def compute_pca(self):
+        '''
+        Create the covariance matrix and its eigenvalues.
+        '''
 
         cube_mean = np.nansum(self.cube) / np.sum(np.isfinite(self.cube))
         norm_cube = self.cube - cube_mean
@@ -43,6 +51,14 @@ class PCA(object):
         return self
 
     def run(self, verbose=False):
+        '''
+        Run method. Needed to maintain package standards.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         self.compute_pca()
 
@@ -56,7 +72,22 @@ class PCA(object):
 
 class PCA_Distance(object):
 
-    """docstring for PCA_Distance"""
+    '''
+    Compare two data cubes based on the eigenvalues of the PCA decomposition.
+    The distance is the Euclidean distance between the eigenvalues.
+
+    Parameters
+    ----------
+    cube1 : numpy.ndarray
+        Data cube.
+    cube2 : numpy.ndarray
+        Data cube.
+    n_eigs : int
+        Number of eigenvalues to compute.
+    fiducial_model : PCA
+        Computed PCA object. Use to avoid recomputing.
+
+    '''
 
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None):
         super(PCA_Distance, self).__init__()
@@ -92,6 +123,15 @@ class PCA_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False):
+        '''
+        Computes the distance between the cubes.
+
+        Parameters
+        ----------
+
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         difference = np.abs((self.pca1.eigvals - self.pca2.eigvals) ** 2.)
         self.distance = np.sqrt(np.sum(difference))

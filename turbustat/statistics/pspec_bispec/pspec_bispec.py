@@ -1,9 +1,3 @@
-'''
-
-Implementation of Spatial Power Spectrum and Bispectrum as described in
-Burkhart et al. (2010)
-
-'''
 
 import numpy as np
 import numpy.random as ra
@@ -20,16 +14,14 @@ except ImportError:
 class PowerSpectrum(object):
 
     """
-    PowerSpectrum
+    Compute the power spectrum of a given image. (Burkhart et al., 2010)
 
-    INPUTS
-    ------
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
+    Parameters
+    ----------
+    img : numpy.ndarray
+        2D image.
+    header : FITS header
+        The image header. Needed for the pixel scale.
 
     """
 
@@ -48,7 +40,7 @@ class PowerSpectrum(object):
 
     def compute_pspec(self):
         '''
-        Compute the power spectrum of MVC
+        Compute the 2D power spectrum.
         '''
 
         mvc_fft = fftshift(fft2(self.img.astype("f8")))
@@ -62,9 +54,9 @@ class PowerSpectrum(object):
                              binsize=1.0, view=False, **kwargs):
         '''
 
-        Computes the radially averaged power spectrum
-        Based on Adam Ginsburg's code
-
+        Computes the radially averaged power spectrum.
+        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
+        See the above url for parameter explanations.
         '''
 
         self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index,
@@ -77,7 +69,14 @@ class PowerSpectrum(object):
 
     def run(self, phys_units=False, verbose=False):
         '''
-        Full computation of the Spatial Power Spectrum
+        Full computation of the Spatial Power Spectrum.
+
+        Parameters
+        ----------
+        phys_units : bool, optional
+            Sets frequency scale to physical units.
+        verbose: bool, optional
+            Enables plotting.
         '''
 
         self.compute_pspec()
@@ -105,33 +104,19 @@ class PSpec_Distance(object):
 
     """
 
-    Distance metric for the spatial power spectrum and wrapper for whole
-    analysis.
+    Distance metric for the spatial power spectrum. A linear model with an
+    interaction term is fit to the powerlaws. The distance is the
+    t-statistic of the interaction term.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    data1 - dictionary
-            dictionary containing necessary property arrays
-
-    data2 - dictionary
-            dictionary containing necessary property arrays
-
-
-
-    FUNCTIONS
-    ---------
-
-    mvc_distance - computes the distance metric for 2 datasets
-
-    OUTPUTS
-    -------
-
-    distance - float
-               value of distance metric
-
-    results  - statsmodels class
-               results of the linear fit
+    data1 : dict
+        Dictionary containing necessary property arrays.
+    data2 : dict
+        Dictionary containing necessary property arrays.
+    fiducial_model : PowerSpectrum
+        Computed PowerSpectrum object. use to avoid recomputing.
 
     """
 
@@ -162,7 +147,12 @@ class PSpec_Distance(object):
 
         Implements the distance metric for 2 Power Spectrum transforms.
         We fit the linear portion of the transform to represent the powerlaw
-        A statistical comparison is used on the powerlaw indexes.
+        A linear model with an interaction term is fit to the two powerlaws.
+        The distance is the t-statistic of the interaction.
+
+        Parameters
+        ----------
+        verbose : bool, optional
 
         '''
 
@@ -222,23 +212,21 @@ class PSpec_Distance(object):
 class BiSpectrum(object):
 
     """
-    BiSpectrum
+    Computes the bispectrum (three-point correlation function) of the given
+    image (Burkhart et al., 2010).
+    The bispectrum and the bicoherence are returned. The bicoherence is
+    a normalized version (real and to unity) of the bispectrum.
 
-    INPUTS
-    ------
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
+    Parameters
+    ----------
+    img : numpy.ndarray
+        2D image.
 
     """
 
-    def __init__(self, img, header):
+    def __init__(self, img):
         super(BiSpectrum, self).__init__()
         self.img = img
-        self.header = header
         self.shape = img.shape
 
         # Set nans to min
@@ -257,14 +245,22 @@ class BiSpectrum(object):
             (int(self.shape[0] / 2.) - 1, int(self.shape[1] / 2.) - 1))
         self.tracker = np.zeros(self.shape)
 
-    def compute_bispectrum(self, nsamples=None, seed=1000):
+    def compute_bispectrum(self, nsamples=100, seed=1000):
+        '''
+        Do the computation.
+
+        Parameters
+        ----------
+        nsamples : int, optional
+            Sets the number of samples to take at each vector
+            magnitude.
+        seed : int, optional
+            Sets the seed for the distribution draws.
+        '''
 
         fft = np.fft.fft2(self.img.astype("f8"))
         conjfft = np.conj(fft)
         ra.seed(seed)
-
-        if nsamples is None:
-            nsamples = 100
 
         for k1mag in range(int(fft.shape[0] / 2.)):
             for k2mag in range(int(fft.shape[1] / 2.)):
@@ -310,7 +306,17 @@ class BiSpectrum(object):
 
         return self
 
-    def run(self, nsamples=None, verbose=False):
+    def run(self, nsamples=100, verbose=False):
+        '''
+        Compute the bispectrum. Necessary to maintiain package standards.
+
+        Parameters
+        ----------
+        nsamples : int, optional
+            Sets the number of samples to take at each vector magnitude.
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         self.compute_bispectrum(nsamples=nsamples)
 
@@ -338,18 +344,33 @@ class BiSpectrum(object):
 
 class BiSpectrum_Distance(object):
 
-    """docstring for BiSpec_Distance"""
+    '''
+    Calculate the distance between two images based on their bicoherence.
+    The distance is the L2 norm between the bicoherence surfaces.
 
-    def __init__(self, data1, data2, nsamples=None, fiducial_model=None):
+    Parameters
+    ----------
+    data1 : FITS hdu
+        Contains the data and header of the image.
+    data2 : FITS hdu
+        Contains the data and header of the image.
+    nsamples : int, optional
+        Sets the number of samples to take at each vector magnitude.
+    fiducial_model : Bispectrum
+        Computed Bispectrum object. use to avoid recomputing.
+
+    '''
+
+    def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
         super(BiSpectrum_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
-            self.bispec1 = BiSpectrum(data1[0], data1[1])
+            self.bispec1 = BiSpectrum(data1[0])
             self.bispec1.run()
 
-        self.bispec2 = BiSpectrum(data2[0], data2[1])
+        self.bispec2 = BiSpectrum(data2[0])
         self.bispec2.run()
 
         self.distance = None

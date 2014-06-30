@@ -1,10 +1,4 @@
 
-'''
-
-Implementation of the VCA & VCS techniques (Lazarian & Pogosyan)
-
-'''
-
 import numpy as np
 from ..psds import pspec
 import statsmodels.formula.api as sm
@@ -21,33 +15,20 @@ from slice_thickness import change_slice_thickness
 
 class VCA(object):
 
-    """
+    '''
+    The VCA technique (Lazarian & Pogosyan, 2004).
 
-    VCA technique
-
-    INPUTS
-    ------
-
-    cube - array
-           PPV data cube
-
-    header - dictionary
-             corresponding FITS header
-
-    distances - list
-                List of distances vector lengths
-                If None, VCA is computed using the distances in the distance
-                array.
-
-
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
-
-    """
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        Data cube.
+    header : FITS header
+        Corresponding FITS header.
+    slice_sizes : list or numpy.ndarray, optional
+        Slices to degrade the cube to.
+    phys_units : bool, optional
+        Sets whether physical scales can be used.
+    '''
 
     def __init__(self, cube, header, slice_sizes=None, phys_units=False):
         super(VCA, self).__init__()
@@ -80,7 +61,7 @@ class VCA(object):
 
     def compute_pspec(self):
         '''
-        Compute the power spectrum of
+        Compute the 2D power spectrum.
         '''
 
         for cube in self.degraded_cubes:
@@ -94,10 +75,9 @@ class VCA(object):
                              return_stddev=False, azbins=1,
                              binsize=1.0, view=False, **kwargs):
         '''
-
         Computes the radially averaged power spectrum
-        Based on Adam Ginsburg's code
-
+        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
+        See the above url for parameter explanations.
         '''
 
         for ps in self.ps2D:
@@ -115,7 +95,13 @@ class VCA(object):
 
     def run(self, verbose=False, **kwargs):
         '''
-        Full computation of VCA
+        Full computation of VCA.
+
+        Parameters
+        ----------
+        verbose: bool, optional
+            Enables plotting.
+        kwargs : passed to pspec.
         '''
 
         self.compute_pspec()
@@ -161,31 +147,18 @@ class VCA(object):
 
 class VCS(object):
 
-    """
+    '''
+    The VCS technique (Lazarian & Pogosyan, 2004).
 
-    VCS technique
-
-    INPUTS
-    ------
-
-    cube - array
-           3D array of data
-
-    header - dictionary
-             corresponding FITS header
-
-    slice_thickness - float
-                      velocity slice size for use in VCS in pixels.
-                      Minimum is 1.
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
-
-
-    """
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        Data cube.
+    header : FITS header
+        Corresponding FITS header.
+    phys_units : bool, optional
+        Sets whether physical scales can be used.
+    '''
 
     def __init__(self, cube, header, phys_units=False):
         super(VCS, self).__init__()
@@ -221,24 +194,18 @@ class VCS(object):
 
     def compute_fft(self):
         '''
-
-        Take the FFT of each spectrum in velocity dimension
-
+        Take the FFT of each spectrum in velocity dimension.
         '''
 
-        import scipy.fftpack as fft
-
-        self.fftcube = fft.fftn(self.cube.astype("f8"))
+        self.fftcube = fftn(self.cube.astype("f8"))
         self.correlated_cube = np.abs(self.fftcube) ** 2.
 
         return self
 
     def make_ps1D(self):
         '''
-
         Create a 1D power spectrum by averaging the correlation cube over
-        all pixels
-
+        all pixels.
         '''
 
         self.ps1D = np.nansum(
@@ -248,7 +215,14 @@ class VCS(object):
         return self
 
     def run(self, verbose=False):
+        '''
+        Run the entire computation.
 
+        Parameters
+        ----------
+        verbose: bool, optional
+            Enables plotting.
+        '''
         self.compute_fft()
         self.make_ps1D()
 
@@ -271,7 +245,22 @@ class VCS(object):
 
 class VCA_Distance(object):
 
-    """docstring for VCA_Distance"""
+    '''
+    Calculate the distance between two cubes using VCA. The 1D power spectrum
+    is modeled by a linear model. The distance is the t-statistic of the
+    interaction between the two slopes.
+
+    Parameters
+    ----------
+    cube1 : FITS hdu
+        Data cube.
+    cube2 : FITS hdu
+        Data cube.
+    slice_size : float, optional
+        Slice to degrade the cube to.
+    fiducial_model : VCA
+        Computed VCA object. use to avoid recomputing.
+    '''
 
     def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
         super(VCA_Distance, self).__init__()
@@ -295,8 +284,11 @@ class VCA_Distance(object):
         Implements the distance metric for 2 VCA transforms, each with the
         same channel width. We fit the linear portion of the transform to
         represent the powerlaw.
-        A statistical comparison is used on the powerlaw indexes.
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         # Clipping from 8 pixels to half the box size
@@ -354,7 +346,23 @@ class VCA_Distance(object):
 
 class VCS_Distance(object):
 
-    """docstring for VCS_Distance"""
+    '''
+    Calculate the distance between two cubes using VCS. The 1D power spectrum
+    is modeled by a broked linear model to account for the density and
+    velocity dominated scales. The distance is the sum of  the t-statistics
+    for each model.
+
+    Parameters
+    ----------
+    cube1 : FITS hdu
+        Data cube.
+    cube2 : FITS hdu
+        Data cube.
+    slice_size : float, optional
+        Slice to degrade the cube to.
+    fiducial_model : VCA
+        Computed VCA object. use to avoid recomputing.
+    '''
 
     def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
         super(VCS_Distance, self).__init__()
@@ -381,6 +389,10 @@ class VCS_Distance(object):
         0.45 pix$^{-1}$. This distance is the t-statistic of the difference
         in the slopes.
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         vel_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
@@ -447,6 +459,9 @@ class VCS_Distance(object):
 
 
 def make_dataframe(x1, y1, x2, y2):
+    '''
+    Combine two datasets into a pandas DataFrame.
+    '''
 
     # Rid infs, nans from the x sets
     logx1 = np.log10(x1)[np.isfinite(np.log10(x1))]

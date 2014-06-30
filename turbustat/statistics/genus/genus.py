@@ -1,10 +1,4 @@
 
-'''
-
-Genus Statistics Implementation (Chepurnov et al., 2008)
-
-'''
-
 import numpy as np
 import scipy.ndimage as nd
 from scipy.stats import scoreatpercentile, nanmean, nanstd
@@ -24,23 +18,23 @@ class Genus(object):
 
     """
 
-    Genus Statistics
+    Genus Statistics based off of Chepurnov et al. (2008).
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    img - array
-          integrated intensity image
-
-    density_threshold - int
-                        percentile to set density threshold at
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
-
+    img - numpy.ndarray
+        2D image.
+    lowdens_thresh : float, optional
+        Lower threshold of the data to use.
+    highdens_thresh : float, optional
+        Upper threshold of the data to use.
+    numpts : int, optional
+        Number of thresholds to calculate statistic at.
+    smoothing_radii : list, optional
+        Kernel radii to smooth data to.
+    save_name : str, optional
+        Object or region name. Used when plotting.
     """
 
     def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100,
@@ -77,6 +71,9 @@ class Genus(object):
         self.smoothed_images = []
 
     def make_smooth_arrays(self):
+        '''
+        Smooth data using a Gaussian kernel.
+        '''
 
         for i, width in enumerate(self.smoothing_radii):
             kernel = Gaussian2DKernel(
@@ -90,20 +87,31 @@ class Genus(object):
                 self.smoothed_images.append(convolve_fft(self.img, kernel))
         return self
 
-    def clean_fft(self):
+    # def clean_fft(self):
 
-        for j, image in enumerate(self.smoothed_images):
-            self.fft_images.append(fft2(image))
+    #     for j, image in enumerate(self.smoothed_images):
+    #         self.fft_images.append(fft2(image))
 
-        return self
+    #     return self
 
     def make_genus_curve(self):
+        '''
+        Create the genus curve.
+        '''
 
         self.genus_stats = compute_genus(self.smoothed_images, self.thresholds)
 
         return self
 
     def run(self, verbose=False):
+        '''
+        Run the whole statistic.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        '''
 
         self.make_smooth_arrays()
         # self.clean_fft()
@@ -124,79 +132,29 @@ class Genus(object):
         return self
 
 
-def polyroots(x, y, ranges=None, deg=5, **kwargs):
-    '''
-
-    Fit polynomial and find its roots in a given range.
-
-    INPUTS
-    ------
-
-    x - array
-        x data
-
-    y - array
-        y data
-
-    ranges - list
-             list of upper and low bounds within x.
-             If None, uses whole x-range.
-             low bound is first, upper bound second (ie. [2,10])
-
-    kwargs - passed to np.polyfit
-
-    OUTPUTS
-    -------
-
-    range_roots - list
-                  roots in the given range
-
-    '''
-
-    if ranges is not None:
-        assert len(ranges) == 2
-        if ranges[0] < min(x):
-            print "Lower Bound below list minimum, using list minimum"
-            ranges[0] = min(x)
-        if ranges[1] > max(x):
-            print "Upper Bound above list maximum, using list maximum"
-            ranges[1] = max(x)
-    else:
-        ranges = [min(x), max(x)]
-
-    p = np.polyfit(x, y, deg=deg, **kwargs)
-    roots = np.roots(p)
-    range_roots = [
-        root for root in roots if root < ranges[1] and root > ranges[0]]
-
-    return range_roots
-
-
 def compute_genus(images, thresholds):
     '''
 
-    Computes the Genus Statistic
+    Computes the Genus Statistic.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    image - list of array OR a single array
-            images to compute genus from
+    image : list of numpy.ndarray OR a single numpy.ndarray
+        Images(s) to compute the Genus of.
 
-    thresholds - list/array
-                 thresholds to calculate statistic at
+    thresholds : list or numpy.ndarray
+        Thresholds to calculate the statistic at.
 
-    OUTPUTS
+    Returns
     -------
 
-    genus_stats - array
-                  statistic calculated
+    genus_stats : array
+    The calculated statistic.
 
     '''
 
-    if isinstance(images, list):
-        pass
-    else:
+    if not isinstance(images, list):
         images = [images]
 
     genus_stats = np.empty((len(images), len(thresholds)))
@@ -213,8 +171,7 @@ def compute_genus(images, thresholds):
 
             genus_stats[j, i] = high_density_num - low_density_num
 
-        # genus_stats[j,:] = clip_genus(genus_stats[j,:]) # Until I know this
-        # is needed, ignore.
+        # genus_stats[j,:] = clip_genus(genus_stats[j,:])
 
     return genus_stats
 
@@ -225,17 +182,20 @@ def clip_genus(genus_curve, length_threshold=5):
     Clip out uninteresting regions in the genus curve
     (large regions with value of 0).
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    genus_curve - array
-                  computed genus curve
+    genus_curve : array
+        Computed genus curve.
 
-    thresholds - list/array
-                 thresholds to calculate statistic at
+    length_threshold : int, optional
+        Minimum length to warrant clipping.
 
-    length_threshold - int
-                       minimum length to warrant clipping
+    Returns
+    -------
+
+    genus_curve : numpy.ndarray
+        Clipped Genus Curve.
 
     '''
 
@@ -261,6 +221,18 @@ class GenusDistance(object):
 
     Distance Metric for the Genus Statistic.
 
+    Parameters
+    ----------
+
+    img1 - numpy.ndarray
+        2D image.
+    img2 - numpy.ndarray
+        2D image.
+    smoothing_radii : list, optional
+        Kernel radii to smooth data to.
+    fiducial_model : Genus
+        Computed Genus object. Use to avoid recomputing.
+
     """
 
     def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
@@ -280,7 +252,12 @@ class GenusDistance(object):
         '''
 
         Data is centered and normalized (via normalize).
-        The distance is the difference between cubic splines.
+        The distance is the difference between cubic splines of the curves.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
 
         '''
 

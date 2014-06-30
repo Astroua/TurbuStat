@@ -21,7 +21,24 @@ from astrodendro import pruning, Dendrogram
 
 class Dendrogram_Stats(object):
 
-    """docstring for Dendrogram_Stats"""
+    """
+    Dendrogram statistics as described in Burkhart et al. (2013)
+    Two statistics are contained:
+        * number of leaves + branches vs. $\delta$ parameter
+        * statistical moments of the intensity histogram
+
+    Parameters
+    ----------
+
+    cube : numpy.ndarray
+        Data cube.
+    min_deltas : numpy.ndarray or list
+        Minimum deltas of leaves in the dendrogram.
+    dendro_params : dict
+        Further parameters for the dendrogram algorithm
+        (see www.dendrograms.org for more info).
+
+    """
 
     def __init__(self, cube, min_deltas=None, dendro_params=None):
         super(Dendrogram_Stats, self).__init__()
@@ -44,7 +61,13 @@ class Dendrogram_Stats(object):
 
     def compute_dendro(self, verbose=False):
         '''
+        Compute the dendrogram and prune to the minimum deltas.
         ** min_deltas must be in ascending order! **
+
+        Parameters
+        ----------
+        verbose : optional, bool
+
         '''
         d = Dendrogram.compute(self.cube, verbose=verbose,
                                min_delta=self.min_deltas[0],
@@ -64,6 +87,15 @@ class Dendrogram_Stats(object):
         return self
 
     def run(self, verbose=False):
+        '''
+
+        Compute dendrograms. Necessary to maintain the package format.
+
+        Parameters
+        ----------
+        verbose : optional, bool
+
+        '''
         self.compute_dendro(verbose=verbose)
         if verbose:
             # import matplotlib.pyplot as p
@@ -72,7 +104,38 @@ class Dendrogram_Stats(object):
 
 class DendroDistance(object):
 
-    """docstring for DendroDistance"""
+    """
+    Calculate the distance between 2 cubes using dendrograms. The number of
+    features vs. minimum delta is fit to a linear model, with an interaction
+    term o gauge the difference. The distance is the t-statistic of that
+    parameter. The Hellinger distance is computed for the histograms at each
+    minimum delta value. The distance is the average of the Hellinger
+    distances.
+
+    Parameters
+    ----------
+    cube1 : numpy.ndarray
+        Data cube.
+    cube2 : numpy.ndarray
+        Data cube.
+    min_deltas : numpy.ndarray or list
+        Minimum deltas of leaves in the dendrogram.
+    nbins : str or float, optional
+        Number of bins for the histograms. 'best' sets
+        that number using the square root of the average
+        number of features between the histograms to be
+        compared.
+    min_features : int, optional
+        The minimum number of features necessary to compare
+        the histograms.
+    fiducial_model : Dendrogram_Stats
+        Computed dendrogram and statistic values. Use to avoid
+        re-computing.
+    dendro_params : dict
+        Further parameters for the dendrogram algorithm
+        (see www.dendrograms.org for more info).
+
+    """
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
                  min_features=100, fiducial_model=None, dendro_params=None):
@@ -125,6 +188,12 @@ class DendroDistance(object):
 
     def numfeature_stat(self, verbose=False):
         '''
+        Calculate the distance based on the number of features statistic.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         # Remove points where log(numdata)=0
@@ -186,6 +255,12 @@ class DendroDistance(object):
 
     def histogram_stat(self, verbose=False):
         '''
+        Computes the distance using histograms.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         if self.nbins == "best":
@@ -278,6 +353,9 @@ class DendroDistance(object):
 
 
 def hellinger_stat(x, y):
+    '''
+    Compute the Hellinger statistic of multiple samples.
+    '''
 
     assert x.shape == y.shape
 
@@ -294,6 +372,9 @@ def hellinger_stat(x, y):
 
 
 def break_spline(x, y, **kwargs):
+    '''
+    Calculate the break in 2 linear trends using a spline.
+    '''
 
     s = UnivariateSpline(x, y, **kwargs)
     knots = s.get_knots()

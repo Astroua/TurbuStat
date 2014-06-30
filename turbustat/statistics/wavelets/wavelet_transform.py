@@ -1,14 +1,6 @@
 
-'''
-
-Applying 2D Continuous Wavelet Transform to data curve properties as shown in
-Gill and Henriksen, 1990
-
-Based on code from kPyWavelet and astropy.nddata.convolution.convolve
-
-'''
-
 import numpy as np
+import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
@@ -20,13 +12,10 @@ except ImportError:
 
 
 class Mexican_hat():
-
-    """
-
+    '''
     Implements the Mexican hat wavelet class.
-    From kPyWavelet
-
-    """
+    Code is from kPyWavelet.
+    '''
 
     name = 'Mexican hat'
 
@@ -35,23 +24,38 @@ class Mexican_hat():
         self.cpsi = 1.  # pi
 
     def psi_ft(self, k, l):
-        """
+        '''
         Fourier transform of the Mexican hat wavelet as in Wang and
         Lu (2010), equation [15].
-
-        """
+        '''
         K, L = np.meshgrid(k, l)
         return (K ** 2. + L ** 2.) * np.exp(-0.5 * (K ** 2. + L ** 2.))
 
     def psi(self, x, y):
-        """Mexican hat wavelet as in Wang and Lu (2010), equation [14]."""
+        '''
+        Mexican hat wavelet as in Wang and Lu (2010), equation [14].
+        '''
         X, Y = np.meshgrid(x, y)
         return (2. - (X ** 2. + Y ** 2.)) * np.exp(-0.5 * (X ** 2. + Y ** 2.))
 
 
 class wt2D(object):
+    '''
+    Compute the wavelet transform of a 2D array.
 
-    """docstring for wt2D"""
+    Parameters
+    ----------
+    array : numpy.ndarray
+        2D array.
+    scales : numpy.ndarray or list
+        The scales where the transform is calculated.
+    dx : float, optional
+        Spacing in the x-direction.
+    dy : float, optional
+        Spacing in the y-direction.
+    wavelet : wavelet class
+        The wavelet class to use.
+    '''
 
     def __init__(self, array, scales, dx=0.25, dy=0.25, wavelet=Mexican_hat()):
         super(wt2D, self).__init__()
@@ -75,26 +79,17 @@ class wt2D(object):
         self.iWf = None
 
     def cwt2d(self, dx=None, dy=None):
-        """
+        '''
         Bi-dimensional continuous wavelet transform of the signal at
         specified scale a.
 
-        PARAMETERS
-            f (array like):
-                Input signal array.
-            dx, dy (float):
-                Sample spacing for each dimension.
-            a (array like, optional):
-                Scale parameter array.
-            wavelet (class, optional) :
-                Mother wavelet class. Default is Mexican_hat()
-
-        RETURNS
-
-        EXAMPLE
-
-        """
-
+        Parameters
+        ----------
+        dx : float, optional
+            Spacing in the x-direction.
+        dy : float, optional
+            Spacing in the y-direction.
+        '''
         if dx is not None:
             assert isinstance(dx, list)
             self.dx = dx
@@ -125,6 +120,17 @@ class wt2D(object):
         return self
 
     def astropy_cwt2d(self, dx=None, dy=None):
+        '''
+        Same as cwt2D except it uses astropy.convolve_fft's ability
+        to interpolate over NaNs.
+
+        Parameters
+        ----------
+        dx : float, optional
+            Spacing in the x-direction.
+        dy : float, optional
+            Spacing in the y-direction.
+        '''
 
         if dx is not None:
             assert isinstance(dx, list)
@@ -153,23 +159,15 @@ class wt2D(object):
         return self
 
     def icwt2d(self, da=0.25):
-        """
+        '''
         Inverse bi-dimensional continuous wavelet transform as in Wang and
         Lu (2010), equation [5].
 
-        PARAMETERS
-            W (array like):
-                Wavelet transform, the result of the cwt2d function.
-            scales (array like, optional):
-                Scale parameter array.
-
-        RETURNS
-            iW (array like) :
-                Inverse wavelet transform.
-
-        EXAMPLE
-
-        """
+        Parameters
+        ----------
+        da : float, optional
+            Spacing in the frequency axis.
+        '''
         if self.Wf is None:
             raise TypeError("Run cwt2D before icwt2D")
         m0, l0, k0 = self.Wf.shape
@@ -195,6 +193,9 @@ class wt2D(object):
         return self
 
     def run(self):
+        '''
+        Compute the Wavelet transform.
+        '''
         if self.nan_flag:
             self.astropy_cwt2d()
         else:
@@ -202,32 +203,36 @@ class wt2D(object):
 
 
 class Wavelet_Distance(object):
+    '''
+    Compute the distance between the two cubes using the Wavelet transform.
+    We fit a linear model to the two wavelet transforms. The distance is the
+    t-statistic of the interaction term describing the difference in the
+    slopes.
 
-    """
-
-    docstring for Wavelet_Distance
-
-
-    INPUTS
-    ------
-
-    dataset1 - tuple
-               Contains FITS image [0] and FITS header [1].
-
-    dataset2 - tuple
-               See above.
-
-    wavelet - class
-              Wavelet class. Only Mexican_hat() is implemented.
-
-    distance - float OR list
-               If float, the distance to the two datasets are the same.
-               If list, it contains the two distances for each dataset.
-               If no distance is provided, pixel units are used.
-    """
+    Parameters
+    ----------
+    dataset1 : FITS hdu
+        2D image.
+    dataset2 : FITS hdu
+        2D image.
+    wavelet : class
+        Wavelet class. Only Mexican_hat() is implemented.
+    ang_units : bool, optional
+        Sets whether to use angular units.
+    scales : numpy.ndarray or list
+        The scales where the transform is calculated.
+    num : int
+        Number of scales to calculate the transform at.
+    dx : float, optional
+        Spacing in the x-direction.
+    dy : float, optional
+        Spacing in the y-direction.
+    fiducial_model : wt2D
+        Computed wt2D object. use to avoid recomputing.
+    '''
 
     def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(),
-                 distance=None, scales=None, num=50, dx=0.25, dy=0.25,
+                 ang_units=True, scales=None, num=50, dx=0.25, dy=0.25,
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
@@ -244,20 +249,17 @@ class Wavelet_Distance(object):
             self.scales1 = scales
             self.scales2 = scales
 
-        if distance is None:
+        if ang_units:
+            try:
+                self.imgscale1 = np.abs(dataset1[1]["CDELT2"])
+                self.imgscale2 = np.abs(dataset2[1]["CDELT2"])
+            except ValueError:
+                warnings.warn("One of the headers doesn't not contain the\
+                               angular size. Reverting to pixel scales.")
+                ang_units = False
+        if not ang_units:
             self.imgscale1 = 1.0
             self.imgscale2 = 1.0
-        else:
-            if isinstance(distance, list):
-                self.imgscale1 = np.abs(
-                    dataset1[1]["CDELT2"]) * (np.pi / 180.0) * distance[0]
-                self.imgscale2 = np.abs(
-                    dataset2[1]["CDELT2"]) * (np.pi / 180.0) * distance[1]
-            else:
-                self.imgscale1 = np.abs(
-                    dataset1[1]["CDELT2"]) * (np.pi / 180.0) * distance
-                self.imgscale2 = np.abs(
-                    dataset2[1]["CDELT2"]) * (np.pi / 180.0) * distance
 
         if fiducial_model is None:
             self.wt1 = wt2D(self.array1, self.scales1, wavelet=wavelet)
@@ -276,31 +278,15 @@ class Wavelet_Distance(object):
 
     def distance_metric(self, non_linear=True, verbose=False):
         '''
-
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
-        A statistical comparison is used on the powerlaw indexes.
 
-        INPUTS
-        ------
-        curve1 - array
-                 results of the wavelet transform
-                 column 1 is log10 T_g (transform)
-                 column 0 is log10 a (scales)
-
-        curve2 - array
-                 comparator to curve1 - same form
-
-        non_linear - bool
-                     flag if portion of data is non-linear
-                     runs the clip_to_linear function to only use the linear
-                     portion in the model
-
-        OUTPUTS
-        -------
-        distance - float
-                   result of the distance metric
-
+        Parameters
+        ----------
+        non_linear : bool, optional
+            Enables clipping of non-linear portions of the transform.
+        verbose : bool, optional
+            Enables plotting.
         '''
 
         self.curve1 = transform((self.wt1.Wf, self.scales1), self.imgscale1)
@@ -347,32 +333,26 @@ class Wavelet_Distance(object):
 
 def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
     '''
-
     Takes the second derivative of the data with a ricker wavelet.
     Data is clipped to the linear portion (2nd derivative ~ 0)
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    data      - array
-              - x and y data
+    data : numpy.ndarray
+        x and y data.
+    threshold : float, optional
+        Acceptable value of the second derivative to be called linear.
+    kernel_width : float, optional
+        Kernel width set to this percentage of the data length
+    ends_clipped : float, optional
+        Percentage of data to clip off at the ends. End points have residual
+        effects from the convolution.
 
-    threshold - float
-                acceptable value of the second derivative to be called linear
-
-    kernel_width - float
-                   kernel width set to this percentage of the data length
-
-    ends_clipped - float
-                   Percentage of data to clip off at the ends.
-                   End points have residual effects from the convolution.
-
-    OUTPUTS
+    Returns
     -------
-
-    data_clipped - array
-                   Linear portion of the data set returned
-
+    data_clipped : numpy.ndarray
+        Linear portion of the data set returned.
     '''
 
     from scipy.signal import ricker
@@ -404,23 +384,18 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
 
 def transform(data, imgscale):
     '''
-
     Put output of the wavelet transform into the mean of the nonzero components
-    This reduces the dataset to 1D
+    This reduces the dataset to 1D.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
+    data : tuple
+        Contains N arrays and scales from the transform.
 
-    data   - tuple
-           [0] - N arrays from the transform
-           [1] - scales of the transform
-
-    OUTPUTS
+    Returns
     -------
-
-    data_1D - array
-            scales in first column, log <T_g> in the second
-
+    data_1D - numpy.ndarray
+        Scales in the first column and log <T_g> in the second.
     '''
 
     wav_arrays = data[0]

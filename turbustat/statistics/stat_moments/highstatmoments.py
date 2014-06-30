@@ -1,8 +1,3 @@
-'''
-
-Higher Order Statistical Moments following the method by Burkhart et al. (2010)
-
-'''
 
 import numpy as np
 from scipy.stats import nanmean, nanstd
@@ -13,15 +8,18 @@ class StatMoments(object):
     """
 
     Statistical Moments of a given image are returned.
+    See Burkhart et al. (2010) for methods used.
 
-    INPUTS
-    ------
-
-    FUNCTIONS
-    ---------
-
-    OUTPUTS
-    -------
+    Parameters
+    ----------
+    img : numpy.ndarray
+        2D Image.
+    radius : int
+        Radius of circle to use when computing moments.
+    periodic : bool, optional
+        If the data is periodic (ie. from asimulation), wrap the data.
+    bin_num : int, optional
+        Number of bins to use in the histogram.
 
     """
 
@@ -50,7 +48,7 @@ class StatMoments(object):
 
     def array_moments(self):
         '''
-        Moments of the entire image
+        Moments over the entire image.
         '''
         self.mean, self.variance, self.skewness, self.kurtosis =\
             compute_moments(self.img)
@@ -58,6 +56,9 @@ class StatMoments(object):
         return self
 
     def compute_spatial_distrib(self):
+        '''
+        Compute the moments over circular region with the specified radius.
+        '''
 
         if self.periodic_flag:
             pad_img = np.pad(self.img, self.radius, mode="wrap")
@@ -97,6 +98,9 @@ class StatMoments(object):
         return self
 
     def make_spatial_histograms(self):
+        '''
+        Create histograms of the moments.
+        '''
         # Mean
         mean_hist, edges = np.histogram(
             self.mean_array[~np.isnan(self.mean_array)], self.bin_num,
@@ -125,6 +129,15 @@ class StatMoments(object):
         return self
 
     def run(self, verbose=False):
+        '''
+        Compute the entire method.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+
+        '''
 
         self.array_moments()
         self.compute_spatial_distrib()
@@ -162,8 +175,25 @@ class StatMoments(object):
 
 class StatMomentsDistance(object):
 
-    """docstring for StatMomentsDistance"""
+    '''
+    Compute the distance between two images based on their moments.
+    The distance is calculated for the skewness and kurtosis. The distance
+    values for each for computed using the Kullback-Leidler Divergence.
 
+    Parameters
+    ----------
+    image1 : numpy.ndarray
+        2D Image.
+    image2 : numpy.ndarray
+        2D Image.
+    radius : int, optional
+        Radius of circle to use when computing moments.
+    fiducial_model : StatMoments
+        Computed StatMoments object. use to avoid recomputing.
+
+    '''
+
+    ######### ADD ADDITIONAL ARGS !!!!!
     def __init__(self, image1, image2, radius=5, fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
 
@@ -178,6 +208,15 @@ class StatMomentsDistance(object):
         self.skewness_distance = None
 
     def distance_metric(self, verbose=False):
+        '''
+        Compute the distance.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+
+        '''
         self.kurtosis_distance = np.abs(
             kl_divergence(self.moments1.kurtosis_hist[1],
                           self.moments2.kurtosis_hist[1]))
@@ -213,6 +252,9 @@ class StatMomentsDistance(object):
 
 
 def circular_region(radius):
+    '''
+    Create a circular region with nans outside the radius.
+    '''
 
     xx, yy = np.mgrid[-radius:radius + 1, -radius:radius + 1]
 
@@ -226,6 +268,26 @@ def circular_region(radius):
 
 
 def compute_moments(img):
+    '''
+    Compute the moments of the given image.
+
+    Parameters
+    ----------
+    img : numpy.ndarray
+        2D image.
+
+    Returns
+    -------
+    mean : float
+        The 1st moment.
+    variance : float
+        The 2nd moment.
+    skewness : float
+        The 3rd moment.
+    kurtosis : float
+        The 4th moment.
+
+    '''
 
     mean = nanmean(img, axis=None)
     variance = nanstd(img, axis=None) ** 2.
@@ -247,11 +309,16 @@ def kl_divergence(P, Q):
     '''
     Kullback Leidler Divergence
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    P,Q - array
-          Two Discrete Probability distributions
+    P,Q : numpy.ndarray
+        Two Discrete Probability distributions
+
+    Returns
+    -------
+
+    kl_divergence : float
     '''
     P = P[~np.isnan(P)]
     Q = Q[~np.isnan(Q)]
