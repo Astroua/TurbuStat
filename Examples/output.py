@@ -49,8 +49,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
     if statistics is None:  # Run them all
         statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                      "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                      "Skewness", "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
+                      "Genus", "VCS", "VCA", "VCS_Density", "VCS_Velocity",
+                      "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
+                      "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
                       "Dendrogram_Num"]
 
     distances = {}
@@ -65,25 +66,29 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                 Wavelet_Distance(dataset1["integrated_intensity"],
                                  dataset2["integrated_intensity"]).distance_metric()
             distances["Wavelet"] = wavelet_distance.distance
-            fiducial_models["Wavelet"] = wavelet_distance.wt1
+            if not multicore:
+                fiducial_models["Wavelet"] = wavelet_distance.wt1
 
         if any("MVC" in s for s in statistics):
             mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
             distances["MVC"] = mvc_distance.distance
-            fiducial_models["MVC"] = mvc_distance.mvc1
+            if not multicore:
+                fiducial_models["MVC"] = mvc_distance.mvc1
 
         if any("PSpec" in s for s in statistics):
             pspec_distance = PSpec_Distance(dataset1,
                                             dataset2).distance_metric()
             distances["PSpec"] = pspec_distance.distance
-            fiducial_models["PSpec"] = pspec_distance.pspec1
+            if not multicore:
+                fiducial_models["PSpec"] = pspec_distance.pspec1
 
         if any("Bispectrum" in s for s in statistics):
             bispec_distance = \
                 BiSpectrum_Distance(dataset1["integrated_intensity"],
                                     dataset2["integrated_intensity"]).distance_metric()
             distances["Bispectrum"] = bispec_distance.distance
-            fiducial_models["Bispectrum"] = bispec_distance.bispec1
+            if not multicore:
+                fiducial_models["Bispectrum"] = bispec_distance.bispec1
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
@@ -92,33 +97,40 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                                        dataset2["integrated_intensity"],
                                        dataset2["integrated_intensity_error"][0]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
-            fiducial_models["DeltaVariance"] = delvar_distance.delvar1
+            if not multicore:
+                fiducial_models["DeltaVariance"] = delvar_distance.delvar1
 
         if any("Genus" in s for s in statistics):
             genus_distance = \
                 GenusDistance(dataset1["integrated_intensity"][0],
                               dataset2["integrated_intensity"][0]).distance_metric()
             distances["Genus"] = genus_distance.distance
-            fiducial_models["Genus"] = genus_distance.genus1
+            if not multicore:
+                fiducial_models["Genus"] = genus_distance.genus1
 
         if any("VCS" in s for s in statistics):
             vcs_distance = VCS_Distance(dataset1["cube"],
                                         dataset2["cube"]).distance_metric()
             distances["VCS"] = vcs_distance.distance
-            fiducial_models["VCS"] = vcs_distance.vcs1
+            distances["VCS_Density"] = vcs_distance.density_distance
+            distances["VCS_Velocity"] = vcs_distance.velocity_distance
+            if not multicore:
+                fiducial_models["VCS"] = vcs_distance.vcs1
 
         if any("VCA" in s for s in statistics):
             vca_distance = VCA_Distance(dataset1["cube"],
                                         dataset2["cube"]).distance_metric()
             distances["VCA"] = vca_distance.distance
-            fiducial_models["VCA"] = vca_distance.vca1
+            if not multicore:
+                fiducial_models["VCA"] = vca_distance.vca1
 
         if any("Tsallis" in s for s in statistics):
             tsallis_distance = \
                 Tsallis_Distance(dataset1["integrated_intensity"][0],
                                  dataset2["integrated_intensity"][0]).distance_metric()
             distances["Tsallis"] = tsallis_distance.distance
-            fiducial_models["Tsallis"] = tsallis_distance.tsallis1
+            if not multicore:
+                fiducial_models["Tsallis"] = tsallis_distance.tsallis1
 
         if any("Skewness" in s for s in statistics) or\
            any("Kurtosis" in s for s in statistics):
@@ -127,21 +139,24 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                                     dataset2["integrated_intensity"][0], 5).distance_metric()
             distances["Skewness"] = moment_distance.skewness_distance
             distances["Kurtosis"] = moment_distance.kurtosis_distance
-            fiducial_models["stat_moments"] = moment_distance.moments1
+            if not multicore:
+                fiducial_models["stat_moments"] = moment_distance.moments1
 
         if any("PCA" in s for s in statistics):
             pca_distance = \
                 PCA_Distance(dataset1["cube"][0],
                              dataset2["cube"][0]).distance_metric()
             distances["PCA"] = pca_distance.distance
-            fiducial_models["PCA"] = pca_distance.pca1
+            if not multicore:
+                fiducial_models["PCA"] = pca_distance.pca1
 
         if any("SCF" in s for s in statistics):
             scf_distance = \
                 SCF_Distance(dataset1["cube"][0],
                              dataset2["cube"][0]).distance_metric()
             distances["SCF"] = scf_distance.distance
-            fiducial_models["SCF"] = scf_distance.scf1
+            if not multicore:
+                fiducial_models["SCF"] = scf_distance.scf1
 
         if any("Cramer" in s for s in statistics):
             cramer_distance = \
@@ -157,7 +172,8 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
-            fiducial_models["Dendrogram"] = dendro_distance.dendro1
+            if not multicore:
+                fiducial_models["Dendrogram"] = dendro_distance.dendro1
 
         if multicore:
             return distances
@@ -215,6 +231,8 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                 VCS_Distance(dataset1["cube"],
                              dataset2["cube"],
                              fiducial_model=fiducial_models["VCS"]).distance_metric()
+            distances["VCS_Density"] = vcs_distance.density_distance
+            distances["VCS_Velocity"] = vcs_distance.velocity_distance
             distances["VCS"] = vcs_distance.distance
 
         if any("VCA" in s for s in statistics):
@@ -372,9 +390,10 @@ if __name__ == "__main__":
 
     os.chdir(PREFIX)
 
-    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                  "Skewness", "Kurtosis", "Dendrogram_Hist", "Dendrogram_Num"]
+    statistics = ["DeltaVariance"]#"Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+                  # "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
+                  # "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity"]
+                  #, "Dendrogram_Hist", "Dendrogram_Num"]
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
@@ -431,12 +450,12 @@ if __name__ == "__main__":
         # number of comparisons b/w all fiducials
         num_comp = (len(fiducials)**2. - len(fiducials))/2
         # Change dim 2 to match number of time steps
-        distances_storage = np.zeros((num_statistics, num_comp, 1))
+        distances_storage = np.zeros((num_statistics, num_comp, 10))
         posn = 0
         prev = 0
         # no need to loop over the last one
         for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1, 0, -1)):
-            fid_num = int(fid[-5])+1
+            fid_num = int(fid[-5])#+1 #### THIS NEED TO BE CHANGED BASED ON THE FIDUCIAL NUMBERING!!!!!!!
             posn += i
             partial_distances, timesteps_labels = \
                 run_all(fiducials[fid_num-1], fiducials_comp[fid_num:],
