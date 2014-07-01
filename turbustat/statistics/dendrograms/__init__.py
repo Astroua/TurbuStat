@@ -1,2 +1,2 @@
-# from compute_dendro import DendroStats
-from dendro_stats import DendroDistance
+
+from dendro_stats import DendroDistance, Dendrogram_Stats
