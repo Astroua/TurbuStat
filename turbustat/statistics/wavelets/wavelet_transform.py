@@ -59,13 +59,19 @@ class wt2D(object):
         The wavelet class to use.
     '''
 
-    def __init__(self, array, header, scales, dx=0.25, dy=0.25,
-                 wavelet=Mexican_hat(), ang_units=True):
+    def __init__(self, array, header, scales=None, dx=0.25, dy=0.25,
+                 wavelet=Mexican_hat(), num=50, ang_units=True):
         super(wt2D, self).__init__()
         self.array = array.astype("f8")
         self.header = header
-        self.scales = scales
         self.wavelet = wavelet
+
+        if scales is None:
+            a_min = round((5. / 3.), 3)  # Smallest scale given by paper
+            self.scales = np.logspace(
+                np.log10(a_min), np.log10(min(self.array.shape)), num)
+        else:
+            self.scales = scales
 
         ### NOTE: can't use nan_interpolating from astropy
         ### until the normalization for sum to zeros kernels is fixed!!!
@@ -258,25 +264,15 @@ class Wavelet_Distance(object):
         header1 = dataset1[1]
         array2 = dataset2[0]
         header2 = dataset2[1]
-        self.wavelet = wavelet
-        if scales is None:
-            a_min = round((5. / 3.), 3)  # Smallest scale given by paper
-            self.scales1 = np.logspace(
-                np.log10(a_min), np.log10(min(array1.shape)), num)
-            self.scales2 = np.logspace(
-                np.log10(a_min), np.log10(min(array2.shape)), num)
-        else:
-            self.scales1 = scales
-            self.scales2 = scales
 
         if fiducial_model is None:
-            self.wt1 = wt2D(array1, header1, self.scales1, wavelet=wavelet,
+            self.wt1 = wt2D(array1, header1, scales=scales, wavelet=wavelet,
                             ang_units=ang_units)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = wt2D(array2, header2, self.scales2, wavelet=wavelet,
+        self.wt2 = wt2D(array2, header2, scales=scales, wavelet=wavelet,
                         ang_units=ang_units)
         self.wt2.run()
 
