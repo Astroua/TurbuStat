@@ -2,25 +2,32 @@
 Test functions for VCA
 '''
 
+from unittest import TestCase
+
 import numpy as np
+import numpy.testing as npt
 
 from ..statistics import VCA, VCA_Distance
-from ._testing_data import dataset1, dataset2, computed_data, computed_distances
+from ._testing_data import \
+    dataset1, dataset2, computed_data, computed_distances
 
-class testVCA():
 
-    def __init__(self):
+class testVCA(TestCase):
+
+    def setUp(self):
         self.dataset1 = dataset1
         self.dataset2 = dataset2
-        self.computed_data = computed_data
-        self.computed_distances = computed_distances
-        self.tester = None
 
     def test_VCA_method(self):
-        self.tester = VCA(dataset1["cube"][0],dataset1["cube"][1], slice_sizes = [1.0])
+        self.tester = VCA(dataset1["cube"][0],
+                          dataset1["cube"][1],
+                          slice_sizes=[1.0])
         self.tester.run()
-        assert np.allclose(self.tester.ps1D, self.computed_data['vca_val'])
+        assert np.allclose(self.tester.ps1D, computed_data['vca_val'])
 
     def test_VCA_distance(self):
-        self.tester_dist = VCA_Distance(dataset1["cube"],dataset2["cube"], fiducial_model = self.tester).distance_metric().distance
-        assert np.allclose(self.tester_dist, self.computed_distances['vca_distance'])
+        self.tester_dist = \
+            VCA_Distance(dataset1["cube"],
+                         dataset2["cube"]).distance_metric()
+        npt.assert_almost_equal(self.tester_dist.distance,
+                                computed_distances['vca_distance'])
