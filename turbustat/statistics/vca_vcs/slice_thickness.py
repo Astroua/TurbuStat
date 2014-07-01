@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def change_slice_thickness(cube, slice_thickness=1):
+def change_slice_thickness(cube, slice_thickness=1.0):
     '''
 
     Degrades the velocity resolution of a data cube. This is to avoid
@@ -25,7 +25,7 @@ def change_slice_thickness(cube, slice_thickness=1):
 
     from scipy.stats import nanmean
 
-    assert isinstance(slice_thickness, int)
+    assert isinstance(slice_thickness, float)
     if slice_thickness < 1:
         slice_thickness == 1
         print "Slice Thickness must be at least 1.0. Returning original cube."
@@ -36,6 +36,8 @@ def change_slice_thickness(cube, slice_thickness=1):
     if cube.shape[0] % slice_thickness != 0:
         raise TypeError("Slice thickness must be integer multiple of dimension\
                          size % s" % (cube.shape[0]))
+
+    slice_thickness = int(slice_thickness)
 
     # Want to average over velocity channels
     new_channel_indices = np.arange(0, cube.shape[0] / slice_thickness)
