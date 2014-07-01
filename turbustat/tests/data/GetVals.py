@@ -168,4 +168,6 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     cramer_distance=cramer_distance.distance,
                     genus_distance=genus_distance.distance,
                     vcs_distance=vcs_distance.distance,
-                    bispec_distance=bispec_distance.distance)
+                    bispec_distance=bispec_distance.distance,
+                    dendrohist_distance=dendro_distance.histogram_distance,
+                    dendronum_distance=dendro_distance.num_distance)
