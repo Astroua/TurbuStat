@@ -47,6 +47,8 @@ class wt2D(object):
     ----------
     array : numpy.ndarray
         2D array.
+    header : FITS header
+        Header for the array.
     scales : numpy.ndarray or list
         The scales where the transform is calculated.
     dx : float, optional
@@ -57,19 +59,31 @@ class wt2D(object):
         The wavelet class to use.
     '''
 
-    def __init__(self, array, scales, dx=0.25, dy=0.25, wavelet=Mexican_hat()):
+    def __init__(self, array, header, scales, dx=0.25, dy=0.25,
+                 wavelet=Mexican_hat(), ang_units=True):
         super(wt2D, self).__init__()
         self.array = array.astype("f8")
+        self.header = header
         self.scales = scales
         self.wavelet = wavelet
 
-        ### NOTE: can't use nan_interpolating from astropy until the normalization
-        ### for sum to zeros kernels is fixed!!!
+        ### NOTE: can't use nan_interpolating from astropy
+        ### until the normalization for sum to zeros kernels is fixed!!!
         self.array[np.isnan(self.array)] = np.nanmin(self.array)
 
         self.nan_flag = False
         if np.isnan(self.array).any():
             self.nan_flag = True
+
+        if ang_units:
+            try:
+                self.imgscale = np.abs(self.header["CDELT2"])
+            except ValueError:
+                warnings.warn("Header doesn't not contain the\
+                               angular size. Reverting to pixel scales.")
+                ang_units = False
+        if not ang_units:
+            self.imgscale = 1.0
 
         a_min = 5 / 3.  # Minimum scale size given by Gill and Henriksen (90)
         self.dx = dx * a_min
@@ -192,6 +206,9 @@ class wt2D(object):
 
         return self
 
+    def make_1D_transform(self):
+        self.curve = transform((self.Wf, self.scales), self.imgscale)
+
     def run(self):
         '''
         Compute the Wavelet transform.
@@ -200,6 +217,7 @@ class wt2D(object):
             self.astropy_cwt2d()
         else:
             self.cwt2d()
+        self.make_1D_transform()
 
 
 class Wavelet_Distance(object):
@@ -236,42 +254,34 @@ class Wavelet_Distance(object):
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
-        self.array1 = dataset1[0]
-        self.array2 = dataset2[0]
+        array1 = dataset1[0]
+        header1 = dataset1[1]
+        array2 = dataset2[0]
+        header2 = dataset2[1]
         self.wavelet = wavelet
         if scales is None:
             a_min = round((5. / 3.), 3)  # Smallest scale given by paper
             self.scales1 = np.logspace(
-                np.log10(a_min), np.log10(min(self.array1.shape)), num)
+                np.log10(a_min), np.log10(min(array1.shape)), num)
             self.scales2 = np.logspace(
-                np.log10(a_min), np.log10(min(self.array2.shape)), num)
+                np.log10(a_min), np.log10(min(array2.shape)), num)
         else:
             self.scales1 = scales
             self.scales2 = scales
 
-        if ang_units:
-            try:
-                self.imgscale1 = np.abs(dataset1[1]["CDELT2"])
-                self.imgscale2 = np.abs(dataset2[1]["CDELT2"])
-            except ValueError:
-                warnings.warn("One of the headers doesn't not contain the\
-                               angular size. Reverting to pixel scales.")
-                ang_units = False
-        if not ang_units:
-            self.imgscale1 = 1.0
-            self.imgscale2 = 1.0
-
         if fiducial_model is None:
-            self.wt1 = wt2D(self.array1, self.scales1, wavelet=wavelet)
+            self.wt1 = wt2D(array1, header1, self.scales1, wavelet=wavelet,
+                            ang_units=ang_units)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = wt2D(self.array2, self.scales2, wavelet=wavelet)
+        self.wt2 = wt2D(array2, header2, self.scales2, wavelet=wavelet,
+                        ang_units=ang_units)
         self.wt2.run()
 
-        self.curve1 = None
-        self.curve2 = None
+        self.curve1 = self.wt1.curve
+        self.curve2 = self.wt2.curve
 
         self.results = None
         self.distance = None
@@ -288,9 +298,6 @@ class Wavelet_Distance(object):
         verbose : bool, optional
             Enables plotting.
         '''
-
-        self.curve1 = transform((self.wt1.Wf, self.scales1), self.imgscale1)
-        self.curve2 = transform((self.wt2.Wf, self.scales2), self.imgscale2)
 
         if non_linear:
             self.curve1 = clip_to_linear(self.curve1)
