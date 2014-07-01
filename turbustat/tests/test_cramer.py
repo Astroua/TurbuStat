@@ -3,21 +3,26 @@
 Test functions for Cramer
 '''
 
+from unittest import TestCase
+
 import numpy as np
+import numpy.testing as npt
 
-from ..statistics import cramer, Cramer_Distance
-from ._testing_data import dataset1, dataset2, computed_data, computed_distances
+from ..statistics import Cramer_Distance
+from ._testing_data import \
+    dataset1, dataset2, computed_data, computed_distances
 
-class testCramer():
 
-    def __init__(self):
+class testCramer(TestCase):
+
+    def setUp(self):
         self.dataset1 = dataset1
         self.dataset2 = dataset2
-        self.computed_data = computed_data
-        self.computed_distances = computed_distances
-        self.tester = None
 
-    def test_Cramer_distance(self):
+    def test_cramer(self):
         self.tester = Cramer_Distance(dataset1["cube"][0], dataset2["cube"][0])
-        self.tester = self.tester.distance_metric()
-        assert self.tester.distance == self.computed_distances['cramer_distance']
+        self.tester.distance_metric()
+        assert np.allclose(self.tester.data_matrix1,
+                           computed_data["cramer_val"])
+        npt.assert_almost_equal(self.tester.distance,
+                                computed_distances['cramer_distance'])

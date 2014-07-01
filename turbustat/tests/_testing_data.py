@@ -1,21 +1,108 @@
 
 '''
-Load in data sets for tests
+Load in data sets for tests. 32^2 pixels portions of two data sets
+are loaded in (one Design and one fiducial run).
+Only the channels with signal were kept. Additional channels the match the
+original spectral axis are added on and filled with noise centered around the
+limit.
 '''
 
-from ..io import fromfits
+# Need to create the property arrays
+from ..data_reduction import property_arrays
+
+import os
+import warnings
 import numpy as np
-keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
-             "linewidth_error", "moment0", "moment0_error", "cube"}
+import numpy.random as ra
+from astropy.io.fits import getheader
 
-folder1 = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/Fiducial128_1.0.0/Fiducial128_1_21_0_0_flatrho_0021_13co/"
+# Set seed for adding noise.
+ra.seed(121212)
 
-dataset1 = fromfits(folder1, keywords)
+turb_path = os.path.dirname(__file__)
 
-folder2 = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/Design4.0.0/Design4_21_0_0_flatrho_0021_13co/"
+# Open header for both
+hdr_path = os.path.join(turb_path, "data/header.fits")
+header = getheader(hdr_path)
 
-dataset2 = fromfits(folder2, keywords)
 
-computed_data = np.load("/srv/astro/caleb/checkVals.npz")
+keywords = ["centroid", "centroid_error", "integrated_intensity",
+            "integrated_intensity_error", "linewidth",
+            "linewidth_error", "moment0", "moment0_error", "cube"]
 
-computed_distances = np.load("/srv/astro/caleb/computed_distances.npz")
+path1 = os.path.join(turb_path, "data/dataset1.npz")
+
+dataset1 = np.load(path1)
+
+cube1 = np.empty((500, 32, 32))
+
+count = 0
+for posn, kept in zip(*dataset1["channels"]):
+    posn = int(posn)
+    if kept:
+        cube1[posn, :, :] = dataset1["cube"][count, :, :]
+        count += 1
+    else:
+        cube1[posn, :, :] = ra.normal(0.005, 0.005, (32, 32))
+
+props1 = property_arrays((cube1, header), rms_noise=0.001)
+props1.return_all(save=False)
+
+dataset1 = dict.fromkeys(keywords, 0)
+
+for key in props1.property_dict.keys():
+    if key is not "int_int":
+        dataset1[key] = [props1.property_dict[key][0], header]
+        dataset1[key+"_error"] = [props1.property_dict[key][1], header]
+    else:
+        dataset1["integrated_intensity"] = \
+            [props1.property_dict[key][0], header]
+        dataset1["integrated_intensity_error"] = \
+            [props1.property_dict[key][1], header]
+
+dataset1["cube"] = [cube1, header]
+
+##############################################################################
+
+path2 = os.path.join(turb_path, "data/dataset2.npz")
+
+dataset2 = np.load(path2)
+
+cube2 = np.empty((500, 32, 32))
+
+count = 0
+for posn, kept in zip(*dataset2["channels"]):
+    posn = int(posn)
+    if kept:
+        cube2[posn, :, :] = dataset2["cube"][count, :, :]
+        count += 1
+    else:
+        cube2[posn, :, :] = ra.normal(0.005, 0.005, (32, 32))
+
+props2 = property_arrays((cube2, header), rms_noise=0.001)
+props2.return_all(save=False)
+
+dataset2 = dict.fromkeys(keywords, 0)
+
+for key in props2.property_dict.keys():
+    if key is not "int_int":
+        dataset2[key] = [props2.property_dict[key][0], header]
+        dataset2[key+"_error"] = [props2.property_dict[key][1], header]
+    else:
+        dataset2["integrated_intensity"] = \
+            [props2.property_dict[key][0], header]
+        dataset2["integrated_intensity_error"] = \
+            [props2.property_dict[key][1], header]
+
+dataset2["cube"] = [cube2, header]
+
+##############################################################################
+
+# Load in saved comparison data.
+try:
+    computed_data = np.load(os.path.join(turb_path, "data/checkVals.npz"))
+
+    computed_distances = np.load(os.path.join(turb_path,
+                                              "data/computed_distances.npz"))
+except IOError:
+    warnings.warn("No checkVals or computed_distances files.")

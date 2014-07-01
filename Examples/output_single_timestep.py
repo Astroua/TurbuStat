@@ -333,23 +333,23 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
         distances_storage = sort_distances(statistics, distances).T
 
     else:
-        for ii, design in enumerate(simulation_runs):
-            fiducial_dataset = fromfits(fiducial[ii], keywords)
+        for i, design in enumerate(simulation_runs):
+            fiducial_dataset = fromfits(fiducial, keywords)
             testing_dataset = fromfits(design, keywords)
             if i == 0:
                 distances, fiducial_models = \
                     wrapper(fiducial_dataset, testing_dataset,
                             statistics=statistics,
-                            filenames=[fiducial[ii], design])
+                            filenames=[fiducial, design])
                 all_fiducial_models = fiducial_models
             else:
                 distances = \
                     wrapper(fiducial_dataset, testing_dataset,
                             fiducial_models=all_fiducial_models,
                             statistics=statistics,
-                            filenames=[fiducial[ii], design])
+                            filenames=[fiducial, design])
             distances = [distances]
-            distances_storage[:, ii:ii+1] = \
+            distances_storage[:, i:i+1] = \
                 sort_distances(statistics, distances).T
 
     return distances_storage
@@ -372,14 +372,14 @@ if __name__ == "__main__":
     from itertools import izip, repeat
 
     INTERACT = False  # Will prompt you for inputs if True
-    PREFIX = "/srv/astro/erickoch/enzo_sims/frac_factorial_set/"
+    PREFIX = "/srv/astro/erickoch/enzo_sims/full_factorial/"
 
     os.chdir(PREFIX)
 
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
                   "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                  "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity"]
-                  #, "Dendrogram_Hist", "Dendrogram_Num"]
+                  "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
+                  "Dendrogram_Hist", "Dendrogram_Num"]
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
@@ -436,7 +436,7 @@ if __name__ == "__main__":
         # number of comparisons b/w all fiducials
         num_comp = (len(fiducials)**2. - len(fiducials))/2
         # Change dim 2 to match number of time steps
-        distances_storage = np.zeros((num_statistics, num_comp, 1))
+        distances_storage = np.zeros((num_statistics, num_comp))
         posn = 0
         prev = 0
         # no need to loop over the last one
@@ -479,8 +479,8 @@ if __name__ == "__main__":
     store = HDFStore("results/"+filename)
 
     for i in range(num_statistics):
-        df = DataFrame(distances_storage[i, :, :], index=simulation_runs,
-                       columns=fiducial)
+        df = DataFrame(distances_storage[i, :], index=simulation_runs,
+                       columns=[fiducial])
         if statistics[i] in store:
             existing_df = store[statistics[i]]
             if len(existing_df.index) == len(df.index):

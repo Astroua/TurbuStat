@@ -2,24 +2,30 @@
 Test functions for PCA
 '''
 
+from unittest import TestCase
+
 import numpy as np
+import numpy.testing as npt
 
 from ..statistics import PCA, PCA_Distance
-from ._testing_data import dataset1, dataset2, computed_data, computed_distances
+from ._testing_data import \
+    dataset1, dataset2, computed_data, computed_distances
 
-class testPCA():
-    def __init__(self):
+
+class testPCA(TestCase):
+
+    def setUp(self):
         self.dataset1 = dataset1
         self.dataset2 = dataset2
-        self.computed_data = computed_data
-        self.computed_distances = computed_distances
-        self.tester = None
 
     def test_PCA_method(self):
-        self.tester = PCA(dataset1["cube"][0], n_eigs = 50)
+        self.tester = PCA(dataset1["cube"][0], n_eigs=50)
         self.tester.run()
-        assert np.allclose(self.tester.eigvals, self.computed_data['pca_val'])
+        assert np.allclose(self.tester.eigvals, computed_data['pca_val'])
 
     def test_PCA_distance(self):
-        self.tester_dist = PCA_Distance(dataset1["cube"][0],dataset2["cube"][0],fiducial_model=self.tester).distance_metric().distance
-        assert np.allclose(self.tester_dist, self.computed_distances['pca_distance'])
+        self.tester_dist = \
+            PCA_Distance(dataset1["cube"][0],
+                         dataset2["cube"][0]).distance_metric()
+        npt.assert_almost_equal(self.tester_dist.distance,
+                                computed_distances['pca_distance'])

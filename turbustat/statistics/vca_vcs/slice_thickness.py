@@ -26,16 +26,18 @@ def change_slice_thickness(cube, slice_thickness=1.0):
     from scipy.stats import nanmean
 
     assert isinstance(slice_thickness, float)
-    if slice_thickness < 1.0:
-        slice_thickness == 1.0
+    if slice_thickness < 1:
+        slice_thickness == 1
         print "Slice Thickness must be at least 1.0. Returning original cube."
 
-    if slice_thickness == 1.0:
+    if slice_thickness == 1:
         return cube
 
     if cube.shape[0] % slice_thickness != 0:
         raise TypeError("Slice thickness must be integer multiple of dimension\
                          size % s" % (cube.shape[0]))
+
+    slice_thickness = int(slice_thickness)
 
     # Want to average over velocity channels
     new_channel_indices = np.arange(0, cube.shape[0] / slice_thickness)
@@ -43,7 +45,8 @@ def change_slice_thickness(cube, slice_thickness=1.0):
         (cube.shape[0] / slice_thickness, cube.shape[1], cube.shape[2]))
 
     for channel in new_channel_indices:
-        old_index = channel * slice_thickness
+        old_index = int(channel * slice_thickness)
+        channel = int(channel)
         degraded_cube[channel, :, :] = nanmean(
             cube[old_index:old_index + slice_thickness], axis=0)
 
