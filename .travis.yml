@@ -20,7 +20,6 @@ install:
     - conda install --yes numpy
     - conda install --yes scipy
     - conda install --yes matplotlib
-    - conda install --yes scikits-image
     - conda install --yes pandas
     - conda install --yes statsmodels
     - conda install --yes scikit-learn
