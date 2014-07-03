@@ -31,4 +31,5 @@ install:
     ## Eventually add on spectral-cube and signal-id
 
 script:
-    nosetests turbustat/tests/
+    - python setup.py install
+    - nosetests turbustat/tests/
