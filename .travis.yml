@@ -17,13 +17,13 @@ install:
     - source activate test
 
     # Now install dependencies
-    - conda --yes install numpy
-    - conda --yes install scipy
-    - conda --yes install matplotlib
-    - conda --yes install scikits-image
-    - conda --yes install pandas
-    - conda --yes install statsmodels
-    - conda --yes install scikit-learn
+    - conda install --yes numpy
+    - conda install --yes scipy
+    - conda install --yes matplotlib
+    - conda install --yes scikits-image
+    - conda install --yes pandas
+    - conda install --yes statsmodels
+    - conda install --yes scikit-learn
     - conda install git+https://github.com/astropy/astropy.git@v0.4rc1
 
     # Use pip to install development versions
