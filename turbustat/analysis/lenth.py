@@ -1,3 +1,6 @@
+# Licensed under an MIT open source license - see LICENSE
+
+
 '''
 
 Implementation of Lenth's Method. This returns a t-like statistic allowng the sensitivity

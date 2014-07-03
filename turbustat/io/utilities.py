@@ -1,4 +1,5 @@
-#!/usr/bin/python
+# Licensed under an MIT open source license - see LICENSE
+
 
 '''
 Utility Functions used for the simulation statistics suite
@@ -15,26 +16,29 @@ def fromfits(folder, keywords, header=True, verbose=False):
     Returns image and its header
     Generalized to load multiple fits files
 
-    INPUTS
-    ------
+    Parameters
+    ----------
 
-    folder - string
-             folder to look for FITS files
+    folder : str
+        Folder to look for FITS files.
 
-    keywords - list
-               image descriptor to look for in file name
+    keywords : list
+        Image descriptions to look for in file name.
 
-    header - bool
-             return header
+    header : bool, optional
+        Sets whether the header is returned.
 
-    OUTPUTS
+    verbose : bool, optional
+        Prints array properties.
+
+    Returns
     -------
 
-    img_dict - dictionary
-               dictionary containing images and headers
+    img_dict : dict
+        Dictionary containing images and headers
 
 
-    EXAMPLE
+    Example
     -------
         keywords = ["centroid", "centroid_error", "moment0", "moment0_error"]
         folder = "image_location"
@@ -103,8 +107,6 @@ def find_word(text, search):
     '''
 
     dText = {}
-    #dSearch = {}
-
     dText = text.split(".")
 
     found_word = 0
@@ -121,34 +123,3 @@ def find_word(text, search):
         return match
     else:
         return False
-
-
-def append_to_hdf5(filename, new_data, col_label):
-    '''
-
-    This function appends a new column onto pre-existing data frames.
-    It allows missing comparisons to be added.
-
-    Parameters
-    **********
-
-    filename : str
-               File containing pre-existing data.
-
-    new_data : array
-               Array with shape (number of stats, timesteps)
-
-    col_labels : str
-                 Label to be added for new column
-
-    '''
-    from pandas import HDFStore, concat
-
-    store = HDFStore(filename)
-
-    for i, key in enumerate(store.keys()):
-        df = store[key]
-        df = concat([df, new_data[i, :]])
-        store[key] = df
-
-    store.close()

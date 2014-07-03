@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+
 
 '''
 Wrapper on spectral_cube for simulated datasets

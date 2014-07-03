@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+
 
 import numpy as np
 import statsmodels.formula.api as sm

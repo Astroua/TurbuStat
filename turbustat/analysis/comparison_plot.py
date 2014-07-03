@@ -1,26 +1,24 @@
+# Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
-from pandas import read_hdf, HDFStore
-import types
 import os
 import matplotlib.pyplot as p
-import matplotlib.cm as cm
+from pandas import read_csv
 
 
-def comparison_plot(path, analysis_fcn="mean", verbose=False,
-                    cross_compare=False,
+def comparison_plot(path, num_fids=5, verbose=False, obs=False,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
-                                "DeltaVariance", "Genus", "VCS", "VCA",
-                                "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
-                                "Kurtosis", "Dendrogram_Hist",
+                                "DeltaVariance", "Genus", "VCS",
+                                "VCS_Density", "VCS_Velocity", "VCA",
+                                "Tsallis", "PCA", "SCF", "Cramer",
+                                "Skewness", "Kurtosis", "Dendrogram_Hist",
                                 "Dendrogram_Num"]):
     '''
+    Requires results converted into csv form!!
 
     This function plots a comparison of the distances between the different
-    simulations and (if available) fiducial runs. Two sets of plots are
-    returned; one for comparisons using the analysis function (default is mean
-    over time-steps) and one comparing the values for each time-step to each
-    fiducial run. The faces of the cubes (0 or 2) are treated separately.
+    simulations and the fiducial runs. All face combinations are checked for
+    in the given path. The plots adjust to the available amount of data.
 
     Parameters
     ----------
@@ -35,194 +33,120 @@ def comparison_plot(path, analysis_fcn="mean", verbose=False,
     statistics : list, optional
         Statistics to plot. Default is all.
     '''
-    # Loop through statistics and load in results for each comparison
 
-    data_files = [os.path.join(path, x) for x in os.listdir(path) if
-                  os.path.isfile(os.path.join(path, x)) and x[-2:] == "h5"]
+    # All possible face combinations
+    data_files = {"0_0": ["Face 0 to 0"],
+                  "1_1": ["Face 1 to 1"],
+                  "2_2": ["Face 2 to 2"],
+                  "0_1": ["Face 0 to 1"],
+                  "0_2": ["Face 0 to 2"],
+                  "1_2": ["Face 1 to 2"],
+                  "2_1": ["Face 2 to 1"],
+                  "2_0": ["Face 2 to 0"],
+                  "1_0": ["Face 1 to 0"]}
 
-    # Sort such that the Fiducials are properly labeled
-    for i in np.arange(1, 7):
-        if i == 1:
-            sorted_files = [f for f in data_files if f[-25] == str(i)]
-        else:
-            sorted_files.extend([f for f in data_files if f[-25] == str(i)])
-    sorted_files.extend([f for f in data_files if f[-48:-45] == "fid"])
+    order = ["0_0", "0_1", "0_2", "1_0", "1_1", "1_2", "2_0", "2_1", "2_2"]
 
-    assert len(data_files) == len(sorted_files)
+    if obs:
+        data_files["0_obs"] = ["Face 0 to Obs"],
+        data_files["1_obs"] = ["Face 1 to Obs"],
+        data_files["2_obs"] = ["Face 2 to Obs"],
 
-    data_files = sorted_files
+    # Read in the data and match it to one of the face combinations.
+    for x in os.listdir(path):
+        if not os.path.isfile(os.path.join(path, x)):
+            continue
+        if not x[-3:] == "csv":
+            continue
+        for key in data_files.keys():
+            if key in x:
+                data = read_csv(os.path.join(path, x))
+                data_files[key].append(data)
+                break
 
-    if len(data_files) == 0:
-        print "The inputed path contains no HDF5 files."
-        return None
+    # Now delete the keys with no data
+    for key in data_files.keys():
+        if len(data_files[key]) == 1:
+            del data_files[key]
+            order.remove(key)
 
-    loader = lambda data, x: read_hdf(data, x)
+    if data_files.keys() == []:
+        print "No csv files found in %s" % (path)
+        return
 
-    if isinstance(analysis_fcn, str):
-        assert isinstance(getattr(loader(data_files[0], statistics[0]),
-                                  analysis_fcn), types.UnboundMethodType)
+    for stat in statistics:
+        # Divide by 2 b/c there should be 2 files for each comparison b/w faces
+        (fig, ax), shape = _plot_size(len(data_files.keys()))
+        for k, key in enumerate(order):
+            bottom = False
+            if shape[0] % (k + 1) == 0:
+                bottom = True
+            _plotter(ax[k], data_files[key][1][stat], data_files[key][2][stat],
+                     num_fids, data_files[key][0], stat, bottom)
 
-    for i, stat in enumerate(statistics):
-        data_face0_0 = []
-        fid_data_face0_0 = []
-
-        data_face2_2 = []
-        fid_data_face2_2 = []
-
-        if cross_compare:
-            data_face2_0 = []
-            fid_data_face2_0 = []
-
-            data_face0_2 = []
-            fid_data_face0_2 = []
-
-        num_sims = 0
-        num_fids = 0
-
-        for data in data_files:
-            datum = loader(data, stat).sort(axis=1)
-            # Face 0 to 0
-            if data[-23:-20] == "0_0":
-                if data.split("/")[-1][:13] == "fiducial_comp":
-                    num_fids = num_fiducials(datum.shape[0])
-                    assert isinstance(num_fids, int)
-                    j_last = 0
-                    for j in np.arange(num_fids, 0, -1):
-                        fid_data_face0_0.append(
-                            datum.iloc[j_last:j + j_last, :])
-                        j_last = j
-
-                else:
-                    data_face0_0.append(datum.sort(axis=0))
-                    num_sims = datum.shape[0]
-            # Face 2 to 2
-            elif data[-23:-20] == "2_2":
-                if data.split("/")[-1][:13] == "fiducial_comp":
-                    num_fids = num_fiducials(datum.shape[0])
-                    assert isinstance(num_fids, int)
-                    j_last = 0
-                    for j in np.arange(num_fids, 0, -1):
-                        fid_data_face2_2.append(
-                            datum.iloc[j_last:j + j_last, :])
-                        j_last = j
-                else:
-                    data_face2_2.append(datum.sort(axis=0))
-            # Face 0 to 2
-            elif cross_compare and data[-23:-20] == "0_2":
-                if data.split("/")[-1][:13] == "fiducial_comp":
-                    num_fids = num_fiducials(datum.shape[0])
-                    assert isinstance(num_fids, int)
-                    j_last = 0
-                    for j in np.arange(num_fids, 0, -1):
-                        fid_data_face2_0.append(
-                            datum.iloc[j_last:j + j_last, :])
-                        j_last = j
-                else:
-                    data_face2_0.append(datum.sort(axis=0))
-            # Face 2 to 0
-            elif cross_compare and data[-23:-20] == "2_0":
-                if data.split("/")[-1][:13] == "fiducial_comp":
-                    num_fids = num_fiducials(datum.shape[0])
-                    assert isinstance(num_fids, int)
-                    j_last = 0
-                    for j in np.arange(num_fids, 0, -1):
-                        fid_data_face0_2.append(
-                            datum.iloc[j_last:j + j_last, :])
-                        j_last = j
-                else:
-                    data_face0_2.append(datum.sort(axis=0))
-            else:
-                if not cross_compare:
-                    pass
-                else:
-                    print "Check filename for position of face label. Currently works only for \
-                           the default output of output.py"
-                    break
-
-        # Comparison across simulations
-        labels = ["Fiducial " + str(num) for num in range(1, num_fids + 2)]
-        xtick_labels = ["Design " + str(num) for num in range(1, num_sims + 1)]
-        xtick_labels = xtick_labels + labels[:-1]
-
-        colours = cm.rainbow(np.linspace(0, 1, num_fids + 1))
-        if cross_compare:
-            ax1 = p.subplot(2, 2, 1)
-        else:
-            ax1 = p.subplot(1, 2, 1)
-
-        for i, (df, col) in enumerate(zip(data_face0_0, colours)):
-            p.plot(np.arange(
-                1, df.shape[0] + 1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
-        p.legend(prop={'size': 8})  # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face0_0, colours)):
-            p.plot(np.arange(num_sims + 1, num_sims + (num_fids + 1 - i)), getattr(df, analysis_fcn)(axis=1),
-                   "ko", label=labels[i + 1])
-        p.title("Face 0 to 0")
-        p.xlim(0, len(xtick_labels) + 3)
-        locs, xlabels = p.xticks(
-            np.arange(1, len(xtick_labels) + 1), xtick_labels, rotation="vertical", size=8)
-        p.setp(xlabels, rotation=70)
-        p.ylabel(stat + " Distance")
-
-        if cross_compare:
-            ax2 = p.subplot(2, 2, 2)
-        else:
-            ax2 = p.subplot(1, 2, 2)
-
-        ax2.yaxis.tick_right()
-        ax2.yaxis.set_label_position("right")
-        for i, (df, col) in enumerate(zip(data_face2_2, colours)):
-            p.plot(np.arange(
-                1, df.shape[0] + 1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
-        p.legend(prop={'size': 8})  # make now to avoid repeats
-        for i, (df, col)in enumerate(zip(fid_data_face2_2, colours)):
-            p.plot(np.arange(num_sims + 1, num_sims + (num_fids + 1 - i)), getattr(df, analysis_fcn)(axis=1),
-                   "ko", label=labels[i + 1])
-        p.title("Face 2 to 2")
-        p.xlim(0, len(xtick_labels) + 3)
-        locs, xlabels = p.xticks(
-            np.arange(1, len(xtick_labels) + 1), xtick_labels, size=8)
-        p.setp(xlabels, rotation=70)
-        p.ylabel(stat + " Distance")
-
-        if cross_compare:
-            ax3 = p.subplot(2, 2, 3)
-            for i, (df, col) in enumerate(zip(data_face0_2, colours)):
-                p.plot(np.arange(
-                    1, df.shape[0] + 1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
-            p.legend(prop={'size': 8})  # make now to avoid repeats
-            for i, (df, col)in enumerate(zip(fid_data_face0_2, colours)):
-                p.plot(np.arange(num_sims + 1, num_sims + (num_fids + 1 - i)), getattr(df, analysis_fcn)(axis=1),
-                       "ko", label=labels[i + 1])
-            p.title("Face 0 to 2")
-            p.xlim(0, len(xtick_labels) + 3)
-            locs, xlabels = p.xticks(
-                np.arange(1, len(xtick_labels) + 1), xtick_labels, rotation="vertical", size=8)
-            p.setp(xlabels, rotation=70)
-            p.ylabel(stat + " Distance")
-
-            ax4 = p.subplot(2, 2, 4)
-            ax4.yaxis.tick_right()
-            ax4.yaxis.set_label_position("right")
-            for i, (df, col) in enumerate(zip(data_face2_0, colours)):
-                p.plot(np.arange(
-                    1, df.shape[0] + 1), getattr(df, analysis_fcn)(axis=1), "-o", label=labels[i])
-            p.legend(prop={'size': 8})  # make now to avoid repeats
-            for i, (df, col)in enumerate(zip(fid_data_face2_0, colours)):
-                p.plot(np.arange(num_sims + 1, num_sims + (num_fids + 1 - i)), getattr(df, analysis_fcn)(axis=1),
-                       "ko", label=labels[i + 1])
-            p.title("Face 2 to 0")
-            p.xlim(0, len(xtick_labels) + 3)
-            locs, xlabels = p.xticks(
-                np.arange(1, len(xtick_labels) + 1), xtick_labels, rotation="vertical", size=8)
-            p.setp(xlabels, rotation=70)
-            p.ylabel(stat + " Distance")
-
+        ax.reshape(shape)
         if verbose:
-            p.show()
+            fig.show()
         else:
-            p.savefig("distance_comparisons_" + stat + ".pdf")
-            p.close()
+            fig.savefig("distance_comparisons_" + stat + ".pdf")
+            fig.clf()
+
+
+def _plot_size(num):
+    if num <= 3:
+        return p.subplots(num, sharex=True), (num, 1)
+    elif num > 3 and num <= 8:
+        return p.subplots(num), (num / 2 + num % 2, 2)
+    elif num == 9:
+        return p.subplots(num), (3, 3)
+    else:
+        print "There should be a maximum of 9 comparisons."
+        return
+
+
+def _plotter(ax, data, fid_data, num_fids, title, stat, bottom):
+
+    num_design = (max(data.shape) / num_fids)
+    x_vals = np.arange(0, num_design)
+    xtick_labels = [str(i) for i in x_vals]
+    fid_labels = [str(i) for i in range(num_fids-1)]
+    # Plot designs
+    for i in range(num_fids):
+        y_vals = data.ix[int(i * num_design):int(((i + 1) * num_design)-1)]
+        ax.plot(x_vals, y_vals, "-o", label="Fiducial " + str(i), alpha=0.6)
+    # Set title in upper left hand corner
+    ax.annotate(title, xy=(0, 1), xytext=(12, -6), va='top',
+                xycoords='axes fraction', textcoords='offset points',
+                fontsize=12, alpha=0.75)
+    # Set the ylabel using the stat name. Replace underscores
+    ax.set_ylabel(stat.replace("_", " ")+"\nDistance", fontsize=10,
+                  multialignment='center')
+
+    # If the plot is on the bottom of a column, add labels
+    if bottom:
+        # Put two 'labels' for the x axis
+        ax.annotate("Designs", xy=(0, 0), xytext=(8 * (num_design / 2), -20),
+                    va='top', xycoords='axes fraction',
+                    textcoords='offset points',
+                    fontsize=10)
+        ax.annotate("Fiducials", xy=(0, 0), xytext=(20 * (num_design / 2), -20),
+                    va='top', xycoords='axes fraction',
+                    textcoords='offset points',
+                    fontsize=10)
+
+    #Plot fiducials
+    # fid_comps = (num_fids**2 + num_fids) / 2
+    x_fid_vals = np.arange(num_design, num_design + num_fids)
+    prev = 0
+    for i, posn in enumerate(np.arange(num_fids - 1, 0, -1)):
+        ax.plot(x_fid_vals[:len(x_fid_vals)-i-1],
+                fid_data[prev:posn+prev], "ko", alpha=0.6)
+        prev += posn
+    # Make the legend
+    ax.legend(loc="upper right", prop={'size': 10})
+    ax.set_xlim([-1, num_design + num_fids + 8])
+    ax.set_xticks(np.append(x_vals, x_fid_vals))
+    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=10)
 
 
 def timestep_comparisons(path, verbose=False):
