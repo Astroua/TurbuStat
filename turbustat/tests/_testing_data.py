@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+
 
 '''
 Load in data sets for tests. 32^2 pixels portions of two data sets

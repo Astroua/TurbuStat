@@ -1,3 +1,6 @@
+# Licensed under an MIT open source license - see LICENSE
+
+
 '''
 
 Implementation of a Multivariable ECDF

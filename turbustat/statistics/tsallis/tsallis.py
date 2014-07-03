@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+
 
 import numpy as np
 from scipy.stats import nanmean, nanstd, chisquare

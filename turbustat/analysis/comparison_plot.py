@@ -1,3 +1,4 @@
+# Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
 import os
