@@ -46,15 +46,15 @@ Package Dependencies
 
 Requires:
 
- *   numpy
- *   matplotlib
- *   astropy 0.4
- *   scipy
- *   skimage
- *   sklearn
- *   pandas
- *   statsmodels
- *   astrodendro
+ *   numpy-1.6
+ *   matplotlib-1.2
+ *   astropy-0.4dev
+ *   scipy-0.12
+ *   skimage-0.8.0
+ *   sklearn-0.13.0
+ *   pandas-0.13
+ *   statsmodels-0.4.0
+ *   astrodendro-dev
 
 Future Dependencies:
 
