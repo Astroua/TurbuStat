@@ -24,7 +24,7 @@ install:
     - conda install --yes pandas
     - conda install --yes statsmodels
     - conda install --yes scikit-learn
-    - conda install git+https://github.com/astropy/astropy.git@v0.4rc1
+    - conda install astropy==v0.4rc1
 
     # Use pip to install development versions
     - sudo pip install git+https://github.com/dendrograms/astrodendro.git
