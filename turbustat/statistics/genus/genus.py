@@ -4,7 +4,6 @@ import numpy as np
 import scipy.ndimage as nd
 from scipy.stats import scoreatpercentile, nanmean, nanstd
 from scipy.interpolate import UnivariateSpline
-from skimage.morphology import remove_small_objects
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
 from itertools import groupby
@@ -297,3 +296,35 @@ def normalize(data):
     st_dev = nanstd(data, axis=None)
 
     return (data - av_val) / st_dev
+
+
+def remove_small_objects(arr, min_size, connectivity=8):
+    '''
+    Remove objects less than the given size.
+    Function is based on skimage.morphology.remove_small_objects
+
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        Binary array containing the mask.
+    min_size : int
+        Smallest allowed size.
+    connectivity : int, optional
+        Connectivity of the neighborhood.
+    '''
+
+    struct = nd.generate_binary_structure(arr.ndim, connectivity)
+
+    labels, num = nd.label(arr, struct)
+
+    sizes = nd.sum(arr, labels, range(1, num + 1))
+
+    for i, size in enumerate(sizes):
+        if size >= min_size:
+            continue
+
+        posns = np.where(labels == i + 1)
+
+        arr[posns] = 0
+
+    return arr
