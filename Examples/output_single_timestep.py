@@ -448,7 +448,7 @@ if __name__ == "__main__":
                 run_all(fiducials[fid_num-1], fiducials_comp[fid_num:],
                         face, statistics, save_name, multicore=MULTICORE,
                         ncores=NCORES)
-            distances_storage[:, prev:posn, :] = partial_distances
+            distances_storage[:, prev:posn] = partial_distances
             prev += i
             fiducial_labels.extend([f + "to" + fid for f in
                                     fiducials_comp[fid_num:]])
