@@ -6,7 +6,9 @@ Script to create final output form of the HDF5 results files.
 from pandas import HDFStore, DataFrame, concat, read_csv, Series
 import os
 
-def convert_format(path, design, face1, face2, output_type="csv", parameters=None):
+
+def convert_format(path, design, face1, face2, output_type="csv",
+                   parameters=None):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
     them into a single file.
@@ -66,7 +68,7 @@ def convert_format(path, design, face1, face2, output_type="csv", parameters=Non
             df = DataFrame(data_columns)
         else:  # Add on to dataframe
             data_columns = DataFrame(data_columns)
-            df = concat([df,data_columns])
+            df = concat([df, data_columns])
 
     filename = "distances_"+str(face1)+"_"+str(face2)
 
@@ -89,7 +91,7 @@ def convert_fiducial(filename, output_type="csv"):
     store = HDFStore(filename)
     data_columns = dict()
     for key in store.keys():
-        data = store[key].sort(axis=0).sort(axis=1)
+        data = store[key].sort(axis=1)
         mean_data = data.mean(axis=1)
         data_columns[key[1:]] = mean_data
     store.close()
