@@ -27,7 +27,7 @@ install:
     - conda install --yes astropy==0.4rc1
 
     # Use pip to install development versions
-    - sudo pip install git+https://github.com/dendrograms/astrodendro.git
+    - pip install git+https://github.com/dendrograms/astrodendro.git
     ## Eventually add on spectral-cube and signal-id
 
 script:
