@@ -48,6 +48,15 @@ def check_dependencies():
             "Install or upgrade scipy before installing TurbuStat.")
 
     try:
+        from skimage.version import version as ski_version
+        if parse_version(ski_version) < parse_version('0.7.1'):
+            print("***Before installing, upgrade skimage to 0.8.0***")
+            raise ImportError
+    except:
+        raise ImportError(
+            "Install or upgrade skimage before installing TurbuStat.")
+
+    try:
         from pandas.version import version as pa_version
         if parse_version(pa_version) < parse_version('0.13'):
             print("***Before installing, upgrade pandas to 0.13***")
@@ -66,15 +75,6 @@ def check_dependencies():
             "Install or upgrade statsmodels before installing TurbuStat.")
 
     try:
-        from skimage.version import version as ski_version
-        if parse_version(ski_version) < parse_version('0.8.0'):
-            print("***Before installing, upgrade skimage to 0.8.0***")
-            raise ImportError
-    except:
-        raise ImportError(
-            "Install or upgrade skimage before installing TurbuStat.")
-
-    try:
         import sklearn
         skl_version = sklearn.__version__
         if parse_version(skl_version) < parse_version('0.13.0'):
@@ -88,7 +88,7 @@ def check_dependencies():
         from astropy.version import version as ast_version
         if parse_version(ast_version[:3]) < parse_version('0.4'):
             print(("""***Before installing, upgrade astropy to 0.4.
-                    NOTE: This is the dev version as of 17/06/14.***""")
+                    NOTE: This is the dev version as of 17/06/14.***"""))
             raise ImportError("")
     except:
         raise ImportError(
