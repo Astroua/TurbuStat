@@ -74,4 +74,4 @@ This package was developed by:
 Build Status
 ------------
 
-*COMING SOON*
+[![Build Status](https://travis-ci.org/Astroua/Turbustat.png?branch=master)](https://travis-ci.org/Astroua/TurbuStat)

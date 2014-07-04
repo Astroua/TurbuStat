@@ -48,15 +48,6 @@ def check_dependencies():
             "Install or upgrade scipy before installing TurbuStat.")
 
     try:
-        from skimage.version import version as ski_version
-        if parse_version(ski_version) < parse_version('0.7.1'):
-            print("***Before installing, upgrade skimage to 0.8.0***")
-            raise ImportError
-    except:
-        raise ImportError(
-            "Install or upgrade skimage before installing TurbuStat.")
-
-    try:
         from pandas.version import version as pa_version
         if parse_version(pa_version) < parse_version('0.13'):
             print("***Before installing, upgrade pandas to 0.13***")
