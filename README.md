@@ -50,7 +50,6 @@ Requires:
  *   matplotlib-1.2
  *   astropy-0.4dev
  *   scipy-0.12
- *   skimage-0.7.1
  *   sklearn-0.13.0
  *   pandas-0.13
  *   statsmodels-0.4.0
