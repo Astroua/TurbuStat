@@ -5,12 +5,13 @@
 Script to create final output form of the HDF5 results files.
 '''
 
+import numpy as np
 from pandas import HDFStore, DataFrame, concat, read_csv, Series
 import os
 
 
 def convert_format(path, design, face1, face2, output_type="csv",
-                   parameters=None):
+                   parameters=None, decimal_places=8):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
     them into a single file.
@@ -31,6 +32,8 @@ def convert_format(path, design, face1, face2, output_type="csv",
                  Contains column names of design that are the parameters
                  varied in the set. If None, all columns are appended to
                  the output file.
+    decimal_places : int, optional
+        Specify the number of decimal places to keep.
     '''
 
     files = [path + f for f in os.listdir(path) if os.path.isfile(path + f)
@@ -56,7 +59,7 @@ def convert_format(path, design, face1, face2, output_type="csv",
             data = store[key].sort(axis=0).sort(axis=1)
             index = data.index
             mean_data = data.mean(axis=1)
-            data_columns[key[1:]] = mean_data
+            data_columns[key[1:]] = trunc_float(mean_data, decimal_places)
         store.close()
 
         # Add on design matrix
@@ -78,7 +81,7 @@ def convert_format(path, design, face1, face2, output_type="csv",
         df.to_csv(path+filename+".csv")
 
 
-def convert_fiducial(filename, output_type="csv"):
+def convert_fiducial(filename, output_type="csv", decimal_places=8):
     '''
     Converts the fiducial comparison HDF5 files into a CSV file.
 
@@ -88,6 +91,8 @@ def convert_fiducial(filename, output_type="csv"):
         HDF5 file.
     output_type : str, optional
            Type of file to output.
+    decimal_places : int, optional
+        Specify the number of decimal places to keep.
     '''
 
     store = HDFStore(filename)
@@ -95,7 +100,7 @@ def convert_fiducial(filename, output_type="csv"):
     for key in store.keys():
         data = store[key].sort(axis=1)
         mean_data = data.mean(axis=1)
-        data_columns[key[1:]] = mean_data
+        data_columns[key[1:]] = trunc_float(mean_data, decimal_places)
     store.close()
 
     df = DataFrame(data_columns)
@@ -103,3 +108,17 @@ def convert_fiducial(filename, output_type="csv"):
     output_name = "".join(filename.split(".")[:-1]) + "." + output_type
 
     df.to_csv(output_name)
+
+
+@np.vectorize
+def trunc_float(a, places=8):
+    '''
+    Round a float, then truncate it.
+    '''
+
+    a_round = np.round(a, places)
+
+    slen = len('%.*f' % (places, a_round))
+    a_round = str(a_round)[:slen]
+
+    return float(a_round)

@@ -50,7 +50,6 @@ Requires:
  *   matplotlib-1.2
  *   astropy-0.4dev
  *   scipy-0.12
- *   skimage-0.7.1
  *   sklearn-0.13.0
  *   pandas-0.13
  *   statsmodels-0.4.0
@@ -74,4 +73,4 @@ This package was developed by:
 Build Status
 ------------
 
-[![Build Status](https://travis-ci.org/Astroua/Turbustat.png?branch=master)](https://travis-ci.org/Astroua/TurbuStat)
+[![Build Status](https://travis-ci.org/Astroua/TurbuStat.svg?branch=master)](https://travis-ci.org/Astroua/TurbuStat)
