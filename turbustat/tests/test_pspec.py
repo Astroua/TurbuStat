@@ -25,7 +25,7 @@ class testPSpec(TestCase):
         self.tester = \
             PowerSpectrum(dataset1["integrated_intensity"][0],
                           dataset1["integrated_intensity"][1],
-                          weight=dataset1["integrated_intensity_error"][0] ** 2.)
+                          weights=dataset1["integrated_intensity_error"][0] ** 2.)
 
         self.tester.run()
         assert np.allclose(self.tester.ps1D, computed_data['pspec_val'])
@@ -34,8 +34,8 @@ class testPSpec(TestCase):
         self.tester_dist = \
             PSpec_Distance(dataset1["integrated_intensity"],
                            dataset2["integrated_intensity"],
-                           weight1=dataset1["integrated_intensity_error"][0]**2.,
-                           weight2=dataset2["integrated_intensity_error"][0]**2.)
+                           weights1=dataset1["integrated_intensity_error"][0]**2.,
+                           weights2=dataset2["integrated_intensity_error"][0]**2.)
         self.tester_dist.distance_metric()
 
         npt.assert_almost_equal(self.tester_dist.distance,
