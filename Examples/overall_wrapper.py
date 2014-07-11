@@ -156,4 +156,4 @@ pdf_distance = \
 
 pdf_distance.distance_metric(verbose=False)
 
-print pdf_distance.PDF1.pdf
+print pdf_distance.distance
