@@ -141,3 +141,19 @@ dendro_distance = DendroDistance(dataset1["cube"][0],
 
 print dendro_distance.num_distance
 print dendro_distance.histogram_distance
+
+# PDF
+
+from turbustat.statistics import PDF_Distance
+
+pdf_distance = \
+    PDF_Distance(dataset1["integrated_intensity"][0],
+                 dataset2["integrated_intensity"][0],
+                 min_val1=0.05,
+                 min_val2=0.05,
+                 weights1=dataset1["integrated_intensity_error"][0] ** -2.,
+                 weights2=dataset2["integrated_intensity_error"][0] ** -2.)
+
+pdf_distance.distance_metric(verbose=False)
+
+print pdf_distance.PDF1.pdf
