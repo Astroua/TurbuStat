@@ -16,7 +16,7 @@ class StatMoments(object):
     ----------
     img : numpy.ndarray
         2D Image.
-    radius : int
+    radius : int, optional
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
@@ -25,7 +25,7 @@ class StatMoments(object):
 
     """
 
-    def __init__(self, img, radius, periodic=True, bin_num=1000):
+    def __init__(self, img, radius=5, periodic=True, bin_num=1000):
         super(StatMoments, self).__init__()
 
         self.img = img
