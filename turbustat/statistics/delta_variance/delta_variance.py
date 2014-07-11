@@ -44,6 +44,8 @@ class DeltaVariance(object):
 
         if weights is None:
             self.weights = np.ones(img.shape)
+        else:
+            self.weights = weights
 
         self.nanflag = False
         if np.isnan(self.img).any():
