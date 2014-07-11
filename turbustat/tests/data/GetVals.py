@@ -38,8 +38,8 @@ from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 pspec_distance = \
     PSpec_Distance(dataset1["integrated_intensity"],
                    dataset2["integrated_intensity"],
-                   weights1=dataset1["integrated_intensity_error"][0]**2.,
-                   weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=False)
+                   weight1=dataset1["integrated_intensity_error"][0]**2.,
+                   weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=False)
 
 pspec_val = pspec_distance.pspec1.ps1D
 
