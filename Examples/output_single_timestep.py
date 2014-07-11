@@ -79,8 +79,11 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                 fiducial_models["MVC"] = mvc_distance.mvc1
 
         if any("PSpec" in s for s in statistics):
-            pspec_distance = PSpec_Distance(dataset1,
-                                            dataset2).distance_metric()
+            pspec_distance = \
+              PSpec_Distance(dataset1["integrated_intensity"],
+                             dataset2["integrated_intensity"],
+                             weight1=dataset1["integrated_intensity_error"][0]**2.,
+                             weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric()
             distances["PSpec"] = pspec_distance.distance
             if not multicore:
                 fiducial_models["PSpec"] = pspec_distance.pspec1
@@ -96,9 +99,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
                 DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset1["integrated_intensity_error"][0],
                                        dataset2["integrated_intensity"],
-                                       dataset2["integrated_intensity_error"][0]).distance_metric()
+                                       weights1=dataset1["integrated_intensity_error"][0],
+                                       weights2=dataset2["integrated_intensity_error"][0]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
             if not multicore:
                 fiducial_models["DeltaVariance"] = delvar_distance.delvar1
@@ -216,9 +219,11 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("PSpec" in s for s in statistics):
             pspec_distance = \
-                PSpec_Distance(dataset1,
-                               dataset2,
-                               fiducial_model=fiducial_models["PSpec"]).distance_metric()
+              PSpec_Distance(dataset1["integrated_intensity"],
+                             dataset2["integrated_intensity"],
+                             weight1=dataset1["integrated_intensity_error"][0]**2.,
+                             weight2=dataset2["integrated_intensity_error"][0]**2.,
+                             fiducial_model=fiducial_models["PSpec"]).distance_metric()
             distances["PSpec"] = pspec_distance.distance
 
         if any("Bispectrum" in s for s in statistics):
@@ -231,9 +236,9 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
                 DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset1["integrated_intensity_error"][0], \
                                        dataset2["integrated_intensity"],
-                                       dataset2["integrated_intensity_error"][0],
+                                       weights1=dataset1["integrated_intensity_error"][0],
+                                       weights2=dataset2["integrated_intensity_error"][0],
                                        fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
 
