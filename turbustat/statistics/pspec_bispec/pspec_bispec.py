@@ -27,7 +27,7 @@ class PowerSpectrum(object):
 
     """
 
-    def __init__(self, img, header):
+    def __init__(self, img, header, weight=None):
         super(PowerSpectrum, self).__init__()
         self.img = img
         # Get rid of nans
@@ -35,6 +35,11 @@ class PowerSpectrum(object):
 
         self.header = header
         self.degperpix = np.abs(header["CDELT2"])
+
+        if weight is None:
+            weight = np.ones(img.shape)
+
+        self.img *= weight
 
         self.ps2D = None
         self.ps1D = None
@@ -122,23 +127,24 @@ class PSpec_Distance(object):
 
     """
 
-    def __init__(self, data1, data2, fiducial_model=None):
+    def __init__(self, data1, data2, weight1=None, weight2=None,
+                 fiducial_model=None):
         super(PSpec_Distance, self).__init__()
 
-        self.shape1 = data1["integrated_intensity"][0].shape
-        self.shape2 = data2["integrated_intensity"][0].shape
+        self.shape1 = data1[0].shape
+        self.shape2 = data2[0].shape
 
         if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1["integrated_intensity"][0] *
-                                        data1["integrated_intensity_error"][0] ** 2.,
-                                        data1["integrated_intensity"][1])
+            self.pspec1 = PowerSpectrum(data1[0],
+                                        data1[1],
+                                        weight=weight1)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
-        self.pspec2 = PowerSpectrum(data2["integrated_intensity"][0] *
-                                    data2["integrated_intensity_error"][0] ** 2.,
-                                    data2["integrated_intensity"][1])
+        self.pspec2 = PowerSpectrum(data2[0],
+                                    data2[1],
+                                    weight=weight2)
         self.pspec2.run()
 
         self.results = None
