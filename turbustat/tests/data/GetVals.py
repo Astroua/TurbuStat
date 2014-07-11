@@ -169,7 +169,7 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     scf_val=scf_val,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
-                    pdf_val = pdf_val)
+                    pdf_val=pdf_val)
 
 np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     pca_distance=pca_distance.distance,
