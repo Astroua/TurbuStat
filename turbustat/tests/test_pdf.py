@@ -17,16 +17,6 @@ class testPDF(TestCase):
         self.dataset1 = dataset1
         self.dataset2 = dataset2
 
-    def test_PDF(self):
-        self.tester = \
-            PDF(self.dataset1["integrated_intensity"][0],
-                min_val=0.05,
-                weights=self.dataset1["integrated_intensity_error"][0] ** -2.)
-
-        self.tester.run()
-
-        assert np.allclose(self.tester.PDF, computed_data["pdf_val"])
-
     def test_PDF_distance(self):
         self.test_dist = \
             PDF_Distance(self.dataset1["integrated_intensity"][0],
@@ -35,6 +25,9 @@ class testPDF(TestCase):
                          min_val2=0.05,
                          weights1=self.dataset1["integrated_intensity_error"][0] ** -2.,
                          weights2=self.dataset2["integrated_intensity_error"][0] ** -2.)
+        self.test_dist.distance_metric()
+
+        assert np.allclose(self.test_dist.PDF1.pdf, computed_data["pdf_val"])
 
         npt.assert_almost_equal(self.test_dist.distance,
                                 computed_distances['pdf_distance'])
