@@ -41,12 +41,12 @@ class PDF(object):
         '''
 
         if bins is not None:
-            self.bins = bins
+            self._bins = bins
 
         # If the number of bins is not given, use sqrt of data length.
         if self.bins is None:
-            self.bins = np.sqrt(self.data.shape[0])
-            self.bins = int(np.round(self.bins))
+            self._bins = np.sqrt(self.data.shape[0])
+            self._bins = int(np.round(self.bins))
 
         norm_weights = np.ones_like(self.data) / self.data.shape[0]
 
