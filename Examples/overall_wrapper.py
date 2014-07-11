@@ -42,11 +42,7 @@ print "MVC Distance: %s" % (mvc_distance.distance)
 
 from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-pspec_distance = \
-  PSpec_Distance(dataset1["integrated_intensity"],
-                 dataset2["integrated_intensity"],
-                 weight1=dataset1["integrated_intensity_error"][0]**2.,
-                 weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=True)
+pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=True)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
@@ -69,9 +65,9 @@ print "Genus Distance: %s" % (genus_distance.distance)
 from turbustat.statistics import DeltaVariance_Distance
 
 delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"],
+                                         dataset1["integrated_intensity_error"][0],
                                          dataset2["integrated_intensity"],
-                                         weights1=dataset1["integrated_intensity_error"][0],
-                                         weights2=dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
+                                         dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
 
 print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
@@ -158,6 +154,6 @@ pdf_distance = \
                  weights1=dataset1["integrated_intensity_error"][0] ** -2.,
                  weights2=dataset2["integrated_intensity_error"][0] ** -2.)
 
-pdf_distance.distance_metric(verbose=True)
+pdf_distance.distance_metric(verbose=False)
 
 print pdf_distance.distance
