@@ -6,8 +6,6 @@ Save the key results using the testing datasets.
 '''
 
 import numpy as np
-from turbustat.io import fromfits
-import sys
 
 keywords = ["centroid", "centroid_error", "integrated_intensity",
             "integrated_intensity_error", "linewidth", "linewidth_error",
@@ -140,6 +138,21 @@ dendro_distance = DendroDistance(dataset1["cube"][0],
 
 dendrogram_val = dendro_distance.dendro1.numfeatures
 
+## PDF
+
+from turbustat.statistics import PDF_Distance
+
+pdf_distance = \
+    PDF_Distance(dataset1["integrated_intensity"][0],
+                 dataset2["integrated_intensity"][0],
+                 min_val1=0.05,
+                 min_val2=0.05,
+                 weights1=dataset1["integrated_intensity_error"][0] ** -2.,
+                 weights2=dataset2["integrated_intensity_error"][0] ** -2.)
+
+pdf_distance.distance_metric(verbose=False)
+
+pdf_val = pdf_distance.PDF1.pdf
 
 np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     mvc_val=mvc_val,
@@ -155,7 +168,8 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     pca_val=pca_val,
                     scf_val=scf_val,
                     cramer_val=cramer_val,
-                    dendrogram_val=dendrogram_val)
+                    dendrogram_val=dendrogram_val,
+                    pdf_val=pdf_val)
 
 np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     pca_distance=pca_distance.distance,
@@ -172,4 +186,5 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     vcs_distance=vcs_distance.distance,
                     bispec_distance=bispec_distance.distance,
                     dendrohist_distance=dendro_distance.histogram_distance,
-                    dendronum_distance=dendro_distance.num_distance)
+                    dendronum_distance=dendro_distance.num_distance,
+                    pdf_distance=pdf_distance.distance)

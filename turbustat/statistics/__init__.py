@@ -10,3 +10,4 @@ from stat_moments import *
 from tsallis import *
 from vca_vcs import *
 from wavelets import *
+from pdf import *

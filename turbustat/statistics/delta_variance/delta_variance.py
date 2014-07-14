@@ -9,7 +9,6 @@ Implementation of the Delta-Variance Method from Stutzki et al. 1998.
 
 import numpy as np
 from scipy.stats import nanmean
-from scipy.spatial.distance import euclidean
 from astropy.convolution import convolve_fft
 from astropy import units as u
 
@@ -36,13 +35,17 @@ class DeltaVariance(object):
 
     """
 
-    def __init__(self, img, header, weights, diam_ratio=1.5, lags=None):
+    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None):
         super(DeltaVariance, self).__init__()
 
         self.img = img
         self.header = header
-        self.weights = weights
         self.diam_ratio = diam_ratio
+
+        if weights is None:
+            self.weights = np.ones(img.shape)
+        else:
+            self.weights = weights
 
         self.nanflag = False
         if np.isnan(self.img).any():
@@ -260,18 +263,20 @@ class DeltaVariance_Distance(object):
         A computed DeltaVariance model. Used to avoid recomputing.
     """
 
-    def __init__(self, dataset1, weights1, dataset2, weights2, diam_ratio=1.5,
-                 lags=None, fiducial_model=None):
+    def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
+                 diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1], weights1,
+            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1],
+                                         weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1], weights2,
+        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1],
+                                     weights=weights2,
                                      diam_ratio=diam_ratio, lags=lags)
         self.delvar2.run()
 

@@ -27,7 +27,7 @@ class PowerSpectrum(object):
 
     """
 
-    def __init__(self, img, header):
+    def __init__(self, img, header, weights=None):
         super(PowerSpectrum, self).__init__()
         self.img = img
         # Get rid of nans
@@ -35,6 +35,11 @@ class PowerSpectrum(object):
 
         self.header = header
         self.degperpix = np.abs(header["CDELT2"])
+
+        if weights is None:
+            weights = np.ones(img.shape)
+
+        self.weighted_img = self.img * weights
 
         self.ps2D = None
         self.ps1D = None
@@ -45,7 +50,7 @@ class PowerSpectrum(object):
         Compute the 2D power spectrum.
         '''
 
-        mvc_fft = fftshift(fft2(self.img.astype("f8")))
+        mvc_fft = fftshift(fft2(self.weighted_img.astype("f8")))
 
         self.ps2D = np.abs(mvc_fft) ** 2.
 
@@ -122,23 +127,24 @@ class PSpec_Distance(object):
 
     """
 
-    def __init__(self, data1, data2, fiducial_model=None):
+    def __init__(self, data1, data2, weights1=None, weights2=None,
+                 fiducial_model=None):
         super(PSpec_Distance, self).__init__()
 
-        self.shape1 = data1["integrated_intensity"][0].shape
-        self.shape2 = data2["integrated_intensity"][0].shape
+        self.shape1 = data1[0].shape
+        self.shape2 = data2[0].shape
 
         if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1["integrated_intensity"][0] *
-                                        data1["integrated_intensity_error"][0] ** 2.,
-                                        data1["integrated_intensity"][1])
+            self.pspec1 = PowerSpectrum(data1[0],
+                                        data1[1],
+                                        weights=weights1)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
-        self.pspec2 = PowerSpectrum(data2["integrated_intensity"][0] *
-                                    data2["integrated_intensity_error"][0] ** 2.,
-                                    data2["integrated_intensity"][1])
+        self.pspec2 = PowerSpectrum(data2[0],
+                                    data2[1],
+                                    weights=weights2)
         self.pspec2.run()
 
         self.results = None

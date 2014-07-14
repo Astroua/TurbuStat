@@ -44,6 +44,8 @@ from turbustat.statistics import Cramer_Distance
 
 from turbustat.statistics import DendroDistance
 
+from turbustat.statistics import PDF_Distance
+
 
 ## Wrapper function
 def wrapper(dataset1, dataset2, fiducial_models=None,
@@ -54,7 +56,7 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                       "Genus", "VCS", "VCA", "VCS_Density", "VCS_Velocity",
                       "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
                       "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
-                      "Dendrogram_Num"]
+                      "Dendrogram_Num", "PDF"]
 
     distances = {}
 
@@ -78,8 +80,11 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
                 fiducial_models["MVC"] = mvc_distance.mvc1
 
         if any("PSpec" in s for s in statistics):
-            pspec_distance = PSpec_Distance(dataset1,
-                                            dataset2).distance_metric()
+            pspec_distance = \
+              PSpec_Distance(dataset1["integrated_intensity"],
+                             dataset2["integrated_intensity"],
+                             weight1=dataset1["integrated_intensity_error"][0]**2.,
+                             weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric()
             distances["PSpec"] = pspec_distance.distance
             if not multicore:
                 fiducial_models["PSpec"] = pspec_distance.pspec1
@@ -94,10 +99,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
-                DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset1["integrated_intensity_error"][0],
-                                       dataset2["integrated_intensity"],
-                                       dataset2["integrated_intensity_error"][0]).distance_metric()
+              DeltaVariance_Distance(dataset1["integrated_intensity"],
+                                     dataset2["integrated_intensity"],
+                                     weights1=dataset1["integrated_intensity_error"][0],
+                                     weights2=dataset2["integrated_intensity_error"][0]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
             if not multicore:
                 fiducial_models["DeltaVariance"] = delvar_distance.delvar1
@@ -177,6 +182,21 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["Dendrogram"] = dendro_distance.dendro1
 
+        if any("PDF" in s for s in statistics):
+            pdf_distance = \
+                PDF_Distance(dataset1["integrated_intensity"][0],
+                             dataset2["integrated_intensity"][0],
+                             min_val1=0.05,
+                             min_val2=0.05,
+                             weights1=dataset1["integrated_intensity_error"][0] ** -2.,
+                             weights2=dataset2["integrated_intensity_error"][0] ** -2.)
+
+            pdf_distance.distance_metric()
+
+            distances["PDF"] = pdf_distance.PDF1.pdf
+            if not multicore:
+                    fiducial_models["PDF"] = pdf_distance.PDF1
+
         if multicore:
             return distances
         else:
@@ -200,9 +220,11 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("PSpec" in s for s in statistics):
             pspec_distance = \
-                PSpec_Distance(dataset1,
-                               dataset2,
-                               fiducial_model=fiducial_models["PSpec"]).distance_metric()
+              PSpec_Distance(dataset1["integrated_intensity"],
+                           dataset2["integrated_intensity"],
+                           weight1=dataset1["integrated_intensity_error"][0]**2.,
+                           weight2=dataset2["integrated_intensity_error"][0]**2.,
+                           fiducial_model=fiducial_models["PSpec"]).distance_metric()
             distances["PSpec"] = pspec_distance.distance
 
         if any("Bispectrum" in s for s in statistics):
@@ -215,10 +237,10 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
                 DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset1["integrated_intensity_error"][0], \
-                                       dataset2["integrated_intensity"],
-                                       dataset2["integrated_intensity_error"][0],
-                                       fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
+                                     dataset2["integrated_intensity"],
+                                     weights1=dataset1["integrated_intensity_error"][0],
+                                     weights2=dataset2["integrated_intensity_error"][0],
+                                     fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
 
         if any("Genus" in s for s in statistics):
@@ -289,6 +311,19 @@ def wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
+
+        if any("PDF" in s for s in statistics):
+            pdf_distance = \
+                PDF_Distance(dataset1["integrated_intensity"][0],
+                             dataset2["integrated_intensity"][0],
+                             min_val1=0.05,
+                             min_val2=0.05,
+                             weights1=dataset1["integrated_intensity_error"][0] ** -2.,
+                             weights2=dataset2["integrated_intensity_error"][0] ** -2.)
+
+            pdf_distance.distance_metric()
+
+            distances["PDF"] = pdf_distance.PDF1.pdf
 
         return distances
 
@@ -395,7 +430,7 @@ if __name__ == "__main__":
     statistics = ["DeltaVariance"]#"Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
                   # "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
                   # "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity"]
-                  #, "Dendrogram_Hist", "Dendrogram_Num"]
+                  #, "Dendrogram_Hist", "Dendrogram_Num", "PDF"]
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
