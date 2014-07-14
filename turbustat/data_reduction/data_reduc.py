@@ -42,7 +42,7 @@ class property_arrays(object):
                 self.weight_cube[:,i,j] = np.arange(1,self.cube.shape[0]+1,1)
         self.sigma = None
 
-        self.property_dict = {}
+        self.property_dict = {"cube": [self.cube, self.header]}
 
         if rms_noise != None:
             if isinstance(rms_noise, float):
