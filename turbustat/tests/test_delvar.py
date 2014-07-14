@@ -32,9 +32,9 @@ class testDelVar(TestCase):
     def test_DelVar_distance(self):
         self.tester_dist = \
             DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                   dataset1["integrated_intensity_error"][0],
                                    dataset2["integrated_intensity"],
-                                   dataset2["integrated_intensity_error"][0])
+                                   weights1=dataset1["integrated_intensity_error"][0],
+                                   weights2=dataset2["integrated_intensity_error"][0])
         self.tester_dist.distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['delvar_distance'])
