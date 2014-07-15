@@ -64,7 +64,7 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
     fiducial_timesteps = fiducial[face]
 
     if verbose:
-        print "Simulation runs to be analyzed: %s" % (simulation_runs)
+        # print "Simulation runs to be analyzed: %s" % (simulation_runs)
         print "Started at "+str(datetime.now())
 
     if multi_timesteps:
@@ -74,8 +74,11 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
                                       len(simulation_runs),
                                       len(fiducial_timesteps)))
 
+        print distances_storage.shape
+
         for i, key in enumerate(simulation_runs.keys()):
             timesteps = simulation_runs[key][comp_face]
+
             if verbose:
                 print "On Simulation %s/%s" % (i+1, len(simulation_runs))
                 print str(datetime.now())
@@ -92,7 +95,7 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
             else:
                 for ii, timestep in enumerate(timesteps):
                     fiducial_dataset = load_and_reduce(fiducial_timesteps[ii])
-                    testing_dataset = load_and_reduce(timestep, keywords)
+                    testing_dataset = load_and_reduce(timestep)
                     if i == 0:
                         distances, fiducial_models = \
                             stats_wrapper(fiducial_dataset, testing_dataset,
@@ -178,10 +181,6 @@ def files_sorter(folder, fiducial_labels=np.arange(0, 5, 1),
         File suffix.
     '''
 
-    # If a single time step is given, make it iterable.
-    if isinstance(timesteps, int):
-        timesteps = [timesteps]
-
     # Get the files and remove any sub-directories.
     files = [f for f in os.listdir(folder) if not os.path.isdir(f) and
              f[-len(suffix):] == suffix]
@@ -241,15 +240,25 @@ def _timestep_sort(d, timesteps, labels=None):
             if d[lab][face] == []:
                 continue
             d[lab][face].sort()
-            if timesteps == 'last':
+            if timesteps == 'last':  # Grab the last one
                 if labels is not None:
                     labels[lab][face].append(d[lab][face][-1][-16:-14])
                 d[lab][face] = d[lab][face][-1]
+            elif timesteps == 'max':  # Keep all available
+                # Reverse the order so the comparisons are between the highest
+                # time steps.
+                d[lab][face] = d[lab][face][::-1]
+            elif isinstance(timesteps, int):  # Slice out a certain section
+                d[lab][face] = d[lab][face][timesteps:]
+                if labels is None:
+                    continue
+                for val in d[lab][face]:
+                    labels[lab][face].append(val[-16:-14])
             else:  # Make a copy and loop through the steps
                 good_files = copy.copy(d[lab][face])
                 for f in d[lab][face]:
                     match = ["_00"+str(step)+"_" in f for step in timesteps]
-                    if not match.any():
+                    if not any(match):
                         good_files.remove(f)
                     if labels is not None:
                         labels[lab][face].append(f[-16:-14])
@@ -271,47 +280,53 @@ def load_and_reduce(filename):
 if __name__ == "__main__":
 
     # Call as:
-    # python output.py 0 0 1 fiducial0 T 10
+    # python output.py 0 0 1 max fiducial0 T 10
     # The args correspond to: fiducial number, face, comparison face,
-    # output file prefix, use multiple cores?, how many cores?
+    # time steps to use, output file prefix, use multiple cores?,
+    # how many cores?
 
     from multiprocessing import Pool
     from itertools import izip, repeat
 
-    # statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-    #               "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-    #               "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
-    #               "Dendrogram_Hist", "Dendrogram_Num", "PDF"]
-
-    statistics = ["MVC"]
+    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
+                  "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
+                  "Dendrogram_Hist", "Dendrogram_Num", "PDF"]
 
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
 
     # Read in cmd line args
-    fiducial_num = int(sys.argv[1])
+    try:
+        fiducial_num = int(sys.argv[1])
+    except ValueError:
+        fiducial_num = str(sys.argv[1])
     face = int(sys.argv[2])
     comp_face = int(sys.argv[3])
-    save_name = str(sys.argv[4])
-    MULTICORE = str(sys.argv[5])
+    try:
+        timesteps = int(sys.argv[4])
+    except ValueError:
+        timesteps = str(sys.argv[4])
+    save_name = str(sys.argv[5])
+    MULTICORE = str(sys.argv[6])
     if MULTICORE == "T":
         MULTICORE = True
     else:
         MULTICORE = False
         NCORES = 1  # Placeholder to pass into run_all
     if MULTICORE:
-        NCORES = int(sys.argv[6])
+        NCORES = int(sys.argv[7])
 
     # Read in all files in the given directory
     PREFIX = "/srv/astro/astrostat/SimSuite5/"
 
     fiducials, designs, timesteps_labels = \
-        files_sorter(PREFIX, timesteps='last',
+        files_sorter(PREFIX, timesteps="max",
                      append_prefix=True, design_labels=[0])
 
     if fiducial_num == "fid_comp":  # Run all the comparisons of fiducials
 
-        print "Fiducials to compare %s" % (fiducials)
+        print "Fiducials to compare %s" % (fiducials.keys())
         fiducial_index = []
         fiducial_col = []
 
@@ -322,20 +337,23 @@ if __name__ == "__main__":
         posn = 0
         prev = 0
         # no need to loop over the last one
-        for fid, i in zip(fiducials[:-1], np.arange(len(fiducials)-1, 0, -1)):
-            fid_num = int(fid[-5])
+        for fid_num, i in zip(fiducials.keys()[:-1],
+                              np.arange(len(fiducials), 0, -1)):
             posn += i
-            partial_distances, timesteps_labels = \
-                run_all(fiducials[fid_num-1], fiducials[fid_num:],
+            comparisons = fiducials.copy()
+            for key in range(fid_num):
+                del comparisons[key]
+            partial_distances = \
+                run_all(fiducials[fid_num], comparisons,
                         face, statistics, save_name, multicore=MULTICORE,
                         ncores=NCORES, comp_face=comp_face,
-                        multi_timesteps=False)
+                        multi_timesteps=True, verbose=True)
             distances_storage[:, prev:posn, :] = partial_distances
             prev += i
 
             fiducial_index.extend(fiducials.keys()[fid_num:])
 
-            fiducial_col.extend([fid] * len(fiducials.keys()[fid_num:]))
+            fiducial_col.extend([posn-prev] * len(fiducials.keys()[fid_num:]))
 
         # consistent naming with non-fiducial case
         simulation_runs = fiducial_index
@@ -346,10 +364,14 @@ if __name__ == "__main__":
             run_all(fiducials[fiducial_num], designs,
                     face, statistics, save_name,
                     multicore=MULTICORE, ncores=NCORES, comp_face=comp_face,
-                    multi_timesteps=False)
+                    multi_timesteps=True)
 
         simulation_runs = designs.keys()
         fiducial_index = [fiducial_num] * len(designs.keys())
+
+    # If using timesteps 'max', some comparisons will remain zero
+    # To distinguish a bit better, set the non-comparisons to zero
+    distances_storage[np.where(distances_storage == 0)] = np.NaN
 
     filename = save_name + str(face) + "_" + str(comp_face) + \
         "_distance_results.h5"
@@ -361,8 +383,14 @@ if __name__ == "__main__":
     store = HDFStore("results/"+filename)
 
     for i in range(num_statistics):
-        df = DataFrame(distances_storage[i, :], index=simulation_runs,
-                       columns=timesteps_labels[0][face])
+        # If timesteps is 'max', there will be different number of labels
+        # in this case, don't bother specifying column names.
+        if not 'max' in timesteps:
+            df = DataFrame(distances_storage[i, :, :], index=simulation_runs,
+                           columns=timesteps_labels[0][face])
+        else:
+            df = DataFrame(distances_storage[i, :, :], index=simulation_runs)
+
         if not "Fiducial" in df.columns:
             df["Fiducial"] = Series(fiducial_index, index=df.index)
         if statistics[i] in store:
