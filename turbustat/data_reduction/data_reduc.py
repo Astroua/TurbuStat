@@ -81,8 +81,8 @@ class property_arrays(object):
             np.sqrt(np.sum(self.nan_mask * (self.clean_cube > 0), axis=0))
         # error_array *= self.noise_mask
 
-        self.property_dict["moment0"] = moment0_array
-        self.property_dict["moment0_error"] = error_array
+        self.property_dict["moment0"] = [moment0_array]
+        self.property_dict["moment0_error"] = [error_array]
 
         return self
 
@@ -102,8 +102,8 @@ class property_arrays(object):
         error_array = np.sqrt(first_err_term + second_err_term)
         # error_array *= self.noise_mask
 
-        self.property_dict["centroid"] = centroid_array
-        self.property_dict["centroid_error"] = error_array
+        self.property_dict["centroid"] = [centroid_array]
+        self.property_dict["centroid_error"] = [error_array]
 
         return self
 
@@ -130,8 +130,8 @@ class property_arrays(object):
                     int_intensity_array[i, j] = np.NaN
                     error_array[i, j] = np.NaN
 
-        self.property_dict["integrated_intensity"] = int_intensity_array
-        self.property_dict["integrated_intensity"] = error_array
+        self.property_dict["integrated_intensity"] = [int_intensity_array]
+        self.property_dict["integrated_intensity"] = [error_array]
         return self
 
     def linewidth(self):
@@ -168,8 +168,8 @@ class property_arrays(object):
                     self.property_dict["moment0"][0][i, j] ** 2.
                 error_array[i, j] = np.sqrt(first_err_term + second_err_term)
 
-        self.property_dict["linewidth"] = linewidth_array
-        self.property_dict["linewidth_error"] = error_array
+        self.property_dict["linewidth"] = [linewidth_array]
+        self.property_dict["linewidth_error"] = [error_array]
 
     def pixel_to_physical_units(self):
 
@@ -216,7 +216,7 @@ class property_arrays(object):
 
         return self
 
-    def save_fits(self, save_path=None):
+    def make_headers(self):
 
         new_hdr = copy.deepcopy(self.header)
         del new_hdr["NAXIS3"], new_hdr["CRVAL3"], new_hdr[
@@ -267,27 +267,14 @@ class property_arrays(object):
                 specs = linewidth_specs
                 specs_error = linewidth_error_specs
 
-            if save_path is not None:
-                filename = "".join(
-                    [save_path, self.save_name, ".", specs["name"], ".fits"])
-                filename_err = "".join(
-                    [save_path, self.save_name, ".", specs["name"],
-                     "_error.fits"])
-            else:
-                filename = "".join(
-                    [self.save_name, ".", specs["name"], ".fits"])
-                filename_err = "".join(
-                    [self.save_name, ".", specs["name"], "_error.fits"])
-
             # Update header for array and the error array
             new_hdr.update("BUNIT", value=specs['BUNIT'], comment='')
             new_hdr.add_comment(specs["comment"])
             new_err_hdr.update("BUNIT", value=specs['BUNIT'], comment='')
             new_err_hdr.add_comment(specs_error["comment"])
 
-            fits.writeto(filename, self.property_dict[prop][0], new_hdr)
-            fits.writeto(
-                filename_err, self.property_dict[prop + "_error"], new_hdr)
+            self.property_dict[prop].append(new_hdr)
+            self.property_dict[prop+"_error"].append(new_err_hdr)
 
             # Reset the comments
             del new_hdr["COMMENT"]
@@ -309,8 +296,29 @@ class property_arrays(object):
         if physical_units:
             self.pixel_to_physical_units()
 
+        # Append headers in the dict.
+        self.make_headers()
+
         if save:
-            self.save_fits(save_path=None)
+            for prop in ['moment0', 'centroid', 'integrated_intensity',
+                         'linewidth']:
+
+                if save_path is not None:
+                    filename = "".join(
+                        [save_path, self.save_name, ".", prop, ".fits"])
+                    filename_err = "".join(
+                        [save_path, self.save_name, ".", prop,
+                         "_error.fits"])
+                else:
+                    filename = "".join(
+                        [self.save_name, ".", prop, ".fits"])
+                    filename_err = "".join(
+                        [self.save_name, ".", prop, "_error.fits"])
+
+                fits.writeto(filename, self.property_dict[prop][0],
+                             self.property_dict[prop][1])
+                fits.writeto(filename_err, self.property_dict[prop+"_error"][0],
+                             self.property_dict[prop+"_error"][1])
 
         return self
 
