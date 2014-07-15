@@ -166,6 +166,7 @@ class property_arrays(object):
                     self.sigma ** 2. * \
                     np.sum(self.nan_mask[:, i, j]) ** 2. / \
                     self.property_dict["moment0"][0][i, j] ** 2.
+
                 error_array[i, j] = np.sqrt(first_err_term + second_err_term)
 
         self.property_dict["linewidth"] = [linewidth_array]
@@ -212,7 +213,7 @@ class property_arrays(object):
             self.property_dict["linewidth"][0] * vel_pix_division
 
         self.property_dict["linewidth_error"][0] = \
-            self.property_dict["linewidth"][0] * vel_pix_division
+            self.property_dict["linewidth_error"][0] * vel_pix_division
 
         return self
 
