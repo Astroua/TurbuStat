@@ -72,7 +72,7 @@ for posn, kept in zip(*dataset2["channels"]):
 props2 = property_arrays((cube2, header), rms_noise=0.001)
 props2.return_all(save=False)
 
-dataset2 = dataset
+dataset2 = props2.dataset
 
 ##############################################################################
 
