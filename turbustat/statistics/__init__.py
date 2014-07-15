@@ -11,3 +11,4 @@ from tsallis import *
 from vca_vcs import *
 from wavelets import *
 from pdf import *
+from wrapping_function import stats_wrapper
