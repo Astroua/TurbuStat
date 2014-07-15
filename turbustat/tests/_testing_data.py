@@ -50,19 +50,7 @@ for posn, kept in zip(*dataset1["channels"]):
 props1 = property_arrays((cube1, header), rms_noise=0.001)
 props1.return_all(save=False)
 
-dataset1 = dict.fromkeys(keywords, 0)
-
-for key in props1.property_dict.keys():
-    if key is not "int_int":
-        dataset1[key] = [props1.property_dict[key][0], header]
-        dataset1[key+"_error"] = [props1.property_dict[key][1], header]
-    else:
-        dataset1["integrated_intensity"] = \
-            [props1.property_dict[key][0], header]
-        dataset1["integrated_intensity_error"] = \
-            [props1.property_dict[key][1], header]
-
-dataset1["cube"] = [cube1, header]
+dataset1 = props1.dataset
 
 ##############################################################################
 
@@ -84,19 +72,7 @@ for posn, kept in zip(*dataset2["channels"]):
 props2 = property_arrays((cube2, header), rms_noise=0.001)
 props2.return_all(save=False)
 
-dataset2 = dict.fromkeys(keywords, 0)
-
-for key in props2.property_dict.keys():
-    if key is not "int_int":
-        dataset2[key] = [props2.property_dict[key][0], header]
-        dataset2[key+"_error"] = [props2.property_dict[key][1], header]
-    else:
-        dataset2["integrated_intensity"] = \
-            [props2.property_dict[key][0], header]
-        dataset2["integrated_intensity_error"] = \
-            [props2.property_dict[key][1], header]
-
-dataset2["cube"] = [cube2, header]
+dataset2 = props2.dataset
 
 ##############################################################################
 
