@@ -10,6 +10,7 @@ Function for calculating statistics for sensitivity analysis
 
 import numpy as np
 from turbustat.io import fromfits
+from turbustat.statistics import stats_wrapper
 import sys
 import os
 from datetime import datetime
@@ -17,327 +18,17 @@ from datetime import datetime
 keywords = {"centroid", "centroid_error", "integrated_intensity",
             "integrated_intensity_error", "linewidth",
             "linewidth_error", "moment0", "moment0_error", "cube"}
-
-## Load each statistic in
-
-from turbustat.statistics import Wavelet_Distance
-
-from turbustat.statistics import MVC_distance
-
-from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
-
-from turbustat.statistics import GenusDistance
-
-from turbustat.statistics import DeltaVariance_Distance
-
-from turbustat.statistics import VCA_Distance, VCS_Distance
-
-from turbustat.statistics import Tsallis_Distance
-
-from turbustat.statistics import StatMomentsDistance
-
-from turbustat.statistics import PCA_Distance
-
-from turbustat.statistics import SCF_Distance
-
-from turbustat.statistics import Cramer_Distance
-
-from turbustat.statistics import DendroDistance
-
-from turbustat.statistics import PDF_Distance
-
-## Wrapper function
-def wrapper(dataset1, dataset2, fiducial_models=None,
-            statistics=None, multicore=False, filenames=None):
-
-    if statistics is None:  # Run them all
-        statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                      "Genus", "VCS", "VCA", "VCS_Density", "VCS_Velocity",
-                      "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
-                      "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
-                      "Dendrogram_Num", "PDF"]
-
-    distances = {}
-
-    # Calculate the fiducial case and return it for later use
-    if fiducial_models is None:
-
-        fiducial_models = {}
-
-        if any("Wavelet" in s for s in statistics):
-            wavelet_distance = \
-                Wavelet_Distance(dataset1["integrated_intensity"],
-                                 dataset2["integrated_intensity"]).distance_metric()
-            distances["Wavelet"] = wavelet_distance.distance
-            if not multicore:
-                fiducial_models["Wavelet"] = wavelet_distance.wt1
-
-        if any("MVC" in s for s in statistics):
-            mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
-            distances["MVC"] = mvc_distance.distance
-            if not multicore:
-                fiducial_models["MVC"] = mvc_distance.mvc1
-
-        if any("PSpec" in s for s in statistics):
-            pspec_distance = \
-              PSpec_Distance(dataset1["integrated_intensity"],
-                             dataset2["integrated_intensity"],
-                             weight1=dataset1["integrated_intensity_error"][0]**2.,
-                             weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric()
-            distances["PSpec"] = pspec_distance.distance
-            if not multicore:
-                fiducial_models["PSpec"] = pspec_distance.pspec1
-
-        if any("Bispectrum" in s for s in statistics):
-            bispec_distance = \
-                BiSpectrum_Distance(dataset1["integrated_intensity"],
-                                    dataset2["integrated_intensity"]).distance_metric()
-            distances["Bispectrum"] = bispec_distance.distance
-            if not multicore:
-                fiducial_models["Bispectrum"] = bispec_distance.bispec1
-
-        if any("DeltaVariance" in s for s in statistics):
-            delvar_distance = \
-                DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset2["integrated_intensity"],
-                                       weights1=dataset1["integrated_intensity_error"][0],
-                                       weights2=dataset2["integrated_intensity_error"][0]).distance_metric()
-            distances["DeltaVariance"] = delvar_distance.distance
-            if not multicore:
-                fiducial_models["DeltaVariance"] = delvar_distance.delvar1
-
-        if any("Genus" in s for s in statistics):
-            genus_distance = \
-                GenusDistance(dataset1["integrated_intensity"][0],
-                              dataset2["integrated_intensity"][0]).distance_metric()
-            distances["Genus"] = genus_distance.distance
-            if not multicore:
-                fiducial_models["Genus"] = genus_distance.genus1
-
-        if any("VCS" in s for s in statistics):
-            vcs_distance = VCS_Distance(dataset1["cube"],
-                                        dataset2["cube"]).distance_metric()
-            distances["VCS"] = vcs_distance.distance
-            distances["VCS_Density"] = vcs_distance.density_distance
-            distances["VCS_Velocity"] = vcs_distance.velocity_distance
-            if not multicore:
-                fiducial_models["VCS"] = vcs_distance.vcs1
-
-        if any("VCA" in s for s in statistics):
-            vca_distance = VCA_Distance(dataset1["cube"],
-                                        dataset2["cube"]).distance_metric()
-            distances["VCA"] = vca_distance.distance
-            if not multicore:
-                fiducial_models["VCA"] = vca_distance.vca1
-
-        if any("Tsallis" in s for s in statistics):
-            tsallis_distance = \
-                Tsallis_Distance(dataset1["integrated_intensity"][0],
-                                 dataset2["integrated_intensity"][0]).distance_metric()
-            distances["Tsallis"] = tsallis_distance.distance
-            if not multicore:
-                fiducial_models["Tsallis"] = tsallis_distance.tsallis1
-
-        if any("Skewness" in s for s in statistics) or\
-           any("Kurtosis" in s for s in statistics):
-            moment_distance = \
-                StatMomentsDistance(dataset1["integrated_intensity"][0],
-                                    dataset2["integrated_intensity"][0], 5).distance_metric()
-            distances["Skewness"] = moment_distance.skewness_distance
-            distances["Kurtosis"] = moment_distance.kurtosis_distance
-            if not multicore:
-                fiducial_models["stat_moments"] = moment_distance.moments1
-
-        if any("PCA" in s for s in statistics):
-            pca_distance = \
-                PCA_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0]).distance_metric()
-            distances["PCA"] = pca_distance.distance
-            if not multicore:
-                fiducial_models["PCA"] = pca_distance.pca1
-
-        if any("SCF" in s for s in statistics):
-            scf_distance = \
-                SCF_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0]).distance_metric()
-            distances["SCF"] = scf_distance.distance
-            if not multicore:
-                fiducial_models["SCF"] = scf_distance.scf1
-
-        if any("Cramer" in s for s in statistics):
-            cramer_distance = \
-                Cramer_Distance(dataset1["cube"][0],
-                                dataset2["cube"][0]).distance_metric()
-            distances["Cramer"] = cramer_distance.distance
-
-        if any("Dendrogram_Hist" in s for s in statistics) or \
-           any("Dendrogram_Num" in s for s in statistics):
-            dendro_distance = DendroDistance(dataset1["cube"][0],
-                                             dataset2["cube"][0])
-            dendro_distance.distance_metric()
-
-            distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
-            distances["Dendrogram_Num"] = dendro_distance.num_distance
-            if not multicore:
-                fiducial_models["Dendrogram"] = dendro_distance.dendro1
-
-        if any("PDF" in s for s in statistics):
-            pdf_distance = \
-                PDF_Distance(dataset1["integrated_intensity"][0],
-                             dataset2["integrated_intensity"][0],
-                             min_val1=0.05,
-                             min_val2=0.05,
-                             weights1=dataset1["integrated_intensity_error"][0] ** -2.,
-                             weights2=dataset2["integrated_intensity_error"][0] ** -2.)
-
-            pdf_distance.distance_metric()
-
-            distances["PDF"] = pdf_distance.PDF1.pdf
-            if not multicore:
-                    fiducial_models["PDF"] = pdf_distance.PDF1
-
-        if multicore:
-            return distances
-        else:
-            return distances, fiducial_models
-
-    else:
-
-        if any("Wavelet" in s for s in statistics):
-            wavelet_distance = \
-                Wavelet_Distance(dataset1["integrated_intensity"],
-                                 dataset2["integrated_intensity"],
-                                 fiducial_model=fiducial_models["Wavelet"]).distance_metric()
-            distances["Wavelet"] = wavelet_distance.distance
-
-        if any("MVC" in s for s in statistics):
-            mvc_distance = \
-                MVC_distance(dataset1,
-                             dataset2,
-                             fiducial_model=fiducial_models["MVC"]).distance_metric()
-            distances["MVC"] = mvc_distance.distance
-
-        if any("PSpec" in s for s in statistics):
-            pspec_distance = \
-              PSpec_Distance(dataset1["integrated_intensity"],
-                             dataset2["integrated_intensity"],
-                             weight1=dataset1["integrated_intensity_error"][0]**2.,
-                             weight2=dataset2["integrated_intensity_error"][0]**2.,
-                             fiducial_model=fiducial_models["PSpec"]).distance_metric()
-            distances["PSpec"] = pspec_distance.distance
-
-        if any("Bispectrum" in s for s in statistics):
-            bispec_distance = \
-                BiSpectrum_Distance(dataset1["integrated_intensity"],
-                                    dataset2["integrated_intensity"],
-                                    fiducial_model=fiducial_models["Bispectrum"]).distance_metric()
-            distances["Bispectrum"] = bispec_distance.distance
-
-        if any("DeltaVariance" in s for s in statistics):
-            delvar_distance = \
-                DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                       dataset2["integrated_intensity"],
-                                       weights1=dataset1["integrated_intensity_error"][0],
-                                       weights2=dataset2["integrated_intensity_error"][0],
-                                       fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
-            distances["DeltaVariance"] = delvar_distance.distance
-
-        if any("Genus" in s for s in statistics):
-            genus_distance = \
-                GenusDistance(dataset1["integrated_intensity"][0],
-                              dataset2["integrated_intensity"][0],
-                              fiducial_model=fiducial_models["Genus"]).distance_metric()
-            distances["Genus"] = genus_distance.distance
-
-        if any("VCS" in s for s in statistics):
-            vcs_distance = \
-                VCS_Distance(dataset1["cube"],
-                             dataset2["cube"],
-                             fiducial_model=fiducial_models["VCS"]).distance_metric()
-            distances["VCS_Density"] = vcs_distance.density_distance
-            distances["VCS_Velocity"] = vcs_distance.velocity_distance
-            distances["VCS"] = vcs_distance.distance
-
-        if any("VCA" in s for s in statistics):
-            vca_distance = \
-                VCA_Distance(dataset1["cube"],
-                             dataset2["cube"],
-                             fiducial_model=fiducial_models["VCA"]).distance_metric()
-            distances["VCA"] = vca_distance.distance
-
-        if any("Tsallis" in s for s in statistics):
-            tsallis_distance= \
-                Tsallis_Distance(dataset1["integrated_intensity"][0],
-                                 dataset2["integrated_intensity"][0],
-                                 fiducial_model=fiducial_models["Tsallis"]).distance_metric()
-            distances["Tsallis"] = tsallis_distance.distance
-
-        if any("Skewness" in s for s in statistics) or any("Kurtosis" in s for s in statistics):
-            moment_distance = \
-                StatMomentsDistance(dataset1["integrated_intensity"][0],
-                                    dataset2["integrated_intensity"][0],
-                                    5,
-                                    fiducial_model=fiducial_models["stat_moments"]).distance_metric()
-            distances["Skewness"] = moment_distance.skewness_distance
-            distances["Kurtosis"] = moment_distance.kurtosis_distance
-
-        if any("PCA" in s for s in statistics):
-            pca_distance = \
-                PCA_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0],
-                             fiducial_model=fiducial_models["PCA"]).distance_metric()
-            distances["PCA"] = pca_distance.distance
-
-        if any("SCF" in s for s in statistics):
-            scf_distance = \
-                SCF_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0],
-                             fiducial_model=fiducial_models["SCF"]).distance_metric()
-            distances["SCF"] = scf_distance.distance
-
-        if any("Cramer" in s for s in statistics):
-            cramer_distance = \
-                Cramer_Distance(dataset1["cube"][0],
-                                dataset2["cube"][0]).distance_metric()
-            distances["Cramer"] = cramer_distance.distance
-
-        if any("Dendrogram_Hist" in s for s in statistics) or \
-           any("Dendrogram_Num" in s for s in statistics):
-            dendro_distance = DendroDistance(dataset1["cube"][0],
-                                             dataset2["cube"][0],
-                                             fiducial_model=fiducial_models["Dendrogram"])
-            dendro_distance.distance_metric()
-
-            distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
-            distances["Dendrogram_Num"] = dendro_distance.num_distance
-
-        if any("PDF" in s for s in statistics):
-            pdf_distance = \
-                PDF_Distance(dataset1["integrated_intensity"][0],
-                             dataset2["integrated_intensity"][0],
-                             min_val1=0.05,
-                             min_val2=0.05,
-                             weights1=dataset1["integrated_intensity_error"][0] ** -2.,
-                             weights2=dataset2["integrated_intensity_error"][0] ** -2.)
-
-            pdf_distance.distance_metric()
-
-            distances["PDF"] = pdf_distance.PDF1.pdf
-
-        return distances
+global keywords
 
 
 def timestep_wrapper(fiducial, design, statistics):
-    keywords = {"centroid", "centroid_error", "integrated_intensity",
-                "integrated_intensity_error", "linewidth",
-                "linewidth_error", "moment0", "moment0_error", "cube"}
 
     fiducial_dataset = fromfits(fiducial, keywords)
     design_dataset = fromfits(design, keywords)
 
-    distances = wrapper(fiducial_dataset, design_dataset,
-                        statistics=statistics, multicore=True,
-                        filenames=[fiducial, design])
+    distances = stats_wrapper(fiducial_dataset, design_dataset,
+                              statistics=statistics, multicore=True,
+                              filenames=[fiducial, design])
     return distances
 
 
@@ -374,16 +65,14 @@ def run_all(fiducial, simulation_runs, face, statistics, savename,
             testing_dataset = fromfits(design, keywords)
             if i == 0:
                 distances, fiducial_models = \
-                    wrapper(fiducial_dataset, testing_dataset,
-                            statistics=statistics,
-                            filenames=[fiducial, design])
+                    stats_wrapper(fiducial_dataset, testing_dataset,
+                                  statistics=statistics)
                 all_fiducial_models = fiducial_models
             else:
                 distances = \
-                    wrapper(fiducial_dataset, testing_dataset,
-                            fiducial_models=all_fiducial_models,
-                            statistics=statistics,
-                            filenames=[fiducial, design])
+                    stats_wrapper(fiducial_dataset, testing_dataset,
+                                  fiducial_models=all_fiducial_models,
+                                  statistics=statistics)
             distances = [distances]
             distances_storage[:, i:i+1] = \
                 sort_distances(statistics, distances).T
