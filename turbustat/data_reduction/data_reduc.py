@@ -97,8 +97,8 @@ class property_arrays(object):
             self.sigma ** 2. * \
             np.sqrt(np.sum(self.weight_cube[np.nonzero(self.clean_cube * self.nan_mask)], axis=0)) \
             / self.property_dict["moment0"][0] ** 2.
-        second_err_term = self.property_dict["moment0"][
-            1] ** 2. / self.property_dict["moment0"][0] ** 2.
+        second_err_term = self.property_dict["moment0_error"][0] ** 2. / \
+                          self.property_dict["moment0"][0] ** 2.
         error_array = np.sqrt(first_err_term + second_err_term)
         # error_array *= self.noise_mask
 
@@ -131,7 +131,7 @@ class property_arrays(object):
                     error_array[i, j] = np.NaN
 
         self.property_dict["integrated_intensity"] = [int_intensity_array]
-        self.property_dict["integrated_intensity"] = [error_array]
+        self.property_dict["integrated_intensity_error"] = [error_array]
         return self
 
     def linewidth(self):
@@ -147,7 +147,7 @@ class property_arrays(object):
 
                 linewidth_array[i, j] = \
                     np.sqrt(np.sum((weight_clean[:, i, j] -
-                                    self.property_dict["centroid"][0][i, j]) ** 2. * \
+                                    self.property_dict["centroid"][0][i, j]) ** 2. *
                                    masked_clean[:, i, j])
                             / self.property_dict["moment0"][0][i, j])
 
@@ -155,7 +155,7 @@ class property_arrays(object):
                     (2 * np.sum((weight_clean[:, i, j] -
                      self.property_dict["centroid"][0][i, j]) *
                      masked_clean[:, i, j]) *
-                     self.property_dict["centroid"][1][i, j] ** 2. +
+                     self.property_dict["centroid_error"][0][i, j] ** 2. +
                      self.sigma ** 2. *
                      np.sum((weight_clean[:, i, j] -
                             self.property_dict["centroid"][0][i, j]) ** 2.)) /\
@@ -191,28 +191,28 @@ class property_arrays(object):
             np.sqrt(np.sum(physical_weights *
                     (self.clean_cube > 0) * self.nan_mask, axis=0)) / \
             self.property_dict["moment0"][0] ** 2.
-        second_err_term = self.property_dict["moment0"][
-            1] ** 2. / self.property_dict["moment0"][0] ** 2.
+        second_err_term = self.property_dict["moment0_error"][0] ** 2. /\
+            self.property_dict["moment0"][0] ** 2.
         cent_error_array = np.sqrt(first_err_term + second_err_term)
         # cent_error_array *= self.noise_mask
 
-        self.property_dict["centroid"] = \
-            (self.property_dict["centroid"] * vel_pix_division) + \
+        self.property_dict["centroid"][0] = \
+            (self.property_dict["centroid"][0] * vel_pix_division) + \
             reference_velocity - (vel_pix_division * self.header["CRPIX3"])
 
-        self.property_dict["centroid_error"] = cent_error_array
+        self.property_dict["centroid_error"][0] = cent_error_array
 
-        self.property_dict["integrated_intensity"] = \
-            self.property_dict["integrated_intensity"] * vel_pix_division
+        self.property_dict["integrated_intensity"][0] = \
+            self.property_dict["integrated_intensity"][0] * vel_pix_division
 
-        self.property_dict["integrated_intensity_error"] = \
-            self.property_dict["integrated_intensity_error"] * vel_pix_division
+        self.property_dict["integrated_intensity_error"][0] = \
+            self.property_dict["integrated_intensity_error"][0] * vel_pix_division
 
-        self.property_dict["linewidth"] = \
+        self.property_dict["linewidth"][0] = \
             self.property_dict["linewidth"][0] * vel_pix_division
 
-        self.property_dict["linewidth_error"] = \
-            self.property_dict["linewidth"] * vel_pix_division
+        self.property_dict["linewidth_error"][0] = \
+            self.property_dict["linewidth"][0] * vel_pix_division
 
         return self
 
