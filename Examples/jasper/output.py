@@ -380,7 +380,7 @@ if __name__ == "__main__":
     ## Save data for each statistic in a dataframe.
     ## Each dataframe is saved in a single hdf5 file
 
-    store = HDFStore("results/"+filename)
+    store = HDFStore("lustre/home/ekoch/results/"+filename)
 
     for i in range(num_statistics):
         # If timesteps is 'max', there will be different number of labels
