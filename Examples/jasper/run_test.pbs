@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l pmem=120000mb
+#PBS -l procs=10
+#PBS -l walltime=5:00:00
+#PBS -m bea
+#PBS -M koch.eric.w@gmail.com
+#PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
+
+source /home/ekoch/.bashrc
+
+echo "Starting at: `date`"
+python /home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py 0 0 0 max fiducial0 T 10
+echo "Exited with code $? at: `date`"
