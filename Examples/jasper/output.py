@@ -40,7 +40,7 @@ def single_input(a):
 
 
 def run_all(fiducial, simulation_runs, face, statistics, savename,
-            multicore=True, ncores=10, verbose=False, comp_face=None,
+            multicore=True, ncores=10, verbose=True, comp_face=None,
             multi_timesteps=False):
     '''
     Given a fiducial set and a series of sets to compare to, loop
