@@ -2,8 +2,8 @@
 
 #PBS -S /bin/bash
 #PBS -l mem=40gb
-#PBS -l procs=10
-#PBS -l walltime=5:00:00
+#PBS -l procs=8
+#PBS -l walltime=24:00:00
 #PBS -m bea
 #PBS -M koch.eric.w@gmail.com
 #PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
