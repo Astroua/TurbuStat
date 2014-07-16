@@ -183,7 +183,7 @@ def files_sorter(folder, fiducial_labels=np.arange(0, 5, 1),
 
     # Get the files and remove any sub-directories.
     files = [f for f in os.listdir(folder) if not os.path.isdir(f) and
-             f[-len(suffix):] == suffix and "SimSuite8" in f]
+             f[-len(suffix):] == suffix]
 
     # Set up the dictionaries.
     fiducials = dict.fromkeys(fiducial_labels)
@@ -280,10 +280,10 @@ def load_and_reduce(filename):
 if __name__ == "__main__":
 
     # Call as:
-    # python output.py 0 0 1 max fiducial0 T 10
-    # The args correspond to: fiducial number, face, comparison face,
-    # time steps to use, output file prefix, use multiple cores?,
-    # how many cores?
+    # python output.py path/to/folder/ 0 0 1 max fiducial0 T 10
+    # The args correspond to: directory, fiducial number, face,
+    # comparison face, time steps to use, output file prefix,
+    # use multiple cores?, how many cores?
 
     from multiprocessing import Pool
     from itertools import izip, repeat
@@ -298,27 +298,27 @@ if __name__ == "__main__":
 
     # Read in cmd line args
     try:
-        fiducial_num = int(sys.argv[1])
+        fiducial_num = int(sys.argv[2])
     except ValueError:
-        fiducial_num = str(sys.argv[1])
-    face = int(sys.argv[2])
-    comp_face = int(sys.argv[3])
+        fiducial_num = str(sys.argv[2])
+    face = int(sys.argv[3])
+    comp_face = int(sys.argv[4])
     try:
-        timesteps = int(sys.argv[4])
+        timesteps = int(sys.argv[5])
     except ValueError:
-        timesteps = str(sys.argv[4])
-    save_name = str(sys.argv[5])
-    MULTICORE = str(sys.argv[6])
+        timesteps = str(sys.argv[5])
+    save_name = str(sys.argv[6])
+    MULTICORE = str(sys.argv[7])
     if MULTICORE == "T":
         MULTICORE = True
     else:
         MULTICORE = False
         NCORES = 1  # Placeholder to pass into run_all
     if MULTICORE:
-        NCORES = int(sys.argv[7])
+        NCORES = int(sys.argv[8])
 
     # Read in all files in the given directory
-    PREFIX = "/lustre/home/eros/fitsfiles/"
+    PREFIX = str(sys.argv[1])
 
     fiducials, designs, timesteps_labels = \
         files_sorter(PREFIX, timesteps="max",
