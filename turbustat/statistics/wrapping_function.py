@@ -76,8 +76,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             pspec_distance = \
               PSpec_Distance(dataset1["integrated_intensity"],
                              dataset2["integrated_intensity"],
-                             weight1=dataset1["integrated_intensity_error"][0]**2.,
-                             weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric()
+                             weights1=dataset1["integrated_intensity_error"][0]**2.,
+                             weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric()
             distances["PSpec"] = pspec_distance.distance
             if not multicore:
                 fiducial_models["PSpec"] = pspec_distance.pspec1
