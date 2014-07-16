@@ -183,7 +183,7 @@ def files_sorter(folder, fiducial_labels=np.arange(0, 5, 1),
 
     # Get the files and remove any sub-directories.
     files = [f for f in os.listdir(folder) if not os.path.isdir(f) and
-             f[-len(suffix):] == suffix]
+             f[-len(suffix):] == suffix and "SimSuite8" in f]
 
     # Set up the dictionaries.
     fiducials = dict.fromkeys(fiducial_labels)
@@ -318,7 +318,7 @@ if __name__ == "__main__":
         NCORES = int(sys.argv[7])
 
     # Read in all files in the given directory
-    PREFIX = "/srv/astro/astrostat/SimSuite5/"
+    PREFIX = "/lustre/home/eros/fitsfiles/"
 
     fiducials, designs, timesteps_labels = \
         files_sorter(PREFIX, timesteps="max",

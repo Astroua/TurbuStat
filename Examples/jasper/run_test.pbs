@@ -11,5 +11,5 @@
 source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
-python /home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py 0 0 0 max fiducial0 T 10
+python2.7 /home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py 0 0 0 max fiducial0 T 10
 echo "Exited with code $? at: `date`"
