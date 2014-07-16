@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PBS -S /bin/bash
-#PBS -l mem=20gb
+#PBS -l mem=40gb
 #PBS -l procs=10
 #PBS -l walltime=5:00:00
 #PBS -m bea
