@@ -237,6 +237,12 @@ class GenusDistance(object):
 
     def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
         super(GenusDistance, self).__init__()
+
+        # Standardize the intensity values in the images
+
+        img1 = normalize(img1)
+        img2 = normalize(img2)
+
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
@@ -261,28 +267,38 @@ class GenusDistance(object):
 
         '''
 
-        norm1 = normalize(self.genus1.genus_stats[0, :])
-        norm2 = normalize(self.genus2.genus_stats[0, :])
+        # 2 times the average number between the two
+        num_pts = \
+            int((len(self.genus1.thresholds) + len(self.genus2.thresholds))/2)
 
-        interp1 = UnivariateSpline(
-            self.genus1.thresholds, norm1, s=1, k=3)  # small smoothing
-        interp2 = UnivariateSpline(self.genus2.thresholds, norm2, s=1, k=3)
+        # Get the min and the max of the thresholds
+        min_pt = max(np.min(self.genus1.thresholds),
+                     np.min(self.genus2.thresholds))
 
-        self.distance = np.nansum(
-            np.abs(interp1(self.genus1.thresholds) -
-                   interp2(self.genus2.thresholds)))
+        max_pt = min(np.max(self.genus1.thresholds),
+                     np.max(self.genus2.thresholds))
+
+        points = np.linspace(min_pt, max_pt, 2*num_pts)
+
+        interp1 = UnivariateSpline(self.genus1.thresholds,
+                                   self.genus1.genus_stats[0, :], s=1, k=3)
+        interp2 = UnivariateSpline(self.genus2.thresholds,
+                                   self.genus2.genus_stats[0, :], s=1, k=3)
+
+        self.distance = np.nansum(np.abs(interp1(points) -
+                                         interp2(points))) / len(points)
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.plot(self.genus1.thresholds, norm1, "bD", label="".join(
-                ["Genus Curve 1:", self.genus1.save_name]))
-            p.plot(self.genus2.thresholds, norm2, "rD", label="".join(
-                ["Genus Curve 2:", self.genus2.save_name]))
-            p.plot(self.genus1.thresholds, interp1(self.genus1.thresholds),
-                   "b", label="".join(["Genus Fit 1:", self.genus1.save_name]))
-            p.plot(self.genus2.thresholds, interp2(self.genus2.thresholds),
-                   "r", label="".join(["Genus Fit 2:", self.genus2.save_name]))
+            p.plot(self.genus1.thresholds,
+                   self.genus1.genus_stats[0, :], "bD",
+                   label=self.genus1.save_name)
+            p.plot(self.genus2.thresholds,
+                   self.genus2.genus_stats[0, :], "gD",
+                   label=self.genus2.save_name)
+            p.plot(points, interp1(points), "b")
+            p.plot(points, interp2(points), "g")
             p.grid(True)
             p.legend(loc="upper right")
             p.show()
