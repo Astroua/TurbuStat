@@ -12,5 +12,5 @@
 source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
-mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py /lustre/home/ekoch/SimSuite8/ 0 0 0 max fiducial0 T
+mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output_mpi.py /lustre/home/ekoch/SimSuite8/ 0 0 0 max fiducial0 T
 echo "Exited with code $? at: `date`"
