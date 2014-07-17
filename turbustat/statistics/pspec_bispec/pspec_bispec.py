@@ -38,6 +38,11 @@ class PowerSpectrum(object):
 
         if weights is None:
             weights = np.ones(img.shape)
+        else:
+            # Get rid of all NaNs
+            weights[np.isnan(weights)] = 0.0
+            weights[np.isnan(self.img)] = 0.0
+            self.img[np.isnan(self.img)] = 0.0
 
         self.weighted_img = self.img * weights
 

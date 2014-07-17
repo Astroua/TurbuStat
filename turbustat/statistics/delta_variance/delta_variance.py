@@ -48,7 +48,7 @@ class DeltaVariance(object):
             self.weights = weights
 
         self.nanflag = False
-        if np.isnan(self.img).any():
+        if np.isnan(self.img).any() or np.isnan(self.weights).any():
             self.nanflag = True
 
         if lags is None:

@@ -35,7 +35,10 @@ mvc_val = mvc_distance.mvc1.ps1D
 
 from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-pspec_distance = PSpec_Distance(dataset1, dataset2).distance_metric(verbose=False)
+pspec_distance = PSpec_Distance(dataset1["integrated_intensity"],
+                                dataset2["integrated_intensity"],
+                                weights1=dataset1["integrated_intensity_error"][0]**2.,
+                                weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=False)
 
 pspec_val = pspec_distance.pspec1.ps1D
 
@@ -59,9 +62,9 @@ from turbustat.statistics import DeltaVariance_Distance
 
 delvar_distance = \
     DeltaVariance_Distance(dataset1["integrated_intensity"],
-                           dataset1["integrated_intensity_error"][0],
                            dataset2["integrated_intensity"],
-                           dataset2["integrated_intensity_error"][0])
+                           weights1=dataset1["integrated_intensity_error"][0],
+                           weights2=dataset2["integrated_intensity_error"][0])
 
 delvar_distance.distance_metric(verbose=False)
 

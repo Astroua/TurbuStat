@@ -45,8 +45,8 @@ from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 pspec_distance = \
   PSpec_Distance(dataset1["integrated_intensity"],
                  dataset2["integrated_intensity"],
-                 weight1=dataset1["integrated_intensity_error"][0]**2.,
-                 weight2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=True)
+                 weights1=dataset1["integrated_intensity_error"][0]**2.,
+                 weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=True)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
