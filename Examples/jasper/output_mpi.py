@@ -80,6 +80,12 @@ def run_all(fiducial, simulation_runs, statistics, savename,
                                                        repeat(statistics)))
                 pool.close()
 
+                # If there aren't the maximum number of timesteps, pad the
+                # output to match the max.
+                if len(distances) < len(fiducial):
+                    diff = len(fiducial) - len(distances)
+                    distances.append([np.NaN] * diff)
+
                 distances_storage[:, i, :] = \
                     sort_distances(statistics, distances).T
 
