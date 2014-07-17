@@ -322,7 +322,7 @@ if __name__ == "__main__":
 
     fiducials, designs, timesteps_labels = \
         files_sorter(PREFIX, timesteps="max",
-                     append_prefix=True, design_labels=[0])
+                     append_prefix=True)
 
     if fiducial_num == "fid_comp":  # Run all the comparisons of fiducials
 
