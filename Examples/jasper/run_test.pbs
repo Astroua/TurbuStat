@@ -3,7 +3,7 @@
 #PBS -S /bin/bash
 #PBS -l mem=20gb
 #PBS -l feature=X5675
-#PBS -l nodes=1:ppn=10
+#PBS -l procs=11
 #PBS -l walltime=5:00:00
 #PBS -m bea
 #PBS -M koch.eric.w@gmail.com
@@ -12,5 +12,5 @@
 source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
-python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py /lustre/home/ekoch/SimSuite8/ 0 0 0 max fiducial0 T 10
+mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output.py /lustre/home/ekoch/SimSuite8/ 0 0 0 max fiducial0 T
 echo "Exited with code $? at: `date`"
