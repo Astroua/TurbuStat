@@ -317,8 +317,7 @@ if __name__ == "__main__":
 
     fiducials, designs, timesteps_labels = \
         files_sorter(PREFIX, timesteps=timesteps,
-                     append_prefix=True, suffix="fits.gz",
-                     design_labels=[0])
+                     append_prefix=True)
 
     if MULTICORE:
         pool = MPIPool(loadbalance=True, debug=True)

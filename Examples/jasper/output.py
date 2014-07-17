@@ -249,7 +249,7 @@ def _timestep_sort(d, timesteps, labels=None):
                 # time steps.
                 d[lab][face] = d[lab][face][::-1]
             elif isinstance(timesteps, int):  # Slice out a certain section
-                d[lab][face] = d[lab][face][timesteps:]
+                d[lab][face] = d[lab][face][:timesteps]
                 if labels is None:
                     continue
                 for val in d[lab][face]:
