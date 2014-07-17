@@ -291,7 +291,7 @@ if __name__ == "__main__":
     statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
                   "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
                   "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
-                  "Dendrogram_Hist", "Dendrogram_Num", "PDF"]
+                  "PDF"]  # "Dendrogram_Hist", "Dendrogram_Num"]
 
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
