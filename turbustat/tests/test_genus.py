@@ -9,7 +9,7 @@ from unittest import TestCase
 import numpy as np
 import numpy.testing as npt
 
-from ..statistics import Genus, GenusDistance
+from ..statistics import GenusDistance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -21,11 +21,11 @@ class testGenus(TestCase):
         self.dataset2 = dataset2
 
     def test_Genus_method(self):
-        self.tester = Genus(dataset1["integrated_intensity"][0],
-                            lowdens_thresh=20)
-        self.tester.run()
+        self.tester = GenusDistance(dataset1["integrated_intensity"][0],
+                                    dataset2["integrated_intensity"][0])
+        self.tester.distance_metric()
 
-        assert np.allclose(self.tester.genus_stats,
+        assert np.allclose(self.tester.genus1.genus_stats,
                            computed_data['genus_val'])
 
     def test_Genus_distance(self):
