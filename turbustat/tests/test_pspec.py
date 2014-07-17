@@ -9,7 +9,6 @@ from unittest import TestCase
 
 import numpy as np
 import numpy.testing as npt
-import copy
 
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import \
