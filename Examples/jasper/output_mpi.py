@@ -78,7 +78,6 @@ def run_all(fiducial, simulation_runs, statistics, savename,
                 distances = pool.map(single_input, zip(fiducial,
                                                        timesteps,
                                                        repeat(statistics)))
-                pool.close()
 
                 # If there aren't the maximum number of timesteps, pad the
                 # output to match the max.
@@ -118,7 +117,6 @@ def run_all(fiducial, simulation_runs, statistics, savename,
             distances = pool.map(single_input, zip(repeat(fiducial),
                                                    simulation_runs.values(),
                                                    repeat(statistics)))
-            pool.close()
 
             distances_storage = sort_distances(statistics, distances).T
 
@@ -418,5 +416,8 @@ if __name__ == "__main__":
             store[statistics[i]] = df
 
     store.close()
+
+    if MULTICORE:
+        pool.close()
 
     print "Done at " + str(datetime.now())
