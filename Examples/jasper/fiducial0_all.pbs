@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l mem=20gb
+#PBS -l feature=X5675
+#PBS -l procs=11
+#PBS -l walltime=35:00:00
+#PBS -m bea
+#PBS -M koch.eric.w@gmail.com
+#PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
+
+source /home/ekoch/.bashrc
+
+echo "Starting at: `date`"
+for face1 in {0..2}
+    do
+    for face2 in {0..2}
+    do
+        mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output_mpi.py /lustre/home/ekoch/SimSuite8/ 0 face1 face2 max SimSuite8 T
+    done
+done
+echo "Exited with code $? at: `date`"
