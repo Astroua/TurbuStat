@@ -227,8 +227,6 @@ class DendroDistance(object):
             # both dendrograms).
             keep_num = int(round(0.2 * len(self.dendro1.min_deltas)))
 
-            print keep_num
-
             # If there aren't enough points, don't do any clipping.
             if len(numfeatures1) >= keep_num:
                 numfeatures1 = numfeatures1[-keep_num:]
