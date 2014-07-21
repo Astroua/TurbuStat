@@ -154,11 +154,11 @@ class DendroDistance(object):
         else:
             self.dendro1 = Dendrogram_Stats(
                 cube1, min_deltas=min_deltas, dendro_params=dendro_params)
-            self.dendro1.run(verbose=True)
+            self.dendro1.run(verbose=False)
 
         self.dendro2 = Dendrogram_Stats(
             cube2, min_deltas=min_deltas, dendro_params=dendro_params)
-        self.dendro2.run(verbose=True)
+        self.dendro2.run(verbose=False)
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
