@@ -11,7 +11,7 @@ import os
 
 
 def convert_format(path, design, face1, face2, output_type="csv",
-                   parameters=None, decimal_places=8):
+                   parameters=None, decimal_places=8, append_comp=True):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
     them into a single file.
@@ -34,10 +34,14 @@ def convert_format(path, design, face1, face2, output_type="csv",
                  the output file.
     decimal_places : int, optional
         Specify the number of decimal places to keep.
+    append_comp : bool, optional
+        Append on columns with fiducial numbers copy
     '''
 
     files = [path + f for f in os.listdir(path) if os.path.isfile(path + f)
-             and str(face1) + "_" + str(face2) in f and f[:9] != "fiducial_"]
+             and "_"+str(face1)+"_"+str(face2)+"_" in f
+             and "comparisons" not in f]
+    files.sort()
     print "Files used: %s" % (files)
 
     if isinstance(design, str):
@@ -69,19 +73,29 @@ def convert_format(path, design, face1, face2, output_type="csv",
             design_df.index = index
             data_columns[key] = design_df[key]
 
+        data_columns = DataFrame(data_columns)
+
+        if append_comp:
+            data_columns["Fiducial"] = \
+                Series(np.asarray([i]*len(index)).T, index=index)
+            data_columns["Designs"] = Series(index.T, index=index)
+
         if i == 0:  # Create dataframe
-            df = DataFrame(data_columns)
+            df = data_columns
         else:  # Add on to dataframe
-            data_columns = DataFrame(data_columns)
             df = concat([df, data_columns])
 
     filename = "distances_"+str(face1)+"_"+str(face2)
+
+    if "Name" in df.keys():
+        del df["Name"]
 
     if output_type == "csv":
         df.to_csv(path+filename+".csv")
 
 
-def convert_fiducial(filename, output_type="csv", decimal_places=8):
+def convert_fiducial(filename, output_type="csv", decimal_places=8,
+                     append_comp=True, num_fids=5):
     '''
     Converts the fiducial comparison HDF5 files into a CSV file.
 
@@ -93,6 +107,10 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8):
            Type of file to output.
     decimal_places : int, optional
         Specify the number of decimal places to keep.
+    append_comp : bool, optional
+        Append on columns with fiducial numbers copy
+    num_fids : int, optional
+        Number of fiducials compared.
     '''
 
     store = HDFStore(filename)
@@ -101,9 +119,19 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8):
         data = store[key].sort(axis=1)
         mean_data = data.mean(axis=1)
         data_columns[key[1:]] = trunc_float(mean_data, decimal_places)
+        comp_fids = store[key].index
     store.close()
 
     df = DataFrame(data_columns)
+
+    if append_comp:
+        fids = []
+        for fid, num in zip(np.arange(0, num_fids-1), np.arange(num_fids-1, 0, -1)):
+            for _ in range(num):
+                fids.append(fid)
+
+        df["Fiducial 1"] = Series(np.asarray(fids).T, index=df.index)
+        df["Fiducial 2"] = Series(comp_fids.T, index=df.index)
 
     output_name = "".join(filename.split(".")[:-1]) + "." + output_type
 
