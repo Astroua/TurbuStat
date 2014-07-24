@@ -12,7 +12,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
                                 "VCS_Density", "VCS_Velocity", "VCA",
                                 "Tsallis", "PCA", "SCF", "Cramer",
                                 "Skewness", "Kurtosis", "Dendrogram_Hist",
-                                "Dendrogram_Num"]):
+                                "Dendrogram_Num", "PDF"]):
     '''
     Requires results converted into csv form!!
 
@@ -76,15 +76,15 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
-        (fig, ax), shape = _plot_size(len(data_files.keys()))
-        for k, key in enumerate(order):
+        (fig, ax) = _plot_size(len(data_files.keys()))
+        shape = ax.shape
+        for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
             if shape[0] % (k + 1) == 0:
                 bottom = True
-            _plotter(ax[k], data_files[key][1][stat], data_files[key][2][stat],
+            _plotter(axis, data_files[key][1][stat], data_files[key][2][stat],
                      num_fids, data_files[key][0], stat, bottom)
 
-        ax.reshape(shape)
         if verbose:
             fig.show()
         else:
@@ -94,11 +94,11 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
 
 def _plot_size(num):
     if num <= 3:
-        return p.subplots(num, sharex=True), (num, 1)
+        return p.subplots(num, sharex=True)
     elif num > 3 and num <= 8:
-        return p.subplots(num), (num / 2 + num % 2, 2)
+        return p.subplots(nrows=num / 2 + num % 2, ncols=2)
     elif num == 9:
-        return p.subplots(num), (3, 3)
+        return p.subplots(nrows=3, ncols=3)
     else:
         print "There should be a maximum of 9 comparisons."
         return

@@ -145,8 +145,9 @@ class DendroDistance(object):
         self.nbins = nbins
 
         if min_deltas is None:
-            min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
-                                   np.logspace(-0.6, -0.35, 10))
+            # min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
+            #                        np.logspace(-0.6, -0.35, 10))
+            min_deltas = np.logspace(-2.5, 0.5, 100)
 
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
@@ -187,12 +188,15 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, verbose=False):
+    def numfeature_stat(self, use_spline=False, verbose=False):
         '''
         Calculate the distance based on the number of features statistic.
 
         Parameters
         ----------
+        use_spline : bool, optional
+            Pick out power-law tail using a spline. Otherwise, the last 20% of
+            the data points are used.
         verbose : bool, optional
             Enables plotting.
         '''
@@ -208,19 +212,37 @@ class DendroDistance(object):
         numfeatures2 = np.log10(
             self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
 
-        # Approximate knot location using linear splines with minimal smoothing
-        break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
-        break2 = break_spline(deltas2, numfeatures2, k=1, s=1)
+        if use_spline:
+            # Approximate knot location using linear splines with minimal smoothing
+            break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
+            break2 = break_spline(deltas2, numfeatures2, k=1, s=1)
 
-        # Keep values after the break
-        numfeatures1 = numfeatures1[np.where(deltas1 > break1)]
-        numfeatures2 = numfeatures2[np.where(deltas2 > break2)]
-        clip_delta1 = deltas1[np.where(deltas1 > break1)]
-        clip_delta2 = deltas2[np.where(deltas2 > break2)]
+            # Keep values after the break
+            numfeatures1 = numfeatures1[np.where(deltas1 > break1)]
+            numfeatures2 = numfeatures2[np.where(deltas2 > break2)]
+            deltas1 = deltas1[np.where(deltas1 > break1)]
+            deltas2 = deltas2[np.where(deltas2 > break2)]
+        else:
+            # Try keeping 20% of the original number of delta values (same for
+            # both dendrograms).
+            keep_num = int(round(0.2 * len(self.dendro1.min_deltas)))
+
+            # If there aren't enough points, don't do any clipping.
+            if len(numfeatures1) >= keep_num:
+                numfeatures1 = numfeatures1[-keep_num:]
+                deltas1 = deltas1[-keep_num:]
+            else:
+                pass
+
+            if len(numfeatures2) >= keep_num:
+                numfeatures2 = numfeatures2[-keep_num:]
+                deltas2 = deltas2[-keep_num:]
+            else:
+                pass
 
         # Set up columns for regression
-        dummy = [0] * len(clip_delta1) + [1] * len(clip_delta2)
-        x = np.concatenate((clip_delta1, clip_delta2))
+        dummy = [0] * len(deltas1) + [1] * len(deltas2)
+        x = np.concatenate((deltas1, deltas2))
         regressor = x.T * dummy
 
         numdata = np.concatenate((numfeatures1, numfeatures2))
@@ -241,8 +263,8 @@ class DendroDistance(object):
             print self.num_results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(clip_delta1, numfeatures1, "bD",
-                   clip_delta2, numfeatures2, "gD")
+            p.plot(deltas1, numfeatures1, "bD",
+                   deltas2, numfeatures2, "gD")
             p.plot(df["scales"][:len(numfeatures1)],
                    self.num_results.fittedvalues[:len(numfeatures1)], "b",
                    df["scales"][-len(numfeatures2):],
@@ -383,12 +405,12 @@ def break_spline(x, y, **kwargs):
     if len(knots) > 3:
         print "Many knots"
         knot_expec = -0.8
-        posn = np.argmin(knots - knot_expec)
+        posn = np.argmin(np.abs(knots - knot_expec))
         return knots[posn]  # Return the knot closest to the expected value
 
     elif len(knots) == 2:
         print "No knots"
-        return -0.6  # Set the threshold at the expected
+        return knots[0]  # Set the threshold to the beginning
 
     else:
         return knots[1]

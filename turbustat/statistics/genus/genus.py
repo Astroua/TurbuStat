@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.ndimage as nd
 from scipy.stats import scoreatpercentile, nanmean, nanstd
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
 from itertools import groupby
@@ -280,10 +280,12 @@ class GenusDistance(object):
 
         points = np.linspace(min_pt, max_pt, 2*num_pts)
 
-        interp1 = UnivariateSpline(self.genus1.thresholds,
-                                   self.genus1.genus_stats[0, :], s=1, k=3)
-        interp2 = UnivariateSpline(self.genus2.thresholds,
-                                   self.genus2.genus_stats[0, :], s=1, k=3)
+        interp1 = \
+            InterpolatedUnivariateSpline(self.genus1.thresholds,
+                                         self.genus1.genus_stats[0, :], k=3)
+        interp2 = \
+            InterpolatedUnivariateSpline(self.genus2.thresholds,
+                                         self.genus2.genus_stats[0, :], k=3)
 
         self.distance = np.nansum(np.abs(interp1(points) -
                                          interp2(points))) / len(points)

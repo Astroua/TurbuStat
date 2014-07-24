@@ -18,24 +18,24 @@ from ._testing_data import \
 class testDendrograms(TestCase):
 
     def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
+        self.min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
+                                    np.logspace(-0.6, -0.35, 10))
 
     def test_DendroStat(self):
-        min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
-                               np.logspace(-0.6, -0.35, 10))
 
         self.tester = Dendrogram_Stats(dataset1["cube"][0],
-                                       min_deltas=min_deltas)
+                                       min_deltas=self.min_deltas)
         self.tester.run()
 
         assert np.allclose(self.tester.numfeatures,
                            computed_data["dendrogram_val"])
 
     def test_DendroDistance(self):
+
         self.tester_dist = \
             DendroDistance(dataset1["cube"][0],
-                           dataset2["cube"][0]).distance_metric()
+                           dataset2["cube"][0],
+                           min_deltas=self.min_deltas).distance_metric()
 
         npt.assert_almost_equal(self.tester_dist.histogram_distance,
                                 computed_distances["dendrohist_distance"])
