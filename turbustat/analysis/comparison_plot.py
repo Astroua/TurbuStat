@@ -80,12 +80,15 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         shape = ax.shape
         for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
-            if shape[0] % (k + 1) == 0:
+            if k >= len(ax.flatten()) - shape[1]:
                 bottom = True
-            _plotter(axis, data_files[key][1][stat], data_files[key][2][stat],
-                     num_fids, data_files[key][0], stat, bottom)
+            if k / float(shape[0]) in [0, 1, 2]:
+                left = True
+            _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
+                     num_fids, data_files[key][0], stat, bottom, left)
 
         if verbose:
+            p.autoscale(True)
             fig.show()
         else:
             fig.savefig("distance_comparisons_" + stat + ".pdf")
@@ -96,15 +99,16 @@ def _plot_size(num):
     if num <= 3:
         return p.subplots(num, sharex=True)
     elif num > 3 and num <= 8:
-        return p.subplots(nrows=num / 2 + num % 2, ncols=2)
+        rows = num / 2 + num % 2
+        return p.subplots(nrows=rows, ncols=2, figsize=(), sharex=True)
     elif num == 9:
-        return p.subplots(nrows=3, ncols=3)
+        return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100, sharex=True)
     else:
         print "There should be a maximum of 9 comparisons."
         return
 
 
-def _plotter(ax, data, fid_data, num_fids, title, stat, bottom):
+def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
 
     num_design = (max(data.shape) / num_fids)
     x_vals = np.arange(0, num_design)
@@ -118,9 +122,12 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom):
     ax.annotate(title, xy=(0, 1), xytext=(12, -6), va='top',
                 xycoords='axes fraction', textcoords='offset points',
                 fontsize=12, alpha=0.75)
-    # Set the ylabel using the stat name. Replace underscores
-    ax.set_ylabel(stat.replace("_", " ")+"\nDistance", fontsize=10,
-                  multialignment='center')
+    if left:
+        # Set the ylabel using the stat name. Replace underscores
+        ax.set_ylabel(stat.replace("_", " ")+"\nDistance", fontsize=10,
+                      multialignment='center')
+    else:
+        ax.set_ylabel("")
 
     # If the plot is on the bottom of a column, add labels
     if bottom:
@@ -129,7 +136,8 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom):
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
                     fontsize=10)
-        ax.annotate("Fiducials", xy=(0, 0), xytext=(20 * (num_design / 2), -20),
+        ax.annotate("Fiducials", xy=(1, 0),
+                    xytext=(-10 * (num_design / 2), -20),
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
                     fontsize=10)
