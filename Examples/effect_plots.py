@@ -147,6 +147,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
         if save:
             fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
         else:
+            fig.canvas.set_window_title("Model results for: "+stat)
             fig.show()
             p.show()
 
