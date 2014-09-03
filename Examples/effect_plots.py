@@ -74,7 +74,10 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             if i < 6:
                 low_data = distances[stat][design[param] == -1]
                 high_data = distances[stat][design[param] == 1]
-                ax.plot([-1, 1], [low_data.mean(), high_data.mean()], "kD")
+                ax.plot([-1, 1], [low_data.mean(), high_data.mean()],
+                        marker="D",
+                        color=scalMap.to_rgba(np.log10(response[param])),
+                        lw=0)
 
                 # Plot the slope
                 ax.plot([-1, 1], [low_data.mean(), high_data.mean()],
@@ -88,12 +91,15 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
                 param2 = param.split(":")[-1]
 
                 low_low = distances[stat][np.logical_and(design[param1] == -1, design[param2] == -1)]
-                low_high = distances[stat][np.logical_and(design[param1] == -1, design[param2] == 1)]
-                high_low = distances[stat][np.logical_and(design[param1] == 1, design[param2] == -1)]
+                low_high = distances[stat][np.logical_and(design[param1] == 1, design[param2] == -1)]
+                high_low = distances[stat][np.logical_and(design[param1] == -1, design[param2] == 1)]
                 high_high = distances[stat][np.logical_and(design[param1] == 1, design[param2] == 1)]
 
-                ax.plot([-1, 1], [low_low.mean(), low_high.mean()], "kD")
-                ax.plot([-1, 1], [high_low.mean(), high_high.mean()], "kD")
+                ax.plot([-1, 1], [low_low.mean(), low_high.mean()], marker="D",
+                        color=scalMap.to_rgba(np.log10(imp_inters[param])))
+                ax.plot([-1, 1],
+                        [high_low.mean(), high_high.mean()], marker="s",
+                        color=scalMap.to_rgba(np.log10(imp_inters[param])))
 
                 ax.plot([-1, 1], [low_low.mean(), low_high.mean()],
                         color=scalMap.to_rgba(np.log10(imp_inters[param])))
@@ -142,6 +148,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
         else:
             fig.show()
+            p.show()
 
 
 def colormap_milagro(vmin, vmax, vtransition, width=0.0001, huestart=0.6):
