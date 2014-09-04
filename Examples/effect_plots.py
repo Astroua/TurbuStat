@@ -152,6 +152,47 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             p.show()
 
 
+def map_all_results(effects_file, min_zscore=2.0, save=False,
+                    params=["fc", "pb", "m", "k", "sf", "vp"],
+                    statistics=["PCA", "SCF", "VCA", "VCS"]):
+
+    if isinstance(effects_file, str):
+        effects = read_csv(effects_file)
+    else:
+        effects = effects_file
+
+    # Get the model effects from the index
+    model_effects = effects.index
+    stats = effects.columns
+
+    values = np.empty((len(effects.columns), len(model_effects)))
+
+    for i, stat in enumerate(stats):
+        values[i, :] = effects[stat]
+
+    values = np.abs(values)
+
+    milagro = \
+        colormap_milagro(0,
+                         10,
+                         2)
+
+
+    p.figure(figsize=(16, 7))
+    p.imshow(values, vmin=0, vmax=10, cmap=milagro,
+             interpolation="nearest")
+    p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
+    p.yticks(np.arange(len(stats)), stats)
+    cbar = p.colorbar()
+    cbar.ax.set_ylabel(r'$t$-value', size=18)
+    cbar.ax.tick_params(labelsize=18)
+
+    if save:
+        p.savefig("all_stat_results.pdf")
+    else:
+        p.show()
+
+
 def colormap_milagro(vmin, vmax, vtransition, width=0.0001, huestart=0.6):
 
     """
