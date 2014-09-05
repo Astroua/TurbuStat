@@ -157,6 +157,12 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
         cb.set_ticklabels([])
         cb.ax.tick_params(labelsize=10, colors='white', length=10)
 
+        cax.annotate(np.round(10**min_resp, 1), xy=(0.86, 0.07),
+                     xytext=(0.86, 0.07), textcoords='figure fraction')
+
+        cax.annotate(np.round(10**max_resp, 1), xy=(0.86, 0.91),
+                     xytext=(0.86, 0.91), textcoords='figure fraction')
+
         if save:
             fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
             p.close()
