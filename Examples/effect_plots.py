@@ -38,9 +38,9 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
     model_effects = effects.index
 
     # Replace the shorthand names
-    rep_name = {'fc': "Face", "pb": "Plasma Beta", 'm': "Mach",
-                'k': "Driving Scale", 'sf': "Solenoidal Fraction",
-                'vp': "Virial Parameter"}
+    rep_name = {'fc': "F", "pb": r'$b$', 'm': r'$\mathcal{M}$',
+                'k': r'$k$', 'sf': r'$\beta$',
+                'vp': r'$\alpha$'}
 
     # Now loop through the statistics in each file
     for stat in distances.columns:
@@ -84,7 +84,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
                         color=scalMap.to_rgba(np.log10(response[param])),
                         label=rep_name[param])
 
-                ax.set_title(param)
+                ax.set_title(rep_name[param])
 
             else:
                 param1 = param.split(":")[0]
@@ -106,7 +106,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
                 ax.plot([-1, 1], [high_low.mean(), high_high.mean()],
                         color=scalMap.to_rgba(np.log10(imp_inters[param])))
 
-                ax.set_title(param)
+                ax.set_title(rep_name[param1]+" : "+rep_name[param2])
 
             ax.set_xlim([-2, 2])
             ax.set_ylim([distances[stat].min(), distances[stat].max()])
@@ -122,30 +122,44 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             else:
                 ax.set_xticks([-1, 1])
 
-        # Loop through the important effects
-        # for posn in enumerate(imp_effect):
-        #     index = model_effects[posn]
-
-        #     # Check if its an interaction term
-        #     if not ":" in index and posn < len(params):
-        #         continue
-        #     int_params = [s for s in rep_name.keys()
-        #                   if s in index.split(":")]
-        #     index = ":".join(int_params)
-
-        #     for param in int_params:
-        #         # Get the right axis to plot on
-        #         ax = axes.flatten()[params.index(param)]
-
         fig.subplots_adjust(right=0.85)
-        cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
+        cax = fig.add_axes([0.88, 0.1, 0.02, 0.8])
         cb = mpl.colorbar.ColorbarBase(cax, cmap=milagro, norm=cNorm)
         cb.set_ticks(np.log10(response))
-        cb.set_ticklabels(model_effects)
-        cb.ax.tick_params(labelsize=10)
+        # Avoid white lines in the pdf rendering
+        cb.solids.set_edgecolor("face")
+
+        max_resp = np.max(np.log10(response))
+        min_resp = np.min(np.log10(response))
+        text_posns = np.linspace(0.1, 0.9, len(response))[::-1]
+
+        # model_effects = model_effects[:21][np.asarray(response).argsort()]
+        # model_effects = model_effects[::-1]
+
+        response = response.order(ascending=False)
+        model_effects = response.index
+
+        for effect, value, tpos in zip(model_effects, np.log10(response), text_posns):
+            if ":" in effect:
+                splitted = effect.split(":")
+                param1 = splitted[0]
+                param2 = splitted[-1]
+                label = rep_name[param1] + " : " + rep_name[param2]
+            else:
+                label = rep_name[effect]
+            cax.annotate(label,
+                         xy=(0.92, (value - min_resp)/(max_resp-min_resp)),
+                         xytext=(0.93, tpos), textcoords='figure fraction',
+                         arrowprops=dict(facecolor='k',
+                                         width=0.05, alpha=1.0, headwidth=0.1),
+                         horizontalalignment='left',
+                         verticalalignment='top')
+        cb.set_ticklabels([])
+        cb.ax.tick_params(labelsize=10, colors='white', length=10)
 
         if save:
             fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
+            p.close()
         else:
             fig.canvas.set_window_title("Model results for: "+stat)
             fig.show()
@@ -154,12 +168,16 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
 
 def map_all_results(effects_file, min_zscore=2.0, save=False,
                     params=["fc", "pb", "m", "k", "sf", "vp"],
-                    statistics=["PCA", "SCF", "VCA", "VCS"]):
+                    statistics=["PCA", "SCF", "VCA", "VCS"],
+                    normed=True):
 
     if isinstance(effects_file, str):
         effects = read_csv(effects_file)
     else:
         effects = effects_file
+
+    # We only car about the absolute value
+    effects = effects.abs()
 
     # Get the model effects from the index
     model_effects = effects.index
@@ -168,15 +186,25 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     values = np.empty((len(effects.columns), len(model_effects)))
 
     for i, stat in enumerate(stats):
-        values[i, :] = effects[stat]
-
-    values = np.abs(values)
+        if normed:
+            for j, effect in enumerate(model_effects):
+                if ":" in effect:
+                    splitted = effect.split(":")[::2]
+                    norm_factor = 1
+                    for param in splitted:
+                        norm_factor *= effects[stat][param]
+                    value = np.power(effects[stat][effect] / norm_factor,
+                                     1/float(len(splitted)))
+                else:
+                    value = effects[stat][effect]
+                values[i, j] = value
+        else:
+            values[i, :] = effects[stat]
 
     milagro = \
         colormap_milagro(0,
                          10,
                          2)
-
 
     p.figure(figsize=(16, 7))
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
@@ -186,9 +214,15 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     cbar = p.colorbar()
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
+    # Avoid white lines in the pdf rendering
+    cbar.solids.set_edgecolor("face")
 
     if save:
-        p.savefig("all_stat_results.pdf")
+        save_name = "all_stat_results.pdf"
+        if normed:
+            save_name = "all_stat_results_normed.pdf"
+        p.savefig(save_name)
+        p.close()
     else:
         p.show()
 
