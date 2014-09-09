@@ -75,6 +75,7 @@ class property_arrays(object):
     def moment0(self):
 
         moment0_array = np.sum(self.clean_cube * self.nan_mask, axis=0)
+        moment0_array[np.where(moment0_array == 0.0)] = np.NaN
         # moment0_array *= self.noise_mask
 
         error_array = self.sigma * \
@@ -151,23 +152,28 @@ class property_arrays(object):
                                    masked_clean[:, i, j])
                             / self.property_dict["moment0"][0][i, j])
 
-                first_err_term = \
-                    (2 * np.sum((weight_clean[:, i, j] -
-                     self.property_dict["centroid"][0][i, j]) *
-                     masked_clean[:, i, j]) *
-                     self.property_dict["centroid_error"][0][i, j] ** 2. +
-                     self.sigma ** 2. *
-                     np.sum((weight_clean[:, i, j] -
-                            self.property_dict["centroid"][0][i, j]) ** 2.)) /\
-                    np.sum((weight_clean[:, i, j] -
-                           self.property_dict["centroid"][0][i, j]) ** 2. *
-                           masked_clean[:, i, j]) ** 2.
-                second_err_term = \
-                    self.sigma ** 2. * \
-                    np.sum(self.nan_mask[:, i, j]) ** 2. / \
-                    self.property_dict["moment0"][0][i, j] ** 2.
+                if np.isclose(linewidth_array[i, j], 0.0, rtol=1e-5):
+                    error_array[i, j] = 0.0
 
-                error_array[i, j] = np.sqrt(first_err_term + second_err_term)
+                else:
+                    first_err_term = \
+                        (2 * np.sum((weight_clean[:, i, j] -
+                        self.property_dict["centroid"][0][i, j]) *
+                        masked_clean[:, i, j]) *
+                        self.property_dict["centroid_error"][0][i, j] ** 2. +
+                        self.sigma ** 2. *
+                        np.sum((weight_clean[:, i, j] -
+                                self.property_dict["centroid"][0][i, j]) ** 2.)) /\
+                        np.sum((weight_clean[:, i, j] -
+                               self.property_dict["centroid"][0][i, j]) ** 2. *
+                               masked_clean[:, i, j]) ** 2.
+                    second_err_term = \
+                        self.sigma ** 2. * \
+                        np.sum(self.nan_mask[:, i, j]) ** 2. / \
+                        self.property_dict["moment0"][0][i, j] ** 2.
+
+                    error_array[i, j] = np.sqrt(first_err_term +
+                                                second_err_term)
 
         self.property_dict["linewidth"] = [linewidth_array]
         self.property_dict["linewidth_error"] = [error_array]
