@@ -43,7 +43,7 @@ class property_arrays(object):
 
         vel_channels = np.arange(1, self.cube.shape[0] + 1)
         self.weight_cube = np.tile(vel_channels[:, np.newaxis, np.newaxis],
-                                   (1, self.shape[1], self.shape[2]))
+                                   (1, self.shape[0], self.shape[1]))
 
         self.sigma = None
 
