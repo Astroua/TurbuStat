@@ -23,6 +23,7 @@ class PCA(object):
         self.cube = cube
         self.n_eigs = n_eigs
 
+        # Remove NaNs
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
@@ -95,29 +96,12 @@ class PCA_Distance(object):
         self.cube1 = cube1
         self.cube2 = cube2
 
-        # We want to match the spectral axes in order to properly compare
-        # the cubes.
-        # mean1 = np.nanmean(self.cube1.moment0, axis=None)
-        # mean2 = np.nanmean(self.cube2.moment0, axis=None)
-
-        # roll1 = (self.cube1.shape[0] / 2) - \
-        #     self.cube1.closest_spectral_channel(mean1)
-        # roll2 = (self.cube2.shape[0] / 2) - \
-        #     self.cube2.closest_spectral_channel(mean2)
-
-        # cube_data1 = \
-        #     np.roll(self.cube1.filled_data[:], roll1)
-        # cube_data2 = \
-        #     np.roll(self.cube2.filled_data[:], roll2)
-
         if fiducial_model is not None:
             self.pca1 = fiducial_model
         else:
             self.pca1 = PCA(self.cube1, n_eigs=n_eigs)
-            # self.pca1 = PCA(cube_data1, n_eigs=n_eigs)
             self.pca1.run()
 
-        # self.pca2 = PCA(cube_data2, n_eigs=n_eigs)
         self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
         self.pca2.run()
 
