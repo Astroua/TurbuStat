@@ -33,17 +33,18 @@ class property_arrays(object):
         super(property_arrays, self).__init__()
         self.cube = cube[0]  # cube.data
         self.header = cube[1]  # cube.header
-        self.array_shape = (self.cube.shape[1], self.cube.shape[2])
+        self.shape = (self.cube.shape[1], self.cube.shape[2])
         self.save_name = save_name
 
         self.clean_cube = np.ones(self.cube.shape)
         self.noise_array = None
         self.nan_mask = np.invert(np.isnan(self.cube), dtype=bool)
         self.weight_cube = np.ones(self.cube.shape)
-        for i in range(self.cube.shape[1]):
-            for j in range(self.cube.shape[2]):
-                self.weight_cube[:, i, j] = np.arange(
-                    1, self.cube.shape[0] + 1, 1)
+
+        vel_channels = np.arange(1, self.cube.shape[0] + 1)
+        self.weight_cube = np.tile(vel_channels[:, np.newaxis, np.newaxis],
+                                   (1, self.shape[1], self.shape[2]))
+
         self.sigma = None
 
         self.property_dict = {"cube": [self.cube, self.header]}
@@ -52,8 +53,8 @@ class property_arrays(object):
             if isinstance(rms_noise, float):
                 self.noise_type_flag = 1
                 self.sigma = rms_noise
-                self.noise_array = np.ones(self.array_shape) * self.sigma
-                self.noise_mask = np.ones(self.array_shape)
+                self.noise_array = np.ones(self.shape) * self.sigma
+                self.noise_mask = np.ones(self.shape)
                 self.clean_cube[self.cube < (clip_level * self.sigma)] = 0.0
                 self.clean_cube *= np.ma.masked_invalid(self.cube)
 
@@ -111,11 +112,11 @@ class property_arrays(object):
     def integrated_intensity(self):
 
         masked_clean = self.clean_cube * self.nan_mask
-        int_intensity_array = np.ones(self.array_shape)
-        error_array = np.ones(self.array_shape)
+        int_intensity_array = np.ones(self.shape)
+        error_array = np.ones(self.shape)
 
-        for i in range(self.array_shape[0]):
-            for j in range(self.array_shape[1]):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
                 z = np.where(masked_clean[:, i, j] > 0)
                 continuous_sections = []
                 for _, g in groupby(enumerate(z[0]), lambda (i, x): i - x):
@@ -140,11 +141,11 @@ class property_arrays(object):
         masked_clean = self.clean_cube * self.nan_mask
         weight_clean = self.weight_cube * self.nan_mask
 
-        linewidth_array = np.empty(self.array_shape)
-        error_array = np.empty(self.array_shape)
+        linewidth_array = np.empty(self.shape)
+        error_array = np.empty(self.shape)
 
-        for i in range(self.array_shape[0]):
-            for j in range(self.array_shape[1]):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
 
                 linewidth_array[i, j] = \
                     np.sqrt(np.sum((weight_clean[:, i, j] -
