@@ -43,15 +43,15 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
     order = comparisons
 
     # All possible face combinations
-    data_files = {"0_0": ["Face 0 to 0"],
-                  "1_1": ["Face 1 to 1"],
-                  "2_2": ["Face 2 to 2"],
-                  "0_1": ["Face 0 to 1"],
-                  "0_2": ["Face 0 to 2"],
-                  "1_2": ["Face 1 to 2"],
-                  "2_1": ["Face 2 to 1"],
-                  "2_0": ["Face 2 to 0"],
-                  "1_0": ["Face 1 to 0"]}
+    data_files = {"0_0": ["Face 0 to 0", None, None],
+                  "1_1": ["Face 1 to 1", None, None],
+                  "2_2": ["Face 2 to 2", None, None],
+                  "0_1": ["Face 0 to 1", None, None],
+                  "0_2": ["Face 0 to 2", None, None],
+                  "1_2": ["Face 1 to 2", None, None],
+                  "2_1": ["Face 2 to 1", None, None],
+                  "2_0": ["Face 2 to 0", None, None],
+                  "1_0": ["Face 1 to 0", None, None]}
 
     # Remove comparisons that aren't requested
     for key in data_files.keys():
@@ -72,7 +72,12 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         for key in data_files.keys():
             if key in x:
                 data = read_csv(os.path.join(path, x))
-                data_files[key].append(data)
+                if "fiducial" in x:
+                    data_files[key][1] = data
+                elif "distances" in x:
+                    data_files[key][2] = data
+                else:
+                    pass
                 break
 
     # Now delete the keys with no data
