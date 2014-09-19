@@ -12,7 +12,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
                                 "VCS_Density", "VCS_Velocity", "VCA",
                                 "Tsallis", "PCA", "SCF", "Cramer",
                                 "Skewness", "Kurtosis", "Dendrogram_Hist",
-                                "Dendrogram_Num", "PDF"]):
+                                "Dendrogram_Num", "PDF"],
+                    comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
+                                 "2_0", "2_1", "2_2"]):
     '''
     Requires results converted into csv form!!
 
@@ -32,20 +34,29 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         Include comparisons between faces.
     statistics : list, optional
         Statistics to plot. Default is all.
+    comparisons : list, optional
+        The face comparisons to include in the plots. The order is set here as
+        well.
     '''
 
-    # All possible face combinations
-    data_files = {"0_0": ["Face 0 to 0"],
-                  "1_1": ["Face 1 to 1"],
-                  "2_2": ["Face 2 to 2"],
-                  "0_1": ["Face 0 to 1"],
-                  "0_2": ["Face 0 to 2"],
-                  "1_2": ["Face 1 to 2"],
-                  "2_1": ["Face 2 to 1"],
-                  "2_0": ["Face 2 to 0"],
-                  "1_0": ["Face 1 to 0"]}
+    # Set the order by the given comparison list
+    order = comparisons
 
-    order = ["0_0", "0_1", "0_2", "1_0", "1_1", "1_2", "2_0", "2_1", "2_2"]
+    # All possible face combinations
+    data_files = {"0_0": ["Face 0 to 0", None, None],
+                  "1_1": ["Face 1 to 1", None, None],
+                  "2_2": ["Face 2 to 2", None, None],
+                  "0_1": ["Face 0 to 1", None, None],
+                  "0_2": ["Face 0 to 2", None, None],
+                  "1_2": ["Face 1 to 2", None, None],
+                  "2_1": ["Face 2 to 1", None, None],
+                  "2_0": ["Face 2 to 0", None, None],
+                  "1_0": ["Face 1 to 0", None, None]}
+
+    # Remove comparisons that aren't requested
+    for key in data_files.keys():
+        if not key in comparisons:
+            del data_files[key]
 
     if obs:
         data_files["0_obs"] = ["Face 0 to Obs"],
@@ -61,7 +72,12 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         for key in data_files.keys():
             if key in x:
                 data = read_csv(os.path.join(path, x))
-                data_files[key].append(data)
+                if "fiducial" in x:
+                    data_files[key][1] = data
+                elif "distances" in x:
+                    data_files[key][2] = data
+                else:
+                    pass
                 break
 
     # Now delete the keys with no data
@@ -78,6 +94,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
         (fig, ax) = _plot_size(len(data_files.keys()))
         shape = ax.shape
+        if len(shape) == 1:
+            ax = ax[:, np.newaxis]
+            shape = ax.shape
         for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
             if k >= len(ax.flatten()) - shape[1]:
@@ -132,15 +151,15 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
     # If the plot is on the bottom of a column, add labels
     if bottom:
         # Put two 'labels' for the x axis
-        ax.annotate("Designs", xy=(0, 0), xytext=(8 * (num_design / 2), -20),
+        ax.annotate("Designs", xy=(0.4, -0.25), xytext=(0.4, -0.25),
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
-                    fontsize=10)
-        ax.annotate("Fiducials", xy=(1, 0),
-                    xytext=(-10 * (num_design / 2), -20),
+                    fontsize=12)
+        ax.annotate("Fiducials", xy=(0.9, -0.25),
+                    xytext=(0.9, -0.25),
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
-                    fontsize=10)
+                    fontsize=12)
 
     #Plot fiducials
     # fid_comps = (num_fids**2 + num_fids) / 2
@@ -154,7 +173,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
     ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
-    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=10)
+    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
 
 
 def timestep_comparisons(path, verbose=False):

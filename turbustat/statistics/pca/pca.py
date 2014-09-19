@@ -23,15 +23,21 @@ class PCA(object):
         self.cube = cube
         self.n_eigs = n_eigs
 
+        # Remove NaNs
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
         self.pca_matrix = np.zeros((self.n_velchan, self.n_velchan))
         self.eigvals = None
 
-    def compute_pca(self):
+    def compute_pca(self, normalize=True):
         '''
         Create the covariance matrix and its eigenvalues.
+
+        Parameters
+        ----------
+        normalize : bool, optional
+            Normalize the set of eigenvalues by the 0th component.
         '''
 
         cube_mean = np.nansum(self.cube) / np.sum(np.isfinite(self.cube))
@@ -47,11 +53,14 @@ class PCA(object):
 
         all_eigsvals, eigvecs = np.linalg.eig(self.pca_matrix)
         all_eigsvals.sort()  # Sort by maximum
-        self.eigvals = all_eigsvals[:self.n_eigs]
+        if normalize:
+            self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
+        else:
+            self.eigvals = all_eigsvals[:self.n_eigs]
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, normalize=True):
         '''
         Run method. Needed to maintain package standards.
 
@@ -59,9 +68,11 @@ class PCA(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        normalize : bool, optional
+            See ```compute_pca```.
         '''
 
-        self.compute_pca()
+        self.compute_pca(normalize=normalize)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -87,39 +98,25 @@ class PCA_Distance(object):
         Number of eigenvalues to compute.
     fiducial_model : PCA
         Computed PCA object. Use to avoid recomputing.
+    normalize : bool, optional
+        Sets whether to normalize the eigenvalues by the 0th eigenvalue.
 
     '''
 
-    def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None):
+    def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None,
+                 normalize=True):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
-
-        # We want to match the spectral axes in order to properly compare
-        # the cubes.
-        # mean1 = np.nanmean(self.cube1.moment0, axis=None)
-        # mean2 = np.nanmean(self.cube2.moment0, axis=None)
-
-        # roll1 = (self.cube1.shape[0] / 2) - \
-        #     self.cube1.closest_spectral_channel(mean1)
-        # roll2 = (self.cube2.shape[0] / 2) - \
-        #     self.cube2.closest_spectral_channel(mean2)
-
-        # cube_data1 = \
-        #     np.roll(self.cube1.filled_data[:], roll1)
-        # cube_data2 = \
-        #     np.roll(self.cube2.filled_data[:], roll2)
 
         if fiducial_model is not None:
             self.pca1 = fiducial_model
         else:
             self.pca1 = PCA(self.cube1, n_eigs=n_eigs)
-            # self.pca1 = PCA(cube_data1, n_eigs=n_eigs)
-            self.pca1.run()
+            self.pca1.run(normalize=normalize)
 
-        # self.pca2 = PCA(cube_data2, n_eigs=n_eigs)
         self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
-        self.pca2.run()
+        self.pca2.run(normalize=normalize)
 
         self.distance = None
 
@@ -129,7 +126,6 @@ class PCA_Distance(object):
 
         Parameters
         ----------
-
         verbose : bool, optional
             Enables plotting.
         '''

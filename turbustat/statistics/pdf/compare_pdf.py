@@ -182,7 +182,7 @@ class PDF_Distance(object):
         self.PDF2 = PDF(stand2, bins=self.bins)
         self.PDF2.run(verbose=False)
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, labels=None, verbose=False):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -190,6 +190,8 @@ class PDF_Distance(object):
 
         Parameters
         ----------
+        labels : tuple, optional
+            Sets the labels in the output plot.
         verbose : bool, optional
             Enables plotting.
         '''
@@ -204,11 +206,17 @@ class PDF_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
             # PDF
+            if labels is None:
+                label1 = "Input 1"
+                label2 = "Input 2"
+            else:
+                label1 = labels[0]
+                label2 = labels[1]
             p.subplot(131)
             p.loglog(self.PDF1.bins[self.PDF1.pdf > 0],
-                     self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label="Input 1")
+                     self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label=label1)
             p.loglog(self.PDF1.bins[self.PDF2.pdf > 0],
-                     self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label="Input 2")
+                     self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
             p.xlabel(r"$\Sigma/\overline{\Sigma}$")

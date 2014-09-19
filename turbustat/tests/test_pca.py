@@ -22,12 +22,12 @@ class testPCA(TestCase):
 
     def test_PCA_method(self):
         self.tester = PCA(dataset1["cube"][0], n_eigs=50)
-        self.tester.run()
+        self.tester.run(normalize=False)
         assert np.allclose(self.tester.eigvals, computed_data['pca_val'])
 
     def test_PCA_distance(self):
         self.tester_dist = \
             PCA_Distance(dataset1["cube"][0],
-                         dataset2["cube"][0]).distance_metric()
+                         dataset2["cube"][0], normalize=False).distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['pca_distance'])
