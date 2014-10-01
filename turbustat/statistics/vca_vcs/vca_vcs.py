@@ -175,7 +175,7 @@ class VCS(object):
         if np.isnan(self.cube).any():
             self.cube[np.isnan(self.cube)] = 0
             # Feel like this should be more specific
-            self.good_channel_count = np.sum(self.cube[0, :, :] != 0)
+            self.good_channel_count = np.sum(self.cube.max(axis=0) != 0)
         else:
             self.good_channel_count = float(
                 self.cube.shape[1] * self.cube.shape[2])
