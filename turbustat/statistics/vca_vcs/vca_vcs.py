@@ -212,7 +212,7 @@ class VCS(object):
 
         self.ps1D = np.nansum(
             np.nansum(self.correlated_cube, axis=2), axis=1) /\
-            self.good_channel_count
+            self.good_pixel_count
 
         return self
 
