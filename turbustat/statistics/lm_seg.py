@@ -54,8 +54,8 @@ class Lm_Seg(object):
             self.x = self.x[~np.isfinite(self.y)]
             self.y = self.y[~np.isfinite(self.y)]
 
-    def fit(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
-            constant=True, verbose=True):
+    def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
+                  constant=True, verbose=True):
         '''
         '''
         # Fit a normal linear model to the data
