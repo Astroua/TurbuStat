@@ -47,12 +47,12 @@ class Lm_Seg(object):
 
         # Check for nans, infs...
         if not np.isfinite(x).all():
-            self.y = self.y[~np.isfinite(self.x)]
-            self.x = self.x[~np.isfinite(self.x)]
+            self.y = self.y[np.isfinite(self.x)]
+            self.x = self.x[np.isfinite(self.x)]
 
         if not np.isfinite(y).all():
-            self.x = self.x[~np.isfinite(self.y)]
-            self.y = self.y[~np.isfinite(self.y)]
+            self.x = self.x[np.isfinite(self.y)]
+            self.y = self.y[np.isfinite(self.y)]
 
     def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
                   constant=True, verbose=True):
