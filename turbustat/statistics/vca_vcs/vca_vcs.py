@@ -444,27 +444,3 @@ class VCS_Distance(object):
             p.show()
 
         return self
-
-
-def make_dataframe(x1, y1, x2, y2):
-    '''
-    Combine two datasets into a pandas DataFrame.
-    '''
-
-    # Rid infs, nans from the x sets
-    logx1 = np.log10(x1)[np.isfinite(np.log10(x1))]
-    logy1 = np.log10(y1)[np.isfinite(np.log10(x1))]
-    logx2 = np.log10(x2)[np.isfinite(np.log10(x2))]
-    logy2 = np.log10(y2)[np.isfinite(np.log10(x2))]
-
-    dummy = [0] * len(logx1) + [1] * len(logx2)
-    x = np.concatenate((logx1, logx2))
-    regressor = x.T * dummy
-    log_ps1D = np.concatenate((logy1, logy2))
-
-    d = {"dummy": Series(dummy), "scales": Series(
-        x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-    df = DataFrame(d)
-
-    return df
