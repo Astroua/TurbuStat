@@ -416,11 +416,11 @@ class VCS_Distance(object):
 
         self.velocity_distance = \
             np.abs((slopes1[0] - slopes2[0]) /
-                   np.sqrt(slope_errs1[0] + slope_errs2[0]))
+                   np.sqrt(slope_errs1[0]**2 + slope_errs2[0]**2))
 
         self.density_distance = \
             np.abs((slopes1[1] - slopes2[1]) /
-                   np.sqrt(slope_errs1[1] + slope_errs2[1]))
+                   np.sqrt(slope_errs1[1]**2 + slope_errs2[1]**2))
 
         # The overall distance is the sum from the two models
         self.distance = self.velocity_distance + self.density_distance
