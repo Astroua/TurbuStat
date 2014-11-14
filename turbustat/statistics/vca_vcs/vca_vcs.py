@@ -5,6 +5,7 @@ import numpy as np
 from ..psds import pspec
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
+from ..lm_seg import Lm_Seg
 
 try:
     from scipy.fftpack import fftn, fftfreq, fftshift
@@ -380,7 +381,7 @@ class VCS_Distance(object):
 
         self.vcs2 = VCS(self.cube2, self.header2).run()
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, brk1=-1.0, brk2=-1.0, verbose=False):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -397,66 +398,47 @@ class VCS_Distance(object):
             Enables plotting.
         '''
 
-        vel_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
-        dens_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
-        for i, x in enumerate(self.vcs1.vel_freqs):
-            if x < 0.1:
-                vel_mask1[i] = 1
-            elif x > 0.15 and x < 0.45:
-                dens_mask1[i] = 1
-        vel_freq1 = self.vcs1.vel_freqs[np.where(vel_mask1 == 1)]
-        vel_ps1D1 = self.vcs1.ps1D[np.where(vel_mask1 == 1)]
-        dens_freq1 = self.vcs1.vel_freqs[np.where(dens_mask1 == 1)]
-        dens_ps1D1 = self.vcs1.ps1D[np.where(dens_mask1 == 1)]
+        fit1 = Lm_Seg(np.log10(self.vcs1.vel_freqs),
+                      np.log10(self.vcs1.ps1D), brk1)
+        fit1.fit_model()
 
-        vel_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
-        dens_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
-        for i, x in enumerate(self.vcs2.vel_freqs):
-            if x < 0.1:
-                vel_mask2[i] = 1
-            elif x > 0.15 and x < 0.45:
-                dens_mask2[i] = 1
-        vel_freq2 = self.vcs2.vel_freqs[np.where(vel_mask2 == 1)]
-        vel_ps1D2 = self.vcs2.ps1D[np.where(vel_mask2 == 1)]
-        dens_freq2 = self.vcs2.vel_freqs[np.where(dens_mask2 == 1)]
-        dens_ps1D2 = self.vcs2.ps1D[np.where(dens_mask2 == 1)]
+        slopes1 = fit1.slopes
+        slope_errs1 = fit1.slope_errs
 
-        df_vel = make_dataframe(vel_freq1, vel_ps1D1, vel_freq2, vel_ps1D2)
-        df_dens = make_dataframe(
-            dens_freq1, dens_ps1D1, dens_freq2, dens_ps1D2)
-        self.vel_results = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df_vel).fit()
-        self.dens_results = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor",
-            data=df_dens).fit()
+        fit2 = Lm_Seg(np.log10(self.vcs2.vel_freqs),
+                      np.log10(self.vcs2.ps1D), brk2)
+        fit2.fit_model()
 
-        # Get the distance of each fit
-        self.density_distance = np.abs(self.dens_results.tvalues["regressor"])
-        self.velocity_distance = np.abs(self.vel_results.tvalues["regressor"])
+        slopes2 = fit2.slopes
+        slope_errs2 = fit2.slope_errs
+
+        # Now construct the t-statistics for each portion
+
+        self.velocity_distance = \
+            np.abs((slopes1[0] - slopes2[0]) /
+                   np.sqrt(slope_errs1[0] + slope_errs2[0]))
+
+        self.density_distance = \
+            np.abs((slopes1[1] - slopes2[1]) /
+                   np.sqrt(slope_errs1[1] + slope_errs2[1]))
 
         # The overall distance is the sum from the two models
         self.distance = self.velocity_distance + self.density_distance
 
         if verbose:
 
-            print self.vel_results.summary()
-            print self.dens_results.summary()
+            print "Fit 1"
+            print fit1.fit.summary()
+            print "Fit 2"
+            print fit2.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(vel_freq1), np.log10(vel_ps1D1), "bD",
-                   np.log10(vel_freq2), np.log10(vel_ps1D2), "gD")
-            p.plot(df_vel["scales"][:len(vel_freq1)],
-                   self.vel_results.fittedvalues[:len(vel_freq1)], "b",
-                   df_vel["scales"][-len(vel_freq2):],
-                   self.vel_results.fittedvalues[-len(vel_freq2):], "g")
-            p.plot(np.log10(dens_freq1), np.log10(dens_ps1D1), "bD",
-                   np.log10(dens_freq2), np.log10(dens_ps1D2), "gD")
-            p.plot(df_dens["scales"][:len(dens_freq1)],
-                   self.dens_results.fittedvalues[:len(dens_freq1)], "b",
-                   df_dens["scales"][-len(dens_freq2):],
-                   self.dens_results.fittedvalues[-len(dens_freq2):], "g")
+            p.plot(fit1.x, fit1.y, 'bD', alpha=0.3)
+            p.plot(fit1.x, fit1.model(fit1.x), 'g', label='Fit 1')
+            p.plot(fit2.x, fit2.y, 'mD', alpha=0.3)
+            p.plot(fit2.x, fit2.model(fit2.x), 'r', label='Fit 2')
             p.grid(True)
-            # p.xlim()
+            p.legend()
             p.xlabel(r"log k$_v$")
             p.ylabel(r"$P_{1}(k_v)$")
             p.show()
