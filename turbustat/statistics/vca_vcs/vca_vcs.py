@@ -427,7 +427,7 @@ class VCS_Distance(object):
 
         self.vcs2 = VCS(self.cube2, self.header2).run()
 
-    def distance_metric(self, brk1=-1.0, brk2=-1.0, verbose=False):
+    def distance_metric(self, verbose=False):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -440,32 +440,21 @@ class VCS_Distance(object):
             Enables plotting.
         '''
 
-        fit1 = Lm_Seg(np.log10(self.vcs1.vel_freqs),
-                      np.log10(self.vcs1.ps1D), brk1)
-        fit1.fit_model()
-
-        slopes1 = fit1.slopes
-        slope_errs1 = fit1.slope_errs
-
-        fit2 = Lm_Seg(np.log10(self.vcs2.vel_freqs),
-                      np.log10(self.vcs2.ps1D), brk2)
-        fit2.fit_model()
-
-        slopes2 = fit2.slopes
-        slope_errs2 = fit2.slope_errs
-
         # Now construct the t-statistics for each portion
 
         self.velocity_distance = \
-            np.abs((slopes1[0] - slopes2[0]) /
-                   np.sqrt(slope_errs1[0]**2 + slope_errs2[0]**2))
+            np.abs((self.vcs1.slopes[0] - self.vcs2.slopes[0]) /
+                   np.sqrt(self.vcs1.slope_errs[0]**2 +
+                           self.vcs2.slope_errs[0]**2))
 
         self.density_distance = \
-            np.abs((slopes1[1] - slopes2[1]) /
-                   np.sqrt(slope_errs1[1]**2 + slope_errs2[1]**2))
+            np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
+                   np.sqrt(self.vcs1.slope_errs[1]**2 +
+                           self.vcs2.slope_errs[1]**2))
 
         self.break_distance = \
-            np.abs((fit1.brk - fit2.brk) / np.sqrt(fit1.brk_err**2 + fit2.brk_err**2))
+            np.abs((self.vcs1.brk - self.vcs2.brk) /
+                   np.sqrt(self.vcs1.brk_err**2 + self.vcs2.brk_err**2))
 
         # The overall distance is the sum from the two models
         self.distance = self.velocity_distance + self.density_distance
@@ -473,15 +462,17 @@ class VCS_Distance(object):
         if verbose:
 
             print "Fit 1"
-            print fit1.fit.summary()
+            print self.vcs1.fit.fit.summary()
             print "Fit 2"
-            print fit2.fit.summary()
+            print self.vcs2.fit.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(fit1.x, fit1.y, 'bD', alpha=0.3)
-            p.plot(fit1.x, fit1.model(fit1.x), 'g', label='Fit 1')
-            p.plot(fit2.x, fit2.y, 'mD', alpha=0.3)
-            p.plot(fit2.x, fit2.model(fit2.x), 'r', label='Fit 2')
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'g',
+                   label='Fit 1')
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'mD', alpha=0.3)
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'r',
+                   label='Fit 2')
             p.grid(True)
             p.legend()
             p.xlabel(r"log k$_v$")
