@@ -217,6 +217,48 @@ class VCS(object):
 
         return self
 
+    def fit_pspec(self, breaks=-1.0, log_break=True, verbose=False):
+        '''
+        Fit the 1D Power spectrum using a segmented linear model.
+
+        Parameters
+        ----------
+        breaks : float or list, optional
+            Guesses for the break points. If given as a list, the length of
+            the list sets the number of break points to be fit. If a choice is
+            outside of the allowed range from the data, Lm_Seg will raise an
+            error.
+        log_break : bool, optional
+            Sets whether the provided break estimates are log-ed values.
+        verbose : bool, optional
+            Enables verbose mode in Lm_Seg.
+        '''
+
+        if not log_break:
+            breaks = np.log10(breaks)
+
+        self.fit = Lm_Seg(np.log10(self.vel_freqs),
+                          np.log10(self.ps1D), breaks)
+        self.fit.fit_model(verbose=verbose)
+
+        return self
+
+    @property
+    def slopes(self):
+        return self.fit.slopes
+
+    @property
+    def slope_errs(self):
+        return self.fit.slope_errs
+
+    @property
+    def brk(self):
+        return self.fit.brk
+
+    @property
+    def brk_err(self):
+        return self.fit.brk_err
+
     def run(self, verbose=False):
         '''
         Run the entire computation.
@@ -228,6 +270,7 @@ class VCS(object):
         '''
         self.compute_fft()
         self.make_ps1D()
+        self.fit_pspec(verbose=verbose)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -237,10 +280,13 @@ class VCS(object):
             else:
                 xlab = r"log k (pixel$^{-1}$)"
 
-            p.loglog(self.vel_freqs, self.ps1D, "bD-")
+            p.loglog(self.vel_freqs, self.ps1D, "bD", label='Data')
+            p.loglog(10**self.fit.x, 10**self.fit.model(self.fit.x), 'r',
+                     label='Fit', linewidth=2)
             p.xlabel(xlab)
             p.ylabel(r"log P$_{1}$(k$_{v}$)")
             p.grid(True)
+            p.legend(loc='best')
             p.show()
 
         return self
@@ -385,11 +431,7 @@ class VCS_Distance(object):
         '''
 
         Implements the distance metric for 2 VCS transforms.
-        We fit the linear portions of the transform to represent the power-laws
-        in the density and velocity dominated regions. From inspection, we set
-        the break at 30 $(km/s)^{-1}$ or 0.15 pix$^{-1}$. We cut off points at
-        the largest $k_v$ where noise dominates. For 500 channels, this is at
-        0.45 pix$^{-1}$. This distance is the t-statistic of the difference
+        This distance is the t-statistic of the difference
         in the slopes.
 
         Parameters
@@ -421,6 +463,9 @@ class VCS_Distance(object):
         self.density_distance = \
             np.abs((slopes1[1] - slopes2[1]) /
                    np.sqrt(slope_errs1[1]**2 + slope_errs2[1]**2))
+
+        self.break_distance = \
+            np.abs((fit1.brk - fit2.brk) / np.sqrt(fit1.brk_err**2 + fit2.brk_err**2))
 
         # The overall distance is the sum from the two models
         self.distance = self.velocity_distance + self.density_distance
