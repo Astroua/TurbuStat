@@ -5,6 +5,7 @@ import numpy as np
 from ..psds import pspec
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
+from ..lm_seg import Lm_Seg
 
 try:
     from scipy.fftpack import fftn, fftfreq, fftshift
@@ -175,9 +176,9 @@ class VCS(object):
         if np.isnan(self.cube).any():
             self.cube[np.isnan(self.cube)] = 0
             # Feel like this should be more specific
-            self.good_channel_count = np.sum(self.cube.max(axis=0) != 0)
+            self.good_pixel_count = np.sum(self.cube.max(axis=0) != 0)
         else:
-            self.good_channel_count = float(
+            self.good_pixel_count = float(
                 self.cube.shape[1] * self.cube.shape[2])
 
         # Lazy check to make sure we have units of km/s
@@ -212,9 +213,51 @@ class VCS(object):
 
         self.ps1D = np.nansum(
             np.nansum(self.correlated_cube, axis=2), axis=1) /\
-            self.good_channel_count
+            self.good_pixel_count
 
         return self
+
+    def fit_pspec(self, breaks=-1.0, log_break=True, verbose=False):
+        '''
+        Fit the 1D Power spectrum using a segmented linear model.
+
+        Parameters
+        ----------
+        breaks : float or list, optional
+            Guesses for the break points. If given as a list, the length of
+            the list sets the number of break points to be fit. If a choice is
+            outside of the allowed range from the data, Lm_Seg will raise an
+            error.
+        log_break : bool, optional
+            Sets whether the provided break estimates are log-ed values.
+        verbose : bool, optional
+            Enables verbose mode in Lm_Seg.
+        '''
+
+        if not log_break:
+            breaks = np.log10(breaks)
+
+        self.fit = Lm_Seg(np.log10(self.vel_freqs),
+                          np.log10(self.ps1D), breaks)
+        self.fit.fit_model(verbose=verbose)
+
+        return self
+
+    @property
+    def slopes(self):
+        return self.fit.slopes
+
+    @property
+    def slope_errs(self):
+        return self.fit.slope_errs
+
+    @property
+    def brk(self):
+        return self.fit.brk
+
+    @property
+    def brk_err(self):
+        return self.fit.brk_err
 
     def run(self, verbose=False):
         '''
@@ -227,6 +270,7 @@ class VCS(object):
         '''
         self.compute_fft()
         self.make_ps1D()
+        self.fit_pspec(verbose=verbose)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -236,10 +280,13 @@ class VCS(object):
             else:
                 xlab = r"log k (pixel$^{-1}$)"
 
-            p.loglog(self.vel_freqs, self.ps1D, "bD-")
+            p.loglog(self.vel_freqs, self.ps1D, "bD", label='Data')
+            p.loglog(10**self.fit.x, 10**self.fit.model(self.fit.x), 'r',
+                     label='Fit', linewidth=2)
             p.xlabel(xlab)
             p.ylabel(r"log P$_{1}$(k$_{v}$)")
             p.grid(True)
+            p.legend(loc='best')
             p.show()
 
         return self
@@ -384,11 +431,7 @@ class VCS_Distance(object):
         '''
 
         Implements the distance metric for 2 VCS transforms.
-        We fit the linear portions of the transform to represent the power-laws
-        in the density and velocity dominated regions. From inspection, we set
-        the break at 30 $(km/s)^{-1}$ or 0.15 pix$^{-1}$. We cut off points at
-        the largest $k_v$ where noise dominates. For 500 channels, this is at
-        0.45 pix$^{-1}$. This distance is the t-statistic of the difference
+        This distance is the t-statistic of the difference
         in the slopes.
 
         Parameters
@@ -397,92 +440,43 @@ class VCS_Distance(object):
             Enables plotting.
         '''
 
-        vel_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
-        dens_mask1 = np.zeros((self.vcs1.vel_freqs.shape))
-        for i, x in enumerate(self.vcs1.vel_freqs):
-            if x < 0.1:
-                vel_mask1[i] = 1
-            elif x > 0.15 and x < 0.45:
-                dens_mask1[i] = 1
-        vel_freq1 = self.vcs1.vel_freqs[np.where(vel_mask1 == 1)]
-        vel_ps1D1 = self.vcs1.ps1D[np.where(vel_mask1 == 1)]
-        dens_freq1 = self.vcs1.vel_freqs[np.where(dens_mask1 == 1)]
-        dens_ps1D1 = self.vcs1.ps1D[np.where(dens_mask1 == 1)]
+        # Now construct the t-statistics for each portion
 
-        vel_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
-        dens_mask2 = np.zeros((self.vcs2.vel_freqs.shape))
-        for i, x in enumerate(self.vcs2.vel_freqs):
-            if x < 0.1:
-                vel_mask2[i] = 1
-            elif x > 0.15 and x < 0.45:
-                dens_mask2[i] = 1
-        vel_freq2 = self.vcs2.vel_freqs[np.where(vel_mask2 == 1)]
-        vel_ps1D2 = self.vcs2.ps1D[np.where(vel_mask2 == 1)]
-        dens_freq2 = self.vcs2.vel_freqs[np.where(dens_mask2 == 1)]
-        dens_ps1D2 = self.vcs2.ps1D[np.where(dens_mask2 == 1)]
+        self.velocity_distance = \
+            np.abs((self.vcs1.slopes[0] - self.vcs2.slopes[0]) /
+                   np.sqrt(self.vcs1.slope_errs[0]**2 +
+                           self.vcs2.slope_errs[0]**2))
 
-        df_vel = make_dataframe(vel_freq1, vel_ps1D1, vel_freq2, vel_ps1D2)
-        df_dens = make_dataframe(
-            dens_freq1, dens_ps1D1, dens_freq2, dens_ps1D2)
-        self.vel_results = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df_vel).fit()
-        self.dens_results = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor",
-            data=df_dens).fit()
+        self.density_distance = \
+            np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
+                   np.sqrt(self.vcs1.slope_errs[1]**2 +
+                           self.vcs2.slope_errs[1]**2))
 
-        # Get the distance of each fit
-        self.density_distance = np.abs(self.dens_results.tvalues["regressor"])
-        self.velocity_distance = np.abs(self.vel_results.tvalues["regressor"])
+        self.break_distance = \
+            np.abs((self.vcs1.brk - self.vcs2.brk) /
+                   np.sqrt(self.vcs1.brk_err**2 + self.vcs2.brk_err**2))
 
         # The overall distance is the sum from the two models
         self.distance = self.velocity_distance + self.density_distance
 
         if verbose:
 
-            print self.vel_results.summary()
-            print self.dens_results.summary()
+            print "Fit 1"
+            print self.vcs1.fit.fit.summary()
+            print "Fit 2"
+            print self.vcs2.fit.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(vel_freq1), np.log10(vel_ps1D1), "bD",
-                   np.log10(vel_freq2), np.log10(vel_ps1D2), "gD")
-            p.plot(df_vel["scales"][:len(vel_freq1)],
-                   self.vel_results.fittedvalues[:len(vel_freq1)], "b",
-                   df_vel["scales"][-len(vel_freq2):],
-                   self.vel_results.fittedvalues[-len(vel_freq2):], "g")
-            p.plot(np.log10(dens_freq1), np.log10(dens_ps1D1), "bD",
-                   np.log10(dens_freq2), np.log10(dens_ps1D2), "gD")
-            p.plot(df_dens["scales"][:len(dens_freq1)],
-                   self.dens_results.fittedvalues[:len(dens_freq1)], "b",
-                   df_dens["scales"][-len(dens_freq2):],
-                   self.dens_results.fittedvalues[-len(dens_freq2):], "g")
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'g',
+                   label='Fit 1')
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'mD', alpha=0.3)
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'r',
+                   label='Fit 2')
             p.grid(True)
-            # p.xlim()
+            p.legend()
             p.xlabel(r"log k$_v$")
             p.ylabel(r"$P_{1}(k_v)$")
             p.show()
 
         return self
-
-
-def make_dataframe(x1, y1, x2, y2):
-    '''
-    Combine two datasets into a pandas DataFrame.
-    '''
-
-    # Rid infs, nans from the x sets
-    logx1 = np.log10(x1)[np.isfinite(np.log10(x1))]
-    logy1 = np.log10(y1)[np.isfinite(np.log10(x1))]
-    logx2 = np.log10(x2)[np.isfinite(np.log10(x2))]
-    logy2 = np.log10(y2)[np.isfinite(np.log10(x2))]
-
-    dummy = [0] * len(logx1) + [1] * len(logx2)
-    x = np.concatenate((logx1, logx2))
-    regressor = x.T * dummy
-    log_ps1D = np.concatenate((logy1, logy2))
-
-    d = {"dummy": Series(dummy), "scales": Series(
-        x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-    df = DataFrame(d)
-
-    return df
