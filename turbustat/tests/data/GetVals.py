@@ -136,8 +136,11 @@ cramer_val = cramer_distance.data_matrix1
 
 from turbustat.statistics import DendroDistance
 
+min_deltas = np.logspace(-2.5, 0.5, 40)
+
 dendro_distance = DendroDistance(dataset1["cube"][0],
-                                 dataset2["cube"][0]).distance_metric(verbose=False)
+                                 dataset2["cube"][0],
+                                 min_deltas=min_deltas).distance_metric(verbose=False)
 
 dendrogram_val = dendro_distance.dendro1.numfeatures
 
