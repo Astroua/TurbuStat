@@ -17,7 +17,9 @@ from pandas import Series, DataFrame
 import statsmodels.formula.api as sm
 from scipy.interpolate import UnivariateSpline
 from mecdf import mecdf
-from astrodendro import pruning, Dendrogram
+from astrodendro import Dendrogram
+
+from ..lm_seg import Lm_Seg
 
 
 class Dendrogram_Stats(object):
@@ -87,6 +89,48 @@ class Dendrogram_Stats(object):
 
         return self
 
+    def make_hist(self):
+        '''
+        Creates histograms based on values from the tree.
+        *Note:* These histograms are remade whenc calculating the distance to
+        ensure the proper form for the Hellinger distance.
+
+        Returns
+        -------
+        hists : list
+            Each list entry contains the histogram values and bins for a
+            value of delta.
+        '''
+
+        hists = []
+
+        for value in self.values:
+            hist, bins = np.histogram(value, bins=int(np.sqrt(len(value))))
+            hists.append([hist, bins])
+
+        return hists
+
+    def fit_numfeat(self, brk=-0.8, verbose=False):
+        '''
+        Fit a segmented linear model with to the curve.
+        '''
+
+        # Remove points where there is only 1 feature or less.
+        x = np.log10(self.min_deltas[self.numfeatures > 1])
+        y = np.log10(self.numfeatures[self.numfeatures > 1])
+
+        # Set the step size to 2% of the total range
+        step = (x.max() - x.min()) * 0.02
+
+        self.model = Lm_Seg(x, y, brk)
+
+        self.model.fit_model(verbose=verbose, h_step=step)
+
+        self.tail_slope = self.model.slopes[1]
+        self.tail_slope_err = self.model.slope_errs[1]
+
+        return self
+
     def run(self, verbose=False):
         '''
 
@@ -98,9 +142,14 @@ class Dendrogram_Stats(object):
 
         '''
         self.compute_dendro(verbose=verbose)
+        self.fit_numfeat(verbose=verbose)
+
         if verbose:
-            # import matplotlib.pyplot as p
-            pass  # Write up some quick plots.
+            import matplotlib.pyplot as p
+
+            p.plot(self.model.x, self.model.y, 'bD')
+            p.plot(self.model.x, self.model.model(self.model.x), 'g')
+            p.show()
 
 
 class DendroDistance(object):
@@ -188,87 +237,35 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, use_spline=False, verbose=False):
+    def numfeature_stat(self, verbose=False):
         '''
         Calculate the distance based on the number of features statistic.
 
         Parameters
         ----------
-        use_spline : bool, optional
-            Pick out power-law tail using a spline. Otherwise, the last 20% of
-            the data points are used.
         verbose : bool, optional
             Enables plotting.
         '''
 
-        # Remove points where log(numdata)=0
-        deltas1 = np.log10(
-            self.dendro1.min_deltas[self.dendro1.numfeatures > 1])
-        numfeatures1 = np.log10(
-            self.dendro1.numfeatures[self.dendro1.numfeatures > 1])
+        self.num_distance = \
+            np.abs(self.dendro1.tail_slope - self.dendro2.tail_slope) / \
+            np.sqrt(self.dendro1.tail_slope_err**2 +
+                    self.dendro2.tail_slope_err**2)
 
-        deltas2 = np.log10(
-            self.dendro2.min_deltas[self.dendro2.numfeatures > 1])
-        numfeatures2 = np.log10(
-            self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
-
-        if use_spline:
-            # Approximate knot location using linear splines with minimal smoothing
-            break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
-            break2 = break_spline(deltas2, numfeatures2, k=1, s=1)
-
-            # Keep values after the break
-            numfeatures1 = numfeatures1[np.where(deltas1 > break1)]
-            numfeatures2 = numfeatures2[np.where(deltas2 > break2)]
-            deltas1 = deltas1[np.where(deltas1 > break1)]
-            deltas2 = deltas2[np.where(deltas2 > break2)]
-        else:
-            # Try keeping 20% of the original number of delta values (same for
-            # both dendrograms).
-            keep_num = int(round(0.2 * len(self.dendro1.min_deltas)))
-
-            # If there aren't enough points, don't do any clipping.
-            if len(numfeatures1) >= keep_num:
-                numfeatures1 = numfeatures1[-keep_num:]
-                deltas1 = deltas1[-keep_num:]
-            else:
-                pass
-
-            if len(numfeatures2) >= keep_num:
-                numfeatures2 = numfeatures2[-keep_num:]
-                deltas2 = deltas2[-keep_num:]
-            else:
-                pass
-
-        # Set up columns for regression
-        dummy = [0] * len(deltas1) + [1] * len(deltas2)
-        x = np.concatenate((deltas1, deltas2))
-        regressor = x.T * dummy
-
-        numdata = np.concatenate((numfeatures1, numfeatures2))
-
-        d = {"dummy": Series(dummy), "scales": Series(x),
-             "log_numdata": Series(numdata), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_numdata ~ dummy + scales + regressor", data=df)
-
-        self.num_results = model.fit()
-
-        self.num_distance = np.abs(self.num_results.tvalues["regressor"])
         if verbose:
 
-            print self.num_results.summary()
-
             import matplotlib.pyplot as p
-            p.plot(deltas1, numfeatures1, "bD",
-                   deltas2, numfeatures2, "gD")
-            p.plot(df["scales"][:len(numfeatures1)],
-                   self.num_results.fittedvalues[:len(numfeatures1)], "b",
-                   df["scales"][-len(numfeatures2):],
-                   self.num_results.fittedvalues[-len(numfeatures2):], "g")
+
+            # Dendrogram 1
+            p.plot(self.dendro1.model.x, self.dendro1.model.y, 'gD')
+            p.plot(self.dendro1.model.x,
+                   self.dendro1.model.model(self.dendro1.model.x), 'g')
+
+            # Dendrogram 2
+            p.plot(self.dendro2.model.x, self.dendro2.model.y, 'bD')
+            p.plot(self.dendro2.model.x,
+                   self.dendro2.model.model(self.dendro2.model.x), 'b')
+
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
