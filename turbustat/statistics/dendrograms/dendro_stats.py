@@ -391,27 +391,5 @@ def hellinger_stat(x, y):
         return np.mean(dists)
 
 
-def break_spline(x, y, **kwargs):
-    '''
-    Calculate the break in 2 linear trends using a spline.
-    '''
-
-    s = UnivariateSpline(x, y, **kwargs)
-    knots = s.get_knots()
-
-    if len(knots) > 3:
-        print "Many knots"
-        knot_expec = -0.8
-        posn = np.argmin(np.abs(knots - knot_expec))
-        return knots[posn]  # Return the knot closest to the expected value
-
-    elif len(knots) == 2:
-        print "No knots"
-        return knots[0]  # Set the threshold to the beginning
-
-    else:
-        return knots[1]
-
-
 def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
