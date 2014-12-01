@@ -13,9 +13,7 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from pandas import Series, DataFrame
-import statsmodels.formula.api as sm
-from scipy.interpolate import UnivariateSpline
+import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
@@ -110,28 +108,48 @@ class Dendrogram_Stats(object):
 
         return hists
 
-    def fit_numfeat(self, brk=-0.8, verbose=False):
+    def fit_numfeat(self, size=5, verbose=False):
         '''
-        Fit a segmented linear model with to the curve.
+        Fit a line to the power-law tail. The break is approximated using
+        a moving window, computing the standard deviation. A spike occurs at
+        the break point.
+
+        Parameters
+        ----------
+        size : int. optional
+            Size of window. Passed to std_window.
+        verbose : bool, optional
+            Shows the model summary.
         '''
+
+        nums = self.numfeatures[self.numfeatures > 1]
+        deltas = self.min_deltas[self.numfeatures > 1]
+
+        # Find the position of the break
+        break_pos = std_window(nums, size=size)
 
         # Remove points where there is only 1 feature or less.
-        x = np.log10(self.min_deltas[self.numfeatures > 1])
-        y = np.log10(self.numfeatures[self.numfeatures > 1])
+        self.x = np.log10(deltas[break_pos:])
+        self.y = np.log10(nums[break_pos:])
 
-        # Set the step size to 2% of the total range
-        step = (x.max() - x.min()) * 0.02
+        x = sm.add_constant(self.x)
 
-        self.model = Lm_Seg(x, y, brk)
+        self.model = sm.OLS(self.y, x).fit()
 
-        self.model.fit_model(verbose=verbose, h_step=step)
+        if verbose:
+            print self.model.summary()
 
-        self.tail_slope = self.model.slopes[1]
-        self.tail_slope_err = self.model.slope_errs[1]
+        cov_matrix = self.model.cov_params()
+        errors = \
+            np.asarray([np.sqrt(cov_matrix[i, i])
+                        for i in range(cov_matrix.shape[0])])
+
+        self.tail_slope = self.model.params[-1]
+        self.tail_slope_err = errors[-1]
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, dendro_verbose=False):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -140,15 +158,17 @@ class Dendrogram_Stats(object):
         ----------
         verbose : optional, bool
 
+        dendro_verbose : optional, bool
+            Prints out updates while making the dendrogram.
         '''
-        self.compute_dendro(verbose=verbose)
+        self.compute_dendro(verbose=dendro_verbose)
         self.fit_numfeat(verbose=verbose)
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.plot(self.model.x, self.model.y, 'bD')
-            p.plot(self.model.x, self.model.model(self.model.x), 'g')
+            p.plot(self.x, self.y, 'bD')
+            p.plot(self.x, self.model.fittedvalues, 'g')
             p.show()
 
 
@@ -393,3 +413,37 @@ def hellinger_stat(x, y):
 
 def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
+
+
+def std_window(y, size=5, return_results=False):
+    '''
+    Uses a moving standard deviation window to find where the powerlaw break
+    is.
+
+    Parameters
+    ----------
+    y : np.ndarray
+        Data.
+    size : int, optional
+        Odd integer which sets the window size.
+    return_results : bool, optional
+        If enabled, returns the results of the window. Otherwise, only the
+        position of the break is returned.
+    '''
+
+    half_size = (size - 1)/2
+
+    shape = max(y.shape)
+
+    stds = np.empty((shape - size + 1))
+
+    for i in range(half_size, shape - half_size):
+        stds[i - half_size] = np.std(y[i - half_size: i + half_size])
+
+    # Now find the max
+    break_pos = np.argmax(stds) + half_size
+
+    if return_results:
+        return break_pos, stds
+
+    return break_pos
