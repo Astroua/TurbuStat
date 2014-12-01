@@ -17,8 +17,6 @@ import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
-from ..lm_seg import Lm_Seg
-
 
 class Dendrogram_Stats(object):
 
@@ -277,18 +275,17 @@ class DendroDistance(object):
             import matplotlib.pyplot as p
 
             # Dendrogram 1
-            p.plot(self.dendro1.model.x, self.dendro1.model.y, 'gD')
-            p.plot(self.dendro1.model.x,
-                   self.dendro1.model.model(self.dendro1.model.x), 'g')
+            p.plot(self.dendro1.x, self.dendro1.y, 'gD', label='Dendro 1')
+            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'g')
 
             # Dendrogram 2
-            p.plot(self.dendro2.model.x, self.dendro2.model.y, 'bD')
-            p.plot(self.dendro2.model.x,
-                   self.dendro2.model.model(self.dendro2.model.x), 'b')
+            p.plot(self.dendro2.x, self.dendro2.y, 'bD', label='Dendro 2')
+            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'b')
 
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
+            p.legend()
             p.show()
 
         return self
