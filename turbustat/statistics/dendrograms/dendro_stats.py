@@ -125,6 +125,7 @@ class Dendrogram_Stats(object):
 
         # Find the position of the break
         break_pos = std_window(nums, size=size)
+        self.break_pos = deltas[break_pos]
 
         # Remove points where there is only 1 feature or less.
         self.x = np.log10(deltas[break_pos:])
