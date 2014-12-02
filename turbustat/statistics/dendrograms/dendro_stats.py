@@ -13,11 +13,9 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from pandas import Series, DataFrame
-import statsmodels.formula.api as sm
-from scipy.interpolate import UnivariateSpline
+import statsmodels.api as sm
 from mecdf import mecdf
-from astrodendro import pruning, Dendrogram
+from astrodendro import Dendrogram
 
 
 class Dendrogram_Stats(object):
@@ -87,7 +85,70 @@ class Dendrogram_Stats(object):
 
         return self
 
-    def run(self, verbose=False):
+    def make_hist(self):
+        '''
+        Creates histograms based on values from the tree.
+        *Note:* These histograms are remade whenc calculating the distance to
+        ensure the proper form for the Hellinger distance.
+
+        Returns
+        -------
+        hists : list
+            Each list entry contains the histogram values and bins for a
+            value of delta.
+        '''
+
+        hists = []
+
+        for value in self.values:
+            hist, bins = np.histogram(value, bins=int(np.sqrt(len(value))))
+            hists.append([hist, bins])
+
+        return hists
+
+    def fit_numfeat(self, size=5, verbose=False):
+        '''
+        Fit a line to the power-law tail. The break is approximated using
+        a moving window, computing the standard deviation. A spike occurs at
+        the break point.
+
+        Parameters
+        ----------
+        size : int. optional
+            Size of window. Passed to std_window.
+        verbose : bool, optional
+            Shows the model summary.
+        '''
+
+        nums = self.numfeatures[self.numfeatures > 1]
+        deltas = self.min_deltas[self.numfeatures > 1]
+
+        # Find the position of the break
+        break_pos = std_window(nums, size=size)
+        self.break_pos = deltas[break_pos]
+
+        # Remove points where there is only 1 feature or less.
+        self.x = np.log10(deltas[break_pos:])
+        self.y = np.log10(nums[break_pos:])
+
+        x = sm.add_constant(self.x)
+
+        self.model = sm.OLS(self.y, x).fit()
+
+        if verbose:
+            print self.model.summary()
+
+        cov_matrix = self.model.cov_params()
+        errors = \
+            np.asarray([np.sqrt(cov_matrix[i, i])
+                        for i in range(cov_matrix.shape[0])])
+
+        self.tail_slope = self.model.params[-1]
+        self.tail_slope_err = errors[-1]
+
+        return self
+
+    def run(self, verbose=False, dendro_verbose=False):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -96,11 +157,18 @@ class Dendrogram_Stats(object):
         ----------
         verbose : optional, bool
 
+        dendro_verbose : optional, bool
+            Prints out updates while making the dendrogram.
         '''
-        self.compute_dendro(verbose=verbose)
+        self.compute_dendro(verbose=dendro_verbose)
+        self.fit_numfeat(verbose=verbose)
+
         if verbose:
-            # import matplotlib.pyplot as p
-            pass  # Write up some quick plots.
+            import matplotlib.pyplot as p
+
+            p.plot(self.x, self.y, 'bD')
+            p.plot(self.x, self.model.fittedvalues, 'g')
+            p.show()
 
 
 class DendroDistance(object):
@@ -188,90 +256,37 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, use_spline=False, verbose=False):
+    def numfeature_stat(self, verbose=False):
         '''
         Calculate the distance based on the number of features statistic.
 
         Parameters
         ----------
-        use_spline : bool, optional
-            Pick out power-law tail using a spline. Otherwise, the last 20% of
-            the data points are used.
         verbose : bool, optional
             Enables plotting.
         '''
 
-        # Remove points where log(numdata)=0
-        deltas1 = np.log10(
-            self.dendro1.min_deltas[self.dendro1.numfeatures > 1])
-        numfeatures1 = np.log10(
-            self.dendro1.numfeatures[self.dendro1.numfeatures > 1])
+        self.num_distance = \
+            np.abs(self.dendro1.tail_slope - self.dendro2.tail_slope) / \
+            np.sqrt(self.dendro1.tail_slope_err**2 +
+                    self.dendro2.tail_slope_err**2)
 
-        deltas2 = np.log10(
-            self.dendro2.min_deltas[self.dendro2.numfeatures > 1])
-        numfeatures2 = np.log10(
-            self.dendro2.numfeatures[self.dendro2.numfeatures > 1])
-
-        if use_spline:
-            # Approximate knot location using linear splines with minimal smoothing
-            break1 = break_spline(deltas1, numfeatures1, k=1, s=1)
-            break2 = break_spline(deltas2, numfeatures2, k=1, s=1)
-
-            # Keep values after the break
-            numfeatures1 = numfeatures1[np.where(deltas1 > break1)]
-            numfeatures2 = numfeatures2[np.where(deltas2 > break2)]
-            deltas1 = deltas1[np.where(deltas1 > break1)]
-            deltas2 = deltas2[np.where(deltas2 > break2)]
-        else:
-            # Try keeping 20% of the original number of delta values (same for
-            # both dendrograms).
-            keep_num = int(round(0.2 * len(self.dendro1.min_deltas)))
-
-            # If there aren't enough points, don't do any clipping.
-            if len(numfeatures1) >= keep_num:
-                numfeatures1 = numfeatures1[-keep_num:]
-                deltas1 = deltas1[-keep_num:]
-            else:
-                pass
-
-            if len(numfeatures2) >= keep_num:
-                numfeatures2 = numfeatures2[-keep_num:]
-                deltas2 = deltas2[-keep_num:]
-            else:
-                pass
-
-        # Set up columns for regression
-        dummy = [0] * len(deltas1) + [1] * len(deltas2)
-        x = np.concatenate((deltas1, deltas2))
-        regressor = x.T * dummy
-
-        numdata = np.concatenate((numfeatures1, numfeatures2))
-
-        d = {"dummy": Series(dummy), "scales": Series(x),
-             "log_numdata": Series(numdata), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_numdata ~ dummy + scales + regressor", data=df)
-
-        self.num_results = model.fit()
-
-        self.num_distance = np.abs(self.num_results.tvalues["regressor"])
         if verbose:
 
-            print self.num_results.summary()
-
             import matplotlib.pyplot as p
-            p.plot(deltas1, numfeatures1, "bD",
-                   deltas2, numfeatures2, "gD")
-            p.plot(df["scales"][:len(numfeatures1)],
-                   self.num_results.fittedvalues[:len(numfeatures1)], "b",
-                   df["scales"][-len(numfeatures2):],
-                   self.num_results.fittedvalues[-len(numfeatures2):], "g")
+
+            # Dendrogram 1
+            p.plot(self.dendro1.x, self.dendro1.y, 'gD', label='Dendro 1')
+            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'g')
+
+            # Dendrogram 2
+            p.plot(self.dendro2.x, self.dendro2.y, 'bD', label='Dendro 2')
+            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'b')
+
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
+            p.legend()
             p.show()
 
         return self
@@ -394,27 +409,39 @@ def hellinger_stat(x, y):
         return np.mean(dists)
 
 
-def break_spline(x, y, **kwargs):
-    '''
-    Calculate the break in 2 linear trends using a spline.
-    '''
-
-    s = UnivariateSpline(x, y, **kwargs)
-    knots = s.get_knots()
-
-    if len(knots) > 3:
-        print "Many knots"
-        knot_expec = -0.8
-        posn = np.argmin(np.abs(knots - knot_expec))
-        return knots[posn]  # Return the knot closest to the expected value
-
-    elif len(knots) == 2:
-        print "No knots"
-        return knots[0]  # Set the threshold to the beginning
-
-    else:
-        return knots[1]
-
-
 def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
+
+
+def std_window(y, size=5, return_results=False):
+    '''
+    Uses a moving standard deviation window to find where the powerlaw break
+    is.
+
+    Parameters
+    ----------
+    y : np.ndarray
+        Data.
+    size : int, optional
+        Odd integer which sets the window size.
+    return_results : bool, optional
+        If enabled, returns the results of the window. Otherwise, only the
+        position of the break is returned.
+    '''
+
+    half_size = (size - 1)/2
+
+    shape = max(y.shape)
+
+    stds = np.empty((shape - size + 1))
+
+    for i in range(half_size, shape - half_size):
+        stds[i - half_size] = np.std(y[i - half_size: i + half_size])
+
+    # Now find the max
+    break_pos = np.argmax(stds) + half_size
+
+    if return_results:
+        return break_pos, stds
+
+    return break_pos

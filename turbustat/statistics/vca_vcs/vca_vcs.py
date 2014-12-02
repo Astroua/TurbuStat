@@ -217,7 +217,8 @@ class VCS(object):
 
         return self
 
-    def fit_pspec(self, breaks=-1.0, log_break=True, verbose=False):
+    def fit_pspec(self, breaks=-1.0, log_break=True, lg_scale_cut=2,
+                  verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model.
 
@@ -230,6 +231,8 @@ class VCS(object):
             error.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
+        lg_scale_cut : int, optional
+            Cuts off largest scales, which deviate from the powerlaw.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
@@ -237,8 +240,9 @@ class VCS(object):
         if not log_break:
             breaks = np.log10(breaks)
 
-        self.fit = Lm_Seg(np.log10(self.vel_freqs),
-                          np.log10(self.ps1D), breaks)
+        self.fit = \
+            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut]),
+                   np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut]), breaks)
         self.fit.fit_model(verbose=verbose)
 
         return self

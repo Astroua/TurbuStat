@@ -18,8 +18,7 @@ from ._testing_data import \
 class testDendrograms(TestCase):
 
     def setUp(self):
-        self.min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
-                                    np.logspace(-0.6, -0.35, 10))
+        self.min_deltas = np.logspace(-1.5, 0.5, 40)
 
     def test_DendroStat(self):
 

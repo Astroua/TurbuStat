@@ -29,6 +29,7 @@ SOFTWARE.
 import statsmodels.api as sm
 import numpy as np
 import warnings
+from copy import copy
 
 
 class Lm_Seg(object):
@@ -82,6 +83,7 @@ class Lm_Seg(object):
 
         # Count
         it = 0
+        h_it = 0
 
         # Now loop through and minimize the residuals by changing where the
         # breaking point is.
@@ -100,11 +102,24 @@ class Lm_Seg(object):
             gamma = fit.params[3]  # Get coef
 
             # Adjust the break point
-            self.brk += (h_step * gamma) / beta
+            new_brk = copy(self.brk)
+            new_brk += (h_step * gamma) / beta
 
-            # How to handle this??
-            # if not (x > brk).any():
-            #     pass
+            # If the new break point is outside of the allowed range, reset
+            # the step size to half of the original, then try stepping again
+            if not (self.x > new_brk).any():
+                while True:
+                    h_step /= 2.0
+                    new_brk += (h_step * gamma) / beta
+                    h_it += 1
+                    if (self.x > new_brk).any():
+                        self.brk = new_brk
+                        break
+                    if h_it >= 5:
+                        raise ValueError("Cannot find suitable step size. \
+                                          Check number of breaks.")
+            else:
+                self.brk = new_brk
 
             dev_1 = np.sum(fit.resid**2.)
 
