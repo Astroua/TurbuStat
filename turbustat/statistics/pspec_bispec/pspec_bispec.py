@@ -155,7 +155,7 @@ class PSpec_Distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, low_cut=2.0, high_cut=64.0, verbose=False):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -165,25 +165,25 @@ class PSpec_Distance(object):
 
         Parameters
         ----------
+        low_cut : int or float, optional
+            Set the cut-off for low spatial frequencies. Visually, below ~2
+            deviates from the power law (for the simulation set).
+        high_cut : int or float, optional
+            Set the cut-off for high spatial frequencies. Values beyond the
+            size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
-
+            Enables plotting.
         '''
 
-        # Clipping from 8 pixels to half the box size
-        # Noise effects dominate outside this region
-        clip_mask1 = np.zeros((self.pspec1.freq.shape))
-        for i, x in enumerate(self.pspec1.freq):
-            if x > 8.0 and x < self.shape1[0] / 2.:
-                clip_mask1[i] = 1
-        clip_freq1 = self.pspec1.freq[np.where(clip_mask1 == 1)]
-        clip_ps1D1 = self.pspec1.ps1D[np.where(clip_mask1 == 1)]
+        clip_freq1 = \
+            self.pspec1.freq[clip_func(self.pspec1.freq, low_cut, high_cut)]
+        clip_ps1D1 = \
+            self.pspec1.ps1D[clip_func(self.pspec1.freq, low_cut, high_cut)]
 
-        clip_mask2 = np.zeros((self.pspec2.freq.shape))
-        for i, x in enumerate(self.pspec2.freq):
-            if x > 8.0 and x < self.shape2[0] / 2.:
-                clip_mask2[i] = 1
-        clip_freq2 = self.pspec2.freq[np.where(clip_mask2 == 1)]
-        clip_ps1D2 = self.pspec2.ps1D[np.where(clip_mask2 == 1)]
+        clip_freq2 = \
+            self.pspec2.freq[clip_func(self.pspec2.freq, low_cut, high_cut)]
+        clip_ps1D2 = \
+            self.pspec2.ps1D[clip_func(self.pspec2.freq, low_cut, high_cut)]
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
@@ -426,3 +426,7 @@ class BiSpectrum_Distance(object):
             p.show()
 
         return self
+
+
+def clip_func(arr, low, high):
+    return np.logical_and(arr > low, arr < high)
