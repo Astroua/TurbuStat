@@ -55,9 +55,9 @@ class PowerSpectrum(object):
         Compute the 2D power spectrum.
         '''
 
-        mvc_fft = fftshift(fft2(self.weighted_img.astype("f8")))
+        fft = fftshift(fft2(self.weighted_img.astype("f8")))
 
-        self.ps2D = np.abs(mvc_fft) ** 2.
+        self.ps2D = np.abs(fft) ** 2.
 
         return self
 
