@@ -1,9 +1,11 @@
 
-from spectral_cube import SpectralCube
+from spectral_cube import SpectralCube, LazyMask
 from spectral_cube.wcs_utils import drop_axis
 from signal_id import Noise, RadioMask
 import numpy as np
 from astropy.io import fits
+from astropy.convolution import convolve
+from scipy import ndimage as nd
 
 
 class Mask_and_Moments(object):
@@ -255,3 +257,44 @@ class Mask_and_Moments(object):
         error_arr[~good_pix] = np.NaN
 
         return error_arr
+
+
+def moment_masking(cube, kernel_size, clip=5, dilations=1):
+    '''
+    '''
+
+    smooth_data = convolve(cube.filled_data[:], gauss_kern(kernel_size))
+
+    fake_mask = LazyMask(np.isfinite, cube=cube)
+
+    smooth_cube = SpectralCube(data=smooth_data, wcs=cube.wcs, mask=fake_mask)
+
+    smooth_scale = Noise(smooth_cube).scale
+
+    mask = (smooth_cube > (clip * smooth_scale)).include()
+
+    # Now dilate the mask once
+
+    dilate_struct = nd.generate_binary_structure(3, 3)
+    mask = nd.binary_dilation(mask, structure=dilate_struct,
+                              iterations=dilations)
+
+    return mask
+
+
+def gauss_kern(size, ysize=None, zsize=None):
+    """ Returns a normalized 3D gauss kernel array for convolutions """
+    size = int(size)
+    if not ysize:
+        ysize = size
+    else:
+        ysize = int(ysize)
+    if not zsize:
+        zsize = size
+    else:
+        zsize = int(zsize)
+
+    x, y, z = np.mgrid[-size:size + 1, -ysize:ysize + 1, -zsize:zsize + 1]
+    g = np.exp(-(x ** 2 / float(size) + y **
+                 2 / float(ysize) + z ** 2 / float(zsize)))
+    return g / g.sum()
