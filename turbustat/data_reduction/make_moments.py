@@ -224,10 +224,10 @@ class Mask_and_Moments(object):
 
         noise.calculate_spectral()
 
+        good_channels = noise.spectral_norm > (self.scale + 1)
+
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
-
-        good_channels = noise.spectral_norm > (self.scale + 1)
 
         channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 
