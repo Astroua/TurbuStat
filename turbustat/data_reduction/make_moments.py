@@ -329,6 +329,12 @@ class Mask_and_Moments(object):
 
         error_arr[~good_pix] = np.NaN
 
+        # Catch bad errors by comparing the velocity scale of the cube
+        max_range = np.abs(self.cube.spectral_axis[0].value -
+                           self.cube.spectral_axis[-1].value)
+
+        error_arr[error_arr > max_range] = np.NaN
+
         error_arr[error_arr == 0] = np.NaN
 
         return error_arr
