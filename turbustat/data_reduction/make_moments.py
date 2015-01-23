@@ -121,19 +121,73 @@ class Mask_and_Moments(object):
                 self._intint_err]
 
     def to_dict(self):
+        '''
+        Returns a dictionary form containing the cube and the property arrays.
+        This is the expected form for the wrapper scripts and methods in
+        TurbuStat.
+        '''
 
         self.get_prop_hdrs()
 
-        prop_dict = \
-            {'cube': [self.cube.filled_data[:], self.cube.header],
-             'moment0': [self.moment0, self.prop_headers[0]],
-             'moment0_error': [self.moment0_err, self.prop_err_headers[0]],
-             'centroid': [self.moment1, self.prop_headers[1]],
-             'centroid_error': [self.moment1_err, self.prop_err_headers[1]],
-             'linewidth': [self.linewidth, self.prop_headers[2]],
-             'linewidth_error': [self.linewidth_err, self.prop_err_headers[2]],
-             'integrated_intensity': [self.intint, self.prop_headers[3]],
-             'integrated_intensity_error': [self.intint_err, self.prop_err_headers[3]]}
+        prop_dict = {}
+
+        if _try_remove_unit(self.cube.filled_data[:]):
+            prop_dict['cube'] = [self.cube.filled_data[:].value,
+                                 self.cube.header]
+        else:
+            prop_dict['cube'] = [self.cube.filled_data[:], self.cube.header]
+
+        if _try_remove_unit(self.moment0):
+            prop_dict['moment0'] = [self.moment0.value, self.prop_headers[0]]
+        else:
+            prop_dict['moment0'] = [self.moment0, self.prop_headers[0]]
+
+        if _try_remove_unit(self.moment0_err):
+            prop_dict['moment0_error'] = [self.moment0_err.value,
+                                          self.prop_err_headers[0]]
+        else:
+            prop_dict['moment0_error'] = [self.moment0_err,
+                                          self.prop_err_headers[0]]
+
+        if _try_remove_unit(self.moment1):
+            prop_dict['centroid'] = [self.moment1.value, self.prop_headers[1]]
+        else:
+            prop_dict['centroid'] = [self.moment1, self.prop_headers[1]]
+
+        if _try_remove_unit(self.moment1_err):
+            prop_dict['centroid_error'] = [self.moment1_err.value,
+                                           self.prop_err_headers[1]]
+        else:
+            prop_dict['centroid_error'] = [self.moment1_err,
+                                           self.prop_err_headers[1]]
+
+        if _try_remove_unit(self.linewidth):
+            prop_dict['linewidth'] = [self.linewidth.value,
+                                      self.prop_headers[2]]
+        else:
+            prop_dict['linewidth'] = [self.linewidth,
+                                      self.prop_headers[2]]
+
+        if _try_remove_unit(self.linewidth_err):
+            prop_dict['linewidth_error'] = [self.linewidth_err.value,
+                                            self.prop_err_headers[2]]
+        else:
+            prop_dict['linewidth_error'] = [self.linewidth_err,
+                                            self.prop_err_headers[2]]
+
+        if _try_remove_unit(self.intint):
+            prop_dict['integrated_intensity'] = [self.intint.value,
+                                                 self.prop_headers[3]]
+        else:
+            prop_dict['integrated_intensity'] = [self.intint,
+                                                 self.prop_headers[3]]
+
+        if _try_remove_unit(self.intint_err):
+            prop_dict['integrated_intensity_error'] = \
+                [self.intint_err.value, self.prop_err_headers[3]]
+        else:
+            prop_dict['integrated_intensity_error'] = \
+                [self.intint_err, self.prop_err_headers[3]]
 
         return prop_dict
 
@@ -236,8 +290,12 @@ class Mask_and_Moments(object):
 
         slab = self.cube.spectral_slab(*channel_range).filled_data[:]
 
-        return self.scale * channel_size * \
+        error_arr = self.scale * channel_size * \
             np.sqrt(np.sum(np.isfinite(slab), axis=0))
+
+        error_arr[error_arr == 0] = np.NaN
+
+        return error_arr
 
     def _get_moment0_err(self):
         '''
@@ -245,6 +303,8 @@ class Mask_and_Moments(object):
 
         error_arr = self.scale * \
             np.sqrt(np.sum(self.cube.mask.include(), axis=0))
+
+        error_arr[error_arr == 0] = np.NaN
 
         return error_arr
 
@@ -268,6 +328,8 @@ class Mask_and_Moments(object):
             np.sqrt(term1 + term2)
 
         error_arr[~good_pix] = np.NaN
+
+        error_arr[error_arr == 0] = np.NaN
 
         return error_arr
 
@@ -302,6 +364,8 @@ class Mask_and_Moments(object):
             np.sqrt(term1 + term2)
 
         error_arr[~good_pix] = np.NaN
+
+        error_arr[error_arr == 0] = np.NaN
 
         return error_arr
 
@@ -345,3 +409,11 @@ def gauss_kern(size, ysize=None, zsize=None):
     g = np.exp(-(x ** 2 / float(size) + y **
                  2 / float(ysize) + z ** 2 / float(zsize)))
     return g / g.sum()
+
+
+def _try_remove_unit(arr):
+    try:
+        unit = arr.unit
+        return True
+    except AttributeError:
+        return False
