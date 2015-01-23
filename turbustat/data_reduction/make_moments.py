@@ -10,7 +10,7 @@ from scipy import ndimage as nd
 
 class Mask_and_Moments(object):
     """docstring for Mask_and_Moments"""
-    def __init__(self, cube, noise_type='constant', clip=3):
+    def __init__(self, cube, noise_type='constant', clip=3, scale=None):
         super(Mask_and_Moments, self).__init__()
 
         if isinstance(cube, SpectralCube):
@@ -21,7 +21,13 @@ class Mask_and_Moments(object):
         self.noise_type = noise_type
         self.clip = clip
 
-        self.scale = Noise(self.cube).scale
+        if scale is None:
+            self.scale = Noise(self.cube).scale
+        else:
+            self.scale = scale
+
+        self.prop_headers = None
+        self.prop_err_headers = None
 
     def find_noise(self, return_obj=False):
 
@@ -108,40 +114,75 @@ class Mask_and_Moments(object):
         return self._intint_err
 
     def all_moments(self):
-        return [self._moment0, self._moment1, self._moment2, self._intint]
+        return [self._moment0, self._moment1, self.linewidth, self._intint]
 
     def all_moment_errs(self):
-        return [self._moment0_err, self._moment1_err, self._moment2_err,
+        return [self._moment0_err, self._moment1_err, self.linewidth_err,
                 self._intint_err]
 
-    def to_fits(self, save_name):
+    def to_dict(self):
+
+        self.get_prop_hdrs()
+
+        prop_dict = \
+            {'cube': [self.cube.filled_data[:], self.cube.header],
+             'moment0': [self.moment0, self.prop_headers[0]],
+             'moment0_error': [self.moment0_err, self.prop_err_headers[0]],
+             'centroid': [self.moment1, self.prop_headers[1]],
+             'centroid_error': [self.moment1_err, self.prop_err_headers[1]],
+             'linewidth': [self.linewidth, self.prop_headers[2]],
+             'linewidth_error': [self.linewidth_err, self.prop_err_headers[2]],
+             'integrated_intensity': [self.intint, self.prop_headers[3]],
+             'integrated_intensity_error': [self.intint_err, self.prop_err_headers[3]]}
+
+        return prop_dict
+
+    def get_prop_hdrs(self):
         '''
-        Save the property arrays as fits files.
         '''
 
-        bunits = [self.cube.spatial_unit, self.cube.spectral_unit,
-                  self.cube.spectral_unit,
-                  self.cube.spatial_unit*self.cube.spectral_unit]
+        bunits = [self.cube.unit, self.cube.spectral_axis.unit,
+                  self.cube.spectral_axis.unit,
+                  self.cube.unit*self.cube.spectral_axis.unit]
 
         comments = ["Image of the Zeroth Moment",
                     "Image of the First Moment",
                     "Image of the Second Moment",
                     "Image of the Integrated Intensity"]
 
-        labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
+        self.prop_headers = []
+        self.prop_err_headers = []
 
-        for i, (arr, err) in enumerate(zip(self.all_moments(),
-                                           self.all_moment_errs())):
+        for i in range(len(bunits)):
 
             wcs = self.cube.wcs.copy()
-            new_wcs = drop_axis(wcs, 0)
+            new_wcs = drop_axis(wcs, -1)
 
             hdr = new_wcs.to_header()
             hdr_err = new_wcs.to_header()
-            hdr["BUNIT"] = bunits[i]
-            hdr_err["BUNIT"] = bunits[i]
+            hdr["BUNIT"] = bunits[i].to_string()
+            hdr_err["BUNIT"] = bunits[i].to_string()
             hdr["COMMENT"] = comments[i]
             hdr_err["COMMENT"] = comments[i] + " Error."
+
+            self.prop_headers.append(hdr)
+            self.prop_err_headers.append(hdr_err)
+
+        return self
+
+    def to_fits(self, save_name):
+        '''
+        Save the property arrays as fits files.
+        '''
+
+        if self.prop_headers is None:
+            self.get_prop_hdrs()
+
+        labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
+
+        for i, (arr, err, hdr, hdr_err) in \
+          enumerate(zip(self.all_moments(), self.all_moment_errs(),
+                        self.prop_headers, self.prop_err_headers)):
 
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
