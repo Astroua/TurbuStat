@@ -107,7 +107,7 @@ class Mask_and_Moments(object):
 
     @property
     def linewidth_err(self):
-        return self.moment2_err / (2 * self.moment2)
+        return self.moment2_err / (2 * np.sqrt(self.moment2))
 
     @property
     def intint_err(self):
@@ -312,7 +312,7 @@ class Mask_and_Moments(object):
         '''
         '''
 
-        pix_cen = self.cube._pix_cen()[0]
+        pix_cen = self.cube._pix_cen()[0] + self.cube.spectral_axis[0].value
 
         good_pix = np.isfinite(self.moment0) + np.isfinite(self.moment1)
 
@@ -320,7 +320,8 @@ class Mask_and_Moments(object):
 
         error_arr[good_pix] = \
             (self.scale / self.moment0[good_pix]) * \
-            np.sum(np.power(pix_cen * good_pix - self.moment1, 2), axis=0)[good_pix]
+            np.sqrt(np.sum(np.power((pix_cen - self.moment1) * good_pix, 2),
+                           axis=0))[good_pix]
 
         error_arr[~good_pix] = np.NaN
 
@@ -341,19 +342,15 @@ class Mask_and_Moments(object):
 
         error_arr = np.zeros(self.moment2.shape)
 
-        term11 = self.scale * \
-            np.power(np.sum(pix_cen * good_pix, axis=0)[good_pix] -
-                     self.moment1[good_pix], 2)
+        term11 = (np.power(pix_cen - self.moment1, 2) * good_pix) - \
+            self.moment2
 
-        term12 = 2 * \
-            np.nansum((data * good_pix) *
-                      ((pix_cen * good_pix) -
-                      self.moment1), axis=0)[good_pix] * \
-            self._get_moment1_err()[good_pix]
+        term1 = self.scale**2 * np.sum(np.power(term11, 2), axis=0)[good_pix]
 
-        term1 = np.power((term11 - term12) / self.moment2[good_pix], 2)
+        term21 = np.sum((data * (pix_cen - self.moment1)) * good_pix, axis=0)
 
-        term2 = np.power(self._get_moment0_err()[good_pix], 2)
+        term2 = 4 * self._get_moment1_err()[good_pix] * \
+            np.power(term21, 2)[good_pix]
 
         error_arr[good_pix] = (1 / self.moment0[good_pix]) * \
             np.sqrt(term1 + term2)
