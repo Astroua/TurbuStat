@@ -268,7 +268,7 @@ class Mask_and_Moments(object):
 
         slab = self.cube.spectral_slab(*channel_range).filled_data[:]
 
-        return np.nansum(slab, axis=0) * channel_size
+        return slab.moment0()
 
     def _get_int_intensity_err(self):
         '''
@@ -318,7 +318,7 @@ class Mask_and_Moments(object):
 
         error_arr = np.zeros(self.moment1.shape)
 
-        term1 = np.power(self.scale *
+        term1 = np.power(self.scale * 
                          np.sum(pix_cen * good_pix, axis=0)[good_pix] /
                          self.moment1[good_pix], 2)
 
