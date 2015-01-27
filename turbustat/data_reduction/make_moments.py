@@ -288,10 +288,10 @@ class Mask_and_Moments(object):
         channel_size = np.abs(self.cube.spectral_axis[1] -
                               self.cube.spectral_axis[0])
 
-        slab = self.cube.spectral_slab(*channel_range).filled_data[:]
+        slab = self.cube.spectral_slab(*channel_range)
 
-        error_arr = self.scale * channel_size * \
-            np.sqrt(np.sum(np.isfinite(slab), axis=0))
+        error_arr = self.scale * \
+            np.sqrt(np.sum(slab.mask.include(), axis=0))
 
         error_arr[error_arr == 0] = np.NaN
 
