@@ -263,9 +263,6 @@ class Mask_and_Moments(object):
 
         channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 
-        channel_size = np.abs(self.cube.spectral_axis[1] -
-                              self.cube.spectral_axis[0])
-
         slab = self.cube.spectral_slab(*channel_range)
 
         return slab.moment0()
@@ -284,9 +281,6 @@ class Mask_and_Moments(object):
             raise ValueError("Cannot find any channels with signal.")
 
         channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
-
-        channel_size = np.abs(self.cube.spectral_axis[1] -
-                              self.cube.spectral_axis[0])
 
         slab = self.cube.spectral_slab(*channel_range)
 
