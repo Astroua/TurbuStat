@@ -318,22 +318,11 @@ class Mask_and_Moments(object):
 
         error_arr = np.zeros(self.moment1.shape)
 
-        term1 = np.power(self.scale * 
-                         np.sum(pix_cen * good_pix, axis=0)[good_pix] /
-                         self.moment1[good_pix], 2)
-
-        term2 = np.power(self._get_moment0_err()[good_pix], 2)
-
-        error_arr[good_pix] = (1 / self.moment0[good_pix]) * \
-            np.sqrt(term1 + term2)
+        error_arr[good_pix] = \
+            (self.scale / self.moment0[good_pix]) * \
+            np.sum(np.power(pix_cen * good_pix - self.moment1, 2), axis=0)[good_pix]
 
         error_arr[~good_pix] = np.NaN
-
-        # Catch bad errors by comparing the velocity scale of the cube
-        max_range = np.abs(self.cube.spectral_axis[0].value -
-                           self.cube.spectral_axis[-1].value)
-
-        error_arr[error_arr > max_range] = np.NaN
 
         error_arr[error_arr == 0] = np.NaN
 
