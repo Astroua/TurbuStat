@@ -266,7 +266,7 @@ class Mask_and_Moments(object):
         channel_size = np.abs(self.cube.spectral_axis[1] -
                               self.cube.spectral_axis[0])
 
-        slab = self.cube.spectral_slab(*channel_range).filled_data[:]
+        slab = self.cube.spectral_slab(*channel_range)
 
         return slab.moment0()
 
