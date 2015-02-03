@@ -59,10 +59,24 @@ class MVC(object):
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
+
+        The quantity calculated here is the same as Equation 3 in Lazarian &
+        Esquivel (2003), but the inputted arrays are not in the same form as
+        described. We can, however, adjust for the use of normalized Centroids
+        and the linewidth.
+
+        An unnormalized centroid can be constructed by multiplying the centroid
+        array by the moment0. Velocity dispersion is the square of the linewidth
+        subtracted by the square of the normalized centroid.
         '''
 
-        mvc_fft = fft2(self.centroid.astype("f8")*self.moment0.astype("f8")) - \
-            self.linewidth * fft2(self.moment0.astype("f8"))
+        term1 = fft2(self.centroid.astype("f8")*self.moment0.astype("f8"))
+
+        term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
+
+        mvc_fft = term1 - term2 * fft2(self.moment0.astype("f8"))
+
+        # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
         self.ps2D = np.abs(mvc_fft) ** 2.
@@ -147,13 +161,13 @@ class MVC_distance(object):
                             data1["moment0"][0] * data1["moment0_error"][0] ** -2.,
                             data1["linewidth"][0] * data1["linewidth_error"][0] ** -2.,
                             data1["centroid"][1])
-            self.mvc1.run(phys_units=False)
+            self.mvc1.run(phys_units=False, verbose=True)
 
         self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** -2.,
                         data2["moment0"][0] * data2["moment0_error"][0] ** -2.,
                         data2["linewidth"][0] * data2["linewidth_error"][0] ** -2.,
                         data2["centroid"][1])
-        self.mvc2.run(phys_units=False)
+        self.mvc2.run(phys_units=False, verbose=True)
 
         self.results = None
         self.distance = None
