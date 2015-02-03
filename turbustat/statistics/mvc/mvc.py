@@ -161,13 +161,13 @@ class MVC_distance(object):
                             data1["moment0"][0] * data1["moment0_error"][0] ** -2.,
                             data1["linewidth"][0] * data1["linewidth_error"][0] ** -2.,
                             data1["centroid"][1])
-            self.mvc1.run(phys_units=False, verbose=True)
+            self.mvc1.run(phys_units=False)
 
         self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** -2.,
                         data2["moment0"][0] * data2["moment0_error"][0] ** -2.,
                         data2["linewidth"][0] * data2["linewidth_error"][0] ** -2.,
                         data2["centroid"][1])
-        self.mvc2.run(phys_units=False, verbose=True)
+        self.mvc2.run(phys_units=False)
 
         self.results = None
         self.distance = None
