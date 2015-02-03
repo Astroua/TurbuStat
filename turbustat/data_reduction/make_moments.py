@@ -341,7 +341,7 @@ class Mask_and_Moments(object):
 
         term1 = self.scale**2 * np.sum(np.power(term11, 2), axis=0)[good_pix]
 
-        term21 = np.sum((data * (pix_cen - self.moment1)) * good_pix, axis=0)
+        term21 = np.nansum((data * (pix_cen - self.moment1)), axis=0)
 
         term2 = 4 * self._get_moment1_err()[good_pix] * \
             np.power(term21, 2)[good_pix]
