@@ -27,13 +27,13 @@ class VCA(object):
         Data cube.
     header : FITS header
         Corresponding FITS header.
-    slice_sizes : list or numpy.ndarray, optional
+    slice_sizes : float or int, optional
         Slices to degrade the cube to.
     phys_units : bool, optional
         Sets whether physical scales can be used.
     '''
 
-    def __init__(self, cube, header, slice_sizes=None, phys_units=False):
+    def __init__(self, cube, header, slice_size=None, phys_units=False):
         super(VCA, self).__init__()
 
         self.cube = cube.astype("float64")
@@ -44,33 +44,26 @@ class VCA(object):
         self.header = header
         self.shape = self.cube.shape
 
-        if slice_sizes is None:
-            self.slice_sizes = [1.0, 5.0, 10.0, 20.0]
-        else:
-            self.slice_sizes = slice_sizes
+        if slice_size is None:
+            self.slice_size = 1.0
 
-        self.degraded_cubes = []
-        for size in self.slice_sizes:
-            self.degraded_cubes.append(
-                change_slice_thickness(self.cube, slice_thickness=size))
+        if slice_size != 1.0:
+            self.cube = \
+                change_slice_thickness(self.cube.copy(),
+                                       slice_thickness=self.slice_size)
 
         self.phys_units_flag = False
         if phys_units:
             self.phys_units_flag = True
-
-        self.ps2D = []
-        self.ps1D = []
-        self.freq = None
 
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
         '''
 
-        for cube in self.degraded_cubes:
-            vca_fft = fftshift(fftn(cube.astype("f8")))
+        vca_fft = fftshift(fftn(self.cube.astype("f8")))
 
-            self.ps2D.append((np.abs(vca_fft) ** 2.).sum(axis=0))
+        self.ps2D = (np.abs(vca_fft) ** 2.).sum(axis=0)
 
         return self
 
@@ -83,16 +76,15 @@ class VCA(object):
         See the above url for parameter explanations.
         '''
 
-        for ps in self.ps2D:
-            self.freq, ps1D = pspec(ps, return_index=return_index,
-                                    wavenumber=wavenumber,
-                                    return_stddev=return_stddev,
-                                    azbins=azbins, binsize=binsize,
-                                    view=view, **kwargs)
-            self.ps1D.append(ps1D)
+        self.freqs, self.ps1D = \
+            pspec(self.ps2D, return_index=return_index,
+                  wavenumber=wavenumber,
+                  return_stddev=return_stddev,
+                  azbins=azbins, binsize=binsize,
+                  view=view, **kwargs)
 
         if self.phys_units_flag:
-            self.freq *= np.abs(self.header["CDELT2"]) ** -1.
+            self.freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
         return self
 
@@ -120,8 +112,8 @@ class VCA(object):
         '''
 
         # Make the data to fit to
-        x = np.log10(self.vel_freqs[self.vel_freqs > low_cut])
-        y = np.log10(self.ps1D[self.vel_freqs > low_cut])
+        x = np.log10(self.freqs[self.freqs > low_cut])
+        y = np.log10(self.ps1D[self.freqs > low_cut])
 
         if breaks is not None:
             # Try the fit with a break in it.
@@ -182,37 +174,23 @@ class VCA(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            num = len(self.slice_sizes)
-            if num <= 4:
-                width = 2
-                length = num
-            else:
-                width = 4
-                length = num / 2
-
             if self.phys_units_flag:
                 xlab = r"log K"
             else:
                 xlab = r"K (pixel$^{-1}$)"
 
-            for i in range(1, num + 1):
-                p.subplot(length, width, 2 * i - 1)
-                p.loglog(self.freq, self.ps1D[i - 1], "kD")
-                p.title(
-                    "".join(["VCA with Thickness: ", str(self.slice_sizes[i - 1])]))
-                p.xlabel(xlab)
-                p.ylabel(r"P$_2(K)$")
-                p.grid(True)
-                p.subplot(length, width, 2 * i)
-                p.imshow(
-                    np.log10(self.ps2D)[i - 1], interpolation="nearest",
-                    origin="lower")
-                p.colorbar()
-            p.show()
+            p.subplot(121)
+            p.loglog(self.freq, self.ps1D, "kD")
+            p.title("VCA with Thickness: " + str(self.slice_size))
+            p.xlabel(xlab)
+            p.ylabel(r"P$_2(K)$")
+            p.grid(True)
 
-        if len(self.slice_sizes) == 1:
-            self.ps1D = self.ps1D[0]
-            self.ps2D = self.ps2D[0]
+            p.subplot(122)
+            p.imshow(np.log10(self.ps2D), interpolation="nearest",
+                     origin="lower")
+            p.colorbar()
+            p.show()
 
         return self
 
@@ -441,9 +419,9 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_sizes=[slice_size]).run()
+            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run()
 
-        self.vca2 = VCA(cube2, header2, slice_sizes=[slice_size]).run()
+        self.vca2 = VCA(cube2, header2, slice_size=slice_size).run()
 
     def distance_metric(self, verbose=False):
         '''
