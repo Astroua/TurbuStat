@@ -81,6 +81,9 @@ class Lm_Seg(object):
         # Sum of residuals
         dev_0 = np.sum(init_lm.resid**2.)
 
+        # Catch cases where a break isn't necessary
+        self.break_fail_flag = False
+
         # Count
         it = 0
         h_it = 0
@@ -116,8 +119,11 @@ class Lm_Seg(object):
                         self.brk = new_brk
                         break
                     if h_it >= 5:
-                        raise ValueError("Cannot find suitable step size. \
-                                          Check number of breaks.")
+                        self.break_fail_flag = True
+                        it = iter_max + 1
+                        break
+                        # raise ValueError("Cannot find suitable step size. \
+                        #                   Check number of breaks.")
             else:
                 self.brk = new_brk
 
@@ -136,16 +142,21 @@ class Lm_Seg(object):
             it += 1
 
             if it > iter_max:
-                warnings.warning("Max iterations reached. \
-                                 Result may not be minimized.")
+                warnings.warn("Max iterations reached. \
+                               Result may not be minimized.")
                 break
 
-        # With the break point hopefully found, do a final good fit
-        U = (self.x - self.brk) * (self.x > self.brk)
-        V = deriv_max(self.x, self.brk)
+        if self.break_fail_flag:
+            self.brk = self.x.max()
 
-        X_all = np.vstack([self.x, U, V]).T
-        X_all = sm.add_constant(X_all)
+            X_all = sm.add_constant(self.x)
+        else:
+            # With the break point hopefully found, do a final good fit
+            U = (self.x - self.brk) * (self.x > self.brk)
+            V = deriv_max(self.x, self.brk)
+
+            X_all = np.vstack([self.x, U, V]).T
+            X_all = sm.add_constant(X_all)
 
         model = sm.OLS(self.y, X_all)
         self.fit = model.fit()
@@ -176,6 +187,13 @@ class Lm_Seg(object):
     def get_slopes(self):
         '''
         '''
+        # Deal with non-break case
+        if self.break_fail_flag:
+            self._slopes = np.asarray([self.params[1]])
+            self._slope_errs = np.asarray([self.param_errs[1]])
+
+            return self
+
         n_slopes = self.params[1:-2].shape[0]
         self._slopes = np.empty(n_slopes)
         self._slope_errs = np.empty(n_slopes)
