@@ -86,7 +86,6 @@ class Lm_Seg(object):
 
         # Count
         it = 0
-        h_it = 0
 
         # Now loop through and minimize the residuals by changing where the
         # breaking point is.
@@ -110,20 +109,24 @@ class Lm_Seg(object):
 
             # If the new break point is outside of the allowed range, reset
             # the step size to half of the original, then try stepping again
-            if not (self.x > new_brk).any():
+            h_it = 0
+            if not (self.x > new_brk).any() or (self.x > new_brk).all():
                 while True:
+                    # Remove step taken
+                    new_brk -= (h_step * gamma) / beta
+                    # Now half the step and try again.
                     h_step /= 2.0
                     new_brk += (h_step * gamma) / beta
                     h_it += 1
-                    if (self.x > new_brk).any():
+                    if (self.x > new_brk).any() and not (self.x > new_brk).all():
                         self.brk = new_brk
                         break
                     if h_it >= 5:
                         self.break_fail_flag = True
                         it = iter_max + 1
+                        warnings.warn("Cannot find good step-size, assuming\
+                                       break not needed")
                         break
-                        # raise ValueError("Cannot find suitable step size. \
-                        #                   Check number of breaks.")
             else:
                 self.brk = new_brk
 
