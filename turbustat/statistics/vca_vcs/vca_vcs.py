@@ -2,7 +2,7 @@
 
 
 import numpy as np
-import statsmodels.formula.api as sm
+import statsmodels.api as sm
 from pandas import Series, DataFrame
 import warnings
 
@@ -96,7 +96,75 @@ class VCA(object):
 
         return self
 
-    def run(self, verbose=False, **kwargs):
+    def fit_pspec(self, breaks=None, log_break=True, low_cut=np.sqrt(2),
+                  verbose=False):
+        '''
+        Fit the 1D Power spectrum using a segmented linear model. Note that
+        the current implementation allows for only 1 break point in the
+        model. If the break point is estimated via a spline, the breaks are
+        tested, starting from the largest, until the model finds a good fit.
+
+        Parameters
+        ----------
+        breaks : float or None, optional
+            Guesses for the break points. If given as a list, the length of
+            the list sets the number of break points to be fit. If a choice is
+            outside of the allowed range from the data, Lm_Seg will raise an
+            error. If None, a spline is used to estimate the breaks.
+        log_break : bool, optional
+            Sets whether the provided break estimates are log-ed values.
+        lg_scale_cut : int, optional
+            Cuts off largest scales, which deviate from the powerlaw.
+        verbose : bool, optional
+            Enables verbose mode in Lm_Seg.
+        '''
+
+        # Make the data to fit to
+        x = np.log10(self.vel_freqs[self.vel_freqs > low_cut])
+        y = np.log10(self.ps1D[self.vel_freqs > low_cut])
+
+        if breaks is not None:
+            # Try the fit with a break in it.
+            if not log_break:
+                breaks = np.log10(breaks)
+
+            self.fit = \
+                Lm_Seg(x, y, breaks)
+            self.fit.fit_model(verbose=verbose)
+
+            if self.fit.params.size == 5:
+
+                self._slope = self.fit.slopes[0]
+                self._slope_err = self.fit.slope_errs[1]
+
+                return self
+
+            else:
+                # Break fit failed, revert to normal model
+                warnings.warn("Model with break failed, reverting to model\
+                               without break.")
+
+        x = sm.add_constant(x)
+
+        model = sm.OLS(y, x)
+
+        self.fit = model.fit()
+
+        self._slope = self.fit.params[1]
+
+        self._slope_err = np.sqrt(self.fit.cov[1, 1])
+
+        return self
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
+    def run(self, verbose=False, breaks=None, **kwargs):
         '''
         Full computation of VCA.
 
@@ -109,6 +177,7 @@ class VCA(object):
 
         self.compute_pspec()
         self.compute_radial_pspec(**kwargs)
+        self.fit_pspec(breaks=breaks)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -393,14 +462,14 @@ class VCA_Distance(object):
         # Noise effects dominate outside this region
         clip_mask1 = np.zeros((self.vca1.freq.shape))
         for i, x in enumerate(self.vca1.freq):
-            if x > 8.0 and x < self.shape1[0] / 2.:
+            if x > np.sqrt(2): #and x < 40.:
                 clip_mask1[i] = 1
         clip_freq1 = self.vca1.freq[np.where(clip_mask1 == 1)]
         clip_ps1D1 = self.vca1.ps1D[np.where(clip_mask1 == 1)]
 
         clip_mask2 = np.zeros((self.vca2.freq.shape))
         for i, x in enumerate(self.vca2.freq):
-            if x > 8.0 and x < self.shape2[0] / 2.:
+            if x > np.sqrt(2): #and x < 40.:
                 clip_mask2[i] = 1
         clip_freq2 = self.vca2.freq[np.where(clip_mask2 == 1)]
         clip_ps1D2 = self.vca2.ps1D[np.where(clip_mask2 == 1)]
