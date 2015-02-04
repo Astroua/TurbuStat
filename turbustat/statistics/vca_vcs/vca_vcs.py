@@ -3,7 +3,6 @@
 
 import numpy as np
 import statsmodels.api as sm
-from pandas import Series, DataFrame
 import warnings
 
 try:
@@ -88,7 +87,7 @@ class VCA(object):
 
         return self
 
-    def fit_pspec(self, breaks=None, log_break=True, low_cut=np.sqrt(2),
+    def fit_pspec(self, brk=None, log_break=True, low_cut=np.sqrt(2),
                   verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -98,7 +97,7 @@ class VCA(object):
 
         Parameters
         ----------
-        breaks : float or None, optional
+        brk : float or None, optional
             Guesses for the break points. If given as a list, the length of
             the list sets the number of break points to be fit. If a choice is
             outside of the allowed range from the data, Lm_Seg will raise an
@@ -115,13 +114,13 @@ class VCA(object):
         x = np.log10(self.freqs[self.freqs > low_cut])
         y = np.log10(self.ps1D[self.freqs > low_cut])
 
-        if breaks is not None:
+        if brk is not None:
             # Try the fit with a break in it.
             if not log_break:
-                breaks = np.log10(breaks)
+                brk = np.log10(brk)
 
             self.fit = \
-                Lm_Seg(x, y, breaks)
+                Lm_Seg(x, y, brk)
             self.fit.fit_model(verbose=verbose)
 
             if self.fit.params.size == 5:
@@ -157,7 +156,7 @@ class VCA(object):
     def slope_err(self):
         return self._slope_err
 
-    def run(self, verbose=False, breaks=None, **kwargs):
+    def run(self, verbose=False, brk=None, **kwargs):
         '''
         Full computation of VCA.
 
@@ -170,7 +169,7 @@ class VCA(object):
 
         self.compute_pspec()
         self.compute_radial_pspec(**kwargs)
-        self.fit_pspec(breaks=breaks)
+        self.fit_pspec(brk=brk)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -408,7 +407,8 @@ class VCA_Distance(object):
         Computed VCA object. use to avoid recomputing.
     '''
 
-    def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
+    def __init__(self, cube1, cube2, slice_size=1.0, brk=None,
+                 fiducial_model=None):
         super(VCA_Distance, self).__init__()
         cube1, header1 = cube1
         cube2, header2 = cube2
@@ -420,9 +420,9 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run()
+            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk)
 
-        self.vca2 = VCA(cube2, header2, slice_size=slice_size).run()
+        self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
 
     def distance_metric(self, verbose=False):
         '''
@@ -437,51 +437,17 @@ class VCA_Distance(object):
             Enables plotting.
         '''
 
-        # Clipping from 8 pixels to half the box size
-        # Noise effects dominate outside this region
-        clip_mask1 = np.zeros((self.vca1.freq.shape))
-        for i, x in enumerate(self.vca1.freq):
-            if x > np.sqrt(2): #and x < 40.:
-                clip_mask1[i] = 1
-        clip_freq1 = self.vca1.freq[np.where(clip_mask1 == 1)]
-        clip_ps1D1 = self.vca1.ps1D[np.where(clip_mask1 == 1)]
-
-        clip_mask2 = np.zeros((self.vca2.freq.shape))
-        for i, x in enumerate(self.vca2.freq):
-            if x > np.sqrt(2): #and x < 40.:
-                clip_mask2[i] = 1
-        clip_freq2 = self.vca2.freq[np.where(clip_mask2 == 1)]
-        clip_ps1D2 = self.vca2.ps1D[np.where(clip_mask2 == 1)]
-
-        dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
-        x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
-        regressor = x.T * dummy
-
-        log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
-
-        d = {"dummy": Series(dummy), "scales": Series(
-            x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
-
-        self.results = model.fit()
-
-        self.distance = np.abs(self.results.tvalues["regressor"])
+        # Construct t-statistic
+        self.distance = \
+            np.abs((self.vca1.slope - self.vca2.slope) /
+                   np.sqrt(self.vca1.slope_err**2 +
+                           self.vca2.slope_err**2))
 
         if verbose:
 
-            print self.results.summary()
-
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
-                   np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
-            p.plot(df["scales"][:len(clip_freq1)],
-                   self.results.fittedvalues[:len(clip_freq1)], "b",
-                   df["scales"][-len(clip_freq2):],
-                   self.results.fittedvalues[-len(clip_freq2):], "g")
+            p.loglog(self.vca1.freqs, self.vca1.ps1D, "kD")
+            p.loglog(self.vca2.freqs, self.vca2.ps1D, "rD")
             p.grid(True)
             p.xlabel("log K")
             p.ylabel(r"$P_{2}(K)$")
