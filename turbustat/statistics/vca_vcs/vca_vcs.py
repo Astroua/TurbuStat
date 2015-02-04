@@ -498,21 +498,23 @@ class VCS_Distance(object):
                            self.vcs2.slope_errs[0]**2))
 
         # A density distance is only found if a break was found
-        if self.vcs1.slopes.shape[0] == 1 or \
-          self.vcs2.slopes.shape[0] == 1:
+        if self.vcs1.slopes.size == 1 or self.vcs2.slopes.size == 1:
             self.density_distance = np.NaN
+            self.break_distance = np.NaN
         else:
             self.density_distance = \
                 np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
                        np.sqrt(self.vcs1.slope_errs[1]**2 +
                                self.vcs2.slope_errs[1]**2))
 
-        self.break_distance = \
-            np.abs((self.vcs1.brk - self.vcs2.brk) /
-                   np.sqrt(self.vcs1.brk_err**2 + self.vcs2.brk_err**2))
+            self.break_distance = \
+                np.abs((self.vcs1.brk - self.vcs2.brk) /
+                       np.sqrt(self.vcs1.brk_err**2 +
+                               self.vcs2.brk_err**2))
 
         # The overall distance is the sum from the two models
-        self.distance = self.velocity_distance + self.density_distance
+        self.distance = \
+            np.nansum([self.velocity_distance, self.density_distance])
 
         if verbose:
 
