@@ -9,13 +9,11 @@ from datetime import datetime
 from astropy.io.fits import getdata
 from itertools import repeat
 
+from spectral_cube import SpectralCube, LazyMask
+from astropy.wcs import WCS
+
 from turbustat.statistics import stats_wrapper
-from turbustat.data_reduction import property_arrays
-
-
-keywords = {"centroid", "centroid_error", "integrated_intensity",
-            "integrated_intensity_error", "linewidth",
-            "linewidth_error", "moment0", "moment0_error", "cube"}
+from turbustat.data_reduction import Mask_and_Moments
 
 
 def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
@@ -276,22 +274,36 @@ def _timestep_sort(d, timesteps, labels=None):
                 d[lab][face] = good_files
 
 
-def load_and_reduce(filename, add_noise=False, rms_noise=0.001):
+def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
+                    nsig=3):
     '''
     Load the cube in and derive the property arrays.
     '''
-    cube = getdata(filename, header=True)
 
     if add_noise:
         if rms_noise is None:
             raise TypeError("Must specify value of rms noise.")
+
+        cube, hdr = getdata(filename, header=True)
+
         from scipy.stats import norm
-        cube[0] += norm.rvs(0.0, rms_noise, cube.shape)
+        cube += norm.rvs(0.0, rms_noise, cube.shape)
 
-    reduction = property_arrays(cube, rms_noise=rms_noise)
-    reduction.return_all(save=False)
+        sc = SpectralCube(data=cube, wcs=WCS(hdr))
 
-    return reduction.dataset
+    else:
+        sc = SpectralCube.read(filename)
+
+    mask = LazyMask(np.isfinite, sc)
+    sc = sc.with_mask(mask)
+
+    reduc = Mask_and_Moments(sc)
+    three_sig_mask = reduc.cube > nsig * reduc.scale
+    reduc.make_mask(mask=three_sig_mask)
+    reduc.make_moments()
+    reduc.make_moment_errors()
+
+    return reduc.to_dict()
 
 if __name__ == "__main__":
 
@@ -314,7 +326,7 @@ if __name__ == "__main__":
 
     # Read in cmd line args
 
-     # Read in all files in the given directory
+    # Read in all files in the given directory
     PREFIX = str(sys.argv[1])
 
     try:
@@ -342,7 +354,7 @@ if __name__ == "__main__":
 
     # Sigma for COMPLETE NGC1333 data using signal-id (normal dist)
     # Note that the mean is forced to 0
-    rms_noise = 0.080285408274829384  # in K
+    rms_noise = 0.080285408274829384 / 4.  # in K
 
     # Set whether we have multiple timesteps for each set
     if timesteps is 'last':
@@ -418,21 +430,21 @@ if __name__ == "__main__":
         "_distance_results.h5"
     from pandas import DataFrame, HDFStore, concat, Series
 
-    ## Save data for each statistic in a dataframe.
-    ## Each dataframe is saved in a single hdf5 file
+    # Save data for each statistic in a dataframe.
+    # Each dataframe is saved in a single hdf5 file
 
     store = HDFStore(output_direc+filename)
 
     for i in range(num_statistics):
         # If timesteps is 'max', there will be different number of labels
         # in this case, don't bother specifying column names.
-        if not 'max' in timesteps:
+        if 'max' not in timesteps:
             df = DataFrame(distances_storage[i, :, :], index=simulation_runs,
                            columns=timesteps_labels[0][face])
         else:
             df = DataFrame(distances_storage[i, :, :], index=simulation_runs)
 
-        if not "Fiducial" in df.columns:
+        if "Fiducial" not in df.columns:
             df["Fiducial"] = Series(fiducial_index, index=df.index)
         if statistics[i] in store:
             existing_df = store[statistics[i]]
