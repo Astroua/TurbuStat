@@ -243,7 +243,7 @@ class Mask_and_Moments(object):
 
             hdu.writeto(save_name+labels[i]+".fits")
 
-    def _get_int_intensity(self):
+    def _get_int_intensity(self, min_sn=1):
         '''
         Get an integrated intensity image of the cube.
 
@@ -256,7 +256,7 @@ class Mask_and_Moments(object):
 
         noise.calculate_spectral()
 
-        good_channels = noise.spectral_norm > (self.scale + 1)
+        good_channels = noise.spectral_norm > min_sn
 
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
@@ -267,7 +267,7 @@ class Mask_and_Moments(object):
 
         return slab.moment0()
 
-    def _get_int_intensity_err(self):
+    def _get_int_intensity_err(self, min_sn=1):
         '''
         '''
 
@@ -275,7 +275,7 @@ class Mask_and_Moments(object):
 
         noise.calculate_spectral()
 
-        good_channels = noise.spectral_norm > (self.scale + 1)
+        good_channels = noise.spectral_norm > min_sn
 
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
