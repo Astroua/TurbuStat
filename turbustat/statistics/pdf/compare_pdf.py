@@ -196,12 +196,7 @@ class PDF_Distance(object):
             Enables plotting.
         '''
 
-        stand_data1 = standardize(self.PDF1.pdf)
-        stand_data2 = standardize(self.PDF2.pdf)
-
-        # Now that its standardized, calculate the distance.
-
-        self.distance = hellinger(stand_data1, stand_data2)
+        self.distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
 
         if verbose:
             import matplotlib.pyplot as p
