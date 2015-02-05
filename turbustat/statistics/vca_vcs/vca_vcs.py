@@ -111,6 +111,7 @@ class VCA(object):
         '''
 
         # Make the data to fit to
+        self.low_cut = low_cut
         x = np.log10(self.freqs[self.freqs > low_cut])
         y = np.log10(self.ps1D[self.freqs > low_cut])
 
@@ -156,6 +157,42 @@ class VCA(object):
     def slope_err(self):
         return self._slope_err
 
+    def plot_fit(self, show=True, show_2D=False, color='r'):
+        '''
+        Plot the fitted model.
+        '''
+
+        import matplotlib.pyplot as p
+
+        if self.phys_units_flag:
+            xlab = r"log K"
+        else:
+            xlab = r"K (pixel$^{-1}$)"
+
+        # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
+        if show_2D:
+            p.subplot(122)
+            p.imshow(np.log10(self.ps2D), interpolation="nearest",
+                     origin="lower")
+            p.colorbar()
+
+            p.subplot(121)
+
+        p.loglog(self.freqs[self.freqs > self.low_cut],
+                 self.ps1D[self.freqs > self.low_cut], color+"D")
+
+        if isinstance(self.fit, Lm_Seg):
+            y_fit = self.fit.y
+        else:
+            y_fit = self.fit.fittedvalues
+        p.loglog(self.freqs[self.freqs > self.low_cut], 10**y_fit, color+'-')
+        p.xlabel(xlab)
+        p.ylabel(r"P$_2(K)$")
+        p.grid(True)
+
+        if show:
+            p.show()
+
     def run(self, verbose=False, brk=None, **kwargs):
         '''
         Full computation of VCA.
@@ -172,25 +209,7 @@ class VCA(object):
         self.fit_pspec(brk=brk)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            if self.phys_units_flag:
-                xlab = r"log K"
-            else:
-                xlab = r"K (pixel$^{-1}$)"
-
-            p.subplot(121)
-            p.loglog(self.freq, self.ps1D, "kD")
-            p.title("VCA with Thickness: " + str(self.slice_size))
-            p.xlabel(xlab)
-            p.ylabel(r"P$_2(K)$")
-            p.grid(True)
-
-            p.subplot(122)
-            p.imshow(np.log10(self.ps2D), interpolation="nearest",
-                     origin="lower")
-            p.colorbar()
-            p.show()
+            self.plot_fit(show=True, show_2D=True)
 
         return self
 
@@ -420,7 +439,7 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk)
+            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk, verbose=True)
 
         self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
 
