@@ -10,13 +10,16 @@ limit.
 '''
 
 # Need to create the property arrays
-from ..data_reduction import property_arrays
+from ..data_reduction import Mask_and_Moments
+
+from spectral_cube import SpectralCube, LazyMask
 
 import os
 import warnings
 import numpy as np
 import numpy.random as ra
 from astropy.io.fits import getheader
+from astropy.wcs import WCS
 
 # Set seed for adding noise.
 ra.seed(121212)
@@ -47,10 +50,15 @@ for posn, kept in zip(*dataset1["channels"]):
     else:
         cube1[posn, :, :] = ra.normal(0.005, 0.005, (32, 32))
 
-props1 = property_arrays((cube1, header), rms_noise=0.001)
-props1.return_all(save=False)
+sc1 = SpectralCube(data=cube1, wcs=WCS(header))
+mask = LazyMask(np.isfinite, sc1)
+sc1 = sc1.with_mask(mask)
+props1 = Mask_and_Moments(sc1)
+props1.make_mask(mask=mask)
+props1.make_moments()
+props1.make_moment_errors()
 
-dataset1 = props1.dataset
+dataset1 = props1.to_dict()
 
 ##############################################################################
 
@@ -69,10 +77,14 @@ for posn, kept in zip(*dataset2["channels"]):
     else:
         cube2[posn, :, :] = ra.normal(0.005, 0.005, (32, 32))
 
-props2 = property_arrays((cube2, header), rms_noise=0.001)
-props2.return_all(save=False)
+sc2 = SpectralCube(data=cube2, wcs=WCS(header))
+mask = LazyMask(np.isfinite, sc2)
+sc2 = sc2.with_mask(mask)
+props2 = Mask_and_Moments(sc2)
+props2.make_moments()
+props2.make_moment_errors()
 
-dataset2 = props2.dataset
+dataset2 = props2.to_dict()
 
 ##############################################################################
 
