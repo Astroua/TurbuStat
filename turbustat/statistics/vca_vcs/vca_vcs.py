@@ -213,6 +213,9 @@ class VCA(object):
         self.fit_pspec(brk=brk)
 
         if verbose:
+
+            print self.fit.summary()
+
             self.plot_fit(show=True, show_2D=True)
 
         return self
@@ -443,7 +446,7 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk, verbose=True)
+            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk)
 
         self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
 
@@ -471,6 +474,12 @@ class VCA_Distance(object):
         if verbose:
             if labels is None:
                 labels = ['1', '2']
+
+            print "Fit to %s" % (labels[0])
+            print self.vca1.fit.summary()
+            print "Fit to %s" % (labels[1])
+            print self.vca2.fit.summary()
+
             import matplotlib.pyplot as p
             self.vca1.plot_fit(show=False, color='b', label=labels[0])
             self.vca2.plot_fit(show=False, color='r', label=labels[1])
