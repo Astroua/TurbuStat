@@ -185,11 +185,11 @@ class VCA(object):
                                        self.freqs <= self.high_cut)
 
         p.loglog(self.freqs[good_interval],
-                 self.ps1D[good_interval], color+"D")
+                 self.ps1D[good_interval], color+"D", alpha=0.5)
 
         y_fit = self.fit.fittedvalues
         p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
-                 label=label)
+                 label=label, linewidth=2)
         p.xlabel(xlab)
         p.ylabel(r"P$_2(K)$")
         p.grid(True)
@@ -483,6 +483,7 @@ class VCA_Distance(object):
             import matplotlib.pyplot as p
             self.vca1.plot_fit(show=False, color='b', label=labels[0])
             self.vca2.plot_fit(show=False, color='r', label=labels[1])
+            p.legend(loc='best')
             p.show()
 
         return self
