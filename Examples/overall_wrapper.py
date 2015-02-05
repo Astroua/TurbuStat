@@ -11,8 +11,6 @@ import numpy as np
 from turbustat.io import fromfits
 import sys
 
-keywords = {"centroid", "centroid_error", "integrated_intensity", "integrated_intensity_error", "linewidth",\
-             "linewidth_error", "moment0", "moment0_error", "cube"}
 
 folder1 = str(sys.argv[1])
 folder2 = str(sys.argv[2])

@@ -59,10 +59,24 @@ class MVC(object):
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
+
+        The quantity calculated here is the same as Equation 3 in Lazarian &
+        Esquivel (2003), but the inputted arrays are not in the same form as
+        described. We can, however, adjust for the use of normalized Centroids
+        and the linewidth.
+
+        An unnormalized centroid can be constructed by multiplying the centroid
+        array by the moment0. Velocity dispersion is the square of the linewidth
+        subtracted by the square of the normalized centroid.
         '''
 
-        mvc_fft = fft2(self.centroid.astype("f8")) - \
-            self.linewidth * fft2(self.moment0.astype("f8"))
+        term1 = fft2(self.centroid.astype("f8")*self.moment0.astype("f8"))
+
+        term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
+
+        mvc_fft = term1 - term2 * fft2(self.moment0.astype("f8"))
+
+        # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
         self.ps2D = np.abs(mvc_fft) ** 2.
@@ -143,22 +157,22 @@ class MVC_distance(object):
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
         else:
-            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0] ** 2.,
-                            data1["moment0"][0] * data1["moment0_error"][0] ** 2.,
-                            data1["linewidth"][0] * data1["linewidth_error"][0] ** 2.,
+            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0] ** -2.,
+                            data1["moment0"][0] * data1["moment0_error"][0] ** -2.,
+                            data1["linewidth"][0] * data1["linewidth_error"][0] ** -2.,
                             data1["centroid"][1])
-            self.mvc1.run()
+            self.mvc1.run(phys_units=False)
 
-        self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** 2.,
-                        data2["moment0"][0] * data2["moment0_error"][0] ** 2.,
-                        data2["linewidth"][0] * data2["linewidth_error"][0] ** 2.,
+        self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** -2.,
+                        data2["moment0"][0] * data2["moment0_error"][0] ** -2.,
+                        data2["linewidth"][0] * data2["linewidth_error"][0] ** -2.,
                         data2["centroid"][1])
-        self.mvc2.run()
+        self.mvc2.run(phys_units=False)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, low_cut=2.0, high_cut=64.0, verbose=False):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -168,25 +182,25 @@ class MVC_distance(object):
 
         Parameters
         ----------
+        low_cut : int or float, optional
+            Set the cut-off for low spatial frequencies. Visually, below ~2
+            deviates from the power law (for the simulation set).
+        high_cut : int or float, optional
+            Set the cut-off for high spatial frequencies. Values beyond the
+            size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
             Enables plotting.
         '''
 
-        # Clipping from 8 pixels to half the box size
-        # Noise effects dominate outside this region
-        clip_mask1 = np.zeros((self.mvc1.freq.shape))
-        for i, x in enumerate(self.mvc1.freq):
-            if x > 8.0 and x < self.shape1[0] / 2.:
-                clip_mask1[i] = 1
-        clip_freq1 = self.mvc1.freq[np.where(clip_mask1 == 1)]
-        clip_ps1D1 = self.mvc1.ps1D[np.where(clip_mask1 == 1)]
+        clip_freq1 = \
+            self.mvc1.freq[clip_func(self.mvc1.freq, low_cut, high_cut)]
+        clip_ps1D1 = \
+            self.mvc1.ps1D[clip_func(self.mvc1.freq, low_cut, high_cut)]
 
-        clip_mask2 = np.zeros((self.mvc2.freq.shape))
-        for i, x in enumerate(self.mvc2.freq):
-            if x > 8.0 and x < self.shape2[0] / 2.:
-                clip_mask2[i] = 1
-        clip_freq2 = self.mvc2.freq[np.where(clip_mask2 == 1)]
-        clip_ps1D2 = self.mvc2.ps1D[np.where(clip_mask2 == 1)]
+        clip_freq2 = \
+            self.mvc2.freq[clip_func(self.mvc2.freq, low_cut, high_cut)]
+        clip_ps1D2 = \
+            self.mvc2.ps1D[clip_func(self.mvc2.freq, low_cut, high_cut)]
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
@@ -223,3 +237,7 @@ class MVC_distance(object):
             p.show()
 
         return self
+
+
+def clip_func(arr, low, high):
+    return np.logical_and(arr > low, arr < high)

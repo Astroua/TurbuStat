@@ -10,7 +10,7 @@ Utility Functions used for the simulation statistics suite
 import os
 
 
-def fromfits(folder, keywords, header=True, verbose=False):
+def fromfits(folder, keywords=None, header=True, verbose=False):
     '''
     Loads a fits file, prints size, bits per pixel, and array type
     Returns image and its header
@@ -48,6 +48,11 @@ def fromfits(folder, keywords, header=True, verbose=False):
         images["centroid"][1] - centroid header
 
     '''
+
+    if keywords is None:
+        keywords = {"centroid", "centroid_error", "integrated_intensity",
+                    "integrated_intensity_error", "linewidth",
+                    "linewidth_error", "moment0", "moment0_error", "cube"}
 
     from astropy.io.fits import getdata
 

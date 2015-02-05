@@ -22,8 +22,7 @@ class testVCA(TestCase):
 
     def test_VCA_method(self):
         self.tester = VCA(dataset1["cube"][0],
-                          dataset1["cube"][1],
-                          slice_sizes=[1.0])
+                          dataset1["cube"][1])
         self.tester.run()
         assert np.allclose(self.tester.ps1D, computed_data['vca_val'])
 

@@ -2,17 +2,16 @@
 
 
 import numpy as np
-from ..psds import pspec
-import statsmodels.formula.api as sm
-from pandas import Series, DataFrame
-from ..lm_seg import Lm_Seg
+import statsmodels.api as sm
+import warnings
 
 try:
     from scipy.fftpack import fftn, fftfreq, fftshift
 except ImportError:
     from numpy.fft import fftn, fftfreq, fftshift
 
-
+from ..lm_seg import Lm_Seg
+from ..psds import pspec
 from slice_thickness import change_slice_thickness
 
 
@@ -27,13 +26,13 @@ class VCA(object):
         Data cube.
     header : FITS header
         Corresponding FITS header.
-    slice_sizes : list or numpy.ndarray, optional
+    slice_sizes : float or int, optional
         Slices to degrade the cube to.
     phys_units : bool, optional
         Sets whether physical scales can be used.
     '''
 
-    def __init__(self, cube, header, slice_sizes=None, phys_units=False):
+    def __init__(self, cube, header, slice_size=None, phys_units=False):
         super(VCA, self).__init__()
 
         self.cube = cube.astype("float64")
@@ -44,33 +43,26 @@ class VCA(object):
         self.header = header
         self.shape = self.cube.shape
 
-        if slice_sizes is None:
-            self.slice_sizes = [1.0, 5.0, 10.0, 20.0]
-        else:
-            self.slice_sizes = slice_sizes
+        if slice_size is None:
+            self.slice_size = 1.0
 
-        self.degraded_cubes = []
-        for size in self.slice_sizes:
-            self.degraded_cubes.append(
-                change_slice_thickness(self.cube, slice_thickness=size))
+        if slice_size != 1.0:
+            self.cube = \
+                change_slice_thickness(self.cube.copy(),
+                                       slice_thickness=self.slice_size)
 
         self.phys_units_flag = False
         if phys_units:
             self.phys_units_flag = True
-
-        self.ps2D = []
-        self.ps1D = []
-        self.freq = None
 
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
         '''
 
-        for cube in self.degraded_cubes:
-            vca_fft = fftshift(fftn(cube.astype("f8")))
+        vca_fft = fftshift(fftn(self.cube.astype("f8")))
 
-            self.ps2D.append((np.abs(vca_fft) ** 2.).sum(axis=0))
+        self.ps2D = (np.abs(vca_fft) ** 2.).sum(axis=0)
 
         return self
 
@@ -83,20 +75,129 @@ class VCA(object):
         See the above url for parameter explanations.
         '''
 
-        for ps in self.ps2D:
-            self.freq, ps1D = pspec(ps, return_index=return_index,
-                                    wavenumber=wavenumber,
-                                    return_stddev=return_stddev,
-                                    azbins=azbins, binsize=binsize,
-                                    view=view, **kwargs)
-            self.ps1D.append(ps1D)
+        self.freqs, self.ps1D = \
+            pspec(self.ps2D, return_index=return_index,
+                  wavenumber=wavenumber,
+                  return_stddev=return_stddev,
+                  azbins=azbins, binsize=binsize,
+                  view=view, **kwargs)
 
         if self.phys_units_flag:
-            self.freq *= np.abs(self.header["CDELT2"]) ** -1.
+            self.freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
         return self
 
-    def run(self, verbose=False, **kwargs):
+    def fit_pspec(self, brk=None, log_break=True, low_cut=np.sqrt(2),
+                  verbose=False):
+        '''
+        Fit the 1D Power spectrum using a segmented linear model. Note that
+        the current implementation allows for only 1 break point in the
+        model. If the break point is estimated via a spline, the breaks are
+        tested, starting from the largest, until the model finds a good fit.
+
+        Parameters
+        ----------
+        brk : float or None, optional
+            Guesses for the break points. If given as a list, the length of
+            the list sets the number of break points to be fit. If a choice is
+            outside of the allowed range from the data, Lm_Seg will raise an
+            error. If None, a spline is used to estimate the breaks.
+        log_break : bool, optional
+            Sets whether the provided break estimates are log-ed values.
+        lg_scale_cut : int, optional
+            Cuts off largest scales, which deviate from the powerlaw.
+        verbose : bool, optional
+            Enables verbose mode in Lm_Seg.
+        '''
+
+        # Make the data to fit to
+        self.low_cut = low_cut
+        x = np.log10(self.freqs[self.freqs > low_cut])
+        y = np.log10(self.ps1D[self.freqs > low_cut])
+
+        if brk is not None:
+            # Try the fit with a break in it.
+            if not log_break:
+                brk = np.log10(brk)
+
+            brk_fit = \
+                Lm_Seg(x, y, brk)
+            brk_fit.fit_model(verbose=verbose)
+
+            if brk_fit.params.size == 5:
+
+                x = x[x < brk_fit.brk]
+                y = y[x < brk_fit.brk]
+
+                self.high_cut = 10**brk_fit.brk
+
+            else:
+                self.high_cut = self.freqs.max()
+                # Break fit failed, revert to normal model
+                warnings.warn("Model with break failed, reverting to model\
+                               without break.")
+        else:
+            self.high_cut = self.freqs.max()
+
+        x = sm.add_constant(x)
+
+        model = sm.OLS(y, x)
+
+        self.fit = model.fit()
+
+        self._slope = self.fit.params[1]
+
+        cov_matrix = self.fit.cov_params()
+        self._slope_err = np.sqrt(cov_matrix[1, 1])
+
+        return self
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
+    def plot_fit(self, show=True, show_2D=False, color='r', label=None):
+        '''
+        Plot the fitted model.
+        '''
+
+        import matplotlib.pyplot as p
+
+        if self.phys_units_flag:
+            xlab = r"log K"
+        else:
+            xlab = r"K (pixel$^{-1}$)"
+
+        # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
+        if show_2D:
+            p.subplot(122)
+            p.imshow(np.log10(self.ps2D), interpolation="nearest",
+                     origin="lower")
+            p.colorbar()
+
+            p.subplot(121)
+
+        good_interval = np.logical_and(self.freqs > self.low_cut,
+                                       self.freqs <= self.high_cut)
+
+        p.loglog(self.freqs[good_interval],
+                 self.ps1D[good_interval], color+"D", alpha=0.5)
+
+        y_fit = self.fit.fittedvalues
+        p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
+                 label=label, linewidth=2)
+        p.xlabel(xlab)
+        p.ylabel(r"P$_2(K)$")
+        p.grid(True)
+
+        if show:
+            p.show()
+
+    def run(self, verbose=False, brk=None, **kwargs):
         '''
         Full computation of VCA.
 
@@ -109,41 +210,13 @@ class VCA(object):
 
         self.compute_pspec()
         self.compute_radial_pspec(**kwargs)
+        self.fit_pspec(brk=brk)
 
         if verbose:
-            import matplotlib.pyplot as p
 
-            num = len(self.slice_sizes)
-            if num <= 4:
-                width = 2
-                length = num
-            else:
-                width = 4
-                length = num / 2
+            print self.fit.summary()
 
-            if self.phys_units_flag:
-                xlab = r"log K"
-            else:
-                xlab = r"K (pixel$^{-1}$)"
-
-            for i in range(1, num + 1):
-                p.subplot(length, width, 2 * i - 1)
-                p.loglog(self.freq, self.ps1D[i - 1], "kD")
-                p.title(
-                    "".join(["VCA with Thickness: ", str(self.slice_sizes[i - 1])]))
-                p.xlabel(xlab)
-                p.ylabel(r"P$_2(K)$")
-                p.grid(True)
-                p.subplot(length, width, 2 * i)
-                p.imshow(
-                    np.log10(self.ps2D)[i - 1], interpolation="nearest",
-                    origin="lower")
-                p.colorbar()
-            p.show()
-
-        if len(self.slice_sizes) == 1:
-            self.ps1D = self.ps1D[0]
-            self.ps2D = self.ps2D[0]
+            self.plot_fit(show=True, show_2D=True)
 
         return self
 
@@ -217,18 +290,21 @@ class VCS(object):
 
         return self
 
-    def fit_pspec(self, breaks=-1.0, log_break=True, lg_scale_cut=2,
+    def fit_pspec(self, breaks=None, log_break=True, lg_scale_cut=2,
                   verbose=False):
         '''
-        Fit the 1D Power spectrum using a segmented linear model.
+        Fit the 1D Power spectrum using a segmented linear model. Note that
+        the current implementation allows for only 1 break point in the
+        model. If the break point is estimated via a spline, the breaks are
+        tested, starting from the largest, until the model finds a good fit.
 
         Parameters
         ----------
-        breaks : float or list, optional
+        breaks : float or None, optional
             Guesses for the break points. If given as a list, the length of
             the list sets the number of break points to be fit. If a choice is
             outside of the allowed range from the data, Lm_Seg will raise an
-            error.
+            error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
         lg_scale_cut : int, optional
@@ -236,6 +312,48 @@ class VCS(object):
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
+
+        if breaks is None:
+            from scipy.interpolate import UnivariateSpline
+
+            # Need to order the points
+            shape = self.vel_freqs.size
+            spline_y = np.log10(self.ps1D[1:shape/2])
+            spline_x = np.log10(self.vel_freqs[1:shape/2])
+
+            spline = UnivariateSpline(spline_x, spline_y, k=1, s=1)
+
+            # The first and last are just the min and max of x
+            breaks = spline.get_knots()[1:-1]
+
+            if verbose:
+                print "Breaks found from spline are: " + str(breaks)
+
+            # Take the number according to max_breaks starting at the
+            # largest x.
+            breaks = breaks[::-1]
+
+            x = np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut])
+            y = np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut])
+
+            # Now try these breaks until a good fit including the break is
+            # found. If none are found, it accept that there wasn't a good
+            # break and continues on.
+            i = 0
+            while True:
+                self.fit = \
+                    Lm_Seg(x, y, breaks[i])
+                self.fit.fit_model(verbose=verbose)
+
+                if self.fit.params.size == 5:
+                    break
+                i += 1
+                if i >= breaks.shape:
+                    warnings.warn("No good break point found. Returned fit\
+                                   does not include a break!")
+                    break
+
+            return self
 
         if not log_break:
             breaks = np.log10(breaks)
@@ -315,7 +433,8 @@ class VCA_Distance(object):
         Computed VCA object. use to avoid recomputing.
     '''
 
-    def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
+    def __init__(self, cube1, cube2, slice_size=1.0, brk=None,
+                 fiducial_model=None):
         super(VCA_Distance, self).__init__()
         cube1, header1 = cube1
         cube2, header2 = cube2
@@ -327,11 +446,11 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_sizes=[slice_size]).run()
+            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk)
 
-        self.vca2 = VCA(cube2, header2, slice_sizes=[slice_size]).run()
+        self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, labels=None, verbose=False):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -340,58 +459,31 @@ class VCA_Distance(object):
 
         Parameters
         ----------
+        labels : list, optional
+            Contains names of datacubes given in order.
         verbose : bool, optional
             Enables plotting.
         '''
 
-        # Clipping from 8 pixels to half the box size
-        # Noise effects dominate outside this region
-        clip_mask1 = np.zeros((self.vca1.freq.shape))
-        for i, x in enumerate(self.vca1.freq):
-            if x > 8.0 and x < self.shape1[0] / 2.:
-                clip_mask1[i] = 1
-        clip_freq1 = self.vca1.freq[np.where(clip_mask1 == 1)]
-        clip_ps1D1 = self.vca1.ps1D[np.where(clip_mask1 == 1)]
-
-        clip_mask2 = np.zeros((self.vca2.freq.shape))
-        for i, x in enumerate(self.vca2.freq):
-            if x > 8.0 and x < self.shape2[0] / 2.:
-                clip_mask2[i] = 1
-        clip_freq2 = self.vca2.freq[np.where(clip_mask2 == 1)]
-        clip_ps1D2 = self.vca2.ps1D[np.where(clip_mask2 == 1)]
-
-        dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
-        x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
-        regressor = x.T * dummy
-
-        log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
-
-        d = {"dummy": Series(dummy), "scales": Series(
-            x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
-
-        self.results = model.fit()
-
-        self.distance = np.abs(self.results.tvalues["regressor"])
+        # Construct t-statistic
+        self.distance = \
+            np.abs((self.vca1.slope - self.vca2.slope) /
+                   np.sqrt(self.vca1.slope_err**2 +
+                           self.vca2.slope_err**2))
 
         if verbose:
+            if labels is None:
+                labels = ['1', '2']
 
-            print self.results.summary()
+            print "Fit to %s" % (labels[0])
+            print self.vca1.fit.summary()
+            print "Fit to %s" % (labels[1])
+            print self.vca2.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
-                   np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
-            p.plot(df["scales"][:len(clip_freq1)],
-                   self.results.fittedvalues[:len(clip_freq1)], "b",
-                   df["scales"][-len(clip_freq2):],
-                   self.results.fittedvalues[-len(clip_freq2):], "g")
-            p.grid(True)
-            p.xlabel("log K")
-            p.ylabel(r"$P_{2}(K)$")
+            self.vca1.plot_fit(show=False, color='b', label=labels[0])
+            self.vca2.plot_fit(show=False, color='r', label=labels[1])
+            p.legend(loc='best')
             p.show()
 
         return self
@@ -446,22 +538,30 @@ class VCS_Distance(object):
 
         # Now construct the t-statistics for each portion
 
+        # There should always be the velocity distance
         self.velocity_distance = \
             np.abs((self.vcs1.slopes[0] - self.vcs2.slopes[0]) /
                    np.sqrt(self.vcs1.slope_errs[0]**2 +
                            self.vcs2.slope_errs[0]**2))
 
-        self.density_distance = \
-            np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
-                   np.sqrt(self.vcs1.slope_errs[1]**2 +
-                           self.vcs2.slope_errs[1]**2))
+        # A density distance is only found if a break was found
+        if self.vcs1.slopes.size == 1 or self.vcs2.slopes.size == 1:
+            self.density_distance = np.NaN
+            self.break_distance = np.NaN
+        else:
+            self.density_distance = \
+                np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
+                       np.sqrt(self.vcs1.slope_errs[1]**2 +
+                               self.vcs2.slope_errs[1]**2))
 
-        self.break_distance = \
-            np.abs((self.vcs1.brk - self.vcs2.brk) /
-                   np.sqrt(self.vcs1.brk_err**2 + self.vcs2.brk_err**2))
+            self.break_distance = \
+                np.abs((self.vcs1.brk - self.vcs2.brk) /
+                       np.sqrt(self.vcs1.brk_err**2 +
+                               self.vcs2.brk_err**2))
 
         # The overall distance is the sum from the two models
-        self.distance = self.velocity_distance + self.density_distance
+        self.distance = \
+            np.nansum([self.velocity_distance, self.density_distance])
 
         if verbose:
 

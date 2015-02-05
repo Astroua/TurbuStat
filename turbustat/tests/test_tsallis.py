@@ -34,4 +34,5 @@ class testTsallis(TestCase):
                              dataset2["integrated_intensity"][0],
                              lags=[1, 2, 4, 8, 16], num_bins=100).distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
-                                computed_distances['tsallis_distance'])
+                                computed_distances['tsallis_distance'],
+                                decimal=5)
