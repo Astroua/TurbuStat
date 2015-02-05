@@ -120,21 +120,24 @@ class VCA(object):
             if not log_break:
                 brk = np.log10(brk)
 
-            self.fit = \
+            brk_fit = \
                 Lm_Seg(x, y, brk)
-            self.fit.fit_model(verbose=verbose)
+            brk_fit.fit_model(verbose=verbose)
 
-            if self.fit.params.size == 5:
+            if brk_fit.params.size == 5:
 
-                self._slope = self.fit.slopes[0]
-                self._slope_err = self.fit.slope_errs[1]
+                x = x[x < brk_fit.brk]
+                y = y[x < brk_fit.brk]
 
-                return self
+                self.high_cut = 10**brk_fit.brk
 
             else:
+                self.high_cut = self.freqs.max()
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
+        else:
+            self.high_cut = self.freqs.max()
 
         x = sm.add_constant(x)
 
@@ -157,7 +160,7 @@ class VCA(object):
     def slope_err(self):
         return self._slope_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r'):
+    def plot_fit(self, show=True, show_2D=False, color='r', label=None):
         '''
         Plot the fitted model.
         '''
@@ -178,14 +181,15 @@ class VCA(object):
 
             p.subplot(121)
 
-        p.loglog(self.freqs[self.freqs > self.low_cut],
-                 self.ps1D[self.freqs > self.low_cut], color+"D")
+        good_interval = np.logical_and(self.freqs > self.low_cut,
+                                       self.freqs <= self.high_cut)
 
-        if isinstance(self.fit, Lm_Seg):
-            y_fit = self.fit.y
-        else:
-            y_fit = self.fit.fittedvalues
-        p.loglog(self.freqs[self.freqs > self.low_cut], 10**y_fit, color+'-')
+        p.loglog(self.freqs[good_interval],
+                 self.ps1D[good_interval], color+"D")
+
+        y_fit = self.fit.fittedvalues
+        p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
+                 label=label)
         p.xlabel(xlab)
         p.ylabel(r"P$_2(K)$")
         p.grid(True)
@@ -443,7 +447,7 @@ class VCA_Distance(object):
 
         self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, labels=None, verbose=False):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -452,6 +456,8 @@ class VCA_Distance(object):
 
         Parameters
         ----------
+        labels : list, optional
+            Contains names of datacubes given in order.
         verbose : bool, optional
             Enables plotting.
         '''
@@ -463,13 +469,11 @@ class VCA_Distance(object):
                            self.vca2.slope_err**2))
 
         if verbose:
-
+            if labels is None:
+                labels = ['1', '2']
             import matplotlib.pyplot as p
-            p.loglog(self.vca1.freqs, self.vca1.ps1D, "kD")
-            p.loglog(self.vca2.freqs, self.vca2.ps1D, "rD")
-            p.grid(True)
-            p.xlabel("log K")
-            p.ylabel(r"$P_{2}(K)$")
+            self.vca1.plot_fit(show=False, color='b', label=labels[0])
+            self.vca2.plot_fit(show=False, color='r', label=labels[1])
             p.show()
 
         return self
