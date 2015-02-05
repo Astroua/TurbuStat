@@ -27,7 +27,7 @@ install:
 
     # Use pip to install development versions
     - pip install git+https://github.com/dendrograms/astrodendro.git
-    - pip install spectral_cube
+    - pip install git+https://github.com/radio-astro-tools/spectral-cube.git
     - pip install git+https://github.com/radio-astro-tools/signal-id.git
 
 script:
