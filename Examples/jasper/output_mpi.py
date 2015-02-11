@@ -360,7 +360,7 @@ if __name__ == "__main__":
 
     # Sigma for COMPLETE NGC1333 data using signal-id (normal dist)
     # Note that the mean is forced to 0
-    rms_noise = 0.080285408274829384 / 4.  # in K
+    rms_noise = 0.1277369117707014 / 2.  # in K
 
     # Set whether we have multiple timesteps for each set
     if timesteps is 'last':
