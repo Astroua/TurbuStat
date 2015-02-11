@@ -28,8 +28,14 @@ def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
     testing_dataset = load_and_reduce(testing_timestep, add_noise=add_noise,
                                       rms_noise=rms_noise)
 
+    if add_noise:
+        vca_break = 1.7
+    else:
+        vca_break = None
+
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
-                              statistics=statistics, multicore=True)
+                              statistics=statistics, multicore=True,
+                              vca_break=vca_break)
     return distances
 
 
