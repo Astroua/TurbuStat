@@ -509,12 +509,10 @@ class VCS_Distance(object):
         Computed VCA object. use to avoid recomputing.
     '''
 
-    def __init__(self, cube1, cube2, slice_size=1.0, fiducial_model=None):
+    def __init__(self, cube1, cube2, fiducial_model=None):
         super(VCS_Distance, self).__init__()
         self.cube1, self.header1 = cube1
         self.cube2, self.header2 = cube2
-
-        assert isinstance(slice_size, float)
 
         if fiducial_model is not None:
             self.vcs1 = fiducial_model
