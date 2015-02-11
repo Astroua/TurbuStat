@@ -432,11 +432,14 @@ class VCA_Distance(object):
         Data cube.
     slice_size : float, optional
         Slice to degrade the cube to.
+    breaks : float, list or array, optional
+        Specify where the break point is. If None, attempts to find using
+        spline. If not specified, no break point will be used.
     fiducial_model : VCA
         Computed VCA object. use to avoid recomputing.
     '''
 
-    def __init__(self, cube1, cube2, slice_size=1.0, brk=None,
+    def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
                  fiducial_model=None):
         super(VCA_Distance, self).__init__()
         cube1, header1 = cube1
@@ -446,12 +449,17 @@ class VCA_Distance(object):
 
         assert isinstance(slice_size, float)
 
+        if not isinstance(breaks, list) or not isinstance(breaks, np.ndarray):
+            breaks = [breaks] * 2
+
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, header1, slice_size=slice_size).run(brk=brk)
+            self.vca1 = \
+                VCA(cube1, header1, slice_size=slice_size).run(brk=breaks[0])
 
-        self.vca2 = VCA(cube2, header2, slice_size=slice_size).run(brk=brk)
+        self.vca2 = \
+            VCA(cube2, header2, slice_size=slice_size).run(brk=breaks[1])
 
     def distance_metric(self, labels=None, verbose=False):
         '''
