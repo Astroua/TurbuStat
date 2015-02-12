@@ -22,7 +22,8 @@ from turbustat.statistics import Wavelet_Distance, \
 
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
-                  statistics=None, multicore=False, vca_break=None):
+                  statistics=None, multicore=False, vca_break=None,
+                  vcs_break=None):
     '''
     Function to run all of the statistics on two datasets.
     Each statistic is run with set inputs. This function needs to be altered
@@ -111,7 +112,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("VCS" in s for s in statistics):
             vcs_distance = VCS_Distance(dataset1["cube"],
-                                        dataset2["cube"]).distance_metric()
+                                        dataset2["cube"],
+                                        breaks=vcs_break).distance_metric()
             distances["VCS"] = vcs_distance.distance
             distances["VCS_Density"] = vcs_distance.density_distance
             distances["VCS_Velocity"] = vcs_distance.velocity_distance
@@ -122,7 +124,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
         if any("VCA" in s for s in statistics):
             vca_distance = VCA_Distance(dataset1["cube"],
                                         dataset2["cube"],
-                                        brk=vca_break).distance_metric()
+                                        breaks=vca_break).distance_metric()
             distances["VCA"] = vca_distance.distance
             if not multicore:
                 fiducial_models["VCA"] = vca_distance.vca1
@@ -250,7 +252,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             vcs_distance = \
                 VCS_Distance(dataset1["cube"],
                              dataset2["cube"],
-                             fiducial_model=fiducial_models["VCS"]).distance_metric()
+                             fiducial_model=fiducial_models["VCS"],
+                             breaks=vcs_break).distance_metric()
             distances["VCS_Density"] = vcs_distance.density_distance
             distances["VCS_Velocity"] = vcs_distance.velocity_distance
             distances["VCS_Break"] = vcs_distance.break_distance
@@ -261,7 +264,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 VCA_Distance(dataset1["cube"],
                              dataset2["cube"],
                              fiducial_model=fiducial_models["VCA"],
-                             brk=vca_break).distance_metric()
+                             breaks=vca_break).distance_metric()
             distances["VCA"] = vca_distance.distance
 
         if any("Tsallis" in s for s in statistics):
