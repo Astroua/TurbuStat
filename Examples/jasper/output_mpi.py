@@ -93,8 +93,8 @@ def run_all(fiducial, simulation_runs, statistics, savename,
                 # output to match the max.
                 if len(distances) < len(fiducial):
                     diff = len(fiducial) - len(distances)
-            for d in range(diff):
-                distances.append(dict.fromkeys(statistics, np.NaN))
+                    for d in range(diff):
+                        distances.append(dict.fromkeys(statistics, np.NaN))
 
                 distances_storage[:, i, :] = \
                     sort_distances(statistics, distances).T
