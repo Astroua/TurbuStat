@@ -15,12 +15,11 @@ from astropy.wcs import WCS
 from turbustat.statistics import stats_wrapper
 from turbustat.data_reduction import Mask_and_Moments
 
+np.random.seed(248954785)
+
 
 def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
                      add_noise, rms_noise):
-
-    print fiducial_timestep
-    print testing_timestep
 
     # Derive the property arrays assuming uniform noise (for sims)
     fiducial_dataset = load_and_reduce(fiducial_timestep, add_noise=add_noise,
@@ -29,13 +28,15 @@ def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
                                       rms_noise=rms_noise)
 
     if add_noise:
-        vca_break = 1.7
+        vca_break = 1.5
+        vcs_break = -0.5
     else:
         vca_break = None
+        vcs_break = -0.8
 
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
                               statistics=statistics, multicore=True,
-                              vca_break=vca_break)
+                              vca_break=vca_break, vcs_break=vcs_break)
     return distances
 
 
@@ -92,7 +93,8 @@ def run_all(fiducial, simulation_runs, statistics, savename,
                 # output to match the max.
                 if len(distances) < len(fiducial):
                     diff = len(fiducial) - len(distances)
-                    distances.append([np.NaN] * diff)
+            for d in range(diff):
+                distances.append(dict.fromkeys(statistics, np.NaN))
 
                 distances_storage[:, i, :] = \
                     sort_distances(statistics, distances).T
@@ -169,7 +171,7 @@ def sort_distances(statistics, distances):
         distance_array = np.empty((len(distances), 1))
 
     for j, dist in enumerate(distances):
-        distance_array[j, :] = [distances[j][stat] for stat in statistics]
+        distance_array[j, :] = [dist[stat] for stat in statistics]
 
     return distance_array
 
@@ -395,14 +397,15 @@ if __name__ == "__main__":
         posn = 0
         prev = 0
         # no need to loop over the last one
-        for fid_num, i in zip(fiducials.keys()[:-1],
-                              np.arange(len(fiducials)-1, 0, -1)):
+        for fid_num, i in zip(fiducials[face].keys()[:-1],
+                              np.arange(len(fiducials[comp_face])-1, 0, -1)):
             posn += i
-            comparisons = fiducials.copy()
+            comparisons = fiducials[comp_face].copy()
+
             for key in range(fid_num + 1):
                 del comparisons[key]
             partial_distances = \
-                run_all(fiducials[face][fid_num], comparisons[comp_face],
+                run_all(fiducials[face][fid_num], comparisons,
                         statistics, save_name, pool=pool,
                         multi_timesteps=multi_timesteps, verbose=True,
                         add_noise=add_noise)
@@ -411,7 +414,7 @@ if __name__ == "__main__":
 
             fiducial_index.extend(fiducials[comp_face].keys()[fid_num+1:])
 
-            fiducial_col.extend([posn-prev] * len(fiducials.keys()[fid_num:]))
+            fiducial_col.extend([posn-prev] * len(fiducials[comp_face].keys()[fid_num:]))
 
         # consistent naming with non-fiducial case
         simulation_runs = fiducial_index
@@ -425,15 +428,16 @@ if __name__ == "__main__":
                     multi_timesteps=multi_timesteps,
                     add_noise=add_noise)
 
-        simulation_runs = designs.keys()
+        simulation_runs = designs[comp_face].keys()
         fiducial_index = [fiducial_num] * len(designs.keys())
 
     # If using timesteps 'max', some comparisons will remain zero
     # To distinguish a bit better, set the non-comparisons to zero
     distances_storage[np.where(distances_storage == 0)] = np.NaN
 
-    filename = save_name + str(face) + "_" + str(comp_face) + \
+    filename = save_name +"_fiducial"+str(fiducial_num)+"_" + str(face) + "_" + str(comp_face) + \
         "_distance_results.h5"
+
     from pandas import DataFrame, HDFStore, concat, Series
 
     # Save data for each statistic in a dataframe.
@@ -450,8 +454,8 @@ if __name__ == "__main__":
         else:
             df = DataFrame(distances_storage[i, :, :], index=simulation_runs)
 
-        if "Fiducial" not in df.columns:
-            df["Fiducial"] = Series(fiducial_index, index=df.index)
+        # if not "Fiducial" in df.columns:
+        #    df["Fiducial"] = Series(fiducial_index, index=df.index)
         if statistics[i] in store:
             existing_df = store[statistics[i]]
             if len(existing_df.index) == len(df.index):
