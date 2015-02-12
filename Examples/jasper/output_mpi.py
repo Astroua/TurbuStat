@@ -408,7 +408,7 @@ if __name__ == "__main__":
                 run_all(fiducials[face][fid_num], comparisons,
                         statistics, save_name, pool=pool,
                         multi_timesteps=multi_timesteps, verbose=True,
-                        add_noise=add_noise)
+                        add_noise=add_noise, rms_noise=rms_noise)
             distances_storage[:, prev:posn, :] = partial_distances
             prev += i
 
@@ -426,7 +426,7 @@ if __name__ == "__main__":
                     designs[comp_face], statistics, save_name,
                     pool=pool,
                     multi_timesteps=multi_timesteps,
-                    add_noise=add_noise)
+                    add_noise=add_noise, rms_noise=rms_noise)
 
         simulation_runs = designs[comp_face].keys()
         fiducial_index = [fiducial_num] * len(designs.keys())
