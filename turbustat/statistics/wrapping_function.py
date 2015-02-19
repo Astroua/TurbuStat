@@ -23,7 +23,7 @@ from turbustat.statistics import Wavelet_Distance, \
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                   statistics=None, multicore=False, vca_break=None,
-                  vcs_break=None):
+                  vcs_break=None, cleanup=True):
     '''
     Function to run all of the statistics on two datasets.
     Each statistic is run with set inputs. This function needs to be altered
@@ -43,6 +43,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
     multicore : bool, optional
         If the wrapper is being used in parallel, this disables
         returning model values for dataset1.
+    cleanup : bool, optional
+        Delete distance classes after running.
     '''
 
     if statistics is None:  # Run them all
@@ -68,11 +70,17 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["Wavelet"] = wavelet_distance.wt1
 
+            if cleanup:
+                del wavelet_distance
+
         if any("MVC" in s for s in statistics):
             mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
             distances["MVC"] = mvc_distance.distance
             if not multicore:
                 fiducial_models["MVC"] = mvc_distance.mvc1
+
+            if cleanup:
+                del mvc_distance
 
         if any("PSpec" in s for s in statistics):
             pspec_distance = \
@@ -84,6 +92,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["PSpec"] = pspec_distance.pspec1
 
+            if cleanup:
+                del pspec_distance
+
         if any("Bispectrum" in s for s in statistics):
             bispec_distance = \
                 BiSpectrum_Distance(dataset1["integrated_intensity"],
@@ -91,6 +102,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["Bispectrum"] = bispec_distance.distance
             if not multicore:
                 fiducial_models["Bispectrum"] = bispec_distance.bispec1
+
+            if cleanup:
+                del bispec_distance
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
@@ -102,6 +116,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["DeltaVariance"] = delvar_distance.delvar1
 
+            if cleanup:
+                del delvar_distance
+
         if any("Genus" in s for s in statistics):
             genus_distance = \
                 GenusDistance(dataset1["integrated_intensity"][0],
@@ -109,6 +126,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["Genus"] = genus_distance.distance
             if not multicore:
                 fiducial_models["Genus"] = genus_distance.genus1
+
+            if cleanup:
+                del genus_distance
 
         if any("VCS" in s for s in statistics):
             vcs_distance = VCS_Distance(dataset1["cube"],
@@ -121,6 +141,10 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["VCS"] = vcs_distance.vcs1
 
+
+            if cleanup:
+                del vcs_distance
+
         if any("VCA" in s for s in statistics):
             vca_distance = VCA_Distance(dataset1["cube"],
                                         dataset2["cube"],
@@ -129,6 +153,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["VCA"] = vca_distance.vca1
 
+            if cleanup:
+                del vca_distance
+
         if any("Tsallis" in s for s in statistics):
             tsallis_distance = \
                 Tsallis_Distance(dataset1["integrated_intensity"][0],
@@ -136,6 +163,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["Tsallis"] = tsallis_distance.distance
             if not multicore:
                 fiducial_models["Tsallis"] = tsallis_distance.tsallis1
+
+            if cleanup:
+                del tsallis_distance
 
         if any("Skewness" in s for s in statistics) or\
            any("Kurtosis" in s for s in statistics):
@@ -147,6 +177,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["stat_moments"] = moment_distance.moments1
 
+            if cleanup:
+                del moment_distance
+
         if any("PCA" in s for s in statistics):
             pca_distance = \
                 PCA_Distance(dataset1["cube"][0],
@@ -154,6 +187,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["PCA"] = pca_distance.distance
             if not multicore:
                 fiducial_models["PCA"] = pca_distance.pca1
+
+            if cleanup:
+                del pca_distance
 
         if any("SCF" in s for s in statistics):
             scf_distance = \
@@ -163,11 +199,17 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                 fiducial_models["SCF"] = scf_distance.scf1
 
+            if cleanup:
+                del scf_distance
+
         if any("Cramer" in s for s in statistics):
             cramer_distance = \
                 Cramer_Distance(dataset1["cube"][0],
                                 dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
+
+            if cleanup:
+                del cramer_distance
 
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
@@ -179,6 +221,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["Dendrogram_Num"] = dendro_distance.num_distance
             if not multicore:
                 fiducial_models["Dendrogram"] = dendro_distance.dendro1
+
+            if cleanup:
+                del dendro_distance
 
         if any("PDF" in s for s in statistics):
             pdf_distance = \
@@ -195,6 +240,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if not multicore:
                     fiducial_models["PDF"] = pdf_distance.PDF1
 
+            if cleanup:
+                del pdf_distance
+
         if multicore:
             return distances
         else:
@@ -209,12 +257,18 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                                  fiducial_model=fiducial_models["Wavelet"]).distance_metric()
             distances["Wavelet"] = wavelet_distance.distance
 
+            if cleanup:
+                del wavelet_distance
+
         if any("MVC" in s for s in statistics):
             mvc_distance = \
                 MVC_distance(dataset1,
                              dataset2,
                              fiducial_model=fiducial_models["MVC"]).distance_metric()
             distances["MVC"] = mvc_distance.distance
+
+            if cleanup:
+                del mvc_distance
 
         if any("PSpec" in s for s in statistics):
             pspec_distance = \
@@ -225,12 +279,18 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                            fiducial_model=fiducial_models["PSpec"]).distance_metric()
             distances["PSpec"] = pspec_distance.distance
 
+            if cleanup:
+                del pspec_distance
+
         if any("Bispectrum" in s for s in statistics):
             bispec_distance = \
                 BiSpectrum_Distance(dataset1["integrated_intensity"],
                                     dataset2["integrated_intensity"],
                                     fiducial_model=fiducial_models["Bispectrum"]).distance_metric()
             distances["Bispectrum"] = bispec_distance.distance
+
+            if cleanup:
+                del bispec_distance
 
         if any("DeltaVariance" in s for s in statistics):
             delvar_distance = \
@@ -241,12 +301,18 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                                      fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
             distances["DeltaVariance"] = delvar_distance.distance
 
+            if cleanup:
+                del delvar_distance
+
         if any("Genus" in s for s in statistics):
             genus_distance = \
                 GenusDistance(dataset1["integrated_intensity"][0],
                               dataset2["integrated_intensity"][0],
                               fiducial_model=fiducial_models["Genus"]).distance_metric()
             distances["Genus"] = genus_distance.distance
+
+            if cleanup:
+                del genus_distance
 
         if any("VCS" in s for s in statistics):
             vcs_distance = \
@@ -259,6 +325,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["VCS_Break"] = vcs_distance.break_distance
             distances["VCS"] = vcs_distance.distance
 
+            if cleanup:
+                del vcs_distance
+
         if any("VCA" in s for s in statistics):
             vca_distance = \
                 VCA_Distance(dataset1["cube"],
@@ -267,12 +336,18 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                              breaks=vca_break).distance_metric()
             distances["VCA"] = vca_distance.distance
 
+            if cleanup:
+                del vca_distance
+
         if any("Tsallis" in s for s in statistics):
             tsallis_distance= \
                 Tsallis_Distance(dataset1["integrated_intensity"][0],
                                  dataset2["integrated_intensity"][0],
                                  fiducial_model=fiducial_models["Tsallis"]).distance_metric()
             distances["Tsallis"] = tsallis_distance.distance
+
+            if cleanup:
+                del tsallis_distance
 
         if any("Skewness" in s for s in statistics) or any("Kurtosis" in s for s in statistics):
             moment_distance = \
@@ -283,12 +358,18 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             distances["Skewness"] = moment_distance.skewness_distance
             distances["Kurtosis"] = moment_distance.kurtosis_distance
 
+            if cleanup:
+                del moment_distance
+
         if any("PCA" in s for s in statistics):
             pca_distance = \
                 PCA_Distance(dataset1["cube"][0],
                              dataset2["cube"][0],
                              fiducial_model=fiducial_models["PCA"]).distance_metric()
             distances["PCA"] = pca_distance.distance
+
+            if cleanup:
+                del pca_distance
 
         if any("SCF" in s for s in statistics):
             scf_distance = \
@@ -297,11 +378,17 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                              fiducial_model=fiducial_models["SCF"]).distance_metric()
             distances["SCF"] = scf_distance.distance
 
+            if cleanup:
+                del scf_distance
+
         if any("Cramer" in s for s in statistics):
             cramer_distance = \
                 Cramer_Distance(dataset1["cube"][0],
                                 dataset2["cube"][0]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
+
+            if cleanup:
+                del cramer_distance
 
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
@@ -312,6 +399,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
             distances["Dendrogram_Num"] = dendro_distance.num_distance
+
+            if cleanup:
+                del dendro_distance
 
         if any("PDF" in s for s in statistics):
             pdf_distance = \
@@ -325,5 +415,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             pdf_distance.distance_metric()
 
             distances["PDF"] = pdf_distance.PDF1.pdf
+
+            if cleanup:
+                del pdf_distance
 
         return distances
