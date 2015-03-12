@@ -52,7 +52,7 @@ class PCA(object):
         self.cov_matrix = self.cov_matrix + self.cov_matrix.T
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
-        all_eigsvals.sort()  # Sort by maximum
+        all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
         if normalize:
             self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
