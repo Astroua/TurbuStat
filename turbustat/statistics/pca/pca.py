@@ -153,18 +153,30 @@ class PCA_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(1, 2, 1)
+            print "Proportions of total variance: 1 - %0.3f, 2 - %0.3f" % \
+                (self.pca1.var_proportion, self.pca2.var_proportion)
+
+            p.subplot(2, 2, 1)
             p.imshow(
-                self.pca1.pca_matrix, origin="lower", interpolation="nearest")
+                self.pca1.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA1")
-
-            p.subplot(1, 2, 2)
+            p.subplot(2, 2, 3)
+            p.bar(np.arange(1, self.pca1.n_eigs + 1, ), self.pca1.eigvals, 0.5, color='r')
+            p.xlim([0, self.pca1.n_eigs + 1])
+            p.xlabel('Eigenvalues')
+            p.ylabel('Variance')
+            p.subplot(2, 2, 2)
             p.imshow(
-                self.pca2.pca_matrix, origin="lower", interpolation="nearest")
+                self.pca2.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA2")
+            p.subplot(2, 2, 4)
+            p.bar(np.arange(1, self.pca2.n_eigs + 1, ), self.pca2.eigvals, 0.5, color='r')
+            p.xlim([0, self.pca2.n_eigs + 1])
+            p.xlabel('Eigenvalues')
 
+            p.tight_layout()
             p.show()
 
         return self
