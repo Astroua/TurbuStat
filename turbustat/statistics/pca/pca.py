@@ -53,12 +53,20 @@ class PCA(object):
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
+
+        self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
+            np.sum(all_eigsvals)
+
         if normalize:
             self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
             self.eigvals = all_eigsvals[:self.n_eigs]
 
         return self
+
+    @property
+    def var_proportion(self):
+        return self._var_prop
 
     def run(self, verbose=False, normalize=True):
         '''
@@ -77,8 +85,16 @@ class PCA(object):
         if verbose:
             import matplotlib.pyplot as p
 
+            print 'Proportion of Variance kept: %s' % (self.var_proportion)
+
+            p.subplot(121)
             p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
+            p.subplot(122)
+            p.bar(np.arange(1, self.n_eigs + 1, ), self.eigvals, 0.5, color='r')
+            p.xlim([0, self.n_eigs + 1])
+            p.xlabel('Eigenvalues')
+            p.ylabel('Variance')
             p.show()
 
 
