@@ -52,7 +52,13 @@ class PCA(object):
 
                 self.cov_matrix[i, j] = \
                     np.nansum(norm_chan*norm_chan2) / \
-                    (np.sum(np.isfinite(norm_chan*norm_chan2)) - 1)
+                    np.sum(np.isfinite(norm_chan*norm_chan2))
+
+            # Variances
+            # Divided in half to account for doubling in line below
+            self.cov_matrix[i, i] = 0.5 * \
+                np.nansum(norm_chan*norm_chan) / \
+                np.sum(np.isfinite(norm_chan*norm_chan))
 
         self.cov_matrix = self.cov_matrix + self.cov_matrix.T
 
