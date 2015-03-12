@@ -29,7 +29,7 @@ class PCA(object):
         self.n_velchan = self.cube.shape[0]
         self.eigvals = None
 
-    def compute_pca(self, normalize=True):
+    def compute_pca(self, mean_sub=False, normalize=True):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -42,9 +42,13 @@ class PCA(object):
         self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
 
         for i, chan in enumerate(_iter_2D(self.cube)):
-            norm_chan = chan - np.nanmean(chan)
+            norm_chan = chan
+            if mean_sub:
+                norm_chan -= np.nanmean(chan)
             for j, chan2 in enumerate(_iter_2D(self.cube[:i+1, :, :])):
-                norm_chan2 = chan2 - np.nanmean(chan2)
+                norm_chan2 = chan2
+                if mean_sub:
+                    norm_chan2 -= np.nanmean(chan2)
 
                 self.cov_matrix[i, j] = \
                     np.nansum(norm_chan*norm_chan2) / \
