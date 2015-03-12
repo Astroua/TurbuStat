@@ -27,7 +27,7 @@ class PCA(object):
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
-        self.pca_matrix = np.zeros((self.n_velchan, self.n_velchan))
+        self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
         self.eigvals = None
 
     def compute_pca(self, normalize=True):
@@ -40,18 +40,18 @@ class PCA(object):
             Normalize the set of eigenvalues by the 0th component.
         '''
 
-        cube_mean = np.nansum(self.cube) / np.sum(np.isfinite(self.cube))
-        norm_cube = self.cube - cube_mean
+        for i, chan in enumerate(_iter_2D(self.cube)):
+            norm_chan = chan - np.nanmean(chan)
+            for j, chan2 in enumerate(_iter_2D(self.cube[:i+1, :, :])):
+                norm_chan2 = chan2 - np.nanmean(chan2)
 
-        for i in range(self.n_velchan):
-            for j in range(i):
-                self.pca_matrix[i, j] = np.nansum(norm_cube[i, :, :] *
-                                                  norm_cube[j, :, :]) / \
-                    np.sum(np.isfinite(norm_cube[i, :, :] *
-                                       norm_cube[j, :, :]))
-        self.pca_matrix = self.pca_matrix + self.pca_matrix.T
+                self.cov_matrix[i, j] = \
+                    np.nansum(norm_chan*norm_chan2) / \
+                    (np.sum(np.isfinite(norm_chan*norm_chan2)) - 1)
 
-        all_eigsvals, eigvecs = np.linalg.eig(self.pca_matrix)
+        self.cov_matrix = self.cov_matrix + self.cov_matrix.T
+
+        all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
         all_eigsvals.sort()  # Sort by maximum
         if normalize:
             self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
@@ -77,7 +77,7 @@ class PCA(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.imshow(self.pca_matrix, origin="lower", interpolation="nearest")
+            p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.show()
 
@@ -151,3 +151,12 @@ class PCA_Distance(object):
             p.show()
 
         return self
+
+
+def _iter_2D(arr):
+    '''
+    Flatten a 3D cube into 2D by its channels.
+    '''
+
+    for chan in arr.reshape((arr.shape[0], -1)):
+        yield chan
