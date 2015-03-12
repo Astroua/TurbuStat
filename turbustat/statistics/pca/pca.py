@@ -27,10 +27,9 @@ class PCA(object):
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
-        self.pca_matrix = np.zeros((self.n_velchan, self.n_velchan))
         self.eigvals = None
 
-    def compute_pca(self, normalize=True):
+    def compute_pca(self, mean_sub=False, normalize=True):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -40,25 +39,45 @@ class PCA(object):
             Normalize the set of eigenvalues by the 0th component.
         '''
 
-        cube_mean = np.nansum(self.cube) / np.sum(np.isfinite(self.cube))
-        norm_cube = self.cube - cube_mean
+        self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
 
-        for i in range(self.n_velchan):
-            for j in range(i):
-                self.pca_matrix[i, j] = np.nansum(norm_cube[i, :, :] *
-                                                  norm_cube[j, :, :]) / \
-                    np.sum(np.isfinite(norm_cube[i, :, :] *
-                                       norm_cube[j, :, :]))
-        self.pca_matrix = self.pca_matrix + self.pca_matrix.T
+        for i, chan in enumerate(_iter_2D(self.cube)):
+            norm_chan = chan
+            if mean_sub:
+                norm_chan -= np.nanmean(chan)
+            for j, chan2 in enumerate(_iter_2D(self.cube[:i+1, :, :])):
+                norm_chan2 = chan2
+                if mean_sub:
+                    norm_chan2 -= np.nanmean(chan2)
 
-        all_eigsvals, eigvecs = np.linalg.eig(self.pca_matrix)
-        all_eigsvals.sort()  # Sort by maximum
+                self.cov_matrix[i, j] = \
+                    np.nansum(norm_chan*norm_chan2) / \
+                    np.sum(np.isfinite(norm_chan*norm_chan2))
+
+            # Variances
+            # Divided in half to account for doubling in line below
+            self.cov_matrix[i, i] = 0.5 * \
+                np.nansum(norm_chan*norm_chan) / \
+                np.sum(np.isfinite(norm_chan*norm_chan))
+
+        self.cov_matrix = self.cov_matrix + self.cov_matrix.T
+
+        all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
+        all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
+
+        self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
+            np.sum(all_eigsvals)
+
         if normalize:
             self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
             self.eigvals = all_eigsvals[:self.n_eigs]
 
         return self
+
+    @property
+    def var_proportion(self):
+        return self._var_prop
 
     def run(self, verbose=False, normalize=True):
         '''
@@ -77,8 +96,16 @@ class PCA(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.imshow(self.pca_matrix, origin="lower", interpolation="nearest")
+            print 'Proportion of Variance kept: %s' % (self.var_proportion)
+
+            p.subplot(121)
+            p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
+            p.subplot(122)
+            p.bar(np.arange(1, self.n_eigs + 1), self.eigvals, 0.5, color='r')
+            p.xlim([0, self.n_eigs + 1])
+            p.xlabel('Eigenvalues')
+            p.ylabel('Variance')
             p.show()
 
 
@@ -136,18 +163,39 @@ class PCA_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(1, 2, 1)
+            print "Proportions of total variance: 1 - %0.3f, 2 - %0.3f" % \
+                (self.pca1.var_proportion, self.pca2.var_proportion)
+
+            p.subplot(2, 2, 1)
             p.imshow(
-                self.pca1.pca_matrix, origin="lower", interpolation="nearest")
+                self.pca1.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA1")
-
-            p.subplot(1, 2, 2)
+            p.subplot(2, 2, 3)
+            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5, color='r')
+            p.xlim([0, self.pca1.n_eigs + 1])
+            p.xlabel('Eigenvalues')
+            p.ylabel('Variance')
+            p.subplot(2, 2, 2)
             p.imshow(
-                self.pca2.pca_matrix, origin="lower", interpolation="nearest")
+                self.pca2.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.title("PCA2")
+            p.subplot(2, 2, 4)
+            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5, color='r')
+            p.xlim([0, self.pca2.n_eigs + 1])
+            p.xlabel('Eigenvalues')
 
+            p.tight_layout()
             p.show()
 
         return self
+
+
+def _iter_2D(arr):
+    '''
+    Flatten a 3D cube into 2D by its channels.
+    '''
+
+    for chan in arr.reshape((arr.shape[0], -1)):
+        yield chan
