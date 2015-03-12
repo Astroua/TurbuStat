@@ -27,7 +27,6 @@ class PCA(object):
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
-        self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
         self.eigvals = None
 
     def compute_pca(self, normalize=True):
@@ -39,6 +38,8 @@ class PCA(object):
         normalize : bool, optional
             Normalize the set of eigenvalues by the 0th component.
         '''
+
+        self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
 
         for i, chan in enumerate(_iter_2D(self.cube)):
             norm_chan = chan - np.nanmean(chan)
