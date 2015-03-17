@@ -50,15 +50,23 @@ class PCA(object):
                 if mean_sub:
                     norm_chan2 -= np.nanmean(chan2)
 
+                divisor = np.sum(np.isfinite(norm_chan*norm_chan2))
+
+                # Apply Bessel's correction when mean subtracting
+                if mean_sub:
+                    divisor -= 1.0
+
                 self.cov_matrix[i, j] = \
-                    np.nansum(norm_chan*norm_chan2) / \
-                    np.sum(np.isfinite(norm_chan*norm_chan2))
+                    np.nansum(norm_chan*norm_chan2) / divisor
 
             # Variances
             # Divided in half to account for doubling in line below
+            var_divis = np.sum(np.isfinite(norm_chan))
+            if mean_sub:
+                var_divis -= 1.0
+
             self.cov_matrix[i, i] = 0.5 * \
-                np.nansum(norm_chan*norm_chan) / \
-                np.sum(np.isfinite(norm_chan*norm_chan))
+                np.nansum(norm_chan*norm_chan) / var_divis
 
         self.cov_matrix = self.cov_matrix + self.cov_matrix.T
 
