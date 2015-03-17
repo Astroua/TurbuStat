@@ -61,9 +61,12 @@ class PCA(object):
 
             # Variances
             # Divided in half to account for doubling in line below
+            var_divis = np.sum(np.isfinite(norm_chan))
+            if mean_sub:
+                var_divis -= 1.0
+
             self.cov_matrix[i, i] = 0.5 * \
-                np.nansum(norm_chan*norm_chan) / \
-                np.sum(np.isfinite(norm_chan*norm_chan))
+                np.nansum(norm_chan*norm_chan) / var_divis
 
         self.cov_matrix = self.cov_matrix + self.cov_matrix.T
 
