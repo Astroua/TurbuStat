@@ -54,3 +54,40 @@ def intensity_data(cube, p=0.1, noise_lim=0.1):
     intensity_vecs = np.delete(intensity_vecs, delete_channels, axis=0)
 
     return intensity_vecs
+
+
+def _format_data(cube, data_format='intensity', num_spec=1000,
+                 noise_lim=0.0, p=0.1):
+    '''
+    Rearrange data into a 2D object using the given format.
+    '''
+
+    if data_format is "spectra":
+        if num_spec is None:
+            raise ValueError('Must specify num_spec for data format',
+                             'spectra.')
+
+        # Find the brightest spectra in the cube
+        mom0 = np.nansum(cube)
+
+        bright_spectra = \
+            np.argpartition(mom0.ravel(), -num_spec)[-num_spec:]
+
+        x = np.empty((num_spec,))
+        y = np.empty((num_spec,))
+
+        for i in range(num_spec):
+            x[i] = bright_spectra[i] / cube.shape[1]
+            y[i] = bright_spectra[i] % cube.shape[2]
+
+        data_matrix = cube[:, x, y]
+
+    elif data_format is "intensity":
+        data_matrix = intensity_data(cube, noise_lim=noise_lim,
+                                     p=p)
+
+    else:
+        raise NameError(
+            "data_format must be either 'spectra' or 'intensity'.")
+
+    return data_matrix
