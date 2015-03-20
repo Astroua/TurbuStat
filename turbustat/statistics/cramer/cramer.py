@@ -55,7 +55,7 @@ class Cramer_Distance(object):
 
         self.data_matrix1 = _format_data(self.cube1, data_format=data_format,
                                          noise_lim=self.noise_value1)
-        self.data_matrix2 = _format_data(self.cube1, data_format=data_format,
+        self.data_matrix2 = _format_data(self.cube2, data_format=data_format,
                                          noise_lim=self.noise_value2)
 
         return self
