@@ -6,7 +6,7 @@ Routines for transforming data cubes to 2D representations
 import numpy as np
 
 
-def intensity_data(cube, p=0.1, noise_lim=0.1):
+def intensity_data(cube, p=0.1, noise_lim=0.1, norm=True):
     '''
     Clips off channels below the given noise limit and keep the
     upper percentile specified.
@@ -31,6 +31,11 @@ def intensity_data(cube, p=0.1, noise_lim=0.1):
 
     delete_channels = []
 
+    if norm:
+        maxval = np.nanmax(cube)
+    else:
+        maxval = 1.0
+
     for dv in range(cube.shape[0]):
         vec_vec = cube[dv, :, :]
         # Remove nans from the slice
@@ -45,7 +50,6 @@ def intensity_data(cube, p=0.1, noise_lim=0.1):
             vel_vec = vel_vec[:vec_length]
 
         # Return the normalized, shortened vector
-        maxval = np.max(vel_vec)
         if maxval != 0.0:
             intensity_vecs[dv, :] = vel_vec / maxval
         else:
