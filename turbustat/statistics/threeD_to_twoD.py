@@ -91,3 +91,66 @@ def _format_data(cube, data_format='intensity', num_spec=1000,
             "data_format must be either 'spectra' or 'intensity'.")
 
     return data_matrix
+
+
+def var_cov_cube(cube, mean_sub=False):
+    '''
+    Compute the variance-covariance matrix of a data cube, with proper
+    handling of NaNs.
+
+    Parameters
+    ----------
+    cube : numpy.ndarray
+        PPV cube. Spectral dimension assumed to be 0th axis.
+    mean_sub : bool, optional
+        Subtract column means.
+
+    Returns
+    -------
+    cov_matrix : numpy.ndarray
+        Computed covariance matrix.
+    '''
+
+    n_velchan = cube.shape[0]
+
+    cov_matrix = np.zeros((n_velchan, n_velchan))
+
+    for i, chan in enumerate(_iter_2D(cube)):
+        norm_chan = chan
+        if mean_sub:
+            norm_chan -= np.nanmean(chan)
+        for j, chan2 in enumerate(_iter_2D(cube[:i+1, :, :])):
+            norm_chan2 = chan2
+            if mean_sub:
+                norm_chan2 -= np.nanmean(chan2)
+
+            divisor = np.sum(np.isfinite(norm_chan*norm_chan2))
+
+            # Apply Bessel's correction when mean subtracting
+            if mean_sub:
+                divisor -= 1.0
+
+            cov_matrix[i, j] = \
+                np.nansum(norm_chan*norm_chan2) / divisor
+
+        # Variances
+        # Divided in half to account for doubling in line below
+        var_divis = np.sum(np.isfinite(norm_chan))
+        if mean_sub:
+            var_divis -= 1.0
+
+        cov_matrix[i, i] = 0.5 * \
+            np.nansum(norm_chan*norm_chan) / var_divis
+
+    cov_matrix = cov_matrix + cov_matrix.T
+
+    return cov_matrix
+
+
+def _iter_2D(arr):
+    '''
+    Flatten a 3D cube into 2D by its channels.
+    '''
+
+    for chan in arr.reshape((arr.shape[0], -1)):
+        yield chan
