@@ -37,7 +37,7 @@ def intensity_data(cube, p=0.1, noise_lim=0.1):
         vel_vec = vec_vec[np.isfinite(vec_vec)]
         # Apply noise limit
         vel_vec = vel_vec[vel_vec > noise_lim]
-        vel_vec.sort()
+        vel_vec = np.sort(vel_vec)[::-1]
         if len(vel_vec) < vec_length:
             diff = vec_length - len(vel_vec)
             vel_vec = np.append(vel_vec, [0.0] * diff)
