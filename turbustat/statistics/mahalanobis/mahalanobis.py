@@ -48,6 +48,13 @@ class Mahalanobis(object):
         self.format_data(*args)
         self.compute_distmat(n_jobs=n_jobs)
 
+        if verbose:
+            import matplotlib.pyplot as p
+
+            p.imshow(self.distance_matrix, interpolation=None)
+            p.colorbar()
+            p.show()
+
         return self
 
 
