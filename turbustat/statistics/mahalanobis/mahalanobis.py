@@ -1,5 +1,6 @@
 
 import numpy as np
+from skleatn.metrics.pairwise import pairwise_distances
 
 from ..threeD_to_twoD import _format_data
 
@@ -18,6 +19,34 @@ class Mahalanobis(object):
 
         self.data_matrix = _format_data(self.cube, data_format=data_format,
                                         *args)
+
+        return self
+
+    def compute_distmat(self, n_jobs=1):
+        '''
+        Compute the Mahalanobis distance matrix.
+        '''
+
+        channels = self.data_matrix.shape[0]
+
+        self.distance_matrix = np.zeros((channels, channels))
+
+        for i in range(channels):
+            for j in range(i):
+                self.distance_matrix[i, j] = \
+                    mahala_fcn(self.data_matrix[i, :], self.data_matrix[j, :])
+
+        # Add in the upper triangle
+        self.distance_matrix = self.distance_matrix + self.distance_matrix.T
+
+        return self
+
+    def run(self, verbose=False, n_jobs=1, *args):
+        '''
+        Run all computations.
+        '''
+        self.format_data(*args)
+        self.compute_distmat(n_jobs=n_jobs)
 
         return self
 
@@ -157,4 +186,4 @@ def mahala_fcn(x, y):
     diff = x - y
     val = np.dot(diff.T, np.dot(icov, diff))
 
-    return np.sqrt(diff)
+    return np.sqrt(val)
