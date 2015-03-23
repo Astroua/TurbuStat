@@ -72,17 +72,17 @@ def _format_data(cube, data_format='intensity', num_spec=1000,
                              'spectra.')
 
         # Find the brightest spectra in the cube
-        mom0 = np.nansum(cube)
+        mom0 = np.nansum(cube, axis=0)
 
         bright_spectra = \
             np.argpartition(mom0.ravel(), -num_spec)[-num_spec:]
 
-        x = np.empty((num_spec,))
-        y = np.empty((num_spec,))
+        x = np.empty((num_spec,), dtype=int)
+        y = np.empty((num_spec,), dtype=int)
 
         for i in range(num_spec):
-            x[i] = bright_spectra[i] / cube.shape[1]
-            y[i] = bright_spectra[i] % cube.shape[2]
+            x[i] = int(bright_spectra[i] / cube.shape[1])
+            y[i] = int(bright_spectra[i] % cube.shape[2])
 
         data_matrix = cube[:, x, y]
 
