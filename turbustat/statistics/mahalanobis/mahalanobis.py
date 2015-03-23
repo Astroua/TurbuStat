@@ -1,6 +1,6 @@
 
 import numpy as np
-from skleatn.metrics.pairwise import pairwise_distances
+from scipy.spatial.distance import mahalanobis
 
 from ..threeD_to_twoD import _format_data
 
@@ -190,7 +190,6 @@ def mahala_fcn(x, y):
     except np.linalg.LinAlgError:
         icov = np.linalg.inv(cov + np.eye(cov.shape[0], cov.shape[1], k=1e-3))
 
-    diff = x - y
-    val = np.dot(diff.T, np.dot(icov, diff))
+    val = mahalanobis(x, y, icov)
 
     return np.sqrt(val)
