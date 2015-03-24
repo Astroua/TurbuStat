@@ -16,7 +16,8 @@ from pandas import DataFrame
 
 
 def pairwise(files, statistics=None, ncores=1, save=False,
-             save_name='pairwise'):
+             save_name='pairwise', add_noise=False,
+             rms_noise=0.001):
     '''
     Create a distance matrix for a set of simulations.
     '''
@@ -30,7 +31,9 @@ def pairwise(files, statistics=None, ncores=1, save=False,
     output = pool.map(single_input,
                       izip(repeat(files),
                            combinations(pos, 2),
-                           repeat(statistics)))
+                           repeat(statistics),
+                           repeat(add_noise),
+                           repeat(rms_noise)))
 
     pool.close()
 
@@ -50,12 +53,14 @@ def pairwise(files, statistics=None, ncores=1, save=False,
         return dist_matrices
 
 
-def timestep_wrapper(files, pos, statistics):
+def timestep_wrapper(files, pos, statistics, noise=False, rms_noise=0.001):
 
     pos1, pos2 = pos
     # Derive the property arrays assuming uniform noise (for sims)
-    dataset1 = load_and_reduce(files[pos1])
-    dataset2 = load_and_reduce(files[pos2])
+    dataset1 = load_and_reduce(files[pos1], add_noise=noise,
+                               rms_noise=rms_noise)
+    dataset2 = load_and_reduce(files[pos2], add_noise=noise,
+                               rms_noise=rms_noise)
 
     distances = stats_wrapper(dataset1, dataset2,
                               statistics=statistics, multicore=True)
@@ -84,14 +89,13 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
         sc = SpectralCube(data=cube, wcs=WCS(hdr))
 
     else:
-        sc = SpectralCube.read(filename)
+        sc = filename
 
-    mask = LazyMask(np.isfinite, sc)
-    sc = sc.with_mask(mask)
+    # mask = LazyMask(np.isfinite, sc)
+    # sc = sc.with_mask(mask)
 
     reduc = Mask_and_Moments(sc)
-    three_sig_mask = reduc.cube > nsig * reduc.scale
-    reduc.make_mask(mask=three_sig_mask)
+    reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
     reduc.make_moments()
     reduc.make_moment_errors()
 
