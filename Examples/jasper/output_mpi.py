@@ -299,15 +299,14 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
 
         sc = SpectralCube(data=cube, wcs=WCS(hdr))
 
+        mask = LazyMask(np.isfinite, sc)
+        sc = sc.with_mask(mask)
+
     else:
-        sc = SpectralCube.read(filename)
+        sc = filename
 
-    mask = LazyMask(np.isfinite, sc)
-    sc = sc.with_mask(mask)
-
-    reduc = Mask_and_Moments(sc)
-    three_sig_mask = reduc.cube > nsig * reduc.scale
-    reduc.make_mask(mask=three_sig_mask)
+    reduc = Mask_and_Moments(sc, scale=rms_noise)
+    reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
     reduc.make_moments()
     reduc.make_moment_errors()
 
