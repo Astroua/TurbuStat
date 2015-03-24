@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from ..threeD_to_twoD import var_cov_cube
+
 
 class PCA(object):
 
@@ -39,36 +41,7 @@ class PCA(object):
             Normalize the set of eigenvalues by the 0th component.
         '''
 
-        self.cov_matrix = np.zeros((self.n_velchan, self.n_velchan))
-
-        for i, chan in enumerate(_iter_2D(self.cube)):
-            norm_chan = chan
-            if mean_sub:
-                norm_chan -= np.nanmean(chan)
-            for j, chan2 in enumerate(_iter_2D(self.cube[:i+1, :, :])):
-                norm_chan2 = chan2
-                if mean_sub:
-                    norm_chan2 -= np.nanmean(chan2)
-
-                divisor = np.sum(np.isfinite(norm_chan*norm_chan2))
-
-                # Apply Bessel's correction when mean subtracting
-                if mean_sub:
-                    divisor -= 1.0
-
-                self.cov_matrix[i, j] = \
-                    np.nansum(norm_chan*norm_chan2) / divisor
-
-            # Variances
-            # Divided in half to account for doubling in line below
-            var_divis = np.sum(np.isfinite(norm_chan))
-            if mean_sub:
-                var_divis -= 1.0
-
-            self.cov_matrix[i, i] = 0.5 * \
-                np.nansum(norm_chan*norm_chan) / var_divis
-
-        self.cov_matrix = self.cov_matrix + self.cov_matrix.T
+        self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
@@ -198,12 +171,3 @@ class PCA_Distance(object):
             p.show()
 
         return self
-
-
-def _iter_2D(arr):
-    '''
-    Flatten a 3D cube into 2D by its channels.
-    '''
-
-    for chan in arr.reshape((arr.shape[0], -1)):
-        yield chan

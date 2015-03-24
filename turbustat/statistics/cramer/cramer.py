@@ -10,6 +10,8 @@ Implementation of the Cramer Statistic
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 
+from ..threeD_to_twoD import _format_data
+
 
 class Cramer_Distance(object):
     """
@@ -34,11 +36,10 @@ class Cramer_Distance(object):
     """
 
     def __init__(self, cube1, cube2, noise_value1=0.1,
-                 noise_value2=0.1, data_format="intensity"):
+                 noise_value2=0.1):
         super(Cramer_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
-        self.data_format = data_format
 
         self.noise_value1 = noise_value1
         self.noise_value2 = noise_value2
@@ -47,26 +48,15 @@ class Cramer_Distance(object):
         self.data_matrix2 = None
         self.distance = None
 
-    def format_data(self, data_format=None):
+    def format_data(self, data_format='intensity'):
         '''
         Rearrange data into a 2D object using the given format.
         '''
 
-        if data_format is not None:
-            self.data_format = data_format
-
-        if self.data_format == "spectra":
-            raise NotImplementedError("")
-
-        elif self.data_format == "intensity":
-            self.data_matrix1 = intensity_data(self.cube1,
-                                               noise_lim=self.noise_value1)
-            self.data_matrix2 = intensity_data(self.cube2,
-                                               noise_lim=self.noise_value2)
-
-        else:
-            raise NameError(
-                "data_format must be either 'spectra' or 'intensity'.")
+        self.data_matrix1 = _format_data(self.cube1, data_format=data_format,
+                                         noise_lim=self.noise_value1)
+        self.data_matrix2 = _format_data(self.cube2, data_format=data_format,
+                                         noise_lim=self.noise_value2)
 
         return self
 
@@ -137,53 +127,3 @@ class Cramer_Distance(object):
         self.cramer_statistic(n_jobs=n_jobs)
 
         return self
-
-
-def intensity_data(cube, p=0.1, noise_lim=0.1):
-    '''
-    Clips off channels below the given noise limit and keep the
-    upper percentile specified.
-
-    Parameters
-    ----------
-    cube : numpy.ndarray
-        Data cube.
-    p : float, optional
-        Sets the fraction of data to keep in each channel.
-    noise_lim : float, optional
-        The noise limit used to reject channels in the cube.
-
-    Returns
-    -------
-
-    intensity_vecs : numpy.ndarray
-        2D dataset of size (# channels, p * cube.shape[1] * cube.shape[2]).
-    '''
-    vec_length = int(round(p * cube.shape[1] * cube.shape[2]))
-    intensity_vecs = np.empty((cube.shape[0], vec_length))
-
-    delete_channels = []
-
-    for dv in range(cube.shape[0]):
-        vec_vec = cube[dv, :, :]
-        # Remove nans from the slice
-        vel_vec = vec_vec[np.isfinite(vec_vec)]
-        # Apply noise limit
-        vel_vec = vel_vec[vel_vec > noise_lim]
-        vel_vec.sort()
-        if len(vel_vec) < vec_length:
-            diff = vec_length - len(vel_vec)
-            vel_vec = np.append(vel_vec, [0.0] * diff)
-        else:
-            vel_vec = vel_vec[:vec_length]
-
-        # Return the normalized, shortened vector
-        maxval = np.max(vel_vec)
-        if maxval != 0.0:
-            intensity_vecs[dv, :] = vel_vec / maxval
-        else:
-            delete_channels.append(dv)
-    # Remove channels
-    intensity_vecs = np.delete(intensity_vecs, delete_channels, axis=0)
-
-    return intensity_vecs
