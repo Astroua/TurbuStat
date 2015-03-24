@@ -6,6 +6,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
 from scipy import ndimage as nd
+import itertools as it
+import operator as op
 
 
 class Mask_and_Moments(object):
@@ -243,7 +245,7 @@ class Mask_and_Moments(object):
 
             hdu.writeto(save_name+labels[i]+".fits")
 
-    def _get_int_intensity(self, min_sn=1):
+    def _get_int_intensity(self):
         '''
         Get an integrated intensity image of the cube.
 
@@ -252,37 +254,30 @@ class Mask_and_Moments(object):
 
         '''
 
-        noise = self.find_noise(return_obj=True)
+        shape = self.cube.shape
 
-        noise.calculate_spectral()
+        channel_max = \
+            np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1]*shape[2]),
+                      axis=1).value
 
-        good_channels = noise.spectral_norm > min_sn
+        good_channels = np.where(channel_max > self.clip*self.scale)[0]
+
+        # Get the longest sequence
+        good_channels = longestSequence(good_channels)
 
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
 
-        channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
+        self.channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 
-        slab = self.cube.spectral_slab(*channel_range)
+        slab = self.cube.spectral_slab(*self.channel_range)
 
         return slab.moment0()
 
     def _get_int_intensity_err(self, min_sn=1):
         '''
         '''
-
-        noise = self.find_noise(return_obj=True)
-
-        noise.calculate_spectral()
-
-        good_channels = noise.spectral_norm > min_sn
-
-        if not np.any(good_channels):
-            raise ValueError("Cannot find any channels with signal.")
-
-        channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
-
-        slab = self.cube.spectral_slab(*channel_range)
+        slab = self.cube.spectral_slab(*self.channel_range)
 
         error_arr = self.scale * \
             np.sqrt(np.sum(slab.mask.include(), axis=0))
@@ -403,3 +398,16 @@ def _try_remove_unit(arr):
         return True
     except AttributeError:
         return False
+
+
+def longestSequence(data):
+
+    longest = []
+
+    sequences = []
+    for k, g in it.groupby(enumerate(data), lambda(i, y): i-y):
+        sequences.append(map(op.itemgetter(1), g))
+
+    longest = max(sequences, key=len)
+
+    return longest
