@@ -13,6 +13,7 @@ import numpy as np
 from interruptible_pool import InterruptiblePool as Pool
 from itertools import izip, combinations, repeat
 from pandas import DataFrame
+from datetime import datetime
 
 
 def pairwise(files, statistics=None, ncores=1, save=False,
@@ -168,8 +169,20 @@ if __name__ == "__main__":
 
     # Now run the pairwise comparisons
 
-    for num in [0, 1]:  # fid_num:
-        for face in [0, 1]:  # faces:
+    for num in fid_num:
+        print "On Fiducial "+str(num)+" of "+str(max(fid_num))
+        for face in faces:
+            print 'Face '+str(face)+" at "+str(datetime.now())
             pairwise(fids_dict[num][face], ncores=5, save=True,
-                     statistics=['Cramer'],
-                     save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face))
+                     statistics=None,
+                     save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face),
+                     save_path=folder+"pairwise/")
+
+    for num in des_num:
+        print "On Design "+str(num)+" of "+str(max(des_num))
+        for face in faces:
+            print 'Face '+str(face)+" at "+str(datetime.now())
+            pairwise(des_dict[num][face], ncores=5, save=True,
+                     statistics=None,
+                     save_name='SimSuite8_Design'+str(num)+"_"+str(face),
+                     save_path=folder+"pairwise/")
