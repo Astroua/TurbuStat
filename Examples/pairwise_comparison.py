@@ -16,8 +16,8 @@ from pandas import DataFrame
 
 
 def pairwise(files, statistics=None, ncores=1, save=False,
-             save_name='pairwise', add_noise=False,
-             rms_noise=0.001):
+             save_name='pairwise', save_path=None,
+             add_noise=False, rms_noise=0.001):
     '''
     Create a distance matrix for a set of simulations.
     '''
@@ -46,9 +46,12 @@ def pairwise(files, statistics=None, ncores=1, save=False,
     if save:
         stats = out[0].keys()
 
+        if save_path is None:
+            save_path = ""
+
         for i, stat in enumerate(stats):
             df = DataFrame(dist_matrices[i, :, :])
-            df.to_csv(save_name+'_'+stat+'_distmat.csv')
+            df.to_csv(save_path+save_name+'_'+stat+'_distmat.csv')
     else:
         return dist_matrices
 
@@ -165,8 +168,8 @@ if __name__ == "__main__":
 
     # Now run the pairwise comparisons
 
-    for num in fid_num:
-        for face in faces:
+    for num in [0, 1]:  # fid_num:
+        for face in [0, 1]:  # faces:
             pairwise(fids_dict[num][face], ncores=5, save=True,
-                     statistics=['Cramer', 'PCA', 'Dendrogram_Hist'],
+                     statistics=['Cramer'],
                      save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face))
