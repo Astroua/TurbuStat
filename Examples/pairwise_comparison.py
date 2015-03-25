@@ -100,3 +100,73 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
     reduc.make_moment_errors()
 
     return reduc.to_dict()
+
+
+if __name__ == "__main__":
+
+    import sys
+    import glob
+
+    folder = str(sys.argv[1])
+
+    # Grab all of the fits files, then sort them by fiducial, design,
+    # then by number, then by the face
+
+    fits_files = glob.glob(folder+"/*.fits")
+
+    fiducials = []
+    designs = []
+
+    for fits in fits_files:
+        if "Fiducial" in fits:
+            fiducials.append(fits)
+        elif "Design" in fits:
+            designs.append(fits)
+        else:
+            print "Cannot classify %f" % (fits)
+
+    # This set has 5 fiducials and 32 designs
+
+    fid_num = np.arange(5)
+    des_num = np.arange(32)
+
+    faces = np.arange(3)
+
+    fids_dict = {}
+    des_dict = {}
+
+    for num in fid_num:
+        fids_dict[num] = dict.fromkeys(faces)
+        for face in faces:
+            fids_dict[num][face] = []
+
+        for fid in fiducials:
+            if not "Fiducial"+str(num) in fid:
+                continue
+
+            for face in faces:
+                if "_0"+str(face)+"_" in fid:
+                    fids_dict[num][face].append(fid)
+                    break
+
+    for num in des_num:
+        des_dict[num] = dict.fromkeys(faces)
+        for face in faces:
+            des_dict[num][face] = []
+
+        for des in designs:
+            if not "Design"+str(num) in des:
+                continue
+
+            for face in faces:
+                if "_0"+str(face)+"_" in des:
+                    des_dict[num][face].append(des)
+                    break
+
+    # Now run the pairwise comparisons
+
+    for num in fid_num:
+        for face in faces:
+            pairwise(fids_dict[num][face], ncores=5, save=True,
+                     statistics=['Cramer', 'PCA', 'Dendrogram_Hist'],
+                     save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face))
