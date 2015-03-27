@@ -286,12 +286,12 @@ class Mask_and_Moments(object):
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
 
-        error_arr = self.scale * \
-            np.sqrt(np.sum(slab.mask.include(), axis=0))
-
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
+        if self.moment_method is 'cube':
+            return _cube0(slab, axis, self.scale)
+        elif self.moment_method is 'slice':
+            return _slice0(slab, axis, self.scale)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
     def _get_moment0_err(self, axis=0):
         '''
