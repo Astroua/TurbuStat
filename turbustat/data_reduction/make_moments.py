@@ -281,7 +281,7 @@ class Mask_and_Moments(object):
 
         return slab.moment0()
 
-    def _get_int_intensity_err(self, min_sn=1):
+    def _get_int_intensity_err(self, axis=0):
         '''
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
