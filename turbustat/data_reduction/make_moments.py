@@ -9,7 +9,7 @@ from scipy import ndimage as nd
 import itertools as it
 import operator as op
 
-from _moment_errs import *
+from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
 
 class Mask_and_Moments(object):
