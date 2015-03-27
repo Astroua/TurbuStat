@@ -59,12 +59,14 @@ class Mask_and_Moments(object):
 
         return self
 
-    def make_moments(self, units=False):
+    def make_moments(self, axis=0, units=False):
 
-        self._moment0 = self.cube.moment0()
-        self._moment1 = self.cube.moment1()
-        self._moment2 = self.cube.moment2()
-        self._intint = self._get_int_intensity()
+        self._moment0 = self.cube.moment0(axis=axis, how=self.moment_method)
+        self._moment1 = self.cube.moment1(axis=axis, how=self.moment_method)
+        self._moment2 = self.cube.moment2(axis=axis, how=self.moment_method)
+
+        # The 'how' is set directly in the int intensity function.
+        self._intint = self._get_int_intensity(axis=axis)
 
         if not units:
             self._moment0 = self._moment0.value
@@ -252,7 +254,7 @@ class Mask_and_Moments(object):
 
             hdu.writeto(save_name+labels[i]+".fits")
 
-    def _get_int_intensity(self):
+    def _get_int_intensity(self, axis=0):
         '''
         Get an integrated intensity image of the cube.
 
@@ -279,7 +281,7 @@ class Mask_and_Moments(object):
 
         slab = self.cube.spectral_slab(*self.channel_range)
 
-        return slab.moment0()
+        return slab.moment0(axis=axis, how=self.moment_method)
 
     def _get_int_intensity_err(self, axis=0):
         '''
