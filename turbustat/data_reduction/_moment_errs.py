@@ -147,33 +147,7 @@ def moment_raywise(cube, order, axis):
     return out
 
 
-def moment_cubewise(cube, order, axis):
-    """
-    Compute the moments by working with the entire data at once
-    """
-
-    pix_cen = cube._pix_cen()[axis]
-    data = cube._get_filled_data() * cube._pix_size()[axis]
-
-    if order == 0:
-        return allbadtonan(np.nansum)(data, axis=axis)
-
-    if order == 1:
-        return (np.nansum(data * pix_cen, axis=axis) /
-                np.nansum(data, axis=axis))
-    else:
-        mom1 = moment_cubewise(cube, 1, axis)
-
-        # insert an axis so it broadcasts properly
-        shp = list(_moment_shp(cube, axis))
-        shp.insert(axis, 1)
-        mom1 = mom1.reshape(shp)
-
-        return (np.nansum(data * (pix_cen - mom1) ** order, axis=axis) /
-                np.nansum(data, axis=axis))
-
-
-def _cube0(cube, scale, axis):
+def _cube0(cube, axis, scale):
     '''
 
     '''
@@ -186,7 +160,7 @@ def _cube0(cube, scale, axis):
     return error_arr
 
 
-def _cube1(cube, scale, axis, moment0, moment1):
+def _cube1(cube, axis, scale, moment0, moment1):
     '''
 
     '''
@@ -209,7 +183,7 @@ def _cube1(cube, scale, axis, moment0, moment1):
     return error_arr
 
 
-def _cube2(cube, scale, axis, moment0, moment1, moment2, moment1_err):
+def _cube2(cube, axis, scale, moment0, moment1, moment2, moment1_err):
     '''
     '''
 
