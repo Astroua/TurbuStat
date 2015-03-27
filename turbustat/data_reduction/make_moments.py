@@ -9,10 +9,13 @@ from scipy import ndimage as nd
 import itertools as it
 import operator as op
 
+from _moment_errs import *
+
 
 class Mask_and_Moments(object):
     """docstring for Mask_and_Moments"""
-    def __init__(self, cube, noise_type='constant', clip=3, scale=None):
+    def __init__(self, cube, noise_type='constant', clip=3, scale=None,
+                 moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
 
         if isinstance(cube, SpectralCube):
@@ -22,6 +25,10 @@ class Mask_and_Moments(object):
 
         self.noise_type = noise_type
         self.clip = clip
+
+        if moment_method not in ['slice', 'cube', 'ray']:
+            raise TypeError("Moment method must be 'slice', 'cube', or 'ray'.")
+        self.moment_method = moment_method
 
         if scale is None:
             self.scale = Noise(self.cube).scale
@@ -286,69 +293,42 @@ class Mask_and_Moments(object):
 
         return error_arr
 
-    def _get_moment0_err(self):
+    def _get_moment0_err(self, axis=0):
         '''
         '''
 
-        error_arr = self.scale * \
-            np.sqrt(np.sum(self.cube.mask.include(), axis=0))
+        if self.moment_method is 'cube':
+            return _cube0(self.cube, axis, self.scale)
+        elif self.moment_method is 'slice':
+            return _slice0(self.cube, axis, self.scale)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
-
-    def _get_moment1_err(self):
+    def _get_moment1_err(self, axis=0):
         '''
         '''
 
-        pix_cen = self.cube._pix_cen()[0] + self.cube.spectral_axis[0].value
+        if self.moment_method is 'cube':
+            return _cube1(self.cube, axis, self.scale, self.moment0,
+                          self.moment1)
+        elif self.moment_method is 'slice':
+            return _slice1(self.cube, axis, self.scale, self.moment0,
+                           self.moment1)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
-        good_pix = np.isfinite(self.moment0) + np.isfinite(self.moment1)
-
-        error_arr = np.zeros(self.moment1.shape)
-
-        error_arr[good_pix] = \
-            (self.scale / self.moment0[good_pix]) * \
-            np.sqrt(np.sum(np.power((pix_cen - self.moment1) * good_pix, 2),
-                           axis=0))[good_pix]
-
-        error_arr[~good_pix] = np.NaN
-
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
-
-    def _get_moment2_err(self):
+    def _get_moment2_err(self, axis=0):
         '''
         '''
 
-        pix_cen = self.cube._pix_cen()[0]
-
-        data = self.cube._get_filled_data() * self.cube._pix_size()[0]
-
-        good_pix = np.isfinite(self.moment0) + np.isfinite(self.moment1) + \
-            np.isfinite(self.moment2)
-
-        error_arr = np.zeros(self.moment2.shape)
-
-        term11 = (np.power(pix_cen - self.moment1, 2) * good_pix) - \
-            self.moment2
-
-        term1 = self.scale**2 * np.sum(np.power(term11, 2), axis=0)[good_pix]
-
-        term21 = np.nansum((data * (pix_cen - self.moment1)), axis=0)
-
-        term2 = 4 * self._get_moment1_err()[good_pix] * \
-            np.power(term21, 2)[good_pix]
-
-        error_arr[good_pix] = (1 / self.moment0[good_pix]) * \
-            np.sqrt(term1 + term2)
-
-        error_arr[~good_pix] = np.NaN
-
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
+        if self.moment_method is 'cube':
+            return _cube2(self.cube, axis, self.scale, self.moment0,
+                          self.moment1, self.moment2, self.moment1_err)
+        elif self.moment_method is 'slice':
+            return _slice2(self.cube, axis, self.scale, self.moment0,
+                           self.moment1, self.moment2, self.moment1_err)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
 
 def moment_masking(cube, kernel_size, clip=5, dilations=1):
