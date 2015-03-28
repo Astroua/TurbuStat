@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PBS -S /bin/bash
-#PBS -l pmem=3500m
+#PBS -l pmem=4000m
 #PBS -l feature=X5675
 #PBS -l nodes=1:ppn=12
 #PBS -l walltime=30:00:00
