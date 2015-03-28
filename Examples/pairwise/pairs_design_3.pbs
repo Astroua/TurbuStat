@@ -4,7 +4,7 @@
 #PBS -l pmem=4000m
 #PBS -l feature=X5675
 #PBS -l nodes=1:ppn=12
-#PBS -l walltime=30:00:00
+#PBS -l walltime=20:00:00
 #PBS -m bea
 #PBS -M koch.eric.w@gmail.com
 #PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
