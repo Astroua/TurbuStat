@@ -374,7 +374,7 @@ if __name__ == "__main__":
                      append_prefix=True)
 
     if MULTICORE:
-        pool = MPIPool(loadbalance=True)
+        pool = MPIPool(loadbalance=False)
 
         if not pool.is_master():
             # Wait for instructions from the master process.
