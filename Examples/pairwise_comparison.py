@@ -112,6 +112,12 @@ if __name__ == "__main__":
     import glob
 
     folder = str(sys.argv[1])
+    ncores = int(sys.argv[2])
+    des_or_fid = str(sys.argv[3])
+    start_num = int(sys.argv[4])
+    end_num = int(sys.argv[5])
+
+    output_folder = str(sys.argv[6])
 
     # Grab all of the fits files, then sort them by fiducial, design,
     # then by number, then by the face
@@ -131,8 +137,8 @@ if __name__ == "__main__":
 
     # This set has 5 fiducials and 32 designs
 
-    fid_num = np.arange(5)
-    des_num = np.arange(32)
+    fid_num = np.arange(start_num, end_num+1)
+    des_num = np.arange(start_num, end_num+1)
 
     faces = np.arange(3)
 
@@ -169,20 +175,28 @@ if __name__ == "__main__":
 
     # Now run the pairwise comparisons
 
-    for num in fid_num:
-        print "On Fiducial "+str(num)+" of "+str(max(fid_num))
-        for face in faces:
-            print 'Face '+str(face)+" at "+str(datetime.now())
-            pairwise(fids_dict[num][face], ncores=5, save=True,
-                     statistics=None,
-                     save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face),
-                     save_path=folder+"pairwise/")
+    if des_or_fid == 'Fiducial':
 
-    for num in des_num:
-        print "On Design "+str(num)+" of "+str(max(des_num))
-        for face in faces:
-            print 'Face '+str(face)+" at "+str(datetime.now())
-            pairwise(des_dict[num][face], ncores=5, save=True,
-                     statistics=None,
-                     save_name='SimSuite8_Design'+str(num)+"_"+str(face),
-                     save_path=folder+"pairwise/")
+        for num in fid_num:
+            print "On Fiducial "+str(num)+" of "+str(max(fid_num))
+            for face in faces:
+                print 'Face '+str(face)+" at "+str(datetime.now())
+                pairwise(fids_dict[num][face], ncores=ncores, save=True,
+                         statistics=['Cramer', 'PCA', 'PDF', 'SCF',
+                                     'VCA', 'VCS'],
+                         save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face),
+                         save_path=output_folder+"pairwise/")
+
+    elif des_or_fid == 'Design':
+        for num in des_num:
+            print "On Design "+str(num)+" of "+str(max(des_num))
+            for face in faces:
+                print 'Face '+str(face)+" at "+str(datetime.now())
+                pairwise(des_dict[num][face], ncores=ncores, save=True,
+                         statistics=['Cramer', 'PCA', 'PDF', 'SCF',
+                                     'VCA', 'VCS'],
+                         save_name='SimSuite8_Design'+str(num)+"_"+str(face),
+                         save_path=output_folder+"pairwise/")
+
+    else:
+        raise TypeError("Must be 'Fiducial' or 'Design'.")
