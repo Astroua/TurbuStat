@@ -283,7 +283,7 @@ def _timestep_sort(d, timesteps, labels=None):
 
 
 def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
-                    nsig=3):
+                    nsig=3, slicewise_noise=True):
     '''
     Load the cube in and derive the property arrays.
     '''
@@ -295,7 +295,13 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
         cube, hdr = getdata(filename, header=True)
 
         from scipy.stats import norm
-        cube += norm.rvs(0.0, rms_noise, cube.shape)
+        if not slicewise_noise:
+            cube += norm.rvs(0.0, rms_noise, cube.shape)
+        else:
+            spec_shape = cube.shape[0]
+            slice_shape = cube.shape[1:]
+            for i in range(spec_shape):
+                cube[i, :, :] += norm.rvs(0.0, rms_noise, slice_shape)
 
         sc = SpectralCube(data=cube, wcs=WCS(hdr))
 
