@@ -13,4 +13,4 @@ source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
 
-python2.7 code_repos/TurbuStat/Examples/pairwise_comparison.py /lustre/home/ekoch/sims/SimSuite8/ 10 Fiducial 0 4
+python2.7 code_repos/TurbuStat/Examples/pairwise/pairwise_comparison.py /lustre/home/ekoch/sims/SimSuite8/ 10 Fiducial 0 4
