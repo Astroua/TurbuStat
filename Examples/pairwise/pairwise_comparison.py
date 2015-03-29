@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # Grab all of the fits files, then sort them by fiducial, design,
     # then by number, then by the face
 
-    fits_files = glob.glob(folder+"/*.fits")
+    fits_files = glob.glob(folder+"*.fits")
 
     fiducials = []
     designs = []
@@ -185,7 +185,7 @@ if __name__ == "__main__":
                          statistics=['Cramer', 'PCA', 'PDF', 'SCF',
                                      'VCA', 'VCS'],
                          save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face),
-                         save_path=output_folder+"pairwise/")
+                         save_path=output_folder)
 
     elif des_or_fid == 'Design':
         for num in des_num:
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                          statistics=['Cramer', 'PCA', 'PDF', 'SCF',
                                      'VCA', 'VCS'],
                          save_name='SimSuite8_Design'+str(num)+"_"+str(face),
-                         save_path=output_folder+"pairwise/")
+                         save_path=output_folder)
 
     else:
         raise TypeError("Must be 'Fiducial' or 'Design'.")
