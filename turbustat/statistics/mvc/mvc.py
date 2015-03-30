@@ -4,11 +4,7 @@
 import numpy as np
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-
-try:
-    from scipy.fftpack import fft2, fftshift
-except ImportError:
-    from numpy.fft import fft2, fftshift
+from numpy.fft import fft2, fftshift
 
 from ..psds import pspec
 

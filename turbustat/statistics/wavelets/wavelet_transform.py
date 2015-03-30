@@ -6,11 +6,7 @@ import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-
-try:
-    from scipy.fftpack import fftn, ifftn, fftfreq
-except ImportError:
-    from numpy.fft import fftn, ifftn, fftfreq
+from numpy.fft import fftn, ifftn, fftfreq
 
 
 class Mexican_hat():

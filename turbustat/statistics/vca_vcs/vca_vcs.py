@@ -4,11 +4,7 @@
 import numpy as np
 import statsmodels.api as sm
 import warnings
-
-try:
-    from scipy.fftpack import fftn, fftfreq, fftshift
-except ImportError:
-    from numpy.fft import fftn, fftfreq, fftshift
+from numpy.fft import fftn, fftfreq, fftshift
 
 from ..lm_seg import Lm_Seg
 from ..psds import pspec
