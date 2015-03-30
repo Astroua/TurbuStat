@@ -5,8 +5,8 @@ from scipy.stats import pearsonr, spearmanr
 from scipy.spatial.distance import squareform
 
 
-def mantel_test(dist1, dist2, corr_func=pearsonr, nperm=1e3,
-                seed=2904100, pval_type='two-tail'):
+def mantel_test(dist1, dist2, corr_func='pearson', nperm=1e3,
+                seed=2904100, pval_type='greater'):
     '''
     Perform the Mantel test to compare 2 distance matrices.
     '''
@@ -39,15 +39,15 @@ def mantel_test(dist1, dist2, corr_func=pearsonr, nperm=1e3,
 
         perm_cors[p] = corr_func(dist1_perm, dist2_flat)[0]
 
-    if pval_type is 'two-tail':
+    if pval_type == 'two-tail':
         n_higher = (np.abs(perm_cors) >= np.abs(orig_cor)).sum()
-    elif pval_type is 'greater':
+    elif pval_type == 'greater':
         n_higher = (perm_cors >= orig_cor).sum()
-    elif pval_type is 'less':
+    elif pval_type == 'less':
         n_higher = (perm_cors <= orig_cor).sum()
     else:
         raise TypeError('pval_type must be: two-tail, greater, or less.')
 
-    pval = (n_higher + 1) / (nperm + 1)
+    pval = (n_higher + 1) / float(nperm + 1)
 
     return orig_cor, pval
