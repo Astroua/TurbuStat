@@ -58,13 +58,14 @@ def pairwise(fid_files, des_files, statistics=None, ncores=1, save=False,
         return dist_matrices
 
 
-def timestep_wrapper(files, pos, statistics, noise=False, rms_noise=0.001):
+def timestep_wrapper(fid_files, des_files, pos, statistics, noise=False,
+                     rms_noise=0.001):
 
     pos1, pos2 = pos
     # Derive the property arrays assuming uniform noise (for sims)
-    dataset1 = load_and_reduce(files[pos1], add_noise=noise,
+    dataset1 = load_and_reduce(fid_files[pos1], add_noise=noise,
                                rms_noise=rms_noise)
-    dataset2 = load_and_reduce(files[pos2], add_noise=noise,
+    dataset2 = load_and_reduce(des_files[pos2], add_noise=noise,
                                rms_noise=rms_noise)
 
     distances = stats_wrapper(dataset1, dataset2,
