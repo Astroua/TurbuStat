@@ -16,21 +16,22 @@ from pandas import DataFrame
 from datetime import datetime
 
 
-def pairwise(files, statistics=None, ncores=1, save=False,
+def pairwise(fid_files, des_files, statistics=None, ncores=1, save=False,
              save_name='pairwise', save_path=None,
              add_noise=False, rms_noise=0.001):
     '''
     Create a distance matrix for a set of simulations.
     '''
 
-    num = len(files)
+    num = min(len(fid_files), len(des_files))
 
     pos = np.arange(num)
 
     pool = Pool(processes=ncores)
 
     output = pool.map(single_input,
-                      izip(repeat(files),
+                      izip(repeat(fid_files),
+                           repeat(des_files),
                            combinations(pos, 2),
                            repeat(statistics),
                            repeat(add_noise),
@@ -137,7 +138,7 @@ if __name__ == "__main__":
 
     # This set has 5 fiducials and 32 designs
 
-    fid_num = np.arange(start_num, end_num+1)
+    fid_num = np.arange(5)
     des_num = np.arange(start_num, end_num+1)
 
     faces = np.arange(3)
@@ -165,7 +166,7 @@ if __name__ == "__main__":
             des_dict[num][face] = []
 
         for des in designs:
-            if not "Design"+str(num) in des:
+            if not "Design"+str(num)+"_" in des:
                 continue
 
             for face in faces:
