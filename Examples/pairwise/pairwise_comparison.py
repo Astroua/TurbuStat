@@ -179,15 +179,16 @@ if __name__ == "__main__":
 
     if des_or_fid == 'Fiducial':
 
-        for num in fid_num:
-            print "On Fiducial "+str(num)+" of "+str(max(fid_num))
-            for face in faces:
-                print 'Face '+str(face)+" at "+str(datetime.now())
-                pairwise(fids_dict[num][face], ncores=ncores, save=True,
-                         statistics=['Cramer', 'PCA', 'PDF', 'SCF',
-                                     'VCA', 'VCS'],
-                         save_name='SimSuite8_Fiducial'+str(num)+"_"+str(face),
-                         save_path=output_folder)
+        for num1 in fid_num:
+            for num2 in fid_num:
+                print "On Fiducial "+str(num)+" of "+str(max(fid_num))
+                for face in faces:
+                    print 'Face '+str(face)+" at "+str(datetime.now())
+                    pairwise(fids_dict[num][face], ncores=ncores, save=True,
+                             statistics=['Cramer', 'PCA', 'PDF', 'SCF',
+                                         'VCA', 'VCS'],
+                             save_name='SimSuite8_Fiducial'+str(num1)+"_"+str(num2)+"_face"+str(face),
+                             save_path=output_folder)
 
     elif des_or_fid == 'Design':
         for num in des_num:
