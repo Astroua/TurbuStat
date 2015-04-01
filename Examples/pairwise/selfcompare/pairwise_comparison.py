@@ -10,7 +10,7 @@ from astropy.io.fits import getdata
 from astropy.wcs import WCS
 from spectral_cube import SpectralCube, LazyMask
 import numpy as np
-from interruptible_pool import InterruptiblePool as Pool
+from ..interruptible_pool import InterruptiblePool as Pool
 from itertools import izip, combinations, repeat
 from pandas import DataFrame
 from datetime import datetime
