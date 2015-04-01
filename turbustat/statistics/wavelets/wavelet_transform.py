@@ -125,7 +125,7 @@ class wt2D(object):
         l, k = fftfreq(N, self.dy), fftfreq(M, self.dx)
 
         # Calculates the Fourier transform of the input signal.
-        f_ft = fftn(self.array, shape=(N, M))
+        f_ft = fftn(self.array)
         # Creates empty wavelet transform array and fills it for every discrete
         # scale using the convolution theorem.
         self.Wf = np.zeros((A, N, M), 'complex')
