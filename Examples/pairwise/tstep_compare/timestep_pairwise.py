@@ -50,8 +50,10 @@ def pairwise(file_dict, statistics=None, ncores=1, save=False,
     dist_matrices = np.zeros((len(output[0][0]), num, num))
 
     for out in output:
+        pos1 = pos.index(out[1])
+        pos2 = pos.index(out[2])
         for i, stat in enumerate(out[0].keys()):
-            dist_matrices[i, out[1], out[2]] = out[0][stat]
+            dist_matrices[i, pos1, pos2] = out[0][stat]
 
     if save:
         stats = out[0].keys()
