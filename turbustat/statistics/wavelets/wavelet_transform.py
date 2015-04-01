@@ -131,7 +131,7 @@ class wt2D(object):
         self.Wf = np.zeros((A, N, M), 'complex')
         for i, an in enumerate(self.scales):
             psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
-            self.Wf[i, :, :] = ifftn(f_ft * psi_ft_bar, shape=(N, M))
+            self.Wf[i, :, :] = ifftn(f_ft * psi_ft_bar)
 
         self.Wf = self.Wf[:, :n0, :m0]
 
