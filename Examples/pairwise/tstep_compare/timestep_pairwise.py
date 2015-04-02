@@ -39,11 +39,11 @@ def pairwise(file_dict, statistics=None, ncores=1, save=False,
         pool = Pool(processes=ncores)
 
     output = pool.map(single_input,
-                      izip(repeat(file_dict),
-                           combinations(pos, 2),
-                           repeat(statistics),
-                           repeat(add_noise),
-                           repeat(rms_noise)))
+                      zip(repeat(file_dict),
+                          combinations(pos, 2),
+                          repeat(statistics),
+                          repeat(add_noise),
+                          repeat(rms_noise)))
 
     pool.close()
 
@@ -72,6 +72,9 @@ def timestep_wrapper(fid_files, des_files, pos, statistics, noise=False,
                      rms_noise=0.001):
 
     pos1, pos2 = pos
+
+    print "On "+str(datetime.now())+" running %s %s" % (pos1, pos2)
+
     # Derive the property arrays assuming uniform noise (for sims)
     dataset1 = load_and_reduce(fid_files[pos1], add_noise=noise,
                                rms_noise=rms_noise)
