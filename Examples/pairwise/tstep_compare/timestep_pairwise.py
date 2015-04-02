@@ -19,9 +19,9 @@ from pandas import DataFrame
 from datetime import datetime
 
 
-def pairwise(file_dict, statistics=None, ncores=1, save=False,
+def pairwise(file_dict, pool, statistics=None, save=False,
              save_name='pairwise', save_path=None,
-             add_noise=False, rms_noise=0.001, mpi=True):
+             add_noise=False, rms_noise=0.001):
     '''
     Create a distance matrix for a set of simulations.
     '''
@@ -30,22 +30,12 @@ def pairwise(file_dict, statistics=None, ncores=1, save=False,
 
     pos = file_dict.keys()
 
-    if mpi:
-        pool = MPIPool()
-        if not pool.is_master():
-            pool.wait()
-            sys.exit(0)
-    else:
-        pool = Pool(processes=ncores)
-
     output = pool.map(single_input,
                       zip(repeat(file_dict),
                           combinations(pos, 2),
                           repeat(statistics),
                           repeat(add_noise),
                           repeat(rms_noise)))
-
-    pool.close()
 
     dist_matrices = np.zeros((len(output[0][0]), num, num))
 
@@ -162,6 +152,15 @@ if __name__ == "__main__":
                 tstep_dict[key] = fits
                 break
 
-    pairwise(tstep_dict, statistics=['Cramer', 'PCA'], ncores=ncores,
+    pool = MPIPool()
+    if not pool.is_master():
+        pool.wait()
+        sys.exit(0)
+
+    # pool = Pool(processes=ncores)
+
+    pairwise(tstep_dict, pool, statistics=['Cramer', 'PCA'],
              save=True, save_name='SimSuite8_Design'+str(num)+"_"+str(face),
              save_path=output_folder)
+
+    pool.close()
