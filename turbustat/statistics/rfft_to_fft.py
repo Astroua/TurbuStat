@@ -1,14 +1,28 @@
+# Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
 
 '''
 Reconstruct FFT output from RFFT in order to save memory
+Largely follows the solution from:
+http://stackoverflow.com/questions/25147045/full-frequency-array-reconstruction-after-numpy-fft-rfftn
 '''
 
 
 def rfft_to_fft(image):
     '''
+    Perform a RFFT on the image (2 or 3D) and return the absolute value in
+    the same format as you would get with the fft (negative frequencies).
+    This avoids ever having to have the full complex cube in memory.
 
+    Inputs
+    ------
+    image : numpy.ndarray
+        2 or 3D array.
+
+    Outputs
+    -------
+    fft_abs : absolute value of the fft.
     '''
 
     ndim = len(image.shape)
