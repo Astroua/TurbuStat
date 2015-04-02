@@ -26,7 +26,7 @@ def pairwise(file_dict, statistics=None, ncores=1, save=False,
     Create a distance matrix for a set of simulations.
     '''
 
-    num = min(len(file_dict.keys()))
+    num = len(file_dict.keys())
 
     pos = file_dict.keys()
 
