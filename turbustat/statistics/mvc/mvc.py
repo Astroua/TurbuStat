@@ -33,7 +33,6 @@ class MVC(object):
     """
 
     def __init__(self, centroid, moment0, linewidth, header):
-        # super(MVC, self).__init__()
         self.centroid = centroid
         self.moment0 = moment0
         self.linewidth = linewidth
