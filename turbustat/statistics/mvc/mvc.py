@@ -66,11 +66,11 @@ class MVC(object):
         subtracted by the square of the normalized centroid.
         '''
 
-        term1 = fft2(self.centroid.astype("f8")*self.moment0.astype("f8"))
+        term1 = fft2(self.centroid*self.moment0)
 
         term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
 
-        mvc_fft = term1 - term2 * fft2(self.moment0.astype("f8"))
+        mvc_fft = term1 - term2 * fft2(self.moment0)
 
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
