@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     # put into dictionary so we can accurately track which Fid/Des it's from
 
-    des = ["D"+str(i) for i in range(32)]
+    des = [] #["D"+str(i) for i in range(32)]
     fid = ["F"+str(i) for i in range(5)]
 
     des_fid = des + fid
@@ -152,7 +152,7 @@ if __name__ == "__main__":
                 tstep_dict[key] = fits
                 break
 
-    pool = MPIPool()
+    pool = MPIPool(loadbalance=False)
     if not pool.is_master():
         pool.wait()
         sys.exit(0)
