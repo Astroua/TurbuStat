@@ -82,7 +82,7 @@ def single_input(a):
 
 
 def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
-                    nsig=3):
+                    nsig=3, no_moments=True):
     '''
     Load the cube in and derive the property arrays.
     '''
@@ -106,10 +106,18 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
 
     reduc = Mask_and_Moments(sc, scale=rms_noise)
     reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
-    reduc.make_moments()
-    reduc.make_moment_errors()
 
-    return reduc.to_dict()
+    if not no_moments:
+
+        reduc.make_moments()
+        reduc.make_moment_errors()
+
+        return reduc.to_dict()
+
+    else:
+        data_dict = {'cube': [reduc.cube.filled_data[:].value, reduc.cube.header]}
+
+        return data_dict
 
 
 if __name__ == "__main__":
