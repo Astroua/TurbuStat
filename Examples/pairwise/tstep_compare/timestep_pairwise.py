@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     # pool = Pool(processes=ncores)
 
-    pairwise(tstep_dict, pool, statistics=['Cramer', 'PCA'],
+    pairwise(tstep_dict, pool, statistics=['Cramer', 'PCA', 'Dendrogram_Hist'],
              save=True, save_name='SimSuite8_Design'+str(num)+"_"+str(face),
              save_path=output_folder)
 
