@@ -52,7 +52,7 @@ def pairwise(file_dict, pool, statistics=None, save=False,
             save_path = ""
 
         for i, stat in enumerate(stats):
-            df = DataFrame(dist_matrices[i, :, :])
+            df = DataFrame(dist_matrices[i, :, :], index=pos, columns=pos)
             df.to_csv(save_path+save_name+'_'+stat+'_distmat.csv')
     else:
         return dist_matrices
