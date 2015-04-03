@@ -64,6 +64,7 @@ def timestep_wrapper(files_list, pos, statistics, noise=False,
     pos1, pos2 = pos
 
     print "On "+str(datetime.now())+" running %s %s" % (pos1, pos2)
+    print "Files:  %s  %s" % (files_list[pos1], files_list[pos2])
 
     # Derive the property arrays assuming uniform noise (for sims)
     dataset1 = load_and_reduce(files_list[pos1], add_noise=noise,
