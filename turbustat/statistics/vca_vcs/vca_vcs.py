@@ -4,14 +4,11 @@
 import numpy as np
 import statsmodels.api as sm
 import warnings
-
-try:
-    from scipy.fftpack import fftn, fftfreq, fftshift
-except ImportError:
-    from numpy.fft import fftn, fftfreq, fftshift
+from numpy.fft import fftfreq, fftshift
 
 from ..lm_seg import Lm_Seg
 from ..psds import pspec
+from ..rfft_to_fft import rfft_to_fft
 from slice_thickness import change_slice_thickness
 
 
@@ -60,9 +57,9 @@ class VCA(object):
         Compute the 2D power spectrum.
         '''
 
-        vca_fft = fftshift(fftn(self.cube.astype("f8")))
+        vca_fft = fftshift(rfft_to_fft(self.cube))
 
-        self.ps2D = (np.abs(vca_fft) ** 2.).sum(axis=0)
+        self.ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
         return self
 
@@ -273,8 +270,8 @@ class VCS(object):
         Take the FFT of each spectrum in velocity dimension.
         '''
 
-        self.fftcube = fftn(self.cube.astype("f8"))
-        self.correlated_cube = np.abs(self.fftcube) ** 2.
+        self.fftcube = rfft_to_fft(self.cube)
+        self.correlated_cube = np.power(self.fftcube, 2.)
 
         return self
 

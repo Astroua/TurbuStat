@@ -4,13 +4,10 @@
 import numpy as np
 import numpy.random as ra
 from ..psds import pspec
+from ..rfft_to_fft import rfft_to_fft
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-
-try:
-    from scipy.fftpack import fft2, fftshift
-except ImportError:
-    from numpy.fft import fft2, fftshift
+from numpy.fft import fft2, fftshift
 
 
 class PowerSpectrum(object):
@@ -55,9 +52,9 @@ class PowerSpectrum(object):
         Compute the 2D power spectrum.
         '''
 
-        fft = fftshift(fft2(self.weighted_img.astype("f8")))
+        fft = fftshift(rfft_to_fft(self.weighted_img))
 
-        self.ps2D = np.abs(fft) ** 2.
+        self.ps2D = np.power(fft, 2.)
 
         return self
 
@@ -271,7 +268,7 @@ class BiSpectrum(object):
             Sets the seed for the distribution draws.
         '''
 
-        fft = np.fft.fft2(self.img.astype("f8"))
+        fft = np.fft.fft2(self.img)
         conjfft = np.conj(fft)
         ra.seed(seed)
 

@@ -4,11 +4,7 @@
 import numpy as np
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-
-try:
-    from scipy.fftpack import fft2, fftshift
-except ImportError:
-    from numpy.fft import fft2, fftshift
+from numpy.fft import fft2, fftshift
 
 from ..psds import pspec
 
@@ -37,7 +33,6 @@ class MVC(object):
     """
 
     def __init__(self, centroid, moment0, linewidth, header):
-        # super(MVC, self).__init__()
         self.centroid = centroid
         self.moment0 = moment0
         self.linewidth = linewidth
@@ -70,11 +65,11 @@ class MVC(object):
         subtracted by the square of the normalized centroid.
         '''
 
-        term1 = fft2(self.centroid.astype("f8")*self.moment0.astype("f8"))
+        term1 = fft2(self.centroid*self.moment0)
 
         term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
 
-        mvc_fft = term1 - term2 * fft2(self.moment0.astype("f8"))
+        mvc_fft = term1 - term2 * fft2(self.moment0)
 
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
