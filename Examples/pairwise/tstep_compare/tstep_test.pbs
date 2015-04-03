@@ -12,5 +12,5 @@
 source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
-mpirun -np 36 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/pairwise/tstep_compare/timestep_pairwise.py /lustre/home/ekoch/sims/SimSuite8/ 24 21 0 /lustre/home/ekoch/sims/tstep_pairwise
+mpirun -np 12 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/pairwise/tstep_compare/timestep_pairwise.py /lustre/home/ekoch/sims/SimSuite8/ 24 25 0 /lustre/home/ekoch/sims/tstep_pairwise
 echo "Exited with code $? at: `date`"
