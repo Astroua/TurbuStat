@@ -58,7 +58,7 @@ def pairwise(file_dict, pool, statistics=None, save=False,
         return dist_matrices
 
 
-def timestep_wrapper(fid_files, des_files, pos, statistics, noise=False,
+def timestep_wrapper(files_list, pos, statistics, noise=False,
                      rms_noise=0.001):
 
     pos1, pos2 = pos
@@ -66,9 +66,9 @@ def timestep_wrapper(fid_files, des_files, pos, statistics, noise=False,
     print "On "+str(datetime.now())+" running %s %s" % (pos1, pos2)
 
     # Derive the property arrays assuming uniform noise (for sims)
-    dataset1 = load_and_reduce(fid_files[pos1], add_noise=noise,
+    dataset1 = load_and_reduce(files_list[pos1], add_noise=noise,
                                rms_noise=rms_noise)
-    dataset2 = load_and_reduce(des_files[pos2], add_noise=noise,
+    dataset2 = load_and_reduce(files_list[pos2], add_noise=noise,
                                rms_noise=rms_noise)
 
     distances = stats_wrapper(dataset1, dataset2,
