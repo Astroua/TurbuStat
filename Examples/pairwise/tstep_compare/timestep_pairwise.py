@@ -43,10 +43,13 @@ def pairwise(file_dict, pool, statistics=None, save=False,
         pos1 = pos.index(out[1])
         pos2 = pos.index(out[2])
         if out[0] == None:
-            out[0] = [np.NaN] * dist_matrices.shape[0]
+            nans = [np.NaN] * dist_matrices.shape[0]
 
-        for i, stat in enumerate(out[0].keys()):
-            dist_matrices[i, pos1, pos2] = out[0][stat]
+            dist_matrices[:, pos1, pos2] = nans
+        else:
+
+            for i, stat in enumerate(out[0].keys()):
+                dist_matrices[i, pos1, pos2] = out[0][stat]
 
     if save:
         stats = out[0].keys()
