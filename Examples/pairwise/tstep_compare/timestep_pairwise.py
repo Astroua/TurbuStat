@@ -42,6 +42,9 @@ def pairwise(file_dict, pool, statistics=None, save=False,
     for out in output:
         pos1 = pos.index(out[1])
         pos2 = pos.index(out[2])
+        if out[0] == None:
+            out[0] = [np.NaN] * dist_matrices.shape[0]
+
         for i, stat in enumerate(out[0].keys()):
             dist_matrices[i, pos1, pos2] = out[0][stat]
 
@@ -62,6 +65,9 @@ def timestep_wrapper(files_list, pos, statistics, noise=False,
                      rms_noise=0.001):
 
     pos1, pos2 = pos
+
+    if files_list[pos1] == None or files_list[pos2] == None:
+        return None, pos1, pos2
 
     print "On "+str(datetime.now())+" running %s %s" % (pos1, pos2)
     print "Files:  %s  %s" % (files_list[pos1], files_list[pos2])
