@@ -37,7 +37,14 @@ def pairwise(file_dict, pool, statistics=None, save=False,
                           repeat(add_noise),
                           repeat(rms_noise)))
 
-    dist_matrices = np.zeros((len(output[0][0]), num, num))
+    i = 0
+    while True:
+        if output[i][0] == None:
+            i += 1
+        else:
+            break
+
+    dist_matrices = np.zeros((len(output[i][0]), num, num))
 
     for out in output:
         pos1 = pos.index(out[1])
