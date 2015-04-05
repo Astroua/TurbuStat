@@ -20,6 +20,38 @@ Run Mantel Test and Procrustes analysis on the pairwise comparisons.
 def viz_dist_mat(csv):
     pass
 
+
+def drop_nans(csv1, csv2):
+    '''
+    Drop common NaNned rows and columns
+    '''
+
+    dist1 = read_csv(csv1, index_col=0)
+    dist2 = read_csv(csv2, index_col=0)
+
+    # Replace 0 with nans
+    dist1 = dist1.replace(0.0, np.NaN)
+    dist2 = dist2.replace(0.0, np.NaN)
+
+    nan_col_1 = ~np.isnan(dist1.mean(0))
+    nan_col_2 = ~np.isnan(dist2.mean(0))
+
+    nan_col = nan_col_1 * nan_col_2
+
+    # First column is all zeros, keep it
+    nan_col[0] = True
+
+    dist1 = dist1[nan_col]
+    dist2 = dist2[nan_col]
+
+    dist1 = dist1.T[nan_col]
+    dist2 = dist2.T[nan_col]
+
+    dist1 = dist1.replace(np.NaN, 0.0)
+    dist2 = dist2.replace(np.NaN, 0.0)
+
+    return dist1.values, dist2.values
+
 if __name__ == "__main__":
 
 
@@ -41,7 +73,7 @@ if __name__ == "__main__":
 
     stats_dict = dict.fromkeys(statistics)
 
-    timesteps = list(np.arange(21, 25))
+    timesteps = list(np.arange(21, 31))
 
     for stat in statistics:
         stats_dict[stat] = dict.fromkeys(timesteps)
@@ -64,12 +96,11 @@ if __name__ == "__main__":
         mantel_results = dict.fromkeys(statistics)
 
         for stat in statistics:
-            mantel_output = np.zeros((2, 4, 4))
+            mantel_output = np.zeros((2, 10, 10))
 
             csvs = stats_dict[stat]
             for (i, j) in combinations(timesteps, 2):
-                dist1 = read_csv(csvs[i], index_col=0).values
-                dist2 = read_csv(csvs[j], index_col=0).values
+                dist1, dist2 = drop_nans(csvs[i], csvs[j])
 
                 # Symmeterize
                 dist1 += dist1.T
@@ -107,8 +138,7 @@ if __name__ == "__main__":
 
             csvs = stats_dict[stat]
             for (i, j) in combinations(timesteps, 2):
-                dist1 = read_csv(csvs[i], index_col=0).values
-                dist2 = read_csv(csvs[j], index_col=0).values
+                dist1, dist2 = drop_nans(csvs[i], csvs[j])
 
                 # Symmeterize
                 dist1 += dist1.T
