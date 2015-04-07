@@ -17,8 +17,33 @@ Run Mantel Test and Procrustes analysis on the pairwise comparisons.
 '''
 
 
-def viz_dist_mat(csv):
-    pass
+def viz_dist_mat(df, new_index, show_img=True):
+    '''
+    Re-order a triangular data frame.
+    '''
+    from pandas import DataFrame
+
+    sym_dist = df.values.T + df.values
+
+    sym_df = DataFrame(sym_dist, index=df.index, columns=df.columns)
+
+    reorder_df = sym_df.reindex(index=new_index, columns=new_index)
+
+    # Now restore only the upper triangle
+
+    upptri_df = DataFrame(reorder_df.values * (df.values != 0.0),
+                          index=new_index,
+                          columns=new_index)
+
+    if show_img:
+        import matplotlib.pyplot as p
+
+        p.imshow(upptri_df.values, interpolation='nearest',
+                 cmap='binary')
+        cbar = p.colorbar()
+        cbar.set_label('Distance', fontsize=20)
+        p.show()
+    return upptri_df
 
 
 def drop_nans(csv1, csv2):
@@ -54,10 +79,9 @@ def drop_nans(csv1, csv2):
 
 if __name__ == "__main__":
 
-
     # Choose which test is to be run.
     run_mantel = True
-    run_procrust = False
+    run_procrust = True
 
     # Input folder where tables are saved.
     folder = str(sys.argv[1])
@@ -105,7 +129,7 @@ if __name__ == "__main__":
                 # Symmeterize
                 dist1 += dist1.T
                 dist2 += dist2.T
-                output = mantel_test(dist1, dist2, nperm=1000)
+                output = mantel_test(dist1, dist2, nperm=100)
 
                 mantel_output[:, timesteps.index(i), timesteps.index(j)] = output
 
@@ -114,15 +138,24 @@ if __name__ == "__main__":
                      'pvals': mantel_output[1, :, :]}
 
         for stat in statistics:
-            p.subplot(121)
-            p.title(stat.replace("_", " "))
-            p.imshow(mantel_results[stat]['value'],# vmax=1, vmin=-1,
-                     interpolation='nearest', cmap='seismic')
-            p.colorbar()
-            p.subplot(122)
-            p.imshow(mantel_results[stat]['pvals'],# vmax=1, vmin=0,
-                     interpolation='nearest', cmap='gray')
-            p.colorbar()
+
+            vals = mantel_results[stat]['value']
+            vals[vals == 0.0] = np.NaN
+            # p.subplot(121)
+            # p.title(stat.replace("_", " "))
+            p.imshow(vals,# vmax=1, vmin=-1,
+                     interpolation='nearest', cmap='binary')
+            p.xticks(np.arange(0, 10), timesteps)
+            p.yticks(np.arange(0, 10), timesteps)
+            p.xlabel('Timesteps')
+            p.ylabel('Timesteps')
+            cb = p.colorbar()
+            cb.set_label('Correlation')
+            # p.subplot(122)
+            # p.imshow(mantel_results[stat]['pvals'],# vmax=1, vmin=0,
+                     # interpolation='nearest', cmap='gray')
+            # p.colorbar()
+            p.tight_layout()
             p.show()
 
     # Now run Procrustes analysis.
@@ -134,7 +167,7 @@ if __name__ == "__main__":
         procrustes_results = dict.fromkeys(statistics)
 
         for stat in statistics:
-            procrustes_output = np.zeros((2, 4, 4))
+            procrustes_output = np.zeros((2, 10, 10))
 
             csvs = stats_dict[stat]
             for (i, j) in combinations(timesteps, 2):
@@ -155,7 +188,7 @@ if __name__ == "__main__":
                             n_jobs=1)
                 pos_2 = mds_2.fit(dist2).embedding_
 
-                output = procrustes_analysis(pos_1, pos_2, nperm=1000)
+                output = procrustes_analysis(pos_1, pos_2, nperm=100)
 
                 procrustes_output[:, timesteps.index(i), timesteps.index(j)] = output
 
@@ -164,13 +197,22 @@ if __name__ == "__main__":
                      'pvals': procrustes_output[1, :, :]}
 
         for stat in statistics:
-            p.subplot(121)
-            p.title(stat.replace("_", " "))
-            p.imshow(procrustes_results[stat]['value'],# vmax=1, vmin=0,
-                     interpolation='nearest', cmap='seismic')
-            p.colorbar()
-            p.subplot(122)
-            p.imshow(procrustes_results[stat]['pvals'],# vmax=1, vmin=0,
+            # p.subplot(121)
+            vals = procrustes_results[stat]['value']
+            vals[vals == 0.0] = np.NaN
+            # p.subplot(121)
+            # p.title(stat.replace("_", " "))
+            p.imshow(vals,# vmax=1, vmin=-1,
                      interpolation='nearest', cmap='gray')
-            p.colorbar()
+            p.xticks(np.arange(0, 10), timesteps)
+            p.yticks(np.arange(0, 10), timesteps)
+            p.xlabel('Timesteps')
+            p.ylabel('Timesteps')
+            cb = p.colorbar()
+            cb.set_label('Sum of Residuals')
+            # p.subplot(122)
+            # p.imshow(procrustes_results[stat]['pvals'],# vmax=1, vmin=0,
+            #          interpolation='nearest', cmap='gray')
+            # p.colorbar()
+            p.tight_layout()
             p.show()
