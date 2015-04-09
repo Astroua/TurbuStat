@@ -374,7 +374,10 @@ if __name__ == "__main__":
     # rms_noise = 0.1277369117707014 / 2.  # in K
 
     # Trying noise levels scaled by their brightness distribs
-    rms_noise = 'scaled'
+    if add_noise:
+        rms_noise = 'scaled'
+    else:
+        rms_noise = 0.001
 
     # Set whether we have multiple timesteps for each set
     if timesteps is 'last':
