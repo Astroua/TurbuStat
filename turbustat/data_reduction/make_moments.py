@@ -6,11 +6,16 @@ import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
 from scipy import ndimage as nd
+import itertools as it
+import operator as op
+
+from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
 
 class Mask_and_Moments(object):
     """docstring for Mask_and_Moments"""
-    def __init__(self, cube, noise_type='constant', clip=3, scale=None):
+    def __init__(self, cube, noise_type='constant', clip=3, scale=None,
+                 moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
 
         if isinstance(cube, SpectralCube):
@@ -20,6 +25,10 @@ class Mask_and_Moments(object):
 
         self.noise_type = noise_type
         self.clip = clip
+
+        if moment_method not in ['slice', 'cube', 'ray']:
+            raise TypeError("Moment method must be 'slice', 'cube', or 'ray'.")
+        self.moment_method = moment_method
 
         if scale is None:
             self.scale = Noise(self.cube).scale
@@ -50,12 +59,14 @@ class Mask_and_Moments(object):
 
         return self
 
-    def make_moments(self, units=False):
+    def make_moments(self, axis=0, units=False):
 
-        self._moment0 = self.cube.moment0()
-        self._moment1 = self.cube.moment1()
-        self._moment2 = self.cube.moment2()
-        self._intint = self._get_int_intensity()
+        self._moment0 = self.cube.moment0(axis=axis, how=self.moment_method)
+        self._moment1 = self.cube.moment1(axis=axis, how=self.moment_method)
+        self._moment2 = self.cube.moment2(axis=axis, how=self.moment_method)
+
+        # The 'how' is set directly in the int intensity function.
+        self._intint = self._get_int_intensity(axis=axis)
 
         if not units:
             self._moment0 = self._moment0.value
@@ -243,7 +254,7 @@ class Mask_and_Moments(object):
 
             hdu.writeto(save_name+labels[i]+".fits")
 
-    def _get_int_intensity(self, min_sn=1):
+    def _get_int_intensity(self, axis=0):
         '''
         Get an integrated intensity image of the cube.
 
@@ -252,108 +263,83 @@ class Mask_and_Moments(object):
 
         '''
 
-        noise = self.find_noise(return_obj=True)
+        shape = self.cube.shape
+        view = [slice(None)] * 3
 
-        noise.calculate_spectral()
+        if self.moment_method is 'cube':
+            channel_max = \
+                np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1]*shape[2]),
+                          axis=1).value
+        else:
+            channel_max = np.empty((shape[axis]))
+            for i in range(shape[axis]):
+                view[axis] = i
+                plane = self.cube._get_filled_data(fill=0, view=view)
 
-        good_channels = noise.spectral_norm > min_sn
+                channel_max[i] = np.nanmax(plane)
 
-        if not np.any(good_channels):
-            raise ValueError("Cannot find any channels with signal.")
+        good_channels = np.where(channel_max > self.clip*self.scale)[0]
 
-        channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
-
-        slab = self.cube.spectral_slab(*channel_range)
-
-        return slab.moment0()
-
-    def _get_int_intensity_err(self, min_sn=1):
-        '''
-        '''
-
-        noise = self.find_noise(return_obj=True)
-
-        noise.calculate_spectral()
-
-        good_channels = noise.spectral_norm > min_sn
+        # Get the longest sequence
+        good_channels = longestSequence(good_channels)
 
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
 
-        channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
+        self.channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 
-        slab = self.cube.spectral_slab(*channel_range)
+        slab = self.cube.spectral_slab(*self.channel_range)
 
-        error_arr = self.scale * \
-            np.sqrt(np.sum(slab.mask.include(), axis=0))
+        return slab.moment0(axis=axis, how=self.moment_method)
 
-        error_arr[error_arr == 0] = np.NaN
+    def _get_int_intensity_err(self, axis=0):
+        '''
+        '''
+        slab = self.cube.spectral_slab(*self.channel_range)
 
-        return error_arr
+        if self.moment_method is 'cube':
+            return _cube0(slab, axis, self.scale)
+        elif self.moment_method is 'slice':
+            return _slice0(slab, axis, self.scale)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
-    def _get_moment0_err(self):
+    def _get_moment0_err(self, axis=0):
         '''
         '''
 
-        error_arr = self.scale * \
-            np.sqrt(np.sum(self.cube.mask.include(), axis=0))
+        if self.moment_method is 'cube':
+            return _cube0(self.cube, axis, self.scale)
+        elif self.moment_method is 'slice':
+            return _slice0(self.cube, axis, self.scale)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
-
-    def _get_moment1_err(self):
+    def _get_moment1_err(self, axis=0):
         '''
         '''
 
-        pix_cen = self.cube._pix_cen()[0] + self.cube.spectral_axis[0].value
+        if self.moment_method is 'cube':
+            return _cube1(self.cube, axis, self.scale, self.moment0,
+                          self.moment1)
+        elif self.moment_method is 'slice':
+            return _slice1(self.cube, axis, self.scale, self.moment0,
+                           self.moment1)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
-        good_pix = np.isfinite(self.moment0) + np.isfinite(self.moment1)
-
-        error_arr = np.zeros(self.moment1.shape)
-
-        error_arr[good_pix] = \
-            (self.scale / self.moment0[good_pix]) * \
-            np.sqrt(np.sum(np.power((pix_cen - self.moment1) * good_pix, 2),
-                           axis=0))[good_pix]
-
-        error_arr[~good_pix] = np.NaN
-
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
-
-    def _get_moment2_err(self):
+    def _get_moment2_err(self, axis=0):
         '''
         '''
 
-        pix_cen = self.cube._pix_cen()[0]
-
-        data = self.cube._get_filled_data() * self.cube._pix_size()[0]
-
-        good_pix = np.isfinite(self.moment0) + np.isfinite(self.moment1) + \
-            np.isfinite(self.moment2)
-
-        error_arr = np.zeros(self.moment2.shape)
-
-        term11 = (np.power(pix_cen - self.moment1, 2) * good_pix) - \
-            self.moment2
-
-        term1 = self.scale**2 * np.sum(np.power(term11, 2), axis=0)[good_pix]
-
-        term21 = np.nansum((data * (pix_cen - self.moment1)), axis=0)
-
-        term2 = 4 * self._get_moment1_err()[good_pix] * \
-            np.power(term21, 2)[good_pix]
-
-        error_arr[good_pix] = (1 / self.moment0[good_pix]) * \
-            np.sqrt(term1 + term2)
-
-        error_arr[~good_pix] = np.NaN
-
-        error_arr[error_arr == 0] = np.NaN
-
-        return error_arr
+        if self.moment_method is 'cube':
+            return _cube2(self.cube, axis, self.scale, self.moment0,
+                          self.moment1, self.moment2, self.moment1_err)
+        elif self.moment_method is 'slice':
+            return _slice2(self.cube, axis, self.scale, self.moment0,
+                           self.moment1, self.moment2, self.moment1_err)
+        elif self.moment_method is 'ray':
+            raise NotImplementedError
 
 
 def moment_masking(cube, kernel_size, clip=5, dilations=1):
@@ -403,3 +389,16 @@ def _try_remove_unit(arr):
         return True
     except AttributeError:
         return False
+
+
+def longestSequence(data):
+
+    longest = []
+
+    sequences = []
+    for k, g in it.groupby(enumerate(data), lambda(i, y): i-y):
+        sequences.append(map(op.itemgetter(1), g))
+
+    longest = max(sequences, key=len)
+
+    return longest

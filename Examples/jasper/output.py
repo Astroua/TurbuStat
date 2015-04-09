@@ -24,14 +24,25 @@ keywords = {"centroid", "centroid_error", "integrated_intensity",
             "linewidth_error", "moment0", "moment0_error", "cube"}
 
 
-def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
+def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
+                     add_noise, rms_noise):
 
     # Derive the property arrays assuming uniform noise (for sims)
-    fiducial_dataset = load_and_reduce(fiducial_timestep)
-    testing_dataset = load_and_reduce(testing_timestep)
+    fiducial_dataset = load_and_reduce(fiducial_timestep, add_noise=add_noise,
+                                       rms_noise=rms_noise)
+    testing_dataset = load_and_reduce(testing_timestep, add_noise=add_noise,
+                                      rms_noise=rms_noise)
+
+    if add_noise:
+        vca_break = 1.5
+        vcs_break = -0.5
+    else:
+        vca_break = None
+        vcs_break = -0.8
 
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
-                              statistics=statistics, multicore=True)
+                              statistics=statistics, multicore=True,
+                              vca_break=vca_break, vcs_break=vcs_break)
     return distances
 
 

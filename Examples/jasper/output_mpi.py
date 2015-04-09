@@ -283,7 +283,7 @@ def _timestep_sort(d, timesteps, labels=None):
 
 
 def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
-                    nsig=3):
+                    nsig=3, slicewise_noise=True):
     '''
     Load the cube in and derive the property arrays.
     '''
@@ -295,19 +295,24 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
         cube, hdr = getdata(filename, header=True)
 
         from scipy.stats import norm
-        cube += norm.rvs(0.0, rms_noise, cube.shape)
+        if not slicewise_noise:
+            cube += norm.rvs(0.0, rms_noise, cube.shape)
+        else:
+            spec_shape = cube.shape[0]
+            slice_shape = cube.shape[1:]
+            for i in range(spec_shape):
+                cube[i, :, :] += norm.rvs(0.0, rms_noise, slice_shape)
 
         sc = SpectralCube(data=cube, wcs=WCS(hdr))
 
+        mask = LazyMask(np.isfinite, sc)
+        sc = sc.with_mask(mask)
+
     else:
-        sc = SpectralCube.read(filename)
+        sc = filename
 
-    mask = LazyMask(np.isfinite, sc)
-    sc = sc.with_mask(mask)
-
-    reduc = Mask_and_Moments(sc)
-    three_sig_mask = reduc.cube > nsig * reduc.scale
-    reduc.make_mask(mask=three_sig_mask)
+    reduc = Mask_and_Moments(sc, scale=rms_noise)
+    reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
     reduc.make_moments()
     reduc.make_moment_errors()
 
@@ -375,7 +380,7 @@ if __name__ == "__main__":
                      append_prefix=True)
 
     if MULTICORE:
-        pool = MPIPool(loadbalance=True)
+        pool = MPIPool(loadbalance=False)
 
         if not pool.is_master():
             # Wait for instructions from the master process.
