@@ -294,6 +294,10 @@ def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
 
         cube, hdr = getdata(filename, header=True)
 
+        # Optionally scale noise by 1/10th of the 98th percentile in the cube
+        if rms_noise == 'scaled':
+            rms_noise = 0.1*np.percentile(cube[np.isfinite(cube)], 98)
+
         from scipy.stats import norm
         if not slicewise_noise:
             cube += norm.rvs(0.0, rms_noise, cube.shape)
@@ -367,7 +371,10 @@ if __name__ == "__main__":
 
     # Sigma for COMPLETE NGC1333 data using signal-id (normal dist)
     # Note that the mean is forced to 0
-    rms_noise = 0.1277369117707014 / 2.  # in K
+    # rms_noise = 0.1277369117707014 / 2.  # in K
+
+    # Trying noise levels scaled by their brightness distribs
+    rms_noise = 'scaled'
 
     # Set whether we have multiple timesteps for each set
     if timesteps is 'last':
