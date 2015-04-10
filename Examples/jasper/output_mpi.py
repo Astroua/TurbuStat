@@ -390,12 +390,19 @@ if __name__ == "__main__":
                      append_prefix=True)
 
     if MULTICORE:
-        pool = MPIPool(loadbalance=False)
 
-        if not pool.is_master():
-            # Wait for instructions from the master process.
-            pool.wait()
-            sys.exit(0)
+        use_mpi = False
+        if use_mpi:
+            pool = MPIPool(loadbalance=False)
+
+            if not pool.is_master():
+                # Wait for instructions from the master process.
+                pool.wait()
+                sys.exit(0)
+        else:
+            from multiprocessing import Pool
+            # Default to 10 for now. Will change if this works.
+            pool = Pool(processes=10)
     else:
         pool = None
 
