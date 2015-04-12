@@ -293,18 +293,18 @@ def load_and_reduce(filename, moment_folder="moments/"):
     labels = ["moment0", "centroid", "linewidth", "integrated_intensity"]
 
     # load the cube in
-    file_dict['cube'] = [getdata(filename, header=True)]
+    file_dict['cube'] = list(getdata(filename, header=True))
 
     prefix_direc = "/".join(filename.split("/")[:-1]) + "/"
     sim_name = filename.split("/")[-1][:-4]
 
     for dic_lab, file_lab in zip(labels, file_labels):
         file_dict[dic_lab] = \
-            [getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 0, header=True)]
+            list(getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 0, header=True))
 
         # And the errors
         file_dict[dic_lab+"_error"] = \
-            [getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 1, header=True)]
+            list(getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 1, header=True))
 
     return file_dict
 
