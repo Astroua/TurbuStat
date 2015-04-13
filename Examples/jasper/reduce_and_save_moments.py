@@ -90,6 +90,8 @@ if __name__ == "__main__":
         except IndexError:
             print "Using same output folder for dirty cubes and moments."
             cube_output = output_folder
+    else:
+        cube_output = output_folder
 
     # Grab all of the fits files
     fits_files = glob.glob(folder+"/")
