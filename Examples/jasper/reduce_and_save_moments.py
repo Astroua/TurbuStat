@@ -94,7 +94,7 @@ if __name__ == "__main__":
         cube_output = output_folder
 
     # Grab all of the fits files
-    fits_files = glob.glob(folder+"/")
+    fits_files = glob.glob(folder)
 
     # Trying noise levels scaled by their brightness distribs
     if add_noise:
