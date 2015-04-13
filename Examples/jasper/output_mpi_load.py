@@ -82,7 +82,7 @@ def run_all(fiducial, simulation_runs, statistics, savename,
 
                 distances = pool.map(single_input, zip(fiducial,
                                                        timesteps,
-                                                       repeat(statistics))
+                                                       repeat(statistics)))
 
                 # If there aren't the maximum number of timesteps, pad the
                 # output to match the max.
@@ -122,7 +122,7 @@ def run_all(fiducial, simulation_runs, statistics, savename,
             # print blah
             distances = pool.map(single_input, zip(repeat(fiducial),
                                                    simulation_runs.values(),
-                                                   repeat(statistics))
+                                                   repeat(statistics)))
 
             distances_storage = sort_distances(statistics, distances).T
 
