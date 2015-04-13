@@ -18,7 +18,7 @@ from turbustat.data_reduction import Mask_and_Moments
 np.random.seed(248954785)
 
 
-def timestep_wrapper(fiducial_timestep, testing_timestep, statistics):
+def timestep_wrapper(fiducial_timestep, testing_timestep, statistics, noise_added):
 
     # Derive the property arrays assuming uniform noise (for sims)
     fiducial_dataset = load_and_reduce(fiducial_timestep)
@@ -43,7 +43,7 @@ def single_input(a):
 
 def run_all(fiducial, simulation_runs, statistics, savename,
             pool=None, verbose=True,
-            multi_timesteps=False):
+            multi_timesteps=False, noise_added=False):
     '''
     Given a fiducial set and a series of sets to compare to, loop
     through and compare all sets and their time steps. Return an array of
@@ -82,7 +82,8 @@ def run_all(fiducial, simulation_runs, statistics, savename,
 
                 distances = pool.map(single_input, zip(fiducial,
                                                        timesteps,
-                                                       repeat(statistics)))
+                                                       repeat(statistics),
+                                                       repeat(noise_added)))
 
                 # If there aren't the maximum number of timesteps, pad the
                 # output to match the max.
@@ -122,7 +123,8 @@ def run_all(fiducial, simulation_runs, statistics, savename,
             # print blah
             distances = pool.map(single_input, zip(repeat(fiducial),
                                                    simulation_runs.values(),
-                                                   repeat(statistics)))
+                                                   repeat(statistics),
+                                                   repeat(noise_added)))
 
             distances_storage = sort_distances(statistics, distances).T
 
@@ -336,7 +338,12 @@ if __name__ == "__main__":
         MULTICORE = True
     else:
         MULTICORE = False
-    output_direc = str(sys.argv[8])
+    noise_added = str(sys.argv[8])
+    if noise_added == "T":
+        noise_added = True
+    else:
+        noise_added = False
+    output_direc = str(sys.argv[9])
 
     # Sigma for COMPLETE NGC1333 data using signal-id (normal dist)
     # Note that the mean is forced to 0
@@ -392,7 +399,7 @@ if __name__ == "__main__":
                 del comparisons[key]
             partial_distances = \
                 run_all(fiducials[face][fid_num], comparisons,
-                        statistics, save_name, pool=pool,
+                        statistics, save_name, pool=pool, noise_added=noise_added,
                         multi_timesteps=multi_timesteps, verbose=True)
             distances_storage[:, prev:posn, :] = partial_distances
             prev += i
@@ -410,7 +417,8 @@ if __name__ == "__main__":
             run_all(fiducials[face][fiducial_num],
                     designs[comp_face], statistics, save_name,
                     pool=pool,
-                    multi_timesteps=multi_timesteps)
+                    multi_timesteps=multi_timesteps,
+                    noise_added=noise_added)
 
         simulation_runs = designs[comp_face].keys()
         fiducial_index = [fiducial_num] * len(designs.keys())
