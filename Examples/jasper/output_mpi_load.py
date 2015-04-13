@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     if MULTICORE:
 
-        use_mpi = False
+        use_mpi = True
         if use_mpi:
             pool = MPIPool(loadbalance=False)
 
