@@ -12,9 +12,9 @@
 source /home/ekoch/.bashrc
 
 echo "Starting at: `date`"
-for face1 in 0 #{0..2}
+for face1 in {0,2}
     do
-    for face2 in 0 #{0..2}
+    for face2 in {0,2}
     do
         # mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output_mpi.py /lustre/home/ekoch/sims/SimSuite8/ 0 $face1 $face2 max SimSuite8 T T /lustre/home/ekoch/sims/results/noise_same_results/
         mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/output_mpi_load.py /lustre/home/ekoch/sims/SimSuite8_noise/ 0 $face1 $face2 max SimSuite8 T T /lustre/home/ekoch/sims/results/noise_same_results/
