@@ -18,16 +18,13 @@ from turbustat.data_reduction import Mask_and_Moments
 np.random.seed(248954785)
 
 
-def timestep_wrapper(fiducial_timestep, testing_timestep, statistics,
-                     add_noise, rms_noise):
+def timestep_wrapper(fiducial_timestep, testing_timestep, statistics, noise_added):
 
     # Derive the property arrays assuming uniform noise (for sims)
-    fiducial_dataset = load_and_reduce(fiducial_timestep, add_noise=add_noise,
-                                       rms_noise=rms_noise)
-    testing_dataset = load_and_reduce(testing_timestep, add_noise=add_noise,
-                                      rms_noise=rms_noise)
+    fiducial_dataset = load_and_reduce(fiducial_timestep)
+    testing_dataset = load_and_reduce(testing_timestep)
 
-    if add_noise:
+    if noise_added:
         vca_break = 1.5
         vcs_break = -0.5
     else:
@@ -46,7 +43,7 @@ def single_input(a):
 
 def run_all(fiducial, simulation_runs, statistics, savename,
             pool=None, verbose=True,
-            multi_timesteps=False, add_noise=False, rms_noise=0.001):
+            multi_timesteps=False, noise_added=False):
     '''
     Given a fiducial set and a series of sets to compare to, loop
     through and compare all sets and their time steps. Return an array of
@@ -86,8 +83,7 @@ def run_all(fiducial, simulation_runs, statistics, savename,
                 distances = pool.map(single_input, zip(fiducial,
                                                        timesteps,
                                                        repeat(statistics),
-                                                       repeat(add_noise),
-                                                       repeat(rms_noise)))
+                                                       repeat(noise_added)))
 
                 # If there aren't the maximum number of timesteps, pad the
                 # output to match the max.
@@ -101,12 +97,8 @@ def run_all(fiducial, simulation_runs, statistics, savename,
 
             else:
                 for ii, timestep in enumerate(timesteps):
-                    fiducial_dataset = load_and_reduce(fiducial[ii],
-                                                       add_noise=add_noise,
-                                                       rms_noise=rms_noise)
-                    testing_dataset = load_and_reduce(timestep,
-                                                      add_noise=add_noise,
-                                                      rms_noise=rms_noise)
+                    fiducial_dataset = load_and_reduce(fiducial[ii])
+                    testing_dataset = load_and_reduce(timestep)
                     if i == 0:
                         distances, fiducial_models = \
                             stats_wrapper(fiducial_dataset, testing_dataset,
@@ -132,21 +124,17 @@ def run_all(fiducial, simulation_runs, statistics, savename,
             distances = pool.map(single_input, zip(repeat(fiducial),
                                                    simulation_runs.values(),
                                                    repeat(statistics),
-                                                   repeat(add_noise),
-                                                   repeat(rms_noise)))
+                                                   repeat(noise_added)))
 
             distances_storage = sort_distances(statistics, distances).T
 
         else:
             # Load the fiducial in
-            fiducial_dataset = load_and_reduce(fiducial, add_noise=add_noise,
-                                               rms_noise=rms_noise)
+            fiducial_dataset = load_and_reduce(fiducial)
 
             for i, key in enumerate(simulation_runs.keys()):
                 testing_dataset = \
-                    load_and_reduce(simulation_runs[key][comp_face],
-                                    add_noise=add_noise,
-                                    rms_noise=rms_noise)
+                    load_and_reduce(simulation_runs[key][comp_face])
                 if i == 0:
                     distances, fiducial_models = \
                         stats_wrapper(fiducial_dataset, testing_dataset,
@@ -282,54 +270,42 @@ def _timestep_sort(d, timesteps, labels=None):
                 d[lab][face] = good_files
 
 
-def load_and_reduce(filename, add_noise=False, rms_noise=0.001,
-                    nsig=3, slicewise_noise=True):
+def load_and_reduce(filename, moment_folder="moments/"):
     '''
     Load the cube in and derive the property arrays.
     '''
 
-    if add_noise:
-        if rms_noise is None:
-            raise TypeError("Must specify value of rms noise.")
+    file_dict = {}
 
-        cube, hdr = getdata(filename, header=True)
+    file_labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
+    labels = ["moment0", "centroid", "linewidth", "integrated_intensity"]
 
-        # Optionally scale noise by 1/10th of the 98th percentile in the cube
-        if rms_noise == 'scaled':
-            rms_noise = 0.1*np.percentile(cube[np.isfinite(cube)], 98)
+    # load the cube in
+    file_dict['cube'] = list(getdata(filename, header=True))
 
-        from scipy.stats import norm
-        if not slicewise_noise:
-            cube += norm.rvs(0.0, rms_noise, cube.shape)
-        else:
-            spec_shape = cube.shape[0]
-            slice_shape = cube.shape[1:]
-            for i in range(spec_shape):
-                cube[i, :, :] += norm.rvs(0.0, rms_noise, slice_shape)
+    prefix_direc = "/".join(filename.split("/")[:-1])
+    if len(prefix_direc) != 0:
+        prefix_direc = prefix_direc + "/"
+    sim_name = filename.split("/")[-1][:-4]
 
-        sc = SpectralCube(data=cube, wcs=WCS(hdr))
+    for dic_lab, file_lab in zip(labels, file_labels):
+        file_dict[dic_lab] = \
+            list(getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 0, header=True))
 
-        mask = LazyMask(np.isfinite, sc)
-        sc = sc.with_mask(mask)
+        # And the errors
+        file_dict[dic_lab+"_error"] = \
+            list(getdata(prefix_direc+moment_folder+sim_name+file_lab+".fits", 1, header=True))
 
-    else:
-        sc = filename
-
-    reduc = Mask_and_Moments(sc, scale=rms_noise)
-    reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
-    reduc.make_moments()
-    reduc.make_moment_errors()
-
-    return reduc.to_dict()
+    return file_dict
 
 if __name__ == "__main__":
 
     # Call as:
-    # python output.py path/to/folder/ 0 0 1 max fiducial0 T T
+    # python output.py path/to/folder/ 0 0 1 max fiducial0 T
     #  /lustre/home/ekoch/results/
     # The args correspond to: directory, fiducial number, face,
     # comparison face, time steps to use, output file prefix,
-    # use multiple cores?, add_noise?, save_direc
+    # use multiple cores?, save_direc
 
     from MPI import MPIPool
 
@@ -362,11 +338,11 @@ if __name__ == "__main__":
         MULTICORE = True
     else:
         MULTICORE = False
-    add_noise = str(sys.argv[8])
-    if add_noise == "T":
-        add_noise = True
+    noise_added = str(sys.argv[8])
+    if noise_added == "T":
+        noise_added = True
     else:
-        add_noise = False
+        noise_added = False
     output_direc = str(sys.argv[9])
 
     # Sigma for COMPLETE NGC1333 data using signal-id (normal dist)
@@ -374,11 +350,6 @@ if __name__ == "__main__":
     # rms_noise = 0.1277369117707014 / 2.  # in K
 
     # Trying noise levels scaled by their brightness distribs
-    if add_noise:
-        rms_noise = 'scaled'
-    else:
-        rms_noise = 0.001
-
     # Set whether we have multiple timesteps for each set
     if timesteps is 'last':
         multi_timesteps = False
@@ -391,7 +362,7 @@ if __name__ == "__main__":
 
     if MULTICORE:
 
-        use_mpi = False
+        use_mpi = True
         if use_mpi:
             pool = MPIPool(loadbalance=False)
 
@@ -428,9 +399,8 @@ if __name__ == "__main__":
                 del comparisons[key]
             partial_distances = \
                 run_all(fiducials[face][fid_num], comparisons,
-                        statistics, save_name, pool=pool,
-                        multi_timesteps=multi_timesteps, verbose=True,
-                        add_noise=add_noise, rms_noise=rms_noise)
+                        statistics, save_name, pool=pool, noise_added=noise_added,
+                        multi_timesteps=multi_timesteps, verbose=True)
             distances_storage[:, prev:posn, :] = partial_distances
             prev += i
 
@@ -448,7 +418,7 @@ if __name__ == "__main__":
                     designs[comp_face], statistics, save_name,
                     pool=pool,
                     multi_timesteps=multi_timesteps,
-                    add_noise=add_noise, rms_noise=rms_noise)
+                    noise_added=noise_added)
 
         simulation_runs = designs[comp_face].keys()
         fiducial_index = [fiducial_num] * len(designs.keys())

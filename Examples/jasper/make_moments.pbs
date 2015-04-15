@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l pmem=4000m
+#PBS -l feature=X5675
+#PBS -l nodes=4:ppn=12
+#PBS -l walltime=5:00:00
+#PBS -m bea
+#PBS -M koch.eric.w@gmail.com
+#PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
+
+source /home/ekoch/.bashrc
+
+echo "Starting at: `date`"
+mpirun -np 48 python2.7 /home/ekoch/code_repos/TurbuStat/Examples/jasper/reduce_and_save_moments.py /lustre/home/ekoch/sims/SimSuite8/ /lustre/home/ekoch/sims/SimSuite8/moments/ F
+echo "Exited with code $? at: `date`"

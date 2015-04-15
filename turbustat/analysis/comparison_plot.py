@@ -110,6 +110,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
             p.autoscale(True)
             fig.show()
         else:
+            p.autoscale(True)
             fig.savefig("distance_comparisons_" + stat + ".pdf")
             fig.clf()
 
@@ -119,7 +120,7 @@ def _plot_size(num):
         return p.subplots(num, sharex=True)
     elif num > 3 and num <= 8:
         rows = num / 2 + num % 2
-        return p.subplots(nrows=rows, ncols=2, figsize=(), sharex=True)
+        return p.subplots(nrows=rows, ncols=2, figsize=(14, 14), dpi=100, sharex=True)
     elif num == 9:
         return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100, sharex=True)
     else:
