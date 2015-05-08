@@ -11,6 +11,8 @@ import numpy as np
 from pandas import read_csv
 import warnings
 
+p.rcParams.update({'font.size': 14})
+
 
 def effect_plots(distance_file, effects_file, min_zscore=2.0,
                  params=["fc", "pb", "m", "k", "sf", "vp"], save=False):
@@ -122,8 +124,8 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             else:
                 ax.set_xticks([-1, 1])
 
-        fig.subplots_adjust(right=0.85)
-        cax = fig.add_axes([0.88, 0.1, 0.02, 0.8])
+        fig.subplots_adjust(right=0.82)
+        cax = fig.add_axes([0.85, 0.1, 0.02, 0.8])
         cb = mpl.colorbar.ColorbarBase(cax, cmap=milagro, norm=cNorm)
         cb.set_ticks(np.log10(response))
         # Avoid white lines in the pdf rendering
@@ -148,8 +150,8 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
             else:
                 label = rep_name[effect]
             cax.annotate(label,
-                         xy=(0.92, (value - min_resp)/(max_resp-min_resp)),
-                         xytext=(0.93, tpos), textcoords='figure fraction',
+                         xy=(0.88, (value - min_resp)/(max_resp-min_resp)),
+                         xytext=(0.9, tpos), textcoords='figure fraction',
                          arrowprops=dict(facecolor='k',
                                          width=0.05, alpha=1.0, headwidth=0.1),
                          horizontalalignment='left',
@@ -157,11 +159,11 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
         cb.set_ticklabels([])
         cb.ax.tick_params(labelsize=10, colors='white', length=10)
 
-        cax.annotate(np.round(10**min_resp, 1), xy=(0.86, 0.07),
-                     xytext=(0.86, 0.07), textcoords='figure fraction')
+        cax.annotate(np.round(10**min_resp, 1), xy=(0.83, 0.07),
+                     xytext=(0.83, 0.07), textcoords='figure fraction')
 
-        cax.annotate(np.round(10**max_resp, 1), xy=(0.86, 0.91),
-                     xytext=(0.86, 0.91), textcoords='figure fraction')
+        cax.annotate(np.round(10**max_resp, 1), xy=(0.83, 0.91),
+                     xytext=(0.83, 0.91), textcoords='figure fraction')
 
         if save:
             fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
