@@ -297,8 +297,23 @@ class DeltaVariance_Distance(object):
         errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
                          self.delvar2.delta_var_error[0, :])
 
-        self.distance = np.linalg.norm(np.log10(self.delvar1.delta_var) -
-                                  np.log10(self.delvar2.delta_var))
+
+        # Check for NaNs
+        nans1 = np.isnan(self.delvar1.delta_var)
+        nans2 = np.isnan(self.delvar2.delta_var)
+
+        if nans1.any() or nans2.any():
+            all_nans = np.logical_or(nan1, nans2)
+
+            delvar1 = np.log10(self.delta_var1.delta_var)[~all_nans]
+            delvar2 = np.log10(self.delta_var2.delta_var)[~all_nans]
+
+        else:
+
+            delvar1 = np.log10(self.delta_var1.delta_var)
+            delvar2 = np.log10(self.delta_var2.delta_var)
+
+        self.distance = np.linalg.norm(delta_var1 - delta_var2)
 
         if verbose:
             import matplotlib.pyplot as p
