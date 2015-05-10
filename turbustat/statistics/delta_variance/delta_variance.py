@@ -313,7 +313,7 @@ class DeltaVariance_Distance(object):
             deltavar1 = np.log10(self.delta_var1.delta_var)
             deltavar2 = np.log10(self.delta_var2.delta_var)
 
-        self.distance = np.linalg.norm(delta_var1 - delta_var2)
+        self.distance = np.linalg.norm(deltavar1 - deltavar2)
 
         if verbose:
             import matplotlib.pyplot as p
