@@ -114,7 +114,7 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, bootstrap=True, nsamples=100, alpha=0.05):
+    def compute_deltavar(self, bootstrap=False, nsamples=100, alpha=0.05):
 
         for i, (convolved_array, convolved_weight) in \
          enumerate(zip(self.convolved_arrays, self.convolved_weights)):
