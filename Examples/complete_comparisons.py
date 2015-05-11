@@ -157,7 +157,7 @@ if __name__ == "__main__":
     from pandas import DataFrame
 
     statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance", # "Bispectrum",
-                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", # "Cramer",
+                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
                   "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
                   "VCS_Break", "PDF", "Dendrogram_Hist", "Dendrogram_Num"]
 
