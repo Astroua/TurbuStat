@@ -114,7 +114,7 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, bootstrap=True, nsamples=100, alpha=0.05):
+    def compute_deltavar(self, bootstrap=False, nsamples=100, alpha=0.05):
 
         for i, (convolved_array, convolved_weight) in \
          enumerate(zip(self.convolved_arrays, self.convolved_weights)):
@@ -297,8 +297,23 @@ class DeltaVariance_Distance(object):
         errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
                          self.delvar2.delta_var_error[0, :])
 
-        self.distance = np.linalg.norm(np.log10(self.delvar1.delta_var) -
-                                  np.log10(self.delvar2.delta_var))
+
+        # Check for NaNs
+        nans1 = np.isnan(self.delvar1.delta_var)
+        nans2 = np.isnan(self.delvar2.delta_var)
+
+        if nans1.any() or nans2.any():
+            all_nans = np.logical_or(nan1, nans2)
+
+            deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
+            deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
+
+        else:
+
+            deltavar1 = np.log10(self.delvar1.delta_var)
+            deltavar2 = np.log10(self.delvar2.delta_var)
+
+        self.distance = np.linalg.norm(deltavar1 - deltavar2)
 
         if verbose:
             import matplotlib.pyplot as p
