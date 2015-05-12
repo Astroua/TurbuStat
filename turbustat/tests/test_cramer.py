@@ -28,3 +28,13 @@ class testCramer(TestCase):
                            computed_data["cramer_val"])
         npt.assert_almost_equal(self.tester.distance,
                                 computed_distances['cramer_distance'])
+
+    def test_cramer_spatial_diff(self):
+
+        small_data = dataset1["cube"][0][:, :26, :26]
+
+        self.tester2 = Cramer_Distance(small_data, dataset2["cube"][0])
+        self.tester3 = Cramer_Distance(dataset2["cube"][0], small_data)
+
+        npt.assert_almost_equal(self.tester2.distance, self.tester3.distance)
+
