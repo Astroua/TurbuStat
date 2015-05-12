@@ -48,7 +48,7 @@ class Cramer_Distance(object):
         self.data_matrix2 = None
         self.distance = None
 
-    def format_data(self, data_format='intensity'):
+    def format_data(self, data_format='intensity', seed=13024):
         '''
         Rearrange data into a 2D object using the given format.
         '''
@@ -63,6 +63,9 @@ class Cramer_Distance(object):
         samps2 = self.data_matrix2.shape[1]
 
         if samps1 != samps2:
+
+            # Set the seed due to the sampling
+            np.random.seed(seed)
 
             if samps1 < samps2:
 
