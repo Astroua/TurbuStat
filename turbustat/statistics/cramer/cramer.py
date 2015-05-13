@@ -48,7 +48,7 @@ class Cramer_Distance(object):
         self.data_matrix2 = None
         self.distance = None
 
-    def format_data(self, data_format='intensity'):
+    def format_data(self, data_format='intensity', seed=13024):
         '''
         Rearrange data into a 2D object using the given format.
         '''
@@ -57,6 +57,37 @@ class Cramer_Distance(object):
                                          noise_lim=self.noise_value1)
         self.data_matrix2 = _format_data(self.cube2, data_format=data_format,
                                          noise_lim=self.noise_value2)
+
+        # Need to check if the same number of samples is taken
+        samps1 = self.data_matrix1.shape[1]
+        samps2 = self.data_matrix2.shape[1]
+
+        if samps1 != samps2:
+
+            # Set the seed due to the sampling
+            np.random.seed(seed)
+
+            if samps1 < samps2:
+
+                new_data = np.empty((self.data_matrix2.shape[0], samps1))
+
+                for i in range(self.data_matrix2.shape[0]):
+                    new_data[i, :] = \
+                        np.random.choice(self.data_matrix2[i, :], samps1,
+                                         replace=False)
+
+                self.data_matrix2 = new_data
+
+            else:
+
+                new_data = np.empty((self.data_matrix1.shape[0], samps2))
+
+                for i in range(self.data_matrix1.shape[0]):
+                    new_data[i, :] = \
+                        np.random.choice(self.data_matrix1[i, :], samps2,
+                                         replace=False)
+
+                self.data_matrix1 = new_data
 
         return self
 

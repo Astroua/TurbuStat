@@ -1,14 +1,17 @@
 
 import numpy as np
 from astropy.io.fits import getdata
+from astropy.wcs import WCS
 from itertools import combinations, izip, repeat
+import subprocess
 try:
-    from MPI import InterruptiblePool as Pool
+    from interruptible_pool import InterruptiblePool as Pool
 except ImportError:
     from multiprocessing import Pool
 
 from turbustat.statistics import stats_wrapper
 from turbustat.data_reduction import Mask_and_Moments
+from spectral_cube import SpectralCube, LazyMask
 
 '''
 COMPLETE comparisons.
@@ -27,14 +30,12 @@ def obs_to_obs(file_list, statistics, nsig=3, pool=None):
     If a pool is passed, it runs in parallel.
     '''
 
-
-
     distances = {}
 
     for stat in statistics:
      distances[stat] = np.zeros((len(file_list), len(file_list)))
 
-    generator = izip(combinations(file_list, 2),
+    generator = zip(combinations(file_list, 2),
                      repeat(statistics),
                      repeat(False),
                      repeat(None),
@@ -107,6 +108,10 @@ def load_and_reduce(filename, add_noise=False, rms_noise=None,
     Load the cube in and derive the property arrays.
     '''
 
+    if "Fiducial" in filename:
+        rms_noise = 'scaled'
+        add_noise = True
+
     if add_noise:
         if rms_noise is None:
             raise TypeError("Must specify value of rms noise.")
@@ -137,7 +142,7 @@ def load_and_reduce(filename, add_noise=False, rms_noise=None,
     if rms_noise is None:
         reduc = Mask_and_Moments(sc)
     else:
-        reduc = Mask_and_Moments(sc, rms_noise=rms_noise)
+        reduc = Mask_and_Moments(sc, scale=rms_noise)
     reduc.make_mask(mask=reduc.cube > nsig * reduc.scale)
     reduc.make_moments()
     reduc.make_moment_errors()
@@ -146,10 +151,12 @@ def load_and_reduce(filename, add_noise=False, rms_noise=None,
 
 if __name__ == "__main__":
 
+    subprocess.Popen('caffeinate')
+
     import os
     from pandas import DataFrame
 
-    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+    statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance", # "Bispectrum",
                   "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
                   "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
                   "VCS_Break", "PDF", "Dendrogram_Hist", "Dendrogram_Num"]
@@ -159,13 +166,30 @@ if __name__ == "__main__":
 
     # Load the list of complete cubes in
 
-    complete_dir = "/Users/eric/Data/complete/"
+    # complete_dir = "/Users/eric/Data/complete/"
+    complete_dir = "/Users/eric/Dropbox/AstroStatistics/"
 
     complete_cubes = [complete_dir+f for f in os.listdir(complete_dir) if f[-4:] == 'fits']
 
+    # Grab the timestep 21 of the 5 fiducials
+
+    sim_dir = "/Volumes/RAIDers_of_the_lost_ark/SimSuite8/"
+
+    fiducial_cubes = [sim_dir+f for f in os.listdir(sim_dir) if "Fiducial" in f and "_0021_02_" in f]
+
+    complete_cubes = complete_cubes + fiducial_cubes
+
+    print complete_cubes
+
     # Run the complete comparisons
 
-    complete_distances = obs_to_obs(complete_cubes, statistics)
+    # pool = Pool(4)
+    pool = None
+
+    complete_distances = obs_to_obs(complete_cubes, statistics, pool=pool)
+
+    # pool.close()
+    # pool.join()
 
     for i, stat in enumerate(complete_distances.keys()):
 
