@@ -71,7 +71,7 @@ class PDF(object):
         Create the ECDF.
         '''
 
-        self._ecdf = np.cumsum(self.pdf)
+        self._ecdf = np.cumsum(np.sort(self.data.ravel())) / np.sum(self.data)
 
         return self
 
@@ -98,7 +98,7 @@ class PDF(object):
 
             # ECDF
             p.subplot(132)
-            p.semilogx(self.bins, self.ecdf, 'b-')
+            p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(r"$\Sigma/\overline{\Sigma}$")
             p.ylabel("ECDF")
