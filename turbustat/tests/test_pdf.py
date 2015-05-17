@@ -29,5 +29,8 @@ class testPDF(TestCase):
 
         assert np.allclose(self.test_dist.PDF1.pdf, computed_data["pdf_val"])
 
-        npt.assert_almost_equal(self.test_dist.distance,
-                                computed_distances['pdf_distance'])
+        npt.assert_almost_equal(self.test_dist.hellinger_distance,
+                                computed_distances['pdf_hellinger_distance'])
+
+        npt.assert_almost_equal(self.test_dist.ks_distance,
+                                computed_distances['pdf_ks_distance'])
