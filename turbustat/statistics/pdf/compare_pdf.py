@@ -7,6 +7,7 @@ The density PDF as described by Kowal et al. (2007)
 '''
 
 import numpy as np
+from scipy.stats import ks_2samp
 
 
 class PDF(object):
@@ -71,7 +72,7 @@ class PDF(object):
         Create the ECDF.
         '''
 
-        self._ecdf = np.cumsum(self.pdf)
+        self._ecdf = np.cumsum(np.sort(self.data.ravel())) / np.sum(self.data)
 
         return self
 
@@ -98,7 +99,7 @@ class PDF(object):
 
             # ECDF
             p.subplot(132)
-            p.semilogx(self.bins, self.ecdf, 'b-')
+            p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(r"$\Sigma/\overline{\Sigma}$")
             p.ylabel("ECDF")
@@ -182,7 +183,28 @@ class PDF_Distance(object):
         self.PDF2 = PDF(stand2, bins=self.bins)
         self.PDF2.run(verbose=False)
 
-    def distance_metric(self, labels=None, verbose=False):
+    def compute_hellinger_distance(self):
+        '''
+        Computes the Hellinger Distance between the two PDFs.
+        '''
+
+        self.hellinger_distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
+
+        return self
+
+    def compute_ks_distance(self):
+        '''
+        Compute the distance using the KS Test.
+        '''
+
+        D, p = ks_2samp(self.PDF1.data, self.PDF2.data)
+
+        self.ks_distance = D
+        self.ks_pval = p
+
+        return self
+
+    def distance_metric(self, statistic='both', labels=None, verbose=False):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -196,7 +218,15 @@ class PDF_Distance(object):
             Enables plotting.
         '''
 
-        self.distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
+        if statistic is 'both':
+            self.compute_hellinger_distance()
+            self.compute_ks_distance()
+        elif statistic is 'hellinger':
+            self.compute_hellinger_distance()
+        elif statistic is 'ks':
+            self.compute_ks_distance()
+        else:
+            raise TypeError("statistic must be 'both', 'hellinger', or 'ks'.")
 
         if verbose:
             import matplotlib.pyplot as p
