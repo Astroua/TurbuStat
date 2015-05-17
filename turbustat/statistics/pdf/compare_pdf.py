@@ -204,7 +204,7 @@ class PDF_Distance(object):
 
         return self
 
-    def distance_metric(self, labels=None, verbose=False):
+    def distance_metric(self, statistic='both', labels=None, verbose=False):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -218,7 +218,15 @@ class PDF_Distance(object):
             Enables plotting.
         '''
 
-        self.distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
+        if statistic is 'both':
+            self.compute_hellinger_distance()
+            self.compute_ks_distance()
+        elif statistic is 'hellinger':
+            self.compute_hellinger_distance()
+        elif statistic is 'ks':
+            self.compute_ks_distance()
+        else:
+            raise TypeError("statistic must be 'both', 'hellinger', or 'ks'.")
 
         if verbose:
             import matplotlib.pyplot as p
