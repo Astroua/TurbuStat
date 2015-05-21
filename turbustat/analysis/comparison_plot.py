@@ -7,7 +7,7 @@ from pandas import read_csv
 
 
 def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
-                    obs_to_fid=False,
+                    obs_to_fid=False, obs_to_fid_data=None,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -64,22 +64,39 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         data_files["1_obs"] = ["Face 1 to Obs"],
         data_files["2_obs"] = ["Face 2 to Obs"],
 
+    if obs_to_fid:
+        if obs_to_fid_data is None:
+            raise TypeError("obs_to_fid_data must be specified"+
+                            " when obs_to_fid is enabled.")
+
+        obs_to_fid_data = {0: None,
+                           1: None,
+                           2: None}
+
     # Read in the data and match it to one of the face combinations.
     for x in os.listdir(path):
         if not os.path.isfile(os.path.join(path, x)):
             continue
         if not x[-3:] == "csv":
             continue
-        for key in data_files.keys():
-            if key in x:
-                data = read_csv(os.path.join(path, x))
-                if "fiducial" in x:
-                    data_files[key][1] = data
-                elif "distances" in x:
-                    data_files[key][2] = data
-                else:
-                    pass
-                break
+
+        # Separate out the observational csv files.
+        if obs_to_fid and 'complete' in x:
+            for key in obs_to_fid_data.keys():
+                if "_"+str(key)+"_":
+                    obs_to_fid_data[key] = read_csv(os.path.join(path, x))
+                    break
+        else:
+            for key in data_files.keys():
+                if key in x:
+                    data = read_csv(os.path.join(path, x))
+                    if "fiducial" in x:
+                        data_files[key][1] = data
+                    elif "distances" in x:
+                        data_files[key][2] = data
+                    else:
+                        pass
+                    break
 
     # Now delete the keys with no data
     for key in data_files.keys():
@@ -106,8 +123,10 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left)
-            if obs_to_fid:
-                _horiz_obs_plot(axis, obs_data, num_obs, num_fids)
+            if obs_to_fid and k <= k / float(shape[1]):
+                obs_key = int(key[0])
+                _horiz_obs_plot(axis, obs_to_fit_data[obs_key],
+                                num_obs, num_fids)
 
         if verbose:
             p.autoscale(True)
