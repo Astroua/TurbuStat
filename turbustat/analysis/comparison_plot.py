@@ -6,7 +6,8 @@ import matplotlib.pyplot as p
 from pandas import read_csv
 
 
-def comparison_plot(path, num_fids=5, verbose=False, obs=False,
+def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
+                    obs_to_fid=False,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -58,7 +59,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         if not key in comparisons:
             del data_files[key]
 
-    if obs:
+    if obs_to_des:
         data_files["0_obs"] = ["Face 0 to Obs"],
         data_files["1_obs"] = ["Face 1 to Obs"],
         data_files["2_obs"] = ["Face 2 to Obs"],
@@ -105,6 +106,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left)
+            if obs_to_fid:
+                _horiz_obs_plot(axis, obs_data, num_obs, num_fids)
 
         if verbose:
             p.autoscale(True)
@@ -175,6 +178,41 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
     ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+
+
+def _horiz_obs_plot(ax, data, num_obs, num_fids):
+    '''
+    Plot a horizontal line with surrounding shading across
+    the plot to signify the distance of the observational data.
+    '''
+
+    # This eventually needs to be generalized
+    labels_dict = {"ophA.13co.fits": "OphA",
+                   "ngc1333.13co.fits": "NGC-1333",
+                   "oc348.14co.fits": "IC-348"}
+
+    obs_names = data.index()
+
+    x_vals = ax.axis()[:2]
+
+    for i in range(num_fids):
+        y_vals = data.ix[int(i * num_obs):int(((i + 1) * num_obs)-1)]
+        ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(i), alpha=0.4,
+                linewidth=3)
+
+    for i, obs in enumerate(obs_names):
+
+        y_vals = data.ix[i::(num_fids)]
+
+        yposn = np.nanmean(y_vals)
+
+        # Calculate position wrt to axis limit
+        y_frac = yposn / float(ax.axis()[-1])
+
+        ax.annotate(labels_dict[obs], xy=(1.1, y_frac), xytext=(1.1, y_frac)
+                    va='top', xycoords='axes fraction',
+                    textcoords='offset points',
+                    fontsize=12)
 
 
 def timestep_comparisons(path, verbose=False):
