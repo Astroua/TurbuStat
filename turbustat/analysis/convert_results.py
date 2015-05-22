@@ -39,22 +39,31 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         Append on columns with fiducial numbers copy
     '''
 
-    files = [path + f for f in os.listdir(path) if os.path.isfile(path + f)
-             and "_"+str(face1)+"_"+str(face2)+"_" in f
-             and "comparisons" not in f]
+    if face2 is not None:
+        files = [path + f for f in os.listdir(path)
+                 if os.path.isfile(path + f)
+                 and "_"+str(face1)+"_"+str(face2)+"_" in f
+                 and "comparisons" not in f]
+    else:
+        # Observational comparisons explicitly have 'face' in filename
+        files = [path + f for f in os.listdir(path)
+                 if os.path.isfile(path + f)
+                 # and "face_"+str(face1) in f
+                 and "comparisons" not in f]
     files.sort()
     print "Files used: %s" % (files)
 
-    if isinstance(design, str):
-        design = read_csv(design)
+    if design is not None:
+        if isinstance(design, str):
+            design = read_csv(design)
 
-    if isinstance(parameters, list):
-        design_df = {}
-        for param in parameters:
-            design_df[param] = Series(design[param])
-        design_df = DataFrame(design_df)
-    else:
-        design_df = design
+        if isinstance(parameters, list):
+            design_df = {}
+            for param in parameters:
+                design_df[param] = Series(design[param])
+            design_df = DataFrame(design_df)
+        else:
+            design_df = design
 
     for i, f in enumerate(files):
         store = HDFStore(f)
@@ -68,11 +77,12 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         store.close()
 
         # Add on design matrix
-        for key in design_df:
-            # can get nans if the file was made in excel
-            design_df = design_df.dropna()
-            design_df.index = index
-            data_columns[key] = design_df[key]
+        if design is not None:
+            for key in design_df:
+                # can get nans if the file was made in excel
+                design_df = design_df.dropna()
+                design_df.index = index
+                data_columns[key] = design_df[key]
 
         data_columns = DataFrame(data_columns)
 
@@ -86,7 +96,10 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         else:  # Add on to dataframe
             df = concat([df, data_columns])
 
-    filename = "distances_"+str(face1)+"_"+str(face2)
+    if face2 is not None:
+        filename = "distances_"+str(face1)+"_"+str(face2)
+    else:
+        filename = "complete_distances_face_"+str(face1)
 
     if "Name" in df.keys():
         del df["Name"]
