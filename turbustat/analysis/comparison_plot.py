@@ -2,6 +2,7 @@
 
 import numpy as np
 import os
+import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv
 
@@ -107,6 +108,16 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
     if data_files.keys() == []:
         print "No csv files found in %s" % (path)
         return
+
+    # Set the colour cycle
+    colour_cycle = mpl.rcParams['axes.color_cycle']
+    if len(colour_cycle) < num_fids:
+        # Need to define our own in this case.
+        mpl.rcParams['axes.color_cycle'] = \
+            [mpl.cmap.jet(i) for i in np.linspace(0.0, 1.0, num_fids)]
+    else:
+        mpl.rcParams['axes.color_cycle'] = colour_cycle[:num_fids]
+
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
