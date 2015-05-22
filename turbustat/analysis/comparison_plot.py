@@ -231,13 +231,9 @@ def _horiz_obs_plot(ax, data, num_fids):
 
         yposn = np.nanmean(y_vals)
 
-        # Calculate position wrt to axis limit
-        y_frac = yposn / float(ax.axis()[-1])
-
-        ax.annotate(labels_dict[obs], xy=(1.0, y_frac), xytext=(1.0, y_frac),
-                    va='top', xycoords='axes fraction',
-                    textcoords='offset points',
-                    fontsize=12)
+        trans = ax.get_yaxis_transform()
+        ax.annotate(labels_dict[obs], xy=(1.01, yposn), xytext=(1.01, yposn),
+                    fontsize=12, xycoords=trans)
 
 
 def timestep_comparisons(path, verbose=False):
