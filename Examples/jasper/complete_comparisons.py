@@ -339,7 +339,8 @@ if __name__ == "__main__":
 
         complete_distances = obs_to_obs(complete_cubes, statistics, pool=pool)
 
-        pool.close()
+        if pool is not None:
+            pool.close()
 
         for i, stat in enumerate(complete_distances.keys()):
 
