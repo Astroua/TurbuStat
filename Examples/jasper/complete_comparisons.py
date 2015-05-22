@@ -89,11 +89,13 @@ def obs_to_fid(obs_list, fiducial_dict, statistics, pool=None):
             np.zeros((len(obs_list),
                       len(fiducial_dict.keys())))
 
-    for obs in obs_list:
+    for posn, obs in enumerate(obs_list):
         # Create generator
         gen = zip(zip(fiducial_dict.values(), repeat(obs)),
                   repeat(statistics),
                   repeat(True))
+
+        print "On "+str(posn+1)+"/"+str(len(obs_list))+" at "+str(datetime.now())
 
         if pool is not None:
             outputs = pool.map(single_input, gen)
