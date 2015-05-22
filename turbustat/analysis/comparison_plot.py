@@ -111,7 +111,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
         (fig, ax) = _plot_size(len(data_files.keys()))
         if len(data_files.keys()) == 1:
-            shape = 1
+            shape = (1, )
         else:
             shape = ax.shape
 
