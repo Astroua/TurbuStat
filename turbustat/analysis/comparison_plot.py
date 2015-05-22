@@ -83,7 +83,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         if obs_to_fid and 'complete' in x:
             for key in obs_to_fid_data.keys():
                 if "face_"+str(key):
-                    obs_to_fid_data[key] = read_csv(os.path.join(path, x))
+                    obs_to_fid_data[key] = read_csv(os.path.join(path, x),
+                                                    index_col=0)
                     break
         else:
             for key in data_files.keys():
@@ -212,16 +213,15 @@ def _horiz_obs_plot(ax, data, num_fids):
     # This eventually needs to be generalized
     labels_dict = {"ophA.13co.fits": "OphA",
                    "ngc1333.13co.fits": "NGC-1333",
-                   "oc348.14co.fits": "IC-348"}
-
-    obs_names = data.index
+                   "ic348.13co.fits": "IC-348"}
 
     x_vals = ax.axis()[:2]
 
     num_obs = data.shape[0] / num_fids
 
-    for i, obs in enumerate(obs_names):
+    obs_names = data.index[:num_obs]
 
+    for i, obs in enumerate(obs_names):
         for j in range(num_fids):
             y_vals = 2*[data.ix[int(j * num_obs)+i]]
             ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j), alpha=0.4,
