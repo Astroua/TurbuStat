@@ -24,7 +24,7 @@ the Fiducial runs
 '''
 
 
-def obs_to_obs(file_list, statistics, nsig=3, pool=None):
+def obs_to_obs(file_list, statistics, pool=None):
     '''
     Pass a list of the observational cubes.
     Reduce the data, run the statistics and output
@@ -40,9 +40,7 @@ def obs_to_obs(file_list, statistics, nsig=3, pool=None):
 
     generator = zip(combinations(file_list, 2),
                      repeat(statistics),
-                     repeat(False),
-                     repeat(None),
-                     repeat(nsig))
+                     repeat(True))
 
     if pool is None:
 
@@ -337,14 +335,14 @@ if __name__ == "__main__":
     else:
         # Pairwise comparisons between the observations only
 
-        complete_distances = obs_to_obs(complete_cubes, statistics, pool=pool)
+        complete_distances = obs_to_obs(obs_cubes, statistics, pool=pool)
 
         if pool is not None:
             pool.close()
 
         for i, stat in enumerate(complete_distances.keys()):
 
-            df = DataFrame(complete_distances[stat], index=complete_cubes,
-                           columns=complete_cubes)
+            df = DataFrame(complete_distances[stat], index=obs_cubes,
+                           columns=obs_cubes)
 
             df.to_csv(complete_dir+"complete_comparisons_"+stat+".csv")
