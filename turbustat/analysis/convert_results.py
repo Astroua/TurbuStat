@@ -11,7 +11,8 @@ import os
 
 
 def convert_format(path, face1, face2=None, design=None, output_type="csv",
-                   parameters=None, decimal_places=8, append_comp=True):
+                   parameters=None, decimal_places=8, append_comp=True,
+                   keep_index=True):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
     them into a single file.
@@ -87,7 +88,10 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
                 design_df.index = index
                 data_columns[key] = design_df[key]
 
-        data_columns = DataFrame(data_columns)
+        if keep_index:
+            data_columns = DataFrame(data_columns, index=index)
+        else:
+            data_columns = DataFrame(data_columns)
 
         if append_comp:
             data_columns["Fiducial"] = \
@@ -98,6 +102,8 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
             df = data_columns
         else:  # Add on to dataframe
             df = concat([df, data_columns])
+
+        print df.index
 
     if face2 is not None:
         filename = "distances_"+str(face1)+"_"+str(face2)
