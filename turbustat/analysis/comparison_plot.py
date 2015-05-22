@@ -40,6 +40,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         well.
     '''
 
+    if path[-1] != "/":
+        path += "/"
+
     # Set the order by the given comparison list
     order = comparisons
 
