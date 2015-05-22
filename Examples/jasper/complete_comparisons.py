@@ -3,7 +3,7 @@ import numpy as np
 from astropy.io.fits import getdata
 from astropy.wcs import WCS
 from itertools import combinations, izip, repeat
-import datetime
+from datetime import datetime
 import subprocess
 try:
     from interruptible_pool import InterruptiblePool as Pool
