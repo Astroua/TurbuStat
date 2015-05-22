@@ -112,6 +112,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         (fig, ax) = _plot_size(len(data_files.keys()))
         if len(data_files.keys()) == 1:
             shape = (1, )
+            ax = np.array([ax])
         else:
             shape = ax.shape
 
