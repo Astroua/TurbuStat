@@ -103,8 +103,6 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         else:  # Add on to dataframe
             df = concat([df, data_columns])
 
-        print df.index
-
     if face2 is not None:
         filename = "distances_"+str(face1)+"_"+str(face2)
     else:
