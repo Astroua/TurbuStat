@@ -405,7 +405,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             if cleanup:
                 del dendro_distance
 
-        if any("PDF" in s for s in statistics):
+        if any("PDF_Hellinger" in s for s in statistics) or \
+           any("PDF_KS" in s for s in statistics):
             pdf_distance = \
                 PDF_Distance(dataset1["integrated_intensity"][0],
                              dataset2["integrated_intensity"][0],
@@ -416,7 +417,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             pdf_distance.distance_metric()
 
-            distances["PDF"] = pdf_distance.PDF1.pdf
+            distances["PDF_Hellinger"] = pdf_distance.hellinger_distance
+            distances["PDF_KS"] = pdf_distance.ks_distance
 
             if cleanup:
                 del pdf_distance

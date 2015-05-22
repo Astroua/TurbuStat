@@ -2,11 +2,13 @@
 
 import numpy as np
 import os
+import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv
 
 
-def comparison_plot(path, num_fids=5, verbose=False, obs=False,
+def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
+                    obs_to_fid=False, obs_to_fid_shade=True, legend=True,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -30,14 +32,22 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         Function to apply to the time-step data.
     verbose : bool, optional
         Enables plotting.
-    cross_compare : bool, optional
-        Include comparisons between faces.
+    obs_to_des : bool, optional
+        Add in subplots where observational cubes are treayed as the fiducial.
+    obs_to_fid : bool, optional
+        Include observational to fiducial distances in the distance subplots.
+    obs_to_fid_shade : bool, optional
+        Plots the observational distances as a single band instead of by
+        fiducial.
     statistics : list, optional
         Statistics to plot. Default is all.
     comparisons : list, optional
         The face comparisons to include in the plots. The order is set here as
         well.
     '''
+
+    if path[-1] != "/":
+        path += "/"
 
     # Set the order by the given comparison list
     order = comparisons
@@ -58,10 +68,15 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         if not key in comparisons:
             del data_files[key]
 
-    if obs:
+    if obs_to_des:
         data_files["0_obs"] = ["Face 0 to Obs"],
         data_files["1_obs"] = ["Face 1 to Obs"],
         data_files["2_obs"] = ["Face 2 to Obs"],
+
+    if obs_to_fid:
+        obs_to_fid_data = {0: None,
+                           1: None,
+                           2: None}
 
     # Read in the data and match it to one of the face combinations.
     for x in os.listdir(path):
@@ -69,16 +84,25 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
             continue
         if not x[-3:] == "csv":
             continue
-        for key in data_files.keys():
-            if key in x:
-                data = read_csv(os.path.join(path, x))
-                if "fiducial" in x:
-                    data_files[key][1] = data
-                elif "distances" in x:
-                    data_files[key][2] = data
-                else:
-                    pass
-                break
+
+        # Separate out the observational csv files.
+        if obs_to_fid and 'complete' in x:
+            for key in obs_to_fid_data.keys():
+                if "face_"+str(key) in x:
+                    obs_to_fid_data[key] = read_csv(os.path.join(path, x),
+                                                    index_col=0)
+                    break
+        else:
+            for key in data_files.keys():
+                if key in x:
+                    data = read_csv(os.path.join(path, x))
+                    if "fiducial" in x:
+                        data_files[key][1] = data
+                    elif "distances" in x:
+                        data_files[key][2] = data
+                    else:
+                        pass
+                    break
 
     # Now delete the keys with no data
     for key in data_files.keys():
@@ -90,10 +114,25 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
         print "No csv files found in %s" % (path)
         return
 
+    # Set the colour cycle
+    colour_cycle = mpl.rcParams['axes.color_cycle']
+    if len(colour_cycle) < num_fids:
+        # Need to define our own in this case.
+        mpl.rcParams['axes.color_cycle'] = \
+            [mpl.cmap.jet(i) for i in np.linspace(0.0, 1.0, num_fids)]
+    else:
+        mpl.rcParams['axes.color_cycle'] = colour_cycle[:num_fids]
+
+
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
         (fig, ax) = _plot_size(len(data_files.keys()))
-        shape = ax.shape
+        if len(data_files.keys()) == 1:
+            shape = (1, )
+            ax = np.array([ax])
+        else:
+            shape = ax.shape
+
         if len(shape) == 1:
             ax = ax[:, np.newaxis]
             shape = ax.shape
@@ -104,7 +143,12 @@ def comparison_plot(path, num_fids=5, verbose=False, obs=False,
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
-                     num_fids, data_files[key][0], stat, bottom, left)
+                     num_fids, data_files[key][0], stat, bottom, left,
+                     legend=legend)
+            if obs_to_fid:
+                obs_key = int(key[0])
+                _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
+                                num_fids, shading=obs_to_fid_shade)
 
         if verbose:
             p.autoscale(True)
@@ -128,7 +172,8 @@ def _plot_size(num):
         return
 
 
-def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
+def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
+             legend=True):
 
     num_design = (max(data.shape) / num_fids)
     x_vals = np.arange(0, num_design)
@@ -151,15 +196,17 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
 
     # If the plot is on the bottom of a column, add labels
     if bottom:
+        trans = ax.get_xaxis_transform()
+
         # Put two 'labels' for the x axis
-        ax.annotate("Designs", xy=(0.4, -0.25), xytext=(0.4, -0.25),
-                    va='top', xycoords='axes fraction',
-                    textcoords='offset points',
+        ax.annotate("Designs", xy=(num_design/2 - 9, -0.15),
+                    xytext=(num_design/2 - 1, -0.15),
+                    va='top', xycoords=trans,
                     fontsize=12)
-        ax.annotate("Fiducials", xy=(0.9, -0.25),
-                    xytext=(0.9, -0.25),
-                    va='top', xycoords='axes fraction',
-                    textcoords='offset points',
+        fid_x = num_design + num_fids/2 - 3
+        ax.annotate("Fiducials", xy=(fid_x, -0.15),
+                    xytext=(fid_x, -0.15),
+                    va='top', xycoords=trans,
                     fontsize=12)
 
     #Plot fiducials
@@ -171,10 +218,79 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
                 fid_data[prev:posn+prev], "ko", alpha=0.6)
         prev += posn
     # Make the legend
-    ax.legend(loc="upper right", prop={'size': 10})
+    if legend:
+        ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
     ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+
+
+def _horiz_obs_plot(ax, data, num_fids, shading=False):
+    '''
+    Plot a horizontal line with surrounding shading across
+    the plot to signify the distance of the observational data.
+    '''
+
+    # This eventually needs to be generalized
+    labels_dict = {"ophA.13co.fits": "OphA",
+                   "ngc1333.13co.fits": "NGC 1333",
+                   "ic348.13co.fits": "IC 348"}
+
+    # Also needs to be generalized
+    colors = ["r", "g", "b"]
+
+    x_vals = ax.axis()[:2]
+
+    num_obs = data.shape[0] / num_fids
+
+    obs_names = data.index[:num_obs]
+
+    for i, obs in enumerate(obs_names):
+
+        y_vals = np.asarray(data.ix[i::num_obs])
+
+        yposn = np.nanmean(y_vals)
+        ymax = np.nanmax(y_vals)
+        ymin = np.nanmin(y_vals)
+
+        if shading:
+
+            # Want to plot a single line at the mean, then shade to show
+            # variance.
+
+            ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
+                            interpolate=True, alpha=0.4,
+                            edgecolor=colors[i])
+
+            middle = (ymax + ymin) / 2
+
+            trans = ax.get_yaxis_transform()
+            ax.annotate(labels_dict[obs], xy=(0.9, middle), xytext=(0.9, middle),
+                        fontsize=12, xycoords=trans,
+                        verticalalignment='center',
+                        horizontalalignment='center')
+
+        else:
+
+            for j in range(num_fids):
+                y_vals = 2*[data.ix[int(j * num_obs)+i]]
+                ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j),
+                        alpha=0.4, linewidth=3)
+
+
+            trans = ax.get_yaxis_transform()
+            ax.annotate(labels_dict[obs], xy=(1.0, ymax), xytext=(1.03, yposn),
+                        fontsize=15, xycoords=trans,
+                        arrowprops=dict(facecolor='k',
+                                        width=0.05, alpha=1.0, headwidth=0.1),
+                        horizontalalignment='left',
+                        verticalalignment='center')
+            ax.annotate(labels_dict[obs], xy=(1.0, ymin), xytext=(1.03, yposn),
+                        fontsize=15, xycoords=trans,
+                        arrowprops=dict(facecolor='k',
+                                        width=0.05, alpha=1.0, headwidth=0.1),
+                        horizontalalignment='left',
+                        verticalalignment='center')
 
 
 def timestep_comparisons(path, verbose=False):

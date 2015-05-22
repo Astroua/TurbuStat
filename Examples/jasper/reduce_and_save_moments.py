@@ -78,7 +78,13 @@ if __name__ == "__main__":
 
     output_folder = str(sys.argv[2])
 
-    add_noise = str(sys.argv[3])
+    is_obs = str(sys.argv[3])
+    if is_obs == "T":
+        is_obs = True
+    else:
+        is_obs = False
+
+    add_noise = str(sys.argv[4])
     if add_noise == "T":
         add_noise = True
     else:
@@ -86,7 +92,7 @@ if __name__ == "__main__":
 
     if add_noise:
         try:
-            cube_output = str(sys.argv[4])
+            cube_output = str(sys.argv[5])
         except IndexError:
             print "Using same output folder for dirty cubes and moments."
             cube_output = output_folder
@@ -99,6 +105,8 @@ if __name__ == "__main__":
     # Trying noise levels scaled by their brightness distribs
     if add_noise:
         rms_noise = 'scaled'
+    elif is_obs:
+        rms_noise = None
     else:
         rms_noise = 0.001
 

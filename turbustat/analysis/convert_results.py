@@ -10,8 +10,9 @@ from pandas import HDFStore, DataFrame, concat, read_csv, Series
 import os
 
 
-def convert_format(path, design, face1, face2, output_type="csv",
-                   parameters=None, decimal_places=8, append_comp=True):
+def convert_format(path, face1, face2=None, design=None, output_type="csv",
+                   parameters=None, decimal_places=8, append_comp=True,
+                   keep_index=True):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
     them into a single file.
@@ -20,40 +21,53 @@ def convert_format(path, design, face1, face2, output_type="csv",
     ----------
     path : str
         Path where files are located.
-    design : str or pandas.DataFrame
-             If str, assumes a 'csv' file.
     face1 : int
         Face of the cube.
-    face2: int
-        Face of the cube compared to.
+    face2: int, optional
+        Face of the cube compared to. Disabled for observational comparison.
+    design : str or pandas.DataFrame, optional
+        If str, assumes a 'csv' file. Disabled for observational
+        comparison.
     output_type : str, optional
-           Type of file to output.
+        Type of file to output.
     parameters : list, optional
-                 Contains column names of design that are the parameters
-                 varied in the set. If None, all columns are appended to
-                 the output file.
+        Contains column names of design that are the parameters
+        varied in the set. If None, all columns are appended to
+        the output file.
     decimal_places : int, optional
         Specify the number of decimal places to keep.
     append_comp : bool, optional
         Append on columns with fiducial numbers copy
     '''
 
-    files = [path + f for f in os.listdir(path) if os.path.isfile(path + f)
-             and "_"+str(face1)+"_"+str(face2)+"_" in f
-             and "comparisons" not in f]
+    if path[-1] != "/":
+        path += "/"
+
+    if face2 is not None:
+        files = [path + f for f in os.listdir(path)
+                 if os.path.isfile(path + f)
+                 and "_"+str(face1)+"_"+str(face2)+"_" in f
+                 and "comparisons" not in f]
+    else:
+        # Observational comparisons explicitly have 'face' in filename
+        files = [path + f for f in os.listdir(path)
+                 if os.path.isfile(path + f)
+                 and "face_"+str(face1) in f
+                 and "comparisons" not in f]
     files.sort()
     print "Files used: %s" % (files)
 
-    if isinstance(design, str):
-        design = read_csv(design)
+    if design is not None:
+        if isinstance(design, str):
+            design = read_csv(design)
 
-    if isinstance(parameters, list):
-        design_df = {}
-        for param in parameters:
-            design_df[param] = Series(design[param])
-        design_df = DataFrame(design_df)
-    else:
-        design_df = design
+        if isinstance(parameters, list):
+            design_df = {}
+            for param in parameters:
+                design_df[param] = Series(design[param])
+            design_df = DataFrame(design_df)
+        else:
+            design_df = design
 
     for i, f in enumerate(files):
         store = HDFStore(f)
@@ -67,13 +81,17 @@ def convert_format(path, design, face1, face2, output_type="csv",
         store.close()
 
         # Add on design matrix
-        for key in design_df:
-            # can get nans if the file was made in excel
-            design_df = design_df.dropna()
-            design_df.index = index
-            data_columns[key] = design_df[key]
+        if design is not None:
+            for key in design_df:
+                # can get nans if the file was made in excel
+                design_df = design_df.dropna()
+                design_df.index = index
+                data_columns[key] = design_df[key]
 
-        data_columns = DataFrame(data_columns)
+        if keep_index:
+            data_columns = DataFrame(data_columns, index=index)
+        else:
+            data_columns = DataFrame(data_columns)
 
         if append_comp:
             data_columns["Fiducial"] = \
@@ -85,7 +103,10 @@ def convert_format(path, design, face1, face2, output_type="csv",
         else:  # Add on to dataframe
             df = concat([df, data_columns])
 
-    filename = "distances_"+str(face1)+"_"+str(face2)
+    if face2 is not None:
+        filename = "distances_"+str(face1)+"_"+str(face2)
+    else:
+        filename = "complete_distances_face_"+str(face1)
 
     if "Name" in df.keys():
         del df["Name"]
