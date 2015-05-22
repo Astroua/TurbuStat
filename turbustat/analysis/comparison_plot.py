@@ -228,7 +228,7 @@ def _horiz_obs_plot(ax, data, num_obs, num_fids):
         # Calculate position wrt to axis limit
         y_frac = yposn / float(ax.axis()[-1])
 
-        ax.annotate(labels_dict[obs], xy=(1.1, y_frac), xytext=(1.1, y_frac)
+        ax.annotate(labels_dict[obs], xy=(1.1, y_frac), xytext=(1.1, y_frac),
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
                     fontsize=12)
