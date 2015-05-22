@@ -231,8 +231,11 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
 
     # This eventually needs to be generalized
     labels_dict = {"ophA.13co.fits": "OphA",
-                   "ngc1333.13co.fits": "NGC-1333",
-                   "ic348.13co.fits": "IC-348"}
+                   "ngc1333.13co.fits": "NGC 1333",
+                   "ic348.13co.fits": "IC 348"}
+
+    # Also needs to be generalized
+    colors = ["r", "g", "b"]
 
     x_vals = ax.axis()[:2]
 
@@ -253,10 +256,9 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
             # Want to plot a single line at the mean, then shade to show
             # variance.
 
-            ax.plot(x_vals, 2 * [yposn], "k-", alpha=0.3, linewidth=3)
-            ax.fill_between(x_vals, ymax, ymin, facecolor='gray',
+            ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
                             interpolate=True, alpha=0.4,
-                            edgecolor='gray')
+                            edgecolor=colors[i])
 
             middle = (ymax + ymin) / 2
 
