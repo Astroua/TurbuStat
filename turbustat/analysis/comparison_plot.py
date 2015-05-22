@@ -196,15 +196,17 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
 
     # If the plot is on the bottom of a column, add labels
     if bottom:
+        trans = ax.get_xaxis_transform()
+
         # Put two 'labels' for the x axis
-        ax.annotate("Designs", xy=(0.4, -0.25), xytext=(0.4, -0.25),
-                    va='top', xycoords='axes fraction',
-                    textcoords='offset points',
+        ax.annotate("Designs", xy=(num_design/2 - 9, -0.15),
+                    xytext=(num_design/2 - 1, -0.15),
+                    va='top', xycoords=trans,
                     fontsize=12)
-        ax.annotate("Fiducials", xy=(0.9, -0.25),
-                    xytext=(0.9, -0.25),
-                    va='top', xycoords='axes fraction',
-                    textcoords='offset points',
+        fid_x = num_design + num_fids/2 - 3
+        ax.annotate("Fiducials", xy=(fid_x, -0.15),
+                    xytext=(fid_x, -0.15),
+                    va='top', xycoords=trans,
                     fontsize=12)
 
     #Plot fiducials
