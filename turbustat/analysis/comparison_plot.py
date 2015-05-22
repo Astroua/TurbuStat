@@ -8,7 +8,7 @@ from pandas import read_csv
 
 
 def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
-                    obs_to_fid=False, obs_to_fid_shade=True,
+                    obs_to_fid=False, obs_to_fid_shade=True, legend=True,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -143,7 +143,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
-                     num_fids, data_files[key][0], stat, bottom, left)
+                     num_fids, data_files[key][0], stat, bottom, left,
+                     legend=legend)
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
@@ -171,7 +172,8 @@ def _plot_size(num):
         return
 
 
-def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
+def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
+             legend=True):
 
     num_design = (max(data.shape) / num_fids)
     x_vals = np.arange(0, num_design)
@@ -214,7 +216,8 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
                 fid_data[prev:posn+prev], "ko", alpha=0.6)
         prev += posn
     # Make the legend
-    ax.legend(loc="upper right", prop={'size': 10})
+    if legend:
+        ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
     ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
