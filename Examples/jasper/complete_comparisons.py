@@ -90,9 +90,9 @@ def obs_to_fid(obs_list, fiducial_dict, statistics, pool=None):
 
     for obs in obs_list:
         # Create generator
-        gen = izip(zip(fiducial_dict.values(), repeat(obs)),
-                   repeat(statistics),
-                   repeat(True))
+        gen = zip(zip(fiducial_dict.values(), repeat(obs)),
+                  repeat(statistics),
+                  repeat(True))
 
         if pool is not None:
             outputs = pool.map(single_input, gen)
