@@ -227,13 +227,25 @@ def _horiz_obs_plot(ax, data, num_fids):
             ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j), alpha=0.4,
                     linewidth=3)
 
-        y_vals = data.ix[i::num_obs]
+        y_vals = np.asarray(data.ix[i::num_obs])
 
         yposn = np.nanmean(y_vals)
+        ymax = np.nanmax(y_vals)
+        ymin = np.nanmin(y_vals)
 
         trans = ax.get_yaxis_transform()
-        ax.annotate(labels_dict[obs], xy=(1.01, yposn), xytext=(1.01, yposn),
-                    fontsize=12, xycoords=trans)
+        ax.annotate(labels_dict[obs], xy=(1.0, ymax), xytext=(1.03, yposn),
+                    fontsize=15, xycoords=trans,
+                    arrowprops=dict(facecolor='k',
+                                    width=0.05, alpha=1.0, headwidth=0.1),
+                    horizontalalignment='left',
+                    verticalalignment='center')
+        ax.annotate(labels_dict[obs], xy=(1.0, ymin), xytext=(1.03, yposn),
+                    fontsize=15, xycoords=trans,
+                    arrowprops=dict(facecolor='k',
+                                    width=0.05, alpha=1.0, headwidth=0.1),
+                    horizontalalignment='left',
+                    verticalalignment='center')
 
 
 def timestep_comparisons(path, verbose=False):
