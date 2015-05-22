@@ -258,8 +258,10 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
                             interpolate=True, alpha=0.4,
                             edgecolor='gray')
 
+            middle = (ymax + ymin) / 2
+
             trans = ax.get_yaxis_transform()
-            ax.annotate(labels_dict[obs], xy=(0.9, yposn), xytext=(0.9, yposn),
+            ax.annotate(labels_dict[obs], xy=(0.9, middle), xytext=(0.9, middle),
                         fontsize=12, xycoords=trans,
                         verticalalignment='center',
                         horizontalalignment='center')
