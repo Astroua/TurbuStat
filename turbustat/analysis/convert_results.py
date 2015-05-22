@@ -39,7 +39,7 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         Append on columns with fiducial numbers copy
     '''
 
-    if path[-1] == "/":
+    if path[-1] != "/":
         path += "/"
 
     if face2 is not None:
