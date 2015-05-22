@@ -129,8 +129,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                      num_fids, data_files[key][0], stat, bottom, left)
             if obs_to_fid and k <= k / float(shape[1]):
                 obs_key = int(key[0])
-                _horiz_obs_plot(axis, obs_to_fit_data[obs_key],
-                                num_obs, num_fids)
+                _horiz_obs_plot(axis, obs_to_fid_data[obs_key],
+                                num_fids)
 
         if verbose:
             p.autoscale(True)
@@ -203,7 +203,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
     ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
 
 
-def _horiz_obs_plot(ax, data, num_obs, num_fids):
+def _horiz_obs_plot(ax, data, num_fids):
     '''
     Plot a horizontal line with surrounding shading across
     the plot to signify the distance of the observational data.
@@ -214,9 +214,11 @@ def _horiz_obs_plot(ax, data, num_obs, num_fids):
                    "ngc1333.13co.fits": "NGC-1333",
                    "oc348.14co.fits": "IC-348"}
 
-    obs_names = data.index()
+    obs_names = data.index
 
     x_vals = ax.axis()[:2]
+
+    num_obs = data.shape[0] / num_fids
 
     for i in range(num_fids):
         y_vals = data.ix[int(i * num_obs):int(((i + 1) * num_obs)-1)]
