@@ -227,14 +227,14 @@ def _horiz_obs_plot(ax, data, num_fids):
             ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j), alpha=0.4,
                     linewidth=3)
 
-        y_vals = data.ix[i::(num_fids)]
+        y_vals = data.ix[i::num_obs]
 
         yposn = np.nanmean(y_vals)
 
         # Calculate position wrt to axis limit
         y_frac = yposn / float(ax.axis()[-1])
 
-        ax.annotate(labels_dict[obs], xy=(1.1, y_frac), xytext=(1.1, y_frac),
+        ax.annotate(labels_dict[obs], xy=(1.0, y_frac), xytext=(1.0, y_frac),
                     va='top', xycoords='axes fraction',
                     textcoords='offset points',
                     fontsize=12)
