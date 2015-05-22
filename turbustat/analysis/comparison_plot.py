@@ -83,7 +83,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         # Separate out the observational csv files.
         if obs_to_fid and 'complete' in x:
             for key in obs_to_fid_data.keys():
-                if "face_"+str(key):
+                if "face_"+str(key) in x:
                     obs_to_fid_data[key] = read_csv(os.path.join(path, x),
                                                     index_col=0)
                     break
