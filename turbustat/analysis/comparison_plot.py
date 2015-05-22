@@ -8,7 +8,7 @@ from pandas import read_csv
 
 
 def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
-                    obs_to_fid=False, obs_to_fid_data=None,
+                    obs_to_fid=False, obs_to_fid_shade=True,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -32,8 +32,13 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         Function to apply to the time-step data.
     verbose : bool, optional
         Enables plotting.
-    cross_compare : bool, optional
-        Include comparisons between faces.
+    obs_to_des : bool, optional
+        Add in subplots where observational cubes are treayed as the fiducial.
+    obs_to_fid : bool, optional
+        Include observational to fiducial distances in the distance subplots.
+    obs_to_fid_shade : bool, optional
+        Plots the observational distances as a single band instead of by
+        fiducial.
     statistics : list, optional
         Statistics to plot. Default is all.
     comparisons : list, optional
