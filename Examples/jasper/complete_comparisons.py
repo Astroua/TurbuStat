@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io.fits import getdata
 from astropy.wcs import WCS
 from itertools import combinations, izip, repeat
+import datetime
 import subprocess
 try:
     from interruptible_pool import InterruptiblePool as Pool
@@ -232,9 +233,11 @@ if __name__ == "__main__":
     #               "VCS_Break", "PDF", "Dendrogram_Hist", "Dendrogram_Num"]
 
     # Set to run on the 'good' statistics
-    statistics = ["DeltaVariance", "VCS", "VCS_Density", "VCS_Velocity",
-                  "VCA", "PCA", "SCF", "Cramer", "VCS_Break", "PDF_Hellinger",
-                  "PDF_KS", "Dendrogram_Hist", "Dendrogram_Num"]
+    # statistics = ["DeltaVariance", "VCS", "VCS_Density", "VCS_Velocity",
+    #               "VCA", "PCA", "SCF", "Cramer", "VCS_Break", "PDF_Hellinger",
+    #               "PDF_KS", "Dendrogram_Hist", "Dendrogram_Num"]
+
+    statistics = ["PDF_KS", "PDF_Hellinger"]
 
     print "Statistics to run: %s" % (statistics)
 
@@ -315,8 +318,11 @@ if __name__ == "__main__":
 
             for key in distances.keys():
 
-                df = DataFrame(distances[key], index=obs_cubes,
-                               columns=sim_dict[fid].values())
+                df = DataFrame(distances[key],
+                               index=[obs.split("/")[-1]
+                                      for obs in obs_cubes],
+                               columns=[sim.split("/")[-1]
+                                        for sim in sim_dict[fid].values()])
 
                 store[key] = df
 
