@@ -39,6 +39,9 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         Append on columns with fiducial numbers copy
     '''
 
+    if path[-1] == "/":
+        path += "/"
+
     if face2 is not None:
         files = [path + f for f in os.listdir(path)
                  if os.path.isfile(path + f)
@@ -48,7 +51,7 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         # Observational comparisons explicitly have 'face' in filename
         files = [path + f for f in os.listdir(path)
                  if os.path.isfile(path + f)
-                 # and "face_"+str(face1) in f
+                 and "face_"+str(face1) in f
                  and "comparisons" not in f]
     files.sort()
     print "Files used: %s" % (files)
