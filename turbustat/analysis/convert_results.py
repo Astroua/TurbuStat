@@ -10,7 +10,7 @@ from pandas import HDFStore, DataFrame, concat, read_csv, Series
 import os
 
 
-def convert_format(path, design, face1, face2, output_type="csv",
+def convert_format(path, face1, face2=None, design=None, output_type="csv",
                    parameters=None, decimal_places=8, append_comp=True):
     '''
     Takes all HDF5 files in given path comparing face1 to face2 and combines
@@ -20,18 +20,19 @@ def convert_format(path, design, face1, face2, output_type="csv",
     ----------
     path : str
         Path where files are located.
-    design : str or pandas.DataFrame
-             If str, assumes a 'csv' file.
     face1 : int
         Face of the cube.
-    face2: int
-        Face of the cube compared to.
+    face2: int, optional
+        Face of the cube compared to. Disabled for observational comparison.
+    design : str or pandas.DataFrame, optional
+        If str, assumes a 'csv' file. Disabled for observational
+        comparison.
     output_type : str, optional
-           Type of file to output.
+        Type of file to output.
     parameters : list, optional
-                 Contains column names of design that are the parameters
-                 varied in the set. If None, all columns are appended to
-                 the output file.
+        Contains column names of design that are the parameters
+        varied in the set. If None, all columns are appended to
+        the output file.
     decimal_places : int, optional
         Specify the number of decimal places to keep.
     append_comp : bool, optional
