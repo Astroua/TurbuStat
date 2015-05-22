@@ -147,7 +147,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
-                                num_fids)
+                                num_fids, shading=obs_to_fid_shade)
 
         if verbose:
             p.autoscale(True)
@@ -220,7 +220,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left):
     ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
 
 
-def _horiz_obs_plot(ax, data, num_fids):
+def _horiz_obs_plot(ax, data, num_fids, shading=False):
     '''
     Plot a horizontal line with surrounding shading across
     the plot to signify the distance of the observational data.
@@ -238,10 +238,6 @@ def _horiz_obs_plot(ax, data, num_fids):
     obs_names = data.index[:num_obs]
 
     for i, obs in enumerate(obs_names):
-        for j in range(num_fids):
-            y_vals = 2*[data.ix[int(j * num_obs)+i]]
-            ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j), alpha=0.4,
-                    linewidth=3)
 
         y_vals = np.asarray(data.ix[i::num_obs])
 
@@ -249,19 +245,43 @@ def _horiz_obs_plot(ax, data, num_fids):
         ymax = np.nanmax(y_vals)
         ymin = np.nanmin(y_vals)
 
-        trans = ax.get_yaxis_transform()
-        ax.annotate(labels_dict[obs], xy=(1.0, ymax), xytext=(1.03, yposn),
-                    fontsize=15, xycoords=trans,
-                    arrowprops=dict(facecolor='k',
-                                    width=0.05, alpha=1.0, headwidth=0.1),
-                    horizontalalignment='left',
-                    verticalalignment='center')
-        ax.annotate(labels_dict[obs], xy=(1.0, ymin), xytext=(1.03, yposn),
-                    fontsize=15, xycoords=trans,
-                    arrowprops=dict(facecolor='k',
-                                    width=0.05, alpha=1.0, headwidth=0.1),
-                    horizontalalignment='left',
-                    verticalalignment='center')
+        if shading:
+
+            # Want to plot a single line at the mean, then shade to show
+            # variance.
+
+            ax.plot(x_vals, 2 * [yposn], "k-", alpha=0.3, linewidth=3)
+            ax.fill_between(x_vals, ymax, ymin, facecolor='gray',
+                            interpolate=True, alpha=0.4,
+                            edgecolor='gray')
+
+            trans = ax.get_yaxis_transform()
+            ax.annotate(labels_dict[obs], xy=(0.9, yposn), xytext=(0.9, yposn),
+                        fontsize=12, xycoords=trans,
+                        verticalalignment='center',
+                        horizontalalignment='center')
+
+        else:
+
+            for j in range(num_fids):
+                y_vals = 2*[data.ix[int(j * num_obs)+i]]
+                ax.plot(x_vals, y_vals, "-", label="Fiducial " + str(j),
+                        alpha=0.4, linewidth=3)
+
+
+            trans = ax.get_yaxis_transform()
+            ax.annotate(labels_dict[obs], xy=(1.0, ymax), xytext=(1.03, yposn),
+                        fontsize=15, xycoords=trans,
+                        arrowprops=dict(facecolor='k',
+                                        width=0.05, alpha=1.0, headwidth=0.1),
+                        horizontalalignment='left',
+                        verticalalignment='center')
+            ax.annotate(labels_dict[obs], xy=(1.0, ymin), xytext=(1.03, yposn),
+                        fontsize=15, xycoords=trans,
+                        arrowprops=dict(facecolor='k',
+                                        width=0.05, alpha=1.0, headwidth=0.1),
+                        horizontalalignment='left',
+                        verticalalignment='center')
 
 
 def timestep_comparisons(path, verbose=False):
