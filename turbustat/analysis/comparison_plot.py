@@ -139,7 +139,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left)
-            if obs_to_fid and k <= k / float(shape[1]):
+            if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
                                 num_fids)
