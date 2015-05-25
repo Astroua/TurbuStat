@@ -345,4 +345,4 @@ if __name__ == "__main__":
             df = DataFrame(complete_distances[stat], index=obs_cubes,
                            columns=obs_cubes)
 
-            df.to_csv(complete_dir+"complete_comparisons_"+stat+".csv")
+            df.to_csv(obs_dir+"complete_comparisons_"+stat+".csv")
