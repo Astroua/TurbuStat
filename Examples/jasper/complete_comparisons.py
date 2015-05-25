@@ -237,8 +237,6 @@ if __name__ == "__main__":
                   "VCA", "PCA", "SCF", "Cramer", "VCS_Break", "PDF_Hellinger",
                   "PDF_KS", "Dendrogram_Hist", "Dendrogram_Num"]
 
-    statistics = ["VCA"]
-
     print "Statistics to run: %s" % (statistics)
 
 
@@ -269,8 +267,6 @@ if __name__ == "__main__":
     # Load the list of complete cubes in
 
     obs_cubes = [obs_dir+f for f in os.listdir(obs_dir) if f[-4:] == 'fits']
-
-    obs_cubes = [obs_cubes[-1]]
 
     # sim_dir = "/Volumes/RAIDers_of_the_lost_ark/SimSuite8/"
 
@@ -349,4 +345,4 @@ if __name__ == "__main__":
             df = DataFrame(complete_distances[stat], index=obs_cubes,
                            columns=obs_cubes)
 
-            df.to_csv(complete_dir+"complete_comparisons_"+stat+".csv")
+            df.to_csv(obs_dir+"complete_comparisons_"+stat+".csv")
