@@ -152,10 +152,8 @@ class DeltaVariance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar = [np.abs(self.delta_var -
-                                self.delta_var_error[0, :]),
-                         np.abs(self.delta_var +
-                                self.delta_var_error[1, :])]
+            error_bar = [self.delta_var_error[0, :],
+                         self.delta_var_error[1, :]]
             p.errorbar(self.lags, self.delta_var, yerr=error_bar, fmt="bD-")
             ax.grid(True)
             ax.set_xlabel("Lag (arcmin)")
@@ -322,17 +320,13 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar1 = [np.abs(self.delvar1.delta_var -
-                                 self.delvar1.delta_var_error[0, :]),
-                          np.abs(self.delvar1.delta_var +
-                                 self.delvar1.delta_var_error[1, :])]
+            error_bar1 = [self.delvar1.delta_var_error[0, :],
+                         self.delvar1.delta_var_error[1, :]]
             p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
                        yerr=error_bar1, fmt="bD-",
                        label="Delta Var 1")
-            error_bar2 = [np.abs(self.delvar2.delta_var -
-                                 self.delvar2.delta_var_error[0, :]),
-                          np.abs(self.delvar2.delta_var +
-                                 self.delvar2.delta_var_error[1, :])]
+            error_bar = [self.delvar2.delta_var_error[0, :],
+                         self.delvar2.delta_var_error[1, :]]
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
                        yerr=error_bar2, fmt="gD-",
                        label="Delta Var 2")
