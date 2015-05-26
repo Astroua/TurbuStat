@@ -27,6 +27,10 @@ design_matrix = sys.argv[2]
 if design_matrix == "None":
     design_matrix = None
 
+turbustat_path = sys.argv[3]
+if turbustat_path[-1] != "/":
+    turbustat_path += "/"
+
 # Convert into combined csv files.
 
 good_comparison = []
@@ -135,7 +139,7 @@ subprocess.call(['Rscript',
 
 print "Creating model plots."
 
-execfile("/Users/eric/Dropbox/code_development/TurbuStat/Examples/effect_plots.py")
+execfile(turbustat_path+"Examples/effect_plots.py")
 
 effect_plots(path+"DataforFits.csv", path+"ResultsFactorial.csv", save=True,
              out_path=path+'Model Plots/')
