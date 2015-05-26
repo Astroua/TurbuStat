@@ -225,7 +225,7 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
     p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
-    p.yticks(np.arange(len(stats)), stats)
+    p.yticks(np.arange(len(statistics)), statistics)
     cbar = p.colorbar()
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
