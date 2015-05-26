@@ -14,7 +14,7 @@ import warnings
 p.rcParams.update({'font.size': 14})
 
 
-def effect_plots(distance_file, effects_file, min_zscore=2.0,
+def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
                  params=["fc", "pb", "m", "k", "sf", "vp"], save=False,
                  out_path=None):
     '''
@@ -45,8 +45,11 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
                 'k': r'$k$', 'sf': r'$\beta$',
                 'vp': r'$\alpha$'}
 
+    if statistics is None:
+        statistics = distances.columns
+
     # Now loop through the statistics in each file
-    for stat in distances.columns:
+    for stat in statistics:
         try:
             response = effects[stat].abs()
         except KeyError:

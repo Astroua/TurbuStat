@@ -85,7 +85,7 @@ class VCA(object):
         return self
 
     def fit_pspec(self, brk=None, log_break=True, low_cut=np.sqrt(2),
-                  verbose=False):
+                  min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -103,6 +103,9 @@ class VCA(object):
             Sets whether the provided break estimates are log-ed values.
         lg_scale_cut : int, optional
             Cuts off largest scales, which deviate from the powerlaw.
+        min_fits_pts : int, optional
+            Sets the minimum number of points needed to fit. If not met, the
+            break found is rejected.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
@@ -123,10 +126,17 @@ class VCA(object):
 
             if brk_fit.params.size == 5:
 
-                x = x[x < brk_fit.brk]
-                y = y[x < brk_fit.brk]
+                # Check to make sure this leaves enough to fit to.
+                if sum(x < brk_fit.brk) < min_fits_pts:
+                    warnings.warn("Not enough points to fit to."+
+                                  " Ignoring break.")
 
-                self.high_cut = 10**brk_fit.brk
+                    self.high_cut = self.freqs.max()
+                else:
+                    x = x[x < brk_fit.brk]
+                    y = y[x < brk_fit.brk]
+
+                    self.high_cut = 10**brk_fit.brk
 
             else:
                 self.high_cut = self.freqs.max()
