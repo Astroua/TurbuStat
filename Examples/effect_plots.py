@@ -176,7 +176,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
 
 def map_all_results(effects_file, min_zscore=2.0, save=False,
                     params=["fc", "pb", "m", "k", "sf", "vp"],
-                    statistics=["PCA", "SCF", "VCA", "VCS"],
+                    statistics=None,
                     normed=True):
 
     if isinstance(effects_file, str):
@@ -189,11 +189,13 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
 
     # Get the model effects from the index
     model_effects = effects.index
-    stats = effects.columns
+
+    if statistics is None:
+        statistics = effects.columns
 
     values = np.empty((len(effects.columns), len(model_effects)))
 
-    for i, stat in enumerate(stats):
+    for i, stat in enumerate(statistics):
         if normed:
             for j, effect in enumerate(model_effects):
                 if ":" in effect:
