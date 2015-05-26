@@ -7,7 +7,7 @@ The density PDF as described by Kowal et al. (2007)
 '''
 
 import numpy as np
-from scipy.stats import ks_2samp
+from scipy.stats import ks_2samp, anderson_ksamp
 
 
 class PDF(object):
@@ -204,6 +204,16 @@ class PDF_Distance(object):
 
         return self
 
+    def compute_ad_distance(self):
+        '''
+        Compute the distance using the Anderson Darling Test.
+        '''
+
+        D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
+
+        self.ad_distance = D
+        self.ad_pval = p
+
     def distance_metric(self, statistic='both', labels=None, verbose=False):
         '''
         Calculate the distance.
@@ -221,10 +231,13 @@ class PDF_Distance(object):
         if statistic is 'both':
             self.compute_hellinger_distance()
             self.compute_ks_distance()
+            self.compute_ad_distance()
         elif statistic is 'hellinger':
             self.compute_hellinger_distance()
         elif statistic is 'ks':
             self.compute_ks_distance()
+        elif statistic is 'ad':
+            self.compute_ad_distance()
         else:
             raise TypeError("statistic must be 'both', 'hellinger', or 'ks'.")
 
