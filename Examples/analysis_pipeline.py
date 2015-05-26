@@ -20,7 +20,7 @@ if path.split("/")[-1] == "HDF5_files":
     path = "/".join(path.split("/")[:-1]) + "/"
 else:
     hdf5_path = path + "/HDF5_files/"
-
+    path += "/"
 
 design_matrix = sys.argv[2]
 
