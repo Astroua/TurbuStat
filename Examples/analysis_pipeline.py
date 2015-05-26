@@ -124,23 +124,23 @@ subprocess.call(['Rscript', path+"FactorialAnalysis.R"])
 print "Running metric validation."
 
 subprocess.call(['Rscript',
-                 "~/Dropbox/Dropbox/code_development/Examples/noise_validation.r",
+                 "/Users/eric/Dropbox/code_development/TurbuStat/Examples/noise_validation.r",
                  path, "100"])
 
 subprocess.call(['Rscript',
-                 "~/Dropbox/Dropbox/code_development/Examples/signal_validation.r",
+                 "/Users/eric/Dropbox/code_development/TurbuStat/Examples/signal_validation.r",
                  path, "100"])
 
 # Finally, create the model plots
 
 print "Creating model plots."
 
-execfile("~/Dropbox/code_development/Examples/effect_plots.py")
+execfile("/Users/eric/Dropbox/code_development/TurbuStat/Examples/effect_plots.py")
 
-effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
+effect_plots(path+"DataforFits.csv", path+"ResultsFactorial.csv", save=True,
              out_path=path+'Model Plots/')
 
-map_all_results("ResultsFactorial.csv", save=True, normed=True,
+map_all_results(path+"ResultsFactorial.csv", save=True, normed=True,
                 out_path=path+'Model Plots/')
 
 print "Finished!"
