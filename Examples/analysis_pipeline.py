@@ -126,10 +126,10 @@ subprocess.call(['Rscript',
 
 # Finally, create the model plots
 
-execfile("~/Dropbox/Dropbox/code_development/Examples/effect_plots.py")
+execfile("~/Dropbox/code_development/Examples/effect_plots.py")
 
 effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
-             out_path=path+'Model\ Plots/')
+             out_path=path+'Model Plots/')
 
 map_all_results("ResultsFactorial.csv", save=True, normed=True,
-                out_path=path+'Model\ Plots/')
+                out_path=path+'Model Plots/')
