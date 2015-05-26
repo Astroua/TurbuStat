@@ -12,7 +12,7 @@ except ImportError:
 
 from MPI import MPIPool
 
-from turbustat.statistics import stats_wrapper
+from turbustat.statistics import stats_wrapper, statistics_list
 from turbustat.data_reduction import Mask_and_Moments
 from spectral_cube import SpectralCube, LazyMask
 
@@ -227,10 +227,7 @@ if __name__ == "__main__":
     import sys
     from pandas import DataFrame
 
-    # statistics = ["Wavelet", "MVC", "PSpec", "DeltaVariance", # "Bispectrum",
-    #               "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-    #               "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
-    #               "VCS_Break", "PDF", "Dendrogram_Hist", "Dendrogram_Num"]
+    # statistics =  statistics_list
 
     # Set to run on the 'good' statistics
     statistics = ["DeltaVariance", "VCS", "VCS_Density", "VCS_Velocity",
