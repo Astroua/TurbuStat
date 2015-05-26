@@ -16,7 +16,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                                 "Skewness", "Kurtosis", "Dendrogram_Hist",
                                 "Dendrogram_Num", "PDF"],
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
-                                 "2_0", "2_1", "2_2"]):
+                                 "2_0", "2_1", "2_2"],
+                    out_path=None):
     '''
     Requires results converted into csv form!!
 
@@ -155,7 +156,12 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
             fig.show()
         else:
             p.autoscale(True)
-            fig.savefig("distance_comparisons_" + stat + ".pdf")
+            save_name = "distance_comparisons_" + stat + ".pdf"
+            if out_path is not None:
+                if out_path[-1] != "/":
+                    out_path += "/"
+                save_name = out_path + save_name
+            fig.savefig(save_name)
             fig.clf()
 
 

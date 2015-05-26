@@ -10,6 +10,10 @@ from pandas import HDFStore, DataFrame, concat, read_csv, Series
 import os
 
 
+all_comparisons = ["_0_0_", "_0_1_", "_0_2_", "_1_0_", "_1_1_",
+                   "_1_2_", "_2_0_", "_2_1_", "_2_2_"]
+
+
 def convert_format(path, face1, face2=None, design=None, output_type="csv",
                    parameters=None, decimal_places=8, append_comp=True,
                    keep_index=True):
@@ -56,6 +60,9 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
                  and "comparisons" not in f]
     files.sort()
     print "Files used: %s" % (files)
+
+    if len(files) == 0:
+        raise StandardError("No files found for "+str(face1)+" and "+str(face2))
 
     if design is not None:
         if isinstance(design, str):
@@ -116,7 +123,7 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
 
 
 def convert_fiducial(filename, output_type="csv", decimal_places=8,
-                     append_comp=True, num_fids=5):
+                     append_comp=True, num_fids=5, return_name=True):
     '''
     Converts the fiducial comparison HDF5 files into a CSV file.
 
@@ -154,9 +161,18 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8,
         df["Fiducial 1"] = Series(np.asarray(fids).T, index=df.index)
         df["Fiducial 2"] = Series(comp_fids.T, index=df.index)
 
-    output_name = "".join(filename.split(".")[:-1]) + "." + output_type
+    for comp in all_comparisons:
+        if comp in filename:
+            break
+    else:
+        raise StandardError("Could not find a face comparison match for "+filename)
+
+    output_name = "fiducials"+comp[:-1]+"."+output_type
 
     df.to_csv(output_name)
+
+    if return_name:
+        return output_name
 
 
 @np.vectorize

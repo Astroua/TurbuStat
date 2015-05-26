@@ -15,7 +15,8 @@ p.rcParams.update({'font.size': 14})
 
 
 def effect_plots(distance_file, effects_file, min_zscore=2.0,
-                 params=["fc", "pb", "m", "k", "sf", "vp"], save=False):
+                 params=["fc", "pb", "m", "k", "sf", "vp"], save=False,
+                 out_path=None):
     '''
     Creates a series of plots for the important effects in the model.
     '''
@@ -166,7 +167,12 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
                      xytext=(0.83, 0.91), textcoords='figure fraction')
 
         if save:
-            fig.savefig("full_factorial_"+stat+"_modeleffects.pdf")
+            out_name = "full_factorial_"+stat+"_modeleffects.pdf"
+            if out_path is not None:
+                if out_path[-1] != "/":
+                    out_path += "/"
+                out_name = out_path + out_name
+            fig.savefig(out_name)
             p.close()
         else:
             fig.canvas.set_window_title("Model results for: "+stat)
@@ -176,8 +182,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0,
 
 def map_all_results(effects_file, min_zscore=2.0, save=False,
                     params=["fc", "pb", "m", "k", "sf", "vp"],
-                    statistics=["PCA", "SCF", "VCA", "VCS"],
-                    normed=True):
+                    statistics=None, normed=True, out_path=None):
 
     if isinstance(effects_file, str):
         effects = read_csv(effects_file)
@@ -189,11 +194,18 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
 
     # Get the model effects from the index
     model_effects = effects.index
-    stats = effects.columns
+
+    if statistics is None:
+        statistics = list(effects.columns)
+
+    # Alter non-latex friendly strings
+    stat_labels = []
+    for stat in statistics:
+        stat_labels.append(stat.replace("_", " "))
 
     values = np.empty((len(effects.columns), len(model_effects)))
 
-    for i, stat in enumerate(stats):
+    for i, stat in enumerate(statistics):
         if normed:
             for j, effect in enumerate(model_effects):
                 if ":" in effect:
@@ -218,7 +230,7 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
     p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
-    p.yticks(np.arange(len(stats)), stats)
+    p.yticks(np.arange(len(statistics)), stat_labels)
     cbar = p.colorbar()
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
@@ -229,6 +241,11 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
         save_name = "all_stat_results.pdf"
         if normed:
             save_name = "all_stat_results_normed.pdf"
+        if out_path is not None:
+            if out_path[-1] != "/":
+                out_path += "/"
+            save_name = out_path + save_name
+
         p.savefig(save_name)
         p.close()
     else:
