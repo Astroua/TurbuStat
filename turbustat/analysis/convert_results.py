@@ -57,6 +57,9 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
     files.sort()
     print "Files used: %s" % (files)
 
+    if len(files) == 0:
+        raise StandardError("No files found for "+str(face1)+" and "+str(face2))
+
     if design is not None:
         if isinstance(design, str):
             design = read_csv(design)
