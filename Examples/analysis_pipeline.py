@@ -129,11 +129,11 @@ print "Running metric validation."
 
 subprocess.call(['Rscript',
                  "/Users/eric/Dropbox/code_development/TurbuStat/Examples/noise_validation.r",
-                 path, "100"])
+                 path, "10000"])
 
 subprocess.call(['Rscript',
                  "/Users/eric/Dropbox/code_development/TurbuStat/Examples/signal_validation.r",
-                 path, "100"])
+                 path, "10000"])
 
 # Finally, create the model plots
 
