@@ -119,7 +119,7 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
 
 
 def convert_fiducial(filename, output_type="csv", decimal_places=8,
-                     append_comp=True, num_fids=5):
+                     append_comp=True, num_fids=5, return_name=True):
     '''
     Converts the fiducial comparison HDF5 files into a CSV file.
 
@@ -160,6 +160,9 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8,
     output_name = "".join(filename.split(".")[:-1]) + "." + output_type
 
     df.to_csv(output_name)
+
+    if return_name:
+        return output_name
 
 
 @np.vectorize
