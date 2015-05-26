@@ -1,5 +1,10 @@
+# Read in cmd line args
+# Should contain 1) the path, 2) # of iterations
+args = commandArgs(trailingonly=TRUE)
 
-setwd('~/Dropbox/AstroStatistics/Full\ Factorial//Full\ Results')
+startTime = Sys.time()
+setwd(args[,1])
+
 FidDes00 = read.csv('distances_0_0.csv', header = T)
 FidDes22 = read.csv('distances_2_2.csv', header = T)
 
@@ -23,7 +28,7 @@ sts=names(y_all)
 
 y_all = y_all[,sr2]
 
-nperm = 10000
+nperm = as.numeric(args[,2])
 s = 19
 pfv = matrix(0,nperm,s)
 p2 = rep(0,19)
