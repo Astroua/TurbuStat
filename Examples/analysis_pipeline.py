@@ -13,8 +13,7 @@ Runs the basic analysis pipeline, starting from the outputted HDF5 files
 # Specify path with results
 
 path = sys.argv[1]
-
-path = path.strip("/")
+path = path.rstrip("/")
 
 if path.split("/")[-1] == "HDF5_files":
     hdf5_path = path.copy() + "/"
@@ -90,15 +89,12 @@ except StandardError as err:
 # Next convert the fiducial comparisons
 
 for fil in os.listdir(hdf5_path):
-    if not os.path.isfile(fil):
-        continue
+    if os.path.isfile(hdf5_path+fil) and "comparisons" in fil:
+        print fil
 
-    if not "comparisons" in fil:
-        continue
+        out_name = ta.convert_fiducial(hdf5_path+fil, return_name=True)
 
-    out_name = ta.convert_fiducial(hdf5_path+fil, return_name=True)
-
-    shutil.move(out_name, path)
+        shutil.move(out_name, path)
 
 # Now make the distance plots.
 
@@ -122,11 +118,11 @@ subprocess.call(['Rscript', path+"FactorialAnalysis.R"])
 
 subprocess.call(['Rscript',
                  "~/Dropbox/Dropbox/code_development/Examples/noise_validation.r",
-                 path, "10000"])
+                 path, "100"])
 
 subprocess.call(['Rscript',
                  "~/Dropbox/Dropbox/code_development/Examples/signal_validation.r",
-                 path, "10000"])
+                 path, "100"])
 
 # Finally, create the model plots
 
