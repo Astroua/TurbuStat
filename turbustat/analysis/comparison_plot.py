@@ -120,7 +120,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
     if len(colour_cycle) < num_fids:
         # Need to define our own in this case.
         mpl.rcParams['axes.color_cycle'] = \
-            [mpl.cmap.jet(i) for i in np.linspace(0.0, 1.0, num_fids)]
+            [mpl.cm.jet(i) for i in np.linspace(0.0, 1.0, num_fids)]
     else:
         mpl.rcParams['axes.color_cycle'] = colour_cycle[:num_fids]
 
