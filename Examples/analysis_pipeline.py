@@ -31,6 +31,8 @@ if design_matrix == "None":
 
 good_comparison = []
 
+print "Converting to combined csv files."
+
 try:
     ta.convert_format(hdf5_path, 0, face2=0, design=design_matrix)
     shutil.move(hdf5_path+"distances_0_0.csv", path)
@@ -90,13 +92,14 @@ except StandardError as err:
 
 for fil in os.listdir(hdf5_path):
     if os.path.isfile(hdf5_path+fil) and "comparisons" in fil:
-        print fil
 
         out_name = ta.convert_fiducial(hdf5_path+fil, return_name=True)
 
         shutil.move(out_name, path)
 
 # Now make the distance plots.
+
+print "Making distance plots."
 
 ta.comparison_plot(path, comparisons=good_comparison,
                    out_path=path+"Distance Plots/")
@@ -110,11 +113,15 @@ if not "0_0" in good_comparison and not "2_2" in comparison_plot:
 
 os.chdir(path)
 
+print "Fitting model of given design."
+
 subprocess.call(['Rscript', path+"FactorialAnalysis.R"])
 
 # This should create two output tables of the whole dataset.
 
 # Now run the metric validation
+
+print "Running metric validation."
 
 subprocess.call(['Rscript',
                  "~/Dropbox/Dropbox/code_development/Examples/noise_validation.r",
@@ -126,6 +133,8 @@ subprocess.call(['Rscript',
 
 # Finally, create the model plots
 
+print "Creating model plots."
+
 execfile("~/Dropbox/code_development/Examples/effect_plots.py")
 
 effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
@@ -133,3 +142,5 @@ effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
 
 map_all_results("ResultsFactorial.csv", save=True, normed=True,
                 out_path=path+'Model Plots/')
+
+print "Finished!"
