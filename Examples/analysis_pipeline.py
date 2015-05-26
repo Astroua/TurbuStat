@@ -99,7 +99,7 @@ for fil in os.listdir(hdf5_path):
 # Now make the distance plots.
 
 ta.comparison_plot(path, comparisons=good_comparison,
-                   out_path=path+"Distance\ Plots/")
+                   out_path=path+"Distance Plots/")
 
 # Run the R-script to fit the data to the model
 
