@@ -196,7 +196,12 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     model_effects = effects.index
 
     if statistics is None:
-        statistics = effects.columns
+        statistics = list(effects.columns)
+
+    # Alter non-latex friendly strings
+    stat_labels = []
+    for stat in statistics:
+        stat_labels.append(stat.replace("_", " "))
 
     values = np.empty((len(effects.columns), len(model_effects)))
 
@@ -225,7 +230,7 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
     p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
-    p.yticks(np.arange(len(statistics)), statistics)
+    p.yticks(np.arange(len(statistics)), stat_labels)
     cbar = p.colorbar()
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
