@@ -12,7 +12,7 @@ from itertools import repeat
 from spectral_cube import SpectralCube, LazyMask
 from astropy.wcs import WCS
 
-from turbustat.statistics import stats_wrapper
+from turbustat.statistics import stats_wrapper, statistics_list
 from turbustat.data_reduction import Mask_and_Moments
 
 np.random.seed(248954785)
@@ -309,11 +309,13 @@ if __name__ == "__main__":
 
     from MPI import MPIPool
 
-    statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                  "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                  "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
-                  "PDF_Hellinger", "PDF_KS", "Dendrogram_Hist",
-                  "Dendrogram_Num"]
+    # statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
+    #               "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
+    #               "Skewness", "Kurtosis", "VCS_Density", "VCS_Velocity",
+    #               "PDF_Hellinger", "PDF_KS", "Dendrogram_Hist",
+    #               "Dendrogram_Num"]
+
+    statistics = statistics_list
 
     print "Statistics to run: %s" % (statistics)
     num_statistics = len(statistics)
