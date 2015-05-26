@@ -1,6 +1,6 @@
 # Read in cmd line args
 # Should contain 1) the path, 2) # of iterations
-args = commandArgs(trailingonly=TRUE)
+args = commandArgs(TRUE)
 
 startTime = Sys.time()
 setwd(args[,1])
