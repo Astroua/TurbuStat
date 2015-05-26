@@ -12,6 +12,6 @@ statistics_list = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
 
 twoD_statistics_list = \
     ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                  "Genus", "Tsallis", "Skewness", "Kurtosis",
-                  "PDF_Hellinger", "PDF_KS", "PDF_AD",
-                  "Dendrogram_Hist", "Dendrogram_Num"]
+     "Genus", "Tsallis", "Skewness", "Kurtosis",
+     "PDF_Hellinger", "PDF_KS", "PDF_AD",
+     "Dendrogram_Hist", "Dendrogram_Num"]
