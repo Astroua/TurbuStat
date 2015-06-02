@@ -234,7 +234,8 @@ class DendroDistance(object):
     """
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
-                 min_features=100, fiducial_model=None, dendro_params=None):
+                 min_features=100, fiducial_model=None, dendro_params1=None,
+                 dendro_params2=None):
         super(DendroDistance, self).__init__()
 
         self.nbins = nbins
@@ -248,11 +249,11 @@ class DendroDistance(object):
             self.dendro1 = fiducial_model
         else:
             self.dendro1 = Dendrogram_Stats(
-                cube1, min_deltas=min_deltas, dendro_params=dendro_params)
+                cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
             self.dendro1.run(verbose=False)
 
         self.dendro2 = Dendrogram_Stats(
-            cube2, min_deltas=min_deltas, dendro_params=dendro_params)
+            cube2, min_deltas=min_deltas, dendro_params=dendro_params2)
         self.dendro2.run(verbose=False)
 
         # Set the minimum number of components to create a histogram
