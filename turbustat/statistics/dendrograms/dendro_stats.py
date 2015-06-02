@@ -171,6 +171,22 @@ class Dendrogram_Stats(object):
         with open(output_name, 'wb') as output:
                 pickle.dump(self_copy, output, -1)
 
+    @staticmethod
+    def load_results(pickle_file):
+        '''
+        Load in a saved pickle file.
+
+        Parameters
+        ----------
+        pickle_file : str
+            Name of filename to load in.
+        '''
+
+        with open(pickle_file, 'rb') as input:
+                self = pickle.load(input)
+
+        return self
+
     def run(self, verbose=False, dendro_verbose=False,
             save_results=False):
         '''
