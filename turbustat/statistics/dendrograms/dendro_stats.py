@@ -226,10 +226,12 @@ class DendroDistance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
-        Data cube.
-    cube2 : numpy.ndarray
-        Data cube.
+    cube1 : numpy.ndarray or str
+        Data cube. If a str, it should be the filename of a pickle file saved
+        using Dendrogram_Stats.
+    cube2 : numpy.ndarray or str
+        Data cube. If a str, it should be the filename of a pickle file saved
+        using Dendrogram_Stats.
     min_deltas : numpy.ndarray or list
         Minimum deltas of leaves in the dendrogram.
     nbins : str or float, optional
@@ -273,6 +275,9 @@ class DendroDistance(object):
                 raise TypeError("dendro_params is a "+str(type(dendro_params)) +
                                 "It must be a dictionary, or a list containing" +
                                 " a dictionary entries.")
+        else:
+            dendro_params1 = None
+            dendro_params2 = None
 
 
         if fiducial_model is not None:
