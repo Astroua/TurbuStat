@@ -227,15 +227,16 @@ class DendroDistance(object):
     fiducial_model : Dendrogram_Stats
         Computed dendrogram and statistic values. Use to avoid
         re-computing.
-    dendro_params : dict
+    dendro_params : dict or list of dicts, optional
         Further parameters for the dendrogram algorithm
-        (see www.dendrograms.org for more info).
+        (see www.dendrograms.org for more info). If a list of dictionaries is
+        given, the first list entry should be the dictionary for cube1, and the
+        second for cube2.
 
     """
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
-                 min_features=100, fiducial_model=None, dendro_params1=None,
-                 dendro_params2=None):
+                 min_features=100, fiducial_model=None, dendro_params=None):
         super(DendroDistance, self).__init__()
 
         self.nbins = nbins
@@ -244,6 +245,19 @@ class DendroDistance(object):
             # min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
             #                        np.logspace(-0.6, -0.35, 10))
             min_deltas = np.logspace(-2.5, 0.5, 100)
+
+        if dendro_params is not None:
+            if isinstance(dendro_params, list):
+                dendro_params1 = dendro_params[0]
+                dendro_params2 = dendro_params[1]
+            elif isinstance(dendro_params, dict):
+                dendro_params1 = dendro_params
+                dendro_params2 = dendro_params
+            else:
+                raise TypeError("dendro_params is a "+str(type(dendro_params)) +
+                                "It must be a dictionary, or a list containing" +
+                                " a dictionary entries.")
+
 
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
