@@ -13,7 +13,7 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from copy.copy import deepcopy
+from copy import deepcopy
 import cPickle as pickle
 import statsmodels.api as sm
 from mecdf import mecdf
