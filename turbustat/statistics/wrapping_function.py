@@ -23,7 +23,7 @@ from turbustat.statistics import Wavelet_Distance, \
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                   statistics=None, multicore=False, vca_break=None,
-                  vcs_break=None, cleanup=True):
+                  vcs_break=None, dendro_params=None, cleanup=True):
     '''
     Function to run all of the statistics on two datasets.
     Each statistic is run with set inputs. This function needs to be altered
@@ -43,6 +43,10 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
     multicore : bool, optional
         If the wrapper is being used in parallel, this disables
         returning model values for dataset1.
+    dendro_params : dict or list, optional
+        Provides parameters to use when computing the initial dendrogram.
+        If different parameters are required for each dataset, the
+        the input should be a list containing the two dictionaries.
     cleanup : bool, optional
         Delete distance classes after running.
     '''
@@ -214,7 +218,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
             dendro_distance = DendroDistance(dataset1["cube"][0],
-                                             dataset2["cube"][0])
+                                             dataset2["cube"][0],
+                                             dendro_params=dendro_params)
             dendro_distance.distance_metric()
 
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
@@ -396,9 +401,11 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
-            dendro_distance = DendroDistance(dataset1["cube"][0],
-                                             dataset2["cube"][0],
-                                             fiducial_model=fiducial_models["Dendrogram"])
+            dendro_distance = \
+                DendroDistance(dataset1["cube"][0],
+                               dataset2["cube"][0],
+                               fiducial_model=fiducial_models["Dendrogram"],
+                               dendro_params=dendro_params)
             dendro_distance.distance_metric()
 
             distances["Dendrogram_Hist"] = dendro_distance.histogram_distance
