@@ -13,6 +13,8 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
+from copy.copy import deepcopy
+import cPickle as pickle
 import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
@@ -148,7 +150,29 @@ class Dendrogram_Stats(object):
 
         return self
 
-    def run(self, verbose=False, dendro_verbose=False):
+    def save_results(self, output_name=None, keep_data=False):
+        '''
+        Save the results of the dendrogram statistics to avoid re-computing.
+        The pickled file will not include the data cube by default.
+        '''
+
+        if output_name is None:
+            output_name = "dendrogram_stats_output.pkl"
+
+        if output_name[-4:] != ".pkl":
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy.cube = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    def run(self, verbose=False, dendro_verbose=False,
+            save_results=False):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -169,6 +193,9 @@ class Dendrogram_Stats(object):
             p.plot(self.x, self.y, 'bD')
             p.plot(self.x, self.model.fittedvalues, 'g')
             p.show()
+
+        if save_results:
+            self.save_results()
 
 
 class DendroDistance(object):
