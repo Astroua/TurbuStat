@@ -279,17 +279,22 @@ class DendroDistance(object):
             dendro_params1 = None
             dendro_params2 = None
 
-
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
+        elif isinstance(cube1, str):
+            self.dendro1 = Dendrogram_Stats.load_results(cube1)
         else:
             self.dendro1 = Dendrogram_Stats(
                 cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
             self.dendro1.run(verbose=False)
 
-        self.dendro2 = Dendrogram_Stats(
-            cube2, min_deltas=min_deltas, dendro_params=dendro_params2)
-        self.dendro2.run(verbose=False)
+        if isinstance(cube2, str):
+            self.dendro2 = Dendrogram_Stats.load_results(cube2)
+        else:
+            self.dendro2 = \
+                Dendrogram_Stats(cube2, min_deltas=min_deltas,
+                                 dendro_params=dendro_params2)
+            self.dendro2.run(verbose=False)
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
