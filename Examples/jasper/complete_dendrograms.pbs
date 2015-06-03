@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l pmem=4000m
+#PBS -l feature=X5675
+#PBS -l nodes=1:ppn=12
+#PBS -l walltime=20:00:00
+#PBS -m bea
+#PBS -M koch.eric.w@gmail.com
+#PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
+
+source /home/ekoch/.bashrc
+
+echo "Starting at: `date`"
+
+python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/complete_dendrograms.py
+
+echo "Exited with code $? at: `date`"
