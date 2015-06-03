@@ -188,7 +188,7 @@ class Dendrogram_Stats(object):
         return self
 
     def run(self, verbose=False, dendro_verbose=False,
-            save_results=False):
+            save_results=False, output_name=None):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -211,7 +211,7 @@ class Dendrogram_Stats(object):
             p.show()
 
         if save_results:
-            self.save_results()
+            self.save_results(output_name=output_name)
 
 
 class DendroDistance(object):
