@@ -23,7 +23,9 @@ from turbustat.statistics import Wavelet_Distance, \
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                   statistics=None, multicore=False, vca_break=None,
-                  vcs_break=None, dendro_params=None, cleanup=True):
+                  vcs_break=None, dendro_params=None,
+                  dendro_saves=[None, None],
+                  cleanup=True):
     '''
     Function to run all of the statistics on two datasets.
     Each statistic is run with set inputs. This function needs to be altered
@@ -217,8 +219,24 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
-            dendro_distance = DendroDistance(dataset1["cube"][0],
-                                             dataset2["cube"][0],
+
+            if dendro_saves[0] is None:
+                input1 = dataset1["cube"][0]
+            elif isinstance(dendro_saves[0], str):
+                input1 = dendro_saves[0]
+            else:
+                raise UserWarning("dendro_saves must be the filename of the"
+                                  " saved file.")
+
+            if dendro_saves[0] is None:
+                input2 = dataset2["cube"][0]
+            elif isinstance(dendro_saves[0], str):
+                input2 = dendro_saves[1]
+            else:
+                raise UserWarning("dendro_saves must be the filename of the"
+                                  " saved file.")
+
+            dendro_distance = DendroDistance(input1, input2,
                                              dendro_params=dendro_params)
             dendro_distance.distance_metric()
 
@@ -401,9 +419,25 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("Dendrogram_Hist" in s for s in statistics) or \
            any("Dendrogram_Num" in s for s in statistics):
+
+            if dendro_saves[0] is None:
+                input1 = dataset1["cube"][0]
+            elif isinstance(dendro_saves[0], str):
+                input1 = dendro_saves[0]
+            else:
+                raise UserWarning("dendro_saves must be the filename of the"
+                                  " saved file.")
+
+            if dendro_saves[0] is None:
+                input2 = dataset2["cube"][0]
+            elif isinstance(dendro_saves[0], str):
+                input2 = dendro_saves[1]
+            else:
+                raise UserWarning("dendro_saves must be the filename of the"
+                                  " saved file.")
+
             dendro_distance = \
-                DendroDistance(dataset1["cube"][0],
-                               dataset2["cube"][0],
+                DendroDistance(input1, input2,
                                fiducial_model=fiducial_models["Dendrogram"],
                                dendro_params=dendro_params)
             dendro_distance.distance_metric()
