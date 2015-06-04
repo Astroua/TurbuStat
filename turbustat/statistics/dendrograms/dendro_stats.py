@@ -60,7 +60,8 @@ class Dendrogram_Stats(object):
         self.values = []
         self.histograms = []
 
-    def compute_dendro(self, verbose=False):
+    def compute_dendro(self, verbose=False, save_dendro=False,
+                       dendro_name=None, dendro_obj=None):
         '''
         Compute the dendrogram and prune to the minimum deltas.
         ** min_deltas must be in ascending order! **
@@ -68,12 +69,26 @@ class Dendrogram_Stats(object):
         Parameters
         ----------
         verbose : optional, bool
+            Enables the progress bar in astrodendro.
+        save_dendro : optional, bool
+            Saves the dendrogram in HDF5 format. **Requires pyHDF5**
+        dendro_name : str, optional
+            Save name when save_dendro is enabled. ".hdf5" appended
+            automatically.
+        dendro_obj : Dendrogram, optional
+            Input a pre-computed dendrogram object. It is assumed that
+            the dendrogram has already been computed!
 
         '''
-        d = Dendrogram.compute(self.cube, verbose=verbose,
-                               min_delta=self.min_deltas[0],
-                               min_value=self.dendro_params["min_value"],
-                               min_npix=self.dendro_params["min_npix"])
+
+        if dendro_obj is None:
+            d = \
+                Dendrogram.compute(self.cube, verbose=verbose,
+                                   min_delta=self.min_deltas[0],
+                                   min_value=self.dendro_params["min_value"],
+                                   min_npix=self.dendro_params["min_npix"])
+        else:
+            d = dendro_obj
         self.numfeatures[0] = len(d)
         self.values.append(
             np.asarray([struct.vmax for struct in d.all_structures]))
