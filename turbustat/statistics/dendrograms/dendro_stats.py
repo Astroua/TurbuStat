@@ -202,6 +202,29 @@ class Dendrogram_Stats(object):
 
         return self
 
+    @staticmethod
+    def load_dendrogram(hdf5_file, min_deltas=None):
+        '''
+        Load in a previously saved dendrogram. **Requires pyHDF5**
+
+        Parameters
+        ----------
+        hdf5_file : str
+            Name of saved file.
+        min_deltas : numpy.ndarray or list
+            Minimum deltas of leaves in the dendrogram.
+
+        '''
+
+        dendro = Dendrogram.load_from(hdf5_file)
+
+        self = Dendrogram_Stats(dendro.data, min_deltas=min_deltas,
+                                dendro_params=dendro.params)
+
+        self.compute_dendro(dendro_obj=dendro)
+
+        return self
+
     def run(self, verbose=False, dendro_verbose=False,
             save_results=False, output_name=None):
         '''
