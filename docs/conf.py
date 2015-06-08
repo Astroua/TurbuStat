@@ -31,6 +31,9 @@ MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils']
 
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
