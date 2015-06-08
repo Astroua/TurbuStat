@@ -36,11 +36,11 @@ def obs_to_obs(file_list, statistics, pool=None):
     distances = {}
 
     for stat in statistics:
-     distances[stat] = np.zeros((len(file_list), len(file_list)))
+        distances[stat] = np.zeros((len(file_list), len(file_list)))
 
     generator = zip(combinations(file_list, 2),
-                     repeat(statistics),
-                     repeat(True))
+                    repeat(statistics),
+                    repeat(True))
 
     if pool is None:
 
@@ -114,12 +114,12 @@ def obs_to_fid(obs_list, fiducial_dict, statistics, pool=None):
     return distances
 
 
-
 def des_to_obs(obs_list, design_dict, pool=None):
     '''
     Treat observations as the fiducials.
     '''
     pass
+
 
 def run_comparison(fits, statistics, add_noise):
 
@@ -138,7 +138,9 @@ def run_comparison(fits, statistics, add_noise):
 
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
                               statistics=statistics, multicore=True,
-                              vca_break=vca_break, vcs_break=vcs_break)
+                              vca_break=vca_break, vcs_break=vcs_break,
+                              dendro_saves=[fits1[:-5]+"_dendrostat.pkl",
+                                            None])
 
     return distances, fits1, fits2
 
