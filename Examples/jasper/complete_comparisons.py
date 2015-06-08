@@ -139,8 +139,8 @@ def run_comparison(fits, statistics, add_noise):
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
                               statistics=statistics, multicore=True,
                               vca_break=vca_break, vcs_break=vcs_break,
-                              dendro_saves=[fits1[:-5]+"_dendrostat.pkl",
-                                            None])
+                              dendro_saves=[None,
+                                            fits1[:-5]+"_dendrostat.pkl"])
 
     return distances, fits1, fits2
 
