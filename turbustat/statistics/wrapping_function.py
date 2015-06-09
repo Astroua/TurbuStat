@@ -228,9 +228,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 raise UserWarning("dendro_saves must be the filename of the"
                                   " saved file.")
 
-            if dendro_saves[0] is None:
+            if dendro_saves[1] is None:
                 input2 = dataset2["cube"][0]
-            elif isinstance(dendro_saves[0], str):
+            elif isinstance(dendro_saves[1], str):
                 input2 = dendro_saves[1]
             else:
                 raise UserWarning("dendro_saves must be the filename of the"
