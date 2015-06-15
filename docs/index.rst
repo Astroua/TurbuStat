@@ -3,14 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to TurbuStat's documentation!
-=====================================
+TurbuStat
+=========
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   install.rst
+   tutorial.rst
+   preprocessing.rst
+   statistics.rst
+   analysis.rst
+   helper_scripts.rst
 
 
 Indices and tables
