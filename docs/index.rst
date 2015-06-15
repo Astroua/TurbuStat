@@ -6,6 +6,15 @@
 TurbuStat
 =========
 
+TurbuStat provides a set of analysis tools for comparing astronomical radio datacubes, as well as column density or integrated intensity images. Each statistic returns a measure of "distance" between the two datasets.
+
+This package was developed by:
+
+* [Eric Koch](https://github.com/e-koch)
+* [Caleb Ward](https://github.com/Astrolebs)
+* [Erik Rosolowsky](https://github.com/low-sky)
+* Jason Loeppky
+
 Contents:
 
 .. toctree::
