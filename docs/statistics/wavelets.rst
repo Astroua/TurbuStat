@@ -3,6 +3,6 @@
 Wavelets
 ========
 
-.. autoclass:: turbustat.wt2D
+.. autoclass:: turbustat.statistics.wt2D
 
-.. autoclass:: turbustat.Wavelet_Distance
+.. autoclass:: turbustat.statistics.Wavelet_Distance
