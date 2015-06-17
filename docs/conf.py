@@ -20,14 +20,15 @@ import mock
 
 MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
                 'scipy', 'scipy.stats', 'scipy.ndimage',
-                'scipy.interpolate', 'scipy.fftpack',
+                'scipy.interpolate', 'scipy.fftpack', 'scipy.spatial',
                 'scipy.spatial.distance', 'scipy.optimize',
                 'matplotlib', 'matplotlib.pyplot',
                 'astropy', 'astropy.io', 'astropy.io.fits',
                 'astropy.convolution',
-                'sklearn', 'sklearn.metrics.pairwise', 'pandas',
+                'sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
-                'astrodendro', 'signal_id',
+                'statsmodels.formula',
+                'astrodendro', 'signal_id', 'pandas',
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils']
 
