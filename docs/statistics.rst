@@ -15,5 +15,24 @@ Nearly all of the distance metrics are actually ["pseudo" - distance metrics](ht
 
  1) :math:`d(A, A) = 0`
  2) Symmetric :math:`d(A, B) = d(B, A)`
- 3) Triangle Inequality :math:`d(A, B) \\leq d(A, C) + d(B, C)`
+ 3) Triangle Inequality :math:`d(A, B) \leq d(A, C) + d(B, C)`
 
+.. toctree::
+   :maxdepth: 2
+
+   statistics/bispectrum.rst
+   statistics/cramer.rst
+   statistics/deltavariance.rst
+   statistics/dendrograms.rst
+   statistics/genus.rst
+   statistics/highstats.rst
+   statistics/mahalanobis.rst
+   statistics/mvc.rst
+   statistics/pca.rst
+   statistics/pdf.rst
+   statistics/pspec.rst
+   statistics/scf.rst
+   statistics/tsallis.rst
+   statistics/vca.rst
+   statistics/vcs.rst
+   statistics/wavelets.rst
