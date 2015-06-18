@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # ``setup``, since these are now deprecated. See this link for more details:
     # https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
-    check_dependencies()
+    # check_dependencies()
 
     setup(name=PACKAGENAME,
           version=VERSION,
