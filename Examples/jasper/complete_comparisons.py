@@ -118,7 +118,42 @@ def des_to_obs(obs_list, design_dict, pool=None):
     '''
     Treat observations as the fiducials.
     '''
-    pass
+
+    # Make the output
+    output_size = (len(design_dict[design_dict.keys()[0]]),
+                   len(obs_list))
+
+    distances = {}
+
+    for stat in statistics:
+        distances[stat] = \
+            np.zeros((len(design_dict.keys()), len(obs_list)))
+
+    for posn, obs in enumerate(obs_list):
+        # Create generator
+        gen = zip(zip(repeat(obs), design_dict.values()),
+                  repeat(statistics),
+                  repeat(True))
+
+        print "On "+str(posn+1)+"/"+str(len(obs_list))+" at "+str(datetime.now())
+
+        if pool is not None:
+            outputs = pool.map(single_input, gen)
+        else:
+            outputs = map(single_input, gen)
+
+        for output in outputs:
+
+            pos1 = obs_list.index(output[2])
+            pos2 = design_dict.values().index(output[1])
+
+            distance_dict = output[0]
+
+            # Loop through statistics
+            for key in distance_dict.keys():
+                distances[key][pos1, pos2] = distance_dict[key]
+
+    return distances
 
 
 def run_comparison(fits, statistics, add_noise):
@@ -331,6 +366,40 @@ if __name__ == "__main__":
 
         sim_dict = sort_sim_files(sim_cubes, sim_labels=np.arange(0, 32),
                                   sim_type="Design")
+
+        output_storage = []
+
+        # Loop through the fiducial sets
+        for des in sim_dict.keys():
+
+            distances = des_to_obs(obs_cubes, sim_dict[des], statistics,
+                                   pool=pool)
+
+            output_storage.append(distances)
+
+        if pool is not None:
+            pool.close()
+
+        # Loop through the statistics and append to the HDF5 file.
+
+        from pandas import HDFStore
+
+        for des, distances in enumerate(output_storage):
+
+            store = HDFStore(output_dir+save_name+"_design_"+str(des)+
+                             "_face_"+str(face)+".h5")
+
+            for key in distances.keys():
+
+                df = DataFrame(distances[key],
+                               index=[sim.split("/")[-1]
+                                      for sim in sim_dict[des].values()],
+                               columns=[obs.split("/")[-1]
+                                        for obs in obs_cubes])
+
+                store[key] = df
+
+            store.close()
     else:
         # Pairwise comparisons between the observations only
 
