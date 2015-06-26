@@ -292,7 +292,7 @@ if __name__ == "__main__":
 
     # Type of comparison
     comparison = str(sys.argv[4])
-    valid_comp = ["Obs_to_Fid", "Obs_to_Obs", "Obs_to_Des"]
+    valid_comp = ["Obs_to_Fid", "Obs_to_Obs", "Des_to_Obs"]
     if comparison not in valid_comp:
         raise Warning("comparison type give is not valid: " + str(comparison))
 
