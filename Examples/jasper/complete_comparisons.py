@@ -88,10 +88,16 @@ def obs_to_fid(obs_list, fiducial_dict, statistics, pool=None):
                       len(fiducial_dict.keys())))
 
     for posn, obs in enumerate(obs_list):
+
+        # Give dendrogram save file.
+        dendro_saves = [None, obs[:-5]+"_dendrostat.pkl"]
+
         # Create generator
         gen = zip(zip(fiducial_dict.values(), repeat(obs)),
                   repeat(statistics),
-                  repeat(True))
+                  repeat(True),
+                  repeat(dendro_saves))
+
 
         print "On "+str(posn+1)+"/"+str(len(obs_list))+" at "+str(datetime.now())
 
@@ -130,10 +136,15 @@ def des_to_obs(obs_list, design_dict, pool=None):
             np.zeros((len(design_dict.keys()), len(obs_list)))
 
     for posn, obs in enumerate(obs_list):
+
+        # Give dendrogram save file.
+        dendro_saves = [obs[:-5]+"_dendrostat.pkl", None]
+
         # Create generator
         gen = zip(zip(repeat(obs), design_dict.values()),
                   repeat(statistics),
-                  repeat(True))
+                  repeat(True),
+                  repeat(dendro_saves))
 
         print "On "+str(posn+1)+"/"+str(len(obs_list))+" at "+str(datetime.now())
 
@@ -144,8 +155,8 @@ def des_to_obs(obs_list, design_dict, pool=None):
 
         for output in outputs:
 
-            pos1 = obs_list.index(output[2])
-            pos2 = design_dict.values().index(output[1])
+            pos1 = design_dict.values().index(output[1])
+            pos2 = obs_list.index(output[2])
 
             distance_dict = output[0]
 
@@ -156,7 +167,7 @@ def des_to_obs(obs_list, design_dict, pool=None):
     return distances
 
 
-def run_comparison(fits, statistics, add_noise):
+def run_comparison(fits, statistics, add_noise, dendro_saves=[None, None]):
 
     fits1, fits2 = fits
 
@@ -174,8 +185,7 @@ def run_comparison(fits, statistics, add_noise):
     distances = stats_wrapper(fiducial_dataset, testing_dataset,
                               statistics=statistics, multicore=True,
                               vca_break=vca_break, vcs_break=vcs_break,
-                              dendro_saves=[None,
-                                            fits2[:-5]+"_dendrostat.pkl"])
+                              dendro_saves=dendro_saves)
 
     return distances, fits1, fits2
 
