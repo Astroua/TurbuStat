@@ -72,6 +72,18 @@ def check_dependencies():
         Warning(("""NOTE : Install or upgrade astrodendro before installing
                             TurbuStat. ***NOTE: Need dev version as
                             of 17/06/14.***"""))
+    # try:
+    #     import spectral_cube
+    #     test = spectral_cube.SpectralCube
+    #     # from spectral_cube import SpectralCube
+    # except Exception, e: #ImportError:
+    #     raise e
+    #     raise ImportError("Install spectral-cube before installing TurbuStat")
+
+    # try:
+    #     import signal_id
+    # except ImportError:
+        # raise ImportError("Install signal-id before installing TurbuStat")
 
 if __name__ == "__main__":
 
