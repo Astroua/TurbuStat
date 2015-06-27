@@ -67,19 +67,9 @@ def check_dependencies():
             "Install or upgrade sklearn before installing TurbuStat.")
 
     try:
-        from astropy.version import version as ast_version
-        if parse_version(ast_version[:3]) < parse_version('0.4'):
-            print(("""***Before installing, upgrade astropy to 0.4.
-                    NOTE: This is the dev version as of 17/06/14.***"""))
-            raise ImportError("")
-    except:
-        raise ImportError(
-            "Install or upgrade astropy before installing TurbuStat.")
-
-    try:
         import astrodendro
     except:
-        raise ImportError(("""Install or upgrade astrodendro before installing
+        Warning(("""NOTE : Install or upgrade astrodendro before installing
                             TurbuStat. ***NOTE: Need dev version as
                             of 17/06/14.***"""))
 
@@ -87,6 +77,28 @@ if __name__ == "__main__":
 
     import ah_bootstrap
     from setuptools import setup
+
+    from setuptools.command.build_ext import build_ext as _build_ext
+    from setuptools.command.install import install as SetuptoolsInstall
+    from astropy_helpers.utils import _get_platlib_dir
+
+
+    class install(SetuptoolsInstall):
+        user_options = SetuptoolsInstall.user_options[:]
+        boolean_options = SetuptoolsInstall.boolean_options[:]
+
+        def finalize_options(self):
+            build_cmd = self.get_finalized_command('build')
+            platlib_dir = _get_platlib_dir(build_cmd)
+            self.build_lib = platlib_dir
+            SetuptoolsInstall.finalize_options(self)
+            check_dependencies()
+
+
+    class check_deps(_build_ext):
+        def finalize_options(self):
+            _build_ext.finalize_options(self)
+            check_dependencies()
 
     #A dirty hack to get around some early import/configurations ambiguities
     if sys.version_info[0] >= 3:
@@ -135,6 +147,9 @@ if __name__ == "__main__":
     # invoking any other functionality from distutils since it can potentially
     # modify distutils' behavior.
     cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
+
+    # Add in custom install
+    cmdclassd['install'] = install
 
     # Adjust the compiler in case the default on this platform is to use a
     # broken one.
