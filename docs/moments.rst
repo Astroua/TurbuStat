@@ -2,7 +2,7 @@
 Deriving Cube Moments
 =====================
 
-The `Mask_and_Moments`_ class returns moment arrays as well as their errors for use with 2D statistics in the package. Noise is estimated using `signal_id <https://github.com/radio-astro-tools/signal-id>`. Moments are derived using `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>` and are able to handle massive datacubes.
+The `Mask_and_Moments`_ class returns moment arrays as well as their errors for use with 2D statistics in the package. Noise is estimated using `signal_id <https://github.com/radio-astro-tools/signal-id>`_. Moments are derived using `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`_ and are able to handle massive datacubes.
 
 Basic Use
 ---------
