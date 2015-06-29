@@ -13,7 +13,7 @@ This package was developed by:
 * `Eric Koch <https://github.com/e-koch>`_
 * `Caleb Ward <https://github.com/Astrolebs>`_
 * `Erik Rosolowsky <https://github.com/low-sky>`_
-* `Jason Loeppky <httpls://github.com/jloeppky>`_
+* `Jason Loeppky <https://github.com/jloeppky>`_
 
 Contents:
 
