@@ -2,7 +2,7 @@
 Cube Tools
 ==========
 
-** THESE ROUTINES ARE UNTESTED AND STILL IN DEVELOPMENT. THEY WILL BE INCORPORATED IN A FUTURE RELEASE. **
+**THESE ROUTINES ARE UNTESTED AND STILL IN DEVELOPMENT. THEY WILL BE INCORPORATED IN A FUTURE RELEASE.**
 
 This module provides classes to handle observational and simulated data. They are not complete and should not be used in their current form.
 
