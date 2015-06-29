@@ -72,18 +72,16 @@ def check_dependencies():
         Warning(("""NOTE : Install or upgrade astrodendro before installing
                             TurbuStat. ***NOTE: Need dev version as
                             of 17/06/14.***"""))
-    # try:
-    #     import spectral_cube
-    #     test = spectral_cube.SpectralCube
-    #     # from spectral_cube import SpectralCube
-    # except Exception, e: #ImportError:
-    #     raise e
-    #     raise ImportError("Install spectral-cube before installing TurbuStat")
+    try:
+        import spectral_cube
+    except ImportError:
+        raise ImportError("Install spectral-cube before installing TurbuStat")
 
-    # try:
-    #     import signal_id
-    # except ImportError:
-        # raise ImportError("Install signal-id before installing TurbuStat")
+    try:
+        import signal_id
+    except ImportError:
+        raise ImportError("Install signal-id before installing TurbuStat")
+
 
 if __name__ == "__main__":
 
@@ -91,23 +89,11 @@ if __name__ == "__main__":
     from setuptools import setup
 
     from setuptools.command.build_ext import build_ext as _build_ext
-    from setuptools.command.install import install as SetuptoolsInstall
-    from astropy_helpers.utils import _get_platlib_dir
-
-
-    class install(SetuptoolsInstall):
-        user_options = SetuptoolsInstall.user_options[:]
-        boolean_options = SetuptoolsInstall.boolean_options[:]
-
-        def finalize_options(self):
-            build_cmd = self.get_finalized_command('build')
-            platlib_dir = _get_platlib_dir(build_cmd)
-            self.build_lib = platlib_dir
-            SetuptoolsInstall.finalize_options(self)
-            check_dependencies()
-
 
     class check_deps(_build_ext):
+        '''
+        Check for the package dependencies.
+        '''
         def finalize_options(self):
             _build_ext.finalize_options(self)
             check_dependencies()
@@ -160,9 +146,6 @@ if __name__ == "__main__":
     # modify distutils' behavior.
     cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
 
-    # Add in custom install
-    cmdclassd['install'] = install
-
     # Adjust the compiler in case the default on this platform is to use a
     # broken one.
     adjust_compiler(PACKAGENAME)
@@ -213,7 +196,7 @@ if __name__ == "__main__":
           version=VERSION,
           description=DESCRIPTION,
           scripts=scripts,
-          setup_requires=['numpy>=1.6.0'],
+          setup_requires=['numpy>=1.6.0', 'scipy'],
           install_requires=['astropy'],
           author=AUTHOR,
           author_email=AUTHOR_EMAIL,
