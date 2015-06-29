@@ -10,10 +10,10 @@ TurbuStat provides a set of analysis tools for comparing astronomical radio data
 
 This package was developed by:
 
-* [Eric Koch](https://github.com/e-koch)
-* [Caleb Ward](https://github.com/Astrolebs)
-* [Erik Rosolowsky](https://github.com/low-sky)
-* Jason Loeppky
+* `Eric Koch <https://github.com/e-koch>`_
+* `Caleb Ward <https://github.com/Astrolebs>`_
+* `Erik Rosolowsky <https://github.com/low-sky>`_
+* `Jason Loeppky <httpls://github.com/jloeppky>`_
 
 Contents:
 
