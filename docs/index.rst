@@ -6,7 +6,9 @@
 TurbuStat
 =========
 
-TurbuStat provides a set of analysis tools for comparing astronomical radio datacubes, as well as column density or integrated intensity images. Each statistic returns a measure of "distance" between the two datasets.
+TurbuStat provides a set of analysis tools for comparing astronomical radio datacubes, as well as column density, integrated intensity or cube moment maps. Each statistic returns a measure of "distance" between the two datasets.
+
+The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contributions to the code base are very much welcome! If you find any issues in the package, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>` or contact the developers at the email on `this page <https://github.com/e-koch>`. Thank you!
 
 This package was developed by:
 
