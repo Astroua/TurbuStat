@@ -22,7 +22,8 @@ Contents:
 
    install.rst
    tutorial.rst
-   preprocessing.rst
+   moments.rst
+   cube_tools.rst
    statistics.rst
    analysis.rst
    helper_scripts.rst
