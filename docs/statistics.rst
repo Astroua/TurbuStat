@@ -9,7 +9,7 @@ Distance Metrics
 
 The distance metrics are computed using certain outputs contained in the related statistics class.
 
-Nearly all of the distance metrics are actually ["pseudo" - distance metrics](https://en.wikipedia.org/wiki/Pseudometric_space). They must have the following properties:
+Nearly all of the distance metrics are actually `"pseudo" - distance metrics <https://en.wikipedia.org/wiki/Pseudometric_space>`_. They must have the following properties:
 
  1) :math:`d(A, A) = 0`
  2) Symmetric :math:`d(A, B) = d(B, A)`
