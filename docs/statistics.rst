@@ -17,7 +17,7 @@ Nearly all of the distance metrics are actually ["pseudo" - distance metrics](ht
 
 
 Source Code
-===========
+-----------
 .. automodapi:: turbustat.statistics
     :no-heading:
     :no-inheritance-diagram:

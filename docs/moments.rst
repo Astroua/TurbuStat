@@ -24,7 +24,7 @@ The moments can also be saved:
 This will return a FITS file for each moment. Error maps are saved in the first extension.
 
 Source Code
-===========
+-----------
 .. automodapi:: turbustat.data_reduction
     :no-heading:
     :no-inheritance-diagram:
