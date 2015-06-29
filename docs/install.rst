@@ -30,4 +30,4 @@ TurbuStat requires the follow packages:
  ::
     >>> python setup.py check_deps
 
-If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>` or contact the developers at the email on `this page <https://github.com/e-koch>`. Thank you!
+If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
