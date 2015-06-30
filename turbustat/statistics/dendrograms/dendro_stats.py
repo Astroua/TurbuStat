@@ -23,8 +23,8 @@ class Dendrogram_Stats(object):
     """
     Dendrogram statistics as described in Burkhart et al. (2013)
     Two statistics are contained:
-        * number of leaves + branches vs. $\delta$ parameter
-        * statistical moments of the intensity histogram
+    * number of leaves + branches vs. $\delta$ parameter
+    * statistical moments of the intensity histogram
 
     Parameters
     ----------
