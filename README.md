@@ -1,7 +1,11 @@
 TurbuStat
 =========
 
+[![Build Status](https://travis-ci.org/Astroua/TurbuStat.svg?branch=master)](https://travis-ci.org/Astroua/TurbuStat)
+
 **NOTE - this package is still under development. API may change!**
+
+*See the documentation at [http://turbustat.readthedocs.org/](http://turbustat.readthedocs.org/)*
 
 Statistics of Turbulence
 ------------------------
@@ -15,7 +19,7 @@ Distance Metrics
 ----------------
 
 Ideally, we require a distance metric to satisfy several properties. A full description
-is shown in Yeremi et al. (2013).
+is shown in [Yeremi et al. (2014)](http://adsabs.harvard.edu/abs/2014ApJ...783...93Y).
 The key properties are:
 *   cubes with similar physics should have a small distance
 *   unaffected by coordinate shifts
@@ -24,11 +28,6 @@ The key properties are:
 
 Not all of the metrics satisfy the idealized properties. A full description of all
 statistics in this package will be shown in Koch et al. (in prep).
-
-Documentation
--------------
-
-*COMING SOON*
 
 Installing
 ----------
@@ -46,9 +45,7 @@ Package Dependencies
 
 Requires:
 
- *   numpy-1.6
  *   matplotlib-1.2
- *   astropy-0.4dev
  *   scipy-0.12
  *   sklearn-0.13.0
  *   pandas-0.13
@@ -68,9 +65,4 @@ This package was developed by:
 * [Eric Koch](https://github.com/e-koch)
 * [Caleb Ward](https://github.com/Astrolebs)
 * [Erik Rosolowsky](https://github.com/low-sky)
-* Jason Loeppky
-
-Build Status
-------------
-
-[![Build Status](https://travis-ci.org/Astroua/TurbuStat.svg?branch=master)](https://travis-ci.org/Astroua/TurbuStat)
+* [Jason Loeppky](https:/github.com/jloeppky)
