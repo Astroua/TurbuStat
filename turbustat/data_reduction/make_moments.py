@@ -8,6 +8,7 @@ from astropy.convolution import convolve
 from scipy import ndimage as nd
 import itertools as it
 import operator as op
+import os
 
 from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
@@ -20,8 +21,11 @@ class Mask_and_Moments(object):
 
         if isinstance(cube, SpectralCube):
             self.cube = cube
+            self.save_name = None
         else:
             self.cube = SpectralCube.read(cube)
+            # Default save name to the cube name without the suffix.
+            self.save_name = ".".join(cube.split(".")[:-1])
 
         self.noise_type = noise_type
         self.clip = clip
@@ -235,13 +239,20 @@ class Mask_and_Moments(object):
 
         return self
 
-    def to_fits(self, save_name):
+    def to_fits(self, save_name=None):
         '''
         Save the property arrays as fits files.
         '''
 
         if self.prop_headers is None:
             self.get_prop_hdrs()
+
+        if save_name is None:
+            if self.save_name is None:
+                Warning("No save_name has been specified, using 'default'")
+                self.save_name = 'default'
+        else:
+            self.save_name = save_name
 
         labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
 
@@ -252,7 +263,61 @@ class Mask_and_Moments(object):
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
 
-            hdu.writeto(save_name+labels[i]+".fits")
+            hdu.writeto(self.save_name+labels[i]+".fits")
+
+    def from_fits(self, fits_name, moments_path=None, mask_name=None):
+        '''
+        Load pre-made moment arrays given a cube name. Saved moments must
+        match the naming of the cube (e.g. a cube called test.fits will have
+        a moment 0 array solved test_moment0.fits).
+        '''
+
+        if moments_path is None:
+            moments_path = ""
+
+        root_name = fits_name[:-5]
+
+        self = Mask_and_Moments(fits_name)
+
+        if mask_name is not None:
+            mask = fits.getdata(mask_name)
+            self.with_mask(mask=mask)
+
+        # Moment 0
+        try:
+            moment0 = fits.open(os.path.join(moments_path,
+                                             root_name+"_moment0.fits"))
+            self._moment0 = moment0[0]
+            self._moment0_err = moment0[0]
+        except IOError:
+            Warning("Moment 0 fits file not found.")
+
+        try:
+            moment1 = fits.open(os.path.join(moments_path,
+                                             root_name+"_centroid.fits"))
+            self._moment1 = moment1[0]
+            self._moment1_err = moment1[0]
+        except IOError:
+            Warning("Centroid fits file not found.")
+
+        try:
+            linewidth = fits.open(os.path.join(moments_path,
+                                             root_name+"_linewidth.fits"))
+
+            self._moment2 = np.power(linewidth[0], 2.)
+            self._moment2_err = linewidth_err * (2 * np.sqrt(self.moment2))
+        except IOError:
+            Warning("Linewidth fits file not found.")
+
+        try:
+            intint = fits.open(os.path.join(moments_path,
+                                             root_name+"_intint.fits"))
+            self._intint = intint[0]
+            self._intint_err = intint[0]
+        except IOError:
+            Warning("Integrated intensity fits file not found.")
+
+        return self
 
     def _get_int_intensity(self, axis=0):
         '''
