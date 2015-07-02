@@ -372,7 +372,7 @@ if __name__ == "__main__":
 
             store.close()
 
-    elif comparison == "Obs_to_Des":
+    elif comparison == "Des_to_Obs":
         sim_cubes = [sim_dir+f for f in os.listdir(sim_dir) if "Design" in f
                      and "_0"+face+"_" in f]
 
