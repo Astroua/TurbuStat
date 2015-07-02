@@ -36,9 +36,12 @@ Currently, the only way install TurbuStat is to clone the repository and run
 ```python
 python setup.py install
 ```
-The installation will fail if a dependency is not met. In this case, update or
-install the missing package then attempt the install again.
-
+Due to conflicts with the dependencies, TurbuStat will **NOT** automatically install all
+dependencies (only numpy and astropy). To check if your version of python has all the
+dependencies installed, run:
+```python
+python setup.py check_deps
+```
 
 Package Dependencies
 --------------------
