@@ -51,9 +51,6 @@ Requires:
  *   pandas-0.13
  *   statsmodels-0.4.0
  *   astrodendro-dev
-
-Future Dependencies:
-
  *   [signal-id](https://github.com/radio-astro-tools/signal-id)
  *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube)
 
