@@ -155,8 +155,8 @@ def des_to_obs(obs_list, design_dict, statistics, pool=None):
 
         for output in outputs:
 
-            pos1 = obs_list.index(output[1])
-            pos2 = design_dict.values().index(output[2])
+            pos1 = design_dict.values().index(output[2])
+            pos2 = obs_list.index(output[1])
 
             distance_dict = output[0]
 
