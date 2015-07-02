@@ -120,7 +120,7 @@ def obs_to_fid(obs_list, fiducial_dict, statistics, pool=None):
     return distances
 
 
-def des_to_obs(obs_list, design_dict, pool=None):
+def des_to_obs(obs_list, design_dict, statistics, pool=None):
     '''
     Treat observations as the fiducials.
     '''
