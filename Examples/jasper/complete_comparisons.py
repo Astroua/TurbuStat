@@ -280,11 +280,9 @@ if __name__ == "__main__":
     # statistics =  statistics_list
 
     # Set to run on the 'good' statistics
-    # statistics = ["DeltaVariance", "VCS", "VCS_Density", "VCS_Velocity",
-    #               "VCA", "PCA", "SCF", "Cramer", "VCS_Break", "PDF_Hellinger",
-    #               "PDF_KS", "Dendrogram_Hist", "Dendrogram_Num"]
-
-    statistics = ['Cramer']
+    statistics = ["DeltaVariance", "VCS", "VCS_Density", "VCS_Velocity",
+                  "VCA", "PCA", "SCF", "Cramer", "VCS_Break", "Dendrogram_Hist",
+                  "Dendrogram_Num"]
 
     print "Statistics to run: %s" % (statistics)
 
