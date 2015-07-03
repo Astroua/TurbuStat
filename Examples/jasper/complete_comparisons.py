@@ -262,11 +262,11 @@ def sort_sim_files(sim_list, sim_labels=np.arange(0, 5),
         else:
             raise TypeError("Cannot find appropriate timestep for: "+sim)
 
+        # Remove empty timesteps
+        sim_dict[key] =\
+            dict((k, v) for k, v in sim_dict[key].iteritems() if v is not None)
 
         sim_dict[key][tstep] = sim
-
-    # Remove empty timesteps
-    sim_dict =dict((k, v) for k, v in sim_dict.iteritems() if v is not None)
 
     return sim_dict
 
