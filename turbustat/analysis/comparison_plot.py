@@ -92,7 +92,6 @@ def comparison_plot(path, num_fids=5, verbose=False,
                                                     index_col=0)
                     break
         else:
-            print data_files.keys()
             for key in data_files.keys():
                 print key
                 if key in x:
