@@ -9,6 +9,7 @@ from pandas import read_csv
 
 def comparison_plot(path, num_fids=5, verbose=False,
                     obs_to_fid=False, obs_to_fid_shade=True, legend=True,
+                    legend_labels=None,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
                                 "VCS_Density", "VCS_Velocity", "VCA",
@@ -39,6 +40,11 @@ def comparison_plot(path, num_fids=5, verbose=False,
     obs_to_fid_shade : bool, optional
         Plots the observational distances as a single band instead of by
         fiducial.
+    legend : bool, optional
+        Toggle having a legend.
+    legend_labels : list, optional
+        Provide a list of labels to be used in the legend in lieu of
+        "Fiducial #". Length must match the number of fiducials!
     statistics : list, optional
         Statistics to plot. Default is all.
     comparisons : list, optional
@@ -123,6 +129,11 @@ def comparison_plot(path, num_fids=5, verbose=False,
     else:
         mpl.rcParams['axes.color_cycle'] = colour_cycle[:num_fids]
 
+    if legend_labels is not None:
+        if len(legend_labels) != num_fids:
+            raise Warning("The number of labels given in legend_labels does"
+                          " not match the number of fiducials specified: "
+                          + str(num_fids))
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
@@ -144,7 +155,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend)
+                     legend=legend, legend_labels=legend_labels)
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
@@ -178,7 +189,7 @@ def _plot_size(num):
 
 
 def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
-             legend=True):
+             legend=True, legend_labels=None):
 
     num_design = (max(data.shape) / num_fids)
     x_vals = np.arange(0, num_design)
@@ -187,7 +198,11 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     # Plot designs
     for i in range(num_fids):
         y_vals = data.ix[int(i * num_design):int(((i + 1) * num_design)-1)]
-        ax.plot(x_vals, y_vals, "-o", label="Fiducial " + str(i), alpha=0.6)
+        if legend_labels is not None:
+            ax.plot(x_vals, y_vals, "-o", label=legend_labels[i], alpha=0.6)
+        else:
+            ax.plot(x_vals, y_vals, "-o", label="Fiducial " + str(i),
+                    alpha=0.6)
     # Set title in upper left hand corner
     ax.annotate(title, xy=(0, 1), xytext=(12, -6), va='top',
                 xycoords='axes fraction', textcoords='offset points',
@@ -223,12 +238,12 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
             ax.plot(x_fid_vals[:len(x_fid_vals)-i-1],
                     fid_data[prev:posn+prev], "ko", alpha=0.6)
             prev += posn
-        # Make the legend
-        if legend:
-            ax.legend(loc="upper right", prop={'size': 10})
-        ax.set_xlim([-1, num_design + num_fids + 8])
-        ax.set_xticks(np.append(x_vals, x_fid_vals))
-        ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    # Make the legend
+    if legend:
+        ax.legend(loc="upper right", prop={'size': 10})
+    ax.set_xlim([-1, num_design + num_fids + 8])
+    ax.set_xticks(np.append(x_vals, x_fid_vals))
+    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
