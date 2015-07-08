@@ -7,7 +7,7 @@ import matplotlib.pyplot as p
 from pandas import read_csv
 
 
-def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
+def comparison_plot(path, num_fids=5, verbose=False,
                     obs_to_fid=False, obs_to_fid_shade=True, legend=True,
                     statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
                                 "DeltaVariance", "Genus", "VCS",
@@ -16,7 +16,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                                 "Skewness", "Kurtosis", "Dendrogram_Hist",
                                 "Dendrogram_Num", "PDF"],
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
-                                 "2_0", "2_1", "2_2"],
+                                 "2_0", "2_1", "2_2", "0_obs", "1_obs",
+                                 "2_obs"],
                     out_path=None):
     '''
     Requires results converted into csv form!!
@@ -33,8 +34,6 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         Function to apply to the time-step data.
     verbose : bool, optional
         Enables plotting.
-    obs_to_des : bool, optional
-        Add in subplots where observational cubes are treayed as the fiducial.
     obs_to_fid : bool, optional
         Include observational to fiducial distances in the distance subplots.
     obs_to_fid_shade : bool, optional
@@ -64,15 +63,14 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                   "2_0": ["Face 2 to 0", None, None],
                   "1_0": ["Face 1 to 0", None, None]}
 
+    data_files["0_obs"] = ["Face 0 to Obs", None, None]
+    data_files["1_obs"] = ["Face 1 to Obs", None, None]
+    data_files["2_obs"] = ["Face 2 to Obs", None, None]
+
     # Remove comparisons that aren't requested
     for key in data_files.keys():
-        if not key in comparisons:
+        if key not in comparisons:
             del data_files[key]
-
-    if obs_to_des:
-        data_files["0_obs"] = ["Face 0 to Obs"],
-        data_files["1_obs"] = ["Face 1 to Obs"],
-        data_files["2_obs"] = ["Face 2 to Obs"],
 
     if obs_to_fid:
         obs_to_fid_data = {0: None,
@@ -94,7 +92,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                                                     index_col=0)
                     break
         else:
+            print data_files.keys()
             for key in data_files.keys():
+                print key
                 if key in x:
                     data = read_csv(os.path.join(path, x))
                     if "fiducial" in x:
@@ -217,18 +217,19 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
 
     #Plot fiducials
     # fid_comps = (num_fids**2 + num_fids) / 2
-    x_fid_vals = np.arange(num_design, num_design + num_fids)
-    prev = 0
-    for i, posn in enumerate(np.arange(num_fids - 1, 0, -1)):
-        ax.plot(x_fid_vals[:len(x_fid_vals)-i-1],
-                fid_data[prev:posn+prev], "ko", alpha=0.6)
-        prev += posn
-    # Make the legend
-    if legend:
-        ax.legend(loc="upper right", prop={'size': 10})
-    ax.set_xlim([-1, num_design + num_fids + 8])
-    ax.set_xticks(np.append(x_vals, x_fid_vals))
-    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    if fid_data is not None:
+        x_fid_vals = np.arange(num_design, num_design + num_fids)
+        prev = 0
+        for i, posn in enumerate(np.arange(num_fids - 1, 0, -1)):
+            ax.plot(x_fid_vals[:len(x_fid_vals)-i-1],
+                    fid_data[prev:posn+prev], "ko", alpha=0.6)
+            prev += posn
+        # Make the legend
+        if legend:
+            ax.legend(loc="upper right", prop={'size': 10})
+        ax.set_xlim([-1, num_design + num_fids + 8])
+        ax.set_xticks(np.append(x_vals, x_fid_vals))
+        ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
