@@ -99,7 +99,6 @@ def comparison_plot(path, num_fids=5, verbose=False,
                     break
         else:
             for key in data_files.keys():
-                print key
                 if key in x:
                     data = read_csv(os.path.join(path, x))
                     if "fiducial" in x:
