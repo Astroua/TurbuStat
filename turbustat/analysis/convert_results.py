@@ -270,6 +270,19 @@ def concat_convert_HDF5(path, face=None, combine_axis=0, average_axis=None,
         if interweave:
             stats_df = stats_df.sort_index()
 
+            num = len(hdf5_files)
+
+            num_splits = stats_df.shape[0] / num
+            split_dfs = []
+            for i in range(num_splits):
+
+                split_df = stats_df[i*num:(i+1)*num].copy()
+                split_df = split_df.sort(columns=['Order'])
+
+                split_dfs.append(split_df)
+
+            stats_df = concat(split_dfs, axis=0)
+
         if j == 0:
             master_df = stats_df.copy()
             del master_df[0]
