@@ -35,6 +35,8 @@ def obs_to_obs(file_list, statistics, pool=None):
 
     distances = {}
 
+    num_comp = len(file_list) * (len(file_list) - 1) / 2
+
     for stat in statistics:
         distances[stat] = np.zeros((len(file_list), len(file_list)))
 
