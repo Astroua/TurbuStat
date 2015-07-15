@@ -124,13 +124,12 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
     if design_matrix is not None:
         if isinstance(design_matrix, DataFrame):
             pass
-        elif isinstance(design_matrix, str):
+        elif isinstance(design_matrix, unicode) or isinstance(design_matrix, str):
             design_matrix = read_csv(design_matrix, index_col=0)
         else:
+            print type(design_matrix)
             raise TypeError("design_matrix must be a pandas.DataFrame or "
                             "a path to a csv file.")
-    else:
-        design_labels = None
 
         # Set -1 to 0 for cleanliness
         design_matrix[design_matrix == -1] = 0.0
@@ -142,6 +141,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
             label = "".join([str(int(val)) for val in design_matrix.ix[ind]])
 
             design_labels.append(label)
+
+        else:
+            design_labels = None
 
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
