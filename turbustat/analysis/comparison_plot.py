@@ -136,7 +136,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
 
         design_labels = []
 
-        for ind in design_matrix.index():
+        for ind in design_matrix.index:
 
             label = "".join([str(int(val)) for val in design_matrix.ix[ind]])
 
