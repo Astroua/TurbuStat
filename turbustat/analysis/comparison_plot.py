@@ -133,6 +133,14 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         # Set -1 to 0 for cleanliness
         design_matrix[design_matrix == -1] = 0.0
 
+        design_labels = []
+
+        for ind in design_matrix.index():
+
+            label = "".join([str(int(val)) for val in design_matrix.ix[ind]])
+
+            design_labels.append(label)
+
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
     if len(colour_cycle) < num_fids:
@@ -141,7 +149,6 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
             [mpl.cm.jet(i) for i in np.linspace(0.0, 1.0, num_fids)]
     else:
         mpl.rcParams['axes.color_cycle'] = colour_cycle[:num_fids]
-
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
