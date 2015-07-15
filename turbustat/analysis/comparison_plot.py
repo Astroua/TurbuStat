@@ -129,6 +129,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         else:
             raise TypeError("design_matrix must be a pandas.DataFrame or "
                             "a path to a csv file.")
+    else:
+        design_labels = None
 
         # Set -1 to 0 for cleanliness
         design_matrix[design_matrix == -1] = 0.0
@@ -170,7 +172,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend)
+                     legend=legend, labels=design_labels)
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
@@ -204,9 +206,16 @@ def _plot_size(num):
 
 
 def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
-             legend=True):
+             legend=True, labels=None):
 
     num_design = (max(data.shape) / num_fids)
+
+    if labels is not None:
+        if len(labels) != num_design:
+            raise Warning("Design matrix contains different number of designs "
+                          "than the data. Double check the inputted "
+                          "design_matrix.")
+
     x_vals = np.arange(0, num_design)
     xtick_labels = [str(i) for i in x_vals]
     fid_labels = [str(i) for i in range(num_fids-1)]
@@ -253,7 +262,10 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
-    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    if labels is None:
+        ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    else:
+        ax.set_xticklabels(labels, rotation=90, size=12)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
