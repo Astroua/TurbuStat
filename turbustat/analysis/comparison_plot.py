@@ -17,7 +17,7 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                                 "Dendrogram_Num", "PDF"],
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2"],
-                    out_path=None):
+                    out_path=None, design_matrix=None):
     '''
     Requires results converted into csv form!!
 
@@ -45,6 +45,11 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
     comparisons : list, optional
         The face comparisons to include in the plots. The order is set here as
         well.
+    design_matrix : str or pandas.DataFrame, optional
+        The experimental design, which is used for the distances. If a string,
+        is given, it is assumed that it's the path to the saved csv file. When
+        given, the labels of the plots will be coded in 'binary' according to
+        the levels in the design.
     '''
 
     if path[-1] != "/":
