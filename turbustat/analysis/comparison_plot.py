@@ -120,6 +120,16 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         print "No csv files found in %s" % (path)
         return
 
+    # Check for a design
+    if design_matrix is not None:
+        if isinstance(design_matrix, DataFrame):
+            pass
+        elif isinstance(design_matrix, str):
+            design_matrix = read_csv(design_matrix, index_col=0)
+        else:
+            raise TypeError("design_matrix must be a pandas.DataFrame or "
+                            "a path to a csv file.")
+
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
     if len(colour_cycle) < num_fids:
