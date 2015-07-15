@@ -4,7 +4,7 @@ import numpy as np
 import os
 import matplotlib as mpl
 import matplotlib.pyplot as p
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 
 
 def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
@@ -129,6 +129,9 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
         else:
             raise TypeError("design_matrix must be a pandas.DataFrame or "
                             "a path to a csv file.")
+
+        # Set -1 to 0 for cleanliness
+        design_matrix[design_matrix == -1] = 0.0
 
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
