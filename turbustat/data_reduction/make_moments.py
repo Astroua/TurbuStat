@@ -290,6 +290,8 @@ class Mask_and_Moments(object):
             self._moment0 = moment0[0]
             self._moment0_err = moment0[0]
         except IOError:
+            self._moment0 = None
+            self._moment0_err = None
             Warning("Moment 0 fits file not found.")
 
         try:
@@ -298,6 +300,8 @@ class Mask_and_Moments(object):
             self._moment1 = moment1[0]
             self._moment1_err = moment1[0]
         except IOError:
+            self._moment1 = None
+            self._moment1_err = None
             Warning("Centroid fits file not found.")
 
         try:
@@ -307,6 +311,8 @@ class Mask_and_Moments(object):
             self._moment2 = np.power(linewidth[0], 2.)
             self._moment2_err = linewidth_err * (2 * np.sqrt(self.moment2))
         except IOError:
+            self._moment2 = None
+            self._moment2_err = None
             Warning("Linewidth fits file not found.")
 
         try:
@@ -315,6 +321,8 @@ class Mask_and_Moments(object):
             self._intint = intint[0]
             self._intint_err = intint[0]
         except IOError:
+            self._intint = None
+            self._intint_err = None
             Warning("Integrated intensity fits file not found.")
 
         return self
