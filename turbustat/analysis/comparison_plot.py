@@ -279,7 +279,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if labels is None:
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
-        ax.set_xticklabels(labels, rotation=90, size=12)
+        ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
