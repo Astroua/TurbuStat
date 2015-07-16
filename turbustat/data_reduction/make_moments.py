@@ -330,8 +330,8 @@ class Mask_and_Moments(object):
             hdu.writeto(self.save_name+labels[i]+".fits")
 
     @staticmethod
-    def from_fits(fits_name, moments_path=None, mask_name=None,
-                  moment0=None, centroid=None, linewidth=None,
+    def from_fits(fits_name, moments_prefix=None, moments_path=None,
+                  mask_name=None, moment0=None, centroid=None, linewidth=None,
                   intint=None):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
@@ -343,8 +343,11 @@ class Mask_and_Moments(object):
         Parameters
         ----------
         fits_name : str
-            Filename of the cube. Is also used as the prefix to the saved
-            moment files.
+            Filename of the cube or a SpectralCube object. If a filename is
+            given, it is also used as the prefix to the saved moment files.
+        moments_prefix : str, optional
+            If a SpectralCube object is given in ``fits_name``, the prefix
+            for the saved files can be provided here.
         moments_path : str, optional
             Path to where the moments are saved.
         mask_name : str, optional
@@ -366,7 +369,10 @@ class Mask_and_Moments(object):
         if moments_path is None:
             moments_path = ""
 
-        root_name = fits_name[:-4]
+        if not isinstance(fits_name, SpectralCube):
+            root_name = fits_name[:-4]
+        else:
+            root_name = moments_prefix
 
         self = Mask_and_Moments(fits_name)
 
