@@ -265,11 +265,36 @@ class Mask_and_Moments(object):
 
             hdu.writeto(self.save_name+labels[i]+".fits")
 
-    def from_fits(self, fits_name, moments_path=None, mask_name=None):
+    def from_fits(self, fits_name, moments_path=None, mask_name=None,
+                  moment0=None, centroid=None, linewidth=None,
+                  intint=None):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
-        match the naming of the cube (e.g. a cube called test.fits will have
-        a moment 0 array solved test_moment0.fits).
+        match the naming of the cube for the automatic loading to work
+        (e.g. a cube called test.fits will have a moment 0 array solved
+        test_moment0.fits). Otherwise, specify a path to one of the keyword
+        arguments.
+
+        Parameters
+        ----------
+        fits_name : str
+            Prefix to the saved files.
+        moments_path : str, optional
+            Path to where the moments are saved.
+        mask_name : str, optional
+            Filename of a saved mask to be applied to the data.
+        moment0 : str, optional
+            Filename of the moment0 array. Use if naming scheme is not valid
+            for automatic loading.
+        centroid : str, optional
+            Filename of the centroid array. Use if naming scheme is not valid
+            for automatic loading.
+        linewidth : str, optional
+            Filename of the linewidth array. Use if naming scheme is not valid
+            for automatic loading.
+        intint : str, optional
+            Filename of the integrated intensity array. Use if naming scheme
+            is not valid for automatic loading.
         '''
 
         if moments_path is None:
