@@ -312,13 +312,13 @@ class Mask_and_Moments(object):
         if moment0 is not None:
             moment0 = fits.open(moment0)
             self._moment0 = moment0[0]
-            self._moment0_err = moment0[0]
+            self._moment0_err = moment0[1]
         else:
             try:
                 moment0 = fits.open(os.path.join(moments_path,
                                                  root_name+"_moment0.fits"))
                 self._moment0 = moment0[0]
-                self._moment0_err = moment0[0]
+                self._moment0_err = moment0[1]
             except IOError:
                 self._moment0 = None
                 self._moment0_err = None
@@ -327,13 +327,13 @@ class Mask_and_Moments(object):
         if centroid is not None:
             moment1 = fits.open(centroid)
             self._moment1 = moment1[0]
-            self._moment1_err = moment1[0]
+            self._moment1_err = moment1[1]
         else:
             try:
                 moment1 = fits.open(os.path.join(moments_path,
                                                  root_name+"_centroid.fits"))
                 self._moment1 = moment1[0]
-                self._moment1_err = moment1[0]
+                self._moment1_err = moment1[1]
             except IOError:
                 self._moment1 = None
                 self._moment1_err = None
@@ -360,13 +360,13 @@ class Mask_and_Moments(object):
         if intint is not None:
             intint = fits.open(intint)
             self._intint = intint[0]
-            self._intint_err = intint[0]
+            self._intint_err = intint[1]
         else:
             try:
                 intint = fits.open(os.path.join(moments_path,
                                                  root_name+"_intint.fits"))
                 self._intint = intint[0]
-                self._intint_err = intint[0]
+                self._intint_err = intint[1]
             except IOError:
                 self._intint = None
                 self._intint_err = None
