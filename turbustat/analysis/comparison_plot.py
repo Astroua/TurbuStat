@@ -257,7 +257,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
                     xytext=(num_design/2 - 1, yposn),
                     va='top', xycoords=trans,
                     fontsize=12)
-        fid_x = num_design + num_fids/2 - 3
+        fid_x = num_design + num_fids/2 - 2.5
         ax.annotate("Fiducials", xy=(fid_x, yposn),
                     xytext=(fid_x, yposn),
                     va='top', xycoords=trans,
