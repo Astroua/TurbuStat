@@ -265,6 +265,7 @@ class Mask_and_Moments(object):
 
             hdu.writeto(self.save_name+labels[i]+".fits")
 
+    @staticmethod
     def from_fits(self, fits_name, moments_path=None, mask_name=None,
                   moment0=None, centroid=None, linewidth=None,
                   intint=None):
