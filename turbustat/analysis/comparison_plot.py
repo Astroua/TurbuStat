@@ -240,14 +240,19 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if bottom:
         trans = ax.get_xaxis_transform()
 
+        if labels is not None:
+            yposn = -0.2
+        else:
+            yposn = -0.15
+
         # Put two 'labels' for the x axis
-        ax.annotate("Designs", xy=(num_design/2 - 9, -0.15),
-                    xytext=(num_design/2 - 1, -0.15),
+        ax.annotate("Designs", xy=(num_design/2 - 9, yposn),
+                    xytext=(num_design/2 - 1, yposn),
                     va='top', xycoords=trans,
                     fontsize=12)
         fid_x = num_design + num_fids/2 - 3
-        ax.annotate("Fiducials", xy=(fid_x, -0.15),
-                    xytext=(fid_x, -0.15),
+        ax.annotate("Fiducials", xy=(fid_x, yposn),
+                    xytext=(fid_x, yposn),
                     va='top', xycoords=trans,
                     fontsize=12)
 
