@@ -180,6 +180,13 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
                                 num_fids, shading=obs_to_fid_shade)
 
+        # If the labels are given by the design, we need to adjust the bottom
+        # of the subplots
+        if design_labels is not None:
+            top = 0.95
+            bottom = 0.15
+            fig.subplots_adjust(top=top, bottom=bottom)
+
         if verbose:
             p.autoscale(True)
             fig.show()
@@ -241,7 +248,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         trans = ax.get_xaxis_transform()
 
         if labels is not None:
-            yposn = -0.2
+            yposn = -0.28
         else:
             yposn = -0.15
 
