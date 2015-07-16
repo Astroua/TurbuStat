@@ -12,7 +12,7 @@ from ._testing_data import dataset1, sc1
 class test_Mask_and_Moments(TestCase):
     """docstring for test_Mask_and_Moments"""
 
-    def test_loading():
+    def test_loading(self):
 
         # Try loading the files.
 
