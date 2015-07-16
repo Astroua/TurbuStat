@@ -311,14 +311,14 @@ class Mask_and_Moments(object):
         # Moment 0
         if moment0 is not None:
             moment0 = fits.open(moment0)
-            self._moment0 = moment0[0]
-            self._moment0_err = moment0[1]
+            self._moment0 = moment0[0].data
+            self._moment0_err = moment0[1].data
         else:
             try:
                 moment0 = fits.open(os.path.join(moments_path,
                                                  root_name+"_moment0.fits"))
-                self._moment0 = moment0[0]
-                self._moment0_err = moment0[1]
+                self._moment0 = moment0[0].data
+                self._moment0_err = moment0[1].data
             except IOError:
                 self._moment0 = None
                 self._moment0_err = None
@@ -326,14 +326,14 @@ class Mask_and_Moments(object):
 
         if centroid is not None:
             moment1 = fits.open(centroid)
-            self._moment1 = moment1[0]
-            self._moment1_err = moment1[1]
+            self._moment1 = moment1[0].data
+            self._moment1_err = moment1[1].data
         else:
             try:
                 moment1 = fits.open(os.path.join(moments_path,
                                                  root_name+"_centroid.fits"))
-                self._moment1 = moment1[0]
-                self._moment1_err = moment1[1]
+                self._moment1 = moment1[0].data
+                self._moment1_err = moment1[1].data
             except IOError:
                 self._moment1 = None
                 self._moment1_err = None
@@ -342,16 +342,16 @@ class Mask_and_Moments(object):
         if linewidth is not None:
             linewidth = fits.open(linewidth)
 
-            self._moment2 = np.power(linewidth[0], 2.)
-            self._moment2_err = linewidth[1] * (2 * np.sqrt(self.moment2))
+            self._moment2 = np.power(linewidth[0].data, 2.)
+            self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
         else:
             try:
                 linewidth = \
                     fits.open(os.path.join(moments_path,
                                            root_name+"_linewidth.fits"))
 
-                self._moment2 = np.power(linewidth[0], 2.)
-                self._moment2_err = linewidth[1] * (2 * np.sqrt(self.moment2))
+                self._moment2 = np.power(linewidth[0].data, 2.)
+                self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
             except IOError:
                 self._moment2 = None
                 self._moment2_err = None
@@ -359,14 +359,14 @@ class Mask_and_Moments(object):
 
         if intint is not None:
             intint = fits.open(intint)
-            self._intint = intint[0]
-            self._intint_err = intint[1]
+            self._intint = intint[0].data
+            self._intint_err = intint[1].data
         else:
             try:
                 intint = fits.open(os.path.join(moments_path,
                                                  root_name+"_intint.fits"))
-                self._intint = intint[0]
-                self._intint_err = intint[1]
+                self._intint = intint[0].data
+                self._intint_err = intint[1].data
             except IOError:
                 self._intint = None
                 self._intint_err = None
