@@ -419,7 +419,8 @@ class Mask_and_Moments(object):
                                            root_name+"_linewidth.fits"))
 
                 self._moment2 = np.power(linewidth[0].data, 2.)
-                self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
+                self._moment2_err = linewidth[1].data * \
+                    (2 * np.sqrt(self.moment2))
             except IOError as e:
                 self._moment2 = None
                 self._moment2_err = None
@@ -433,7 +434,7 @@ class Mask_and_Moments(object):
         else:
             try:
                 intint = fits.open(os.path.join(moments_path,
-                                                 root_name+"_intint.fits"))
+                                                root_name+"_intint.fits"))
                 self._intint = intint[0].data
                 self._intint_err = intint[1].data
             except IOError as e:
