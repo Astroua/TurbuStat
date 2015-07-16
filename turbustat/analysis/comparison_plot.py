@@ -142,8 +142,8 @@ def comparison_plot(path, num_fids=5, verbose=False, obs_to_des=False,
 
             design_labels.append(label)
 
-        else:
-            design_labels = None
+    else:
+        design_labels = None
 
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
