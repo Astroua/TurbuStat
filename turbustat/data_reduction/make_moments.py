@@ -64,6 +64,15 @@ class Mask_and_Moments(object):
         self.prop_err_headers = None
 
     def find_noise(self, return_obj=False):
+        '''
+        Returns noise estimate, or the whole Noise object.
+
+        Parameters
+        ----------
+        return_obj : bool, optional
+            If True, returns the Noise object. Otherwise returns the estimated
+            noise level.
+        '''
 
         noise = Noise(self.cube)
 
@@ -75,6 +84,15 @@ class Mask_and_Moments(object):
         return noise.scale
 
     def make_mask(self, mask=None):
+        '''
+        Apply a mask to the cube.
+
+        Parameters
+        ----------
+        mask : spectral-cube Mask or numpy.ndarray, optional
+            The mask to be applied to the data. If None is given, RadioMask
+            is used with its default settings.
+        '''
 
         if mask is None:
             rad_mask = RadioMask(self.cube)
@@ -85,6 +103,16 @@ class Mask_and_Moments(object):
         return self
 
     def make_moments(self, axis=0, units=False):
+        '''
+        Calculate the moments.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis to calculate the moments along.
+        units : bool, optional
+            If enabled, the units of the arrays are kept.
+        '''
 
         self._moment0 = self.cube.moment0(axis=axis, how=self.moment_method)
         self._moment1 = self.cube.moment1(axis=axis, how=self.moment_method)
@@ -100,12 +128,20 @@ class Mask_and_Moments(object):
             self._intint = self._intint.value
         return self
 
-    def make_moment_errors(self):
+    def make_moment_errors(self, axis=0):
+        '''
+        Calculate the errors in the moments.
 
-        self._moment0_err = self._get_moment0_err()
-        self._moment1_err = self._get_moment1_err()
-        self._moment2_err = self._get_moment2_err()
-        self._intint_err = self._get_int_intensity_err()
+        Parameters
+        ----------
+        axis : int, optional
+            The axis to calculate the moments along.
+        '''
+
+        self._moment0_err = self._get_moment0_err(axis=axis)
+        self._moment1_err = self._get_moment1_err(axis=axis)
+        self._moment2_err = self._get_moment2_err(axis=axis)
+        self._intint_err = self._get_int_intensity_err(axis=axis)
 
         return self
 
@@ -229,6 +265,7 @@ class Mask_and_Moments(object):
 
     def get_prop_hdrs(self):
         '''
+        Generate headers for the moments.
         '''
 
         bunits = [self.cube.unit, self.cube.spectral_axis.unit,
@@ -263,6 +300,12 @@ class Mask_and_Moments(object):
     def to_fits(self, save_name=None):
         '''
         Save the property arrays as fits files.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Prefix to use when saving the moment arrays.
+            If None is given, 'default' is used.
         '''
 
         if self.prop_headers is None:
@@ -407,7 +450,8 @@ class Mask_and_Moments(object):
 
         Parameters
         ----------
-
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         shape = self.cube.shape
@@ -441,6 +485,10 @@ class Mask_and_Moments(object):
 
     def _get_int_intensity_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
 
@@ -453,6 +501,10 @@ class Mask_and_Moments(object):
 
     def _get_moment0_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':
@@ -464,6 +516,10 @@ class Mask_and_Moments(object):
 
     def _get_moment1_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':
@@ -477,6 +533,10 @@ class Mask_and_Moments(object):
 
     def _get_moment2_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':
