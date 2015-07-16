@@ -278,7 +278,8 @@ class Mask_and_Moments(object):
         Parameters
         ----------
         fits_name : str
-            Prefix to the saved files.
+            Filename of the cube. Is also used as the prefix to the saved
+            moment files.
         moments_path : str, optional
             Path to where the moments are saved.
         mask_name : str, optional
