@@ -17,9 +17,24 @@ class Mask_and_Moments(object):
     """
     A unified approach to deriving the noise level in a cube, applying a
     mask, and deriving moments along with their errors. All the heavy lifting
-    is done with `spectral_cube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+    is done with `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
 
     Parameters
+    ----------
+    cube : SpectralCube or str
+        Either a SpectralCube object, or the filename of a cube readable
+        by spectral-cube.
+    noise_type : {'constant'}, optional
+        *NO CURRENT FUNCTION* Once implemented, it will set parameters
+        for deriving the noise level.
+    clip : float, optional
+        Sigma level to clip data at.
+    scale : float, optional
+        The noise level in the cube. Overrides estimation using
+        `signal_id <https://github.com/radio-astro-tools/signal-id>`_
+    moment_method : {'slice', 'cube', 'ray'}, optional
+        The method to use for creating the moments. See the spectral-cube
+        docs for an explanation of the differences.
     """
     def __init__(self, cube, noise_type='constant', clip=3, scale=None,
                  moment_method='slice'):
