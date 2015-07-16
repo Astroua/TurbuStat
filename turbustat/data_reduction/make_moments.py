@@ -14,7 +14,13 @@ from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
 
 class Mask_and_Moments(object):
-    """docstring for Mask_and_Moments"""
+    """
+    A unified approach to deriving the noise level in a cube, applying a
+    mask, and deriving moments along with their errors. All the heavy lifting
+    is done with `spectral_cube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+
+    Parameters
+    """
     def __init__(self, cube, noise_type='constant', clip=3, scale=None,
                  moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
@@ -266,7 +272,7 @@ class Mask_and_Moments(object):
             hdu.writeto(self.save_name+labels[i]+".fits")
 
     @staticmethod
-    def from_fits(self, fits_name, moments_path=None, mask_name=None,
+    def from_fits(fits_name, moments_path=None, mask_name=None,
                   moment0=None, centroid=None, linewidth=None,
                   intint=None):
         '''
@@ -302,7 +308,7 @@ class Mask_and_Moments(object):
         if moments_path is None:
             moments_path = ""
 
-        root_name = fits_name[:-5]
+        root_name = fits_name[:-4]
 
         self = Mask_and_Moments(fits_name)
 
@@ -321,10 +327,11 @@ class Mask_and_Moments(object):
                                                  root_name+"_moment0.fits"))
                 self._moment0 = moment0[0].data
                 self._moment0_err = moment0[1].data
-            except IOError:
+            except IOError as e:
                 self._moment0 = None
                 self._moment0_err = None
-                Warning("Moment 0 fits file not found.")
+                print e
+                print("Moment 0 fits file not found.")
 
         if centroid is not None:
             moment1 = fits.open(centroid)
@@ -336,10 +343,11 @@ class Mask_and_Moments(object):
                                                  root_name+"_centroid.fits"))
                 self._moment1 = moment1[0].data
                 self._moment1_err = moment1[1].data
-            except IOError:
+            except IOError as e:
                 self._moment1 = None
                 self._moment1_err = None
-                Warning("Centroid fits file not found.")
+                print e
+                print("Centroid fits file not found.")
 
         if linewidth is not None:
             linewidth = fits.open(linewidth)
@@ -354,10 +362,11 @@ class Mask_and_Moments(object):
 
                 self._moment2 = np.power(linewidth[0].data, 2.)
                 self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
-            except IOError:
+            except IOError as e:
                 self._moment2 = None
                 self._moment2_err = None
-                Warning("Linewidth fits file not found.")
+                print e
+                print("Linewidth fits file not found.")
 
         if intint is not None:
             intint = fits.open(intint)
@@ -369,10 +378,11 @@ class Mask_and_Moments(object):
                                                  root_name+"_intint.fits"))
                 self._intint = intint[0].data
                 self._intint_err = intint[1].data
-            except IOError:
+            except IOError as e:
                 self._intint = None
                 self._intint_err = None
-                Warning("Integrated intensity fits file not found.")
+                print e
+                print("Integrated intensity fits file not found.")
 
         return self
 
