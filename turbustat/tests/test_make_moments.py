@@ -25,8 +25,8 @@ class test_Mask_and_Moments(TestCase):
         npt.assert_allclose(test.intint,
                             dataset1["integrated_intensity"][0])
 
-        npt.assert_allclose(test.moment0, dataset1["moment0_error"][0])
-        npt.assert_allclose(test.moment1, dataset1["centroid_error"][0])
+        npt.assert_allclose(test.moment0_err, dataset1["moment0_error"][0])
+        npt.assert_allclose(test.moment1_err, dataset1["centroid_error"][0])
         npt.assert_allclose(test.linewidth_err, dataset1["linewidth_error"][0])
         npt.assert_allclose(test.intint_err,
                             dataset1["integratedintensity_error"][0])
