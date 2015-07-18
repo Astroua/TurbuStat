@@ -421,9 +421,11 @@ if __name__ == "__main__":
         if pool is not None:
             pool.close()
 
-        for i, stat in enumerate(complete_distances.keys()):
+        complete_distances.to_csv("complete_comparisons.csv")
 
-            df = DataFrame(complete_distances[stat], index=obs_cubes,
-                           columns=obs_cubes)
+        # for i, stat in enumerate(complete_distances.keys()):
 
-            df.to_csv(obs_dir+"complete_comparisons_"+stat+".csv")
+        #     df = DataFrame(complete_distances[stat], index=obs_cubes,
+        #                    columns=obs_cubes)
+
+        #     df.to_csv(obs_dir+"complete_comparisons_"+stat+".csv")
