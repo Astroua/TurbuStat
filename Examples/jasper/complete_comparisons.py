@@ -2,6 +2,7 @@
 import numpy as np
 from astropy.io.fits import getdata
 from astropy.wcs import WCS
+from pandas import DataFrame
 from itertools import combinations, izip, repeat
 from datetime import datetime
 import subprocess
@@ -33,12 +34,15 @@ def obs_to_obs(file_list, statistics, pool=None):
     If a pool is passed, it runs in parallel.
     '''
 
-    distances = {}
-
     num_comp = len(file_list) * (len(file_list) - 1) / 2
 
+    distances = \
+        DataFrame([(file_dict[i], file_list[j] for i, j in
+                    combinations(file_list, 2)],
+                  columns=['Fiducial1', 'Fiducial2'])
+
     for stat in statistics:
-        distances[stat] = np.zeros((len(file_list), len(file_list)))
+        distances[stat] = np.zeros((num_comp, ))
 
     generator = zip(combinations(file_list, 2),
                     repeat(statistics),
@@ -46,29 +50,23 @@ def obs_to_obs(file_list, statistics, pool=None):
 
     if pool is None:
 
-        for combo in generator:
-
-            pos1 = file_list.index(combo[0][0])
-            pos2 = file_list.index(combo[0][1])
+        for i, combo in enumerate(generator):
 
             distance_dict = run_comparison(*combo)[0]
 
             for key in distance_dict.keys():
-                distances[key][pos1, pos2] = distance_dict[key]
+                distances[key][i] = distance_dict[key]
 
     else:
 
         outputs = pool.map(single_input, generator)
 
-        for output in outputs:
-
-            pos1 = file_list.index(output[1])
-            pos2 = file_list.index(output[2])
+        for i, output in enumerate(outputs):
 
             distance_dict = output[0]
 
             for key in distance_dict.keys():
-                distances[key][pos1, pos2] = distance_dict[key]
+                distances[key][i] = distance_dict[key]
 
     return distances
 
