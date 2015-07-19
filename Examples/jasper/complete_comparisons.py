@@ -37,13 +37,13 @@ def obs_to_obs(file_list, statistics, pool=None):
     num_comp = len(file_list) * (len(file_list) - 1) / 2
 
     distances = \
-        DataFrame([(file_list[i], file_list[j]) for i, j in
-                    combinations(file_list, 2)],
+        DataFrame([(i, j) for i, j in
+                  combinations(file_list, 2)],
                   columns=['Fiducial1', 'Fiducial2'])
 
     dendro_saves = \
-        [(file_list[i][:-5]+"_dendrostat.pkl",
-          file_list[j][:-5]+"_dendrostat.pkl")
+        [(i[:-5]+"_dendrostat.pkl",
+          j[:-5]+"_dendrostat.pkl")
          for i, j in combinations(file_list, 2)]
 
     for stat in statistics:
