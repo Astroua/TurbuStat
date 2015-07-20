@@ -91,7 +91,7 @@ class Tsallis(object):
 
         Parameters
         ----------
-        sigma : float
+        sigma_clip : float
             Sets the sigma value to clip data at.
         '''
 
@@ -114,6 +114,9 @@ class Tsallis(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        sigma_clip : float
+            Sets the sigma value to clip data at.
+            Passed to :func:`fit_tsallis`.
         '''
 
         self.make_tsallis()
