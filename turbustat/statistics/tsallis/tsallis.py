@@ -85,7 +85,7 @@ class Tsallis(object):
 
         return self
 
-    def fit_tsallis(self, sigma=2):
+    def fit_tsallis(self, sigma_clip=2):
         '''
         Fit the Tsallis distributions.
 
@@ -96,7 +96,7 @@ class Tsallis(object):
         '''
 
         for i, dist in enumerate(self.tsallis_distrib):
-            clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma)
+            clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1],
                                      p0=(-np.max(clipped[1]), 1., 2.),
                                      maxfev=100 * len(dist[0]))
@@ -106,7 +106,7 @@ class Tsallis(object):
             self.tsallis_fits[i, 6] = chisquare(
                 np.exp(fitted_vals), f_exp=np.exp(clipped[1]), ddof=3)[0]
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, sigma_clip=2):
         '''
         Run all steps.
 
@@ -117,7 +117,7 @@ class Tsallis(object):
         '''
 
         self.make_tsallis()
-        self.fit_tsallis()
+        self.fit_tsallis(sigma_clip=sigma_clip)
 
         if verbose:
             import matplotlib.pyplot as p
