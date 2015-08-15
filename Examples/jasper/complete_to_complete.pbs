@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l pmem=1000m
+#PBS -l feature=X5675
+#PBS -l nodes=1:ppn=12
+#PBS -l walltime=1:00:00
+#PBS -m bea
+#PBS -M koch.eric.w@gmail.com
+#PBS -l epilogue=/home/ekoch/code_repos/simscript/epilogue.sh
+
+source /home/ekoch/.bashrc
+
+echo "Starting at: `date`"
+mpirun -np 11 python2.7 /lustre/home/ekoch/code_repos/TurbuStat/Examples/jasper/complete_comparisons.py /lustre/home/ekoch/sims/complete/ PLACEHOLD PLACEHOLD Obs_to_Obs MPI /lustre/home/ekoch/sims/results/obs_to_obs/ PLACEHOLD
+echo "Exited with code $? at: `date`"

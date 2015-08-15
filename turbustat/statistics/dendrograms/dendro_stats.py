@@ -13,6 +13,8 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
+from copy import deepcopy
+import cPickle as pickle
 import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
@@ -58,7 +60,8 @@ class Dendrogram_Stats(object):
         self.values = []
         self.histograms = []
 
-    def compute_dendro(self, verbose=False):
+    def compute_dendro(self, verbose=False, save_dendro=False,
+                       dendro_name=None, dendro_obj=None):
         '''
         Compute the dendrogram and prune to the minimum deltas.
         ** min_deltas must be in ascending order! **
@@ -66,12 +69,26 @@ class Dendrogram_Stats(object):
         Parameters
         ----------
         verbose : optional, bool
+            Enables the progress bar in astrodendro.
+        save_dendro : optional, bool
+            Saves the dendrogram in HDF5 format. **Requires pyHDF5**
+        dendro_name : str, optional
+            Save name when save_dendro is enabled. ".hdf5" appended
+            automatically.
+        dendro_obj : Dendrogram, optional
+            Input a pre-computed dendrogram object. It is assumed that
+            the dendrogram has already been computed!
 
         '''
-        d = Dendrogram.compute(self.cube, verbose=verbose,
-                               min_delta=self.min_deltas[0],
-                               min_value=self.dendro_params["min_value"],
-                               min_npix=self.dendro_params["min_npix"])
+
+        if dendro_obj is None:
+            d = \
+                Dendrogram.compute(self.cube, verbose=verbose,
+                                   min_delta=self.min_deltas[0],
+                                   min_value=self.dendro_params["min_value"],
+                                   min_npix=self.dendro_params["min_npix"])
+        else:
+            d = dendro_obj
         self.numfeatures[0] = len(d)
         self.values.append(
             np.asarray([struct.vmax for struct in d.all_structures]))
@@ -148,7 +165,68 @@ class Dendrogram_Stats(object):
 
         return self
 
-    def run(self, verbose=False, dendro_verbose=False):
+    def save_results(self, output_name=None, keep_data=False):
+        '''
+        Save the results of the dendrogram statistics to avoid re-computing.
+        The pickled file will not include the data cube by default.
+        '''
+
+        if output_name is None:
+            output_name = "dendrogram_stats_output.pkl"
+
+        if output_name[-4:] != ".pkl":
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy.cube = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    @staticmethod
+    def load_results(pickle_file):
+        '''
+        Load in a saved pickle file.
+
+        Parameters
+        ----------
+        pickle_file : str
+            Name of filename to load in.
+        '''
+
+        with open(pickle_file, 'rb') as input:
+                self = pickle.load(input)
+
+        return self
+
+    @staticmethod
+    def load_dendrogram(hdf5_file, min_deltas=None):
+        '''
+        Load in a previously saved dendrogram. **Requires pyHDF5**
+
+        Parameters
+        ----------
+        hdf5_file : str
+            Name of saved file.
+        min_deltas : numpy.ndarray or list
+            Minimum deltas of leaves in the dendrogram.
+
+        '''
+
+        dendro = Dendrogram.load_from(hdf5_file)
+
+        self = Dendrogram_Stats(dendro.data, min_deltas=min_deltas,
+                                dendro_params=dendro.params)
+
+        self.compute_dendro(dendro_obj=dendro)
+
+        return self
+
+    def run(self, verbose=False, dendro_verbose=False,
+            save_results=False, output_name=None):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -170,6 +248,9 @@ class Dendrogram_Stats(object):
             p.plot(self.x, self.model.fittedvalues, 'g')
             p.show()
 
+        if save_results:
+            self.save_results(output_name=output_name)
+
 
 class DendroDistance(object):
 
@@ -183,10 +264,12 @@ class DendroDistance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
-        Data cube.
-    cube2 : numpy.ndarray
-        Data cube.
+    cube1 : numpy.ndarray or str
+        Data cube. If a str, it should be the filename of a pickle file saved
+        using Dendrogram_Stats.
+    cube2 : numpy.ndarray or str
+        Data cube. If a str, it should be the filename of a pickle file saved
+        using Dendrogram_Stats.
     min_deltas : numpy.ndarray or list
         Minimum deltas of leaves in the dendrogram.
     nbins : str or float, optional
@@ -200,9 +283,11 @@ class DendroDistance(object):
     fiducial_model : Dendrogram_Stats
         Computed dendrogram and statistic values. Use to avoid
         re-computing.
-    dendro_params : dict
+    dendro_params : dict or list of dicts, optional
         Further parameters for the dendrogram algorithm
-        (see www.dendrograms.org for more info).
+        (see www.dendrograms.org for more info). If a list of dictionaries is
+        given, the first list entry should be the dictionary for cube1, and the
+        second for cube2.
 
     """
 
@@ -217,16 +302,37 @@ class DendroDistance(object):
             #                        np.logspace(-0.6, -0.35, 10))
             min_deltas = np.logspace(-2.5, 0.5, 100)
 
+        if dendro_params is not None:
+            if isinstance(dendro_params, list):
+                dendro_params1 = dendro_params[0]
+                dendro_params2 = dendro_params[1]
+            elif isinstance(dendro_params, dict):
+                dendro_params1 = dendro_params
+                dendro_params2 = dendro_params
+            else:
+                raise TypeError("dendro_params is a "+str(type(dendro_params)) +
+                                "It must be a dictionary, or a list containing" +
+                                " a dictionary entries.")
+        else:
+            dendro_params1 = None
+            dendro_params2 = None
+
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
+        elif isinstance(cube1, str):
+            self.dendro1 = Dendrogram_Stats.load_results(cube1)
         else:
             self.dendro1 = Dendrogram_Stats(
-                cube1, min_deltas=min_deltas, dendro_params=dendro_params)
+                cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
             self.dendro1.run(verbose=False)
 
-        self.dendro2 = Dendrogram_Stats(
-            cube2, min_deltas=min_deltas, dendro_params=dendro_params)
-        self.dendro2.run(verbose=False)
+        if isinstance(cube2, str):
+            self.dendro2 = Dendrogram_Stats.load_results(cube2)
+        else:
+            self.dendro2 = \
+                Dendrogram_Stats(cube2, min_deltas=min_deltas,
+                                 dendro_params=dendro_params2)
+            self.dendro2.run(verbose=False)
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)

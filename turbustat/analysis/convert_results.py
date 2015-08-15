@@ -6,8 +6,9 @@ Script to create final output form of the HDF5 results files.
 '''
 
 import numpy as np
-from pandas import HDFStore, DataFrame, concat, read_csv, Series
+from pandas import HDFStore, DataFrame, concat, read_csv, Series, Index
 import os
+import glob
 
 
 all_comparisons = ["_0_0_", "_0_1_", "_0_2_", "_1_0_", "_1_1_",
@@ -173,6 +174,127 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8,
 
     if return_name:
         return output_name
+
+
+def concat_convert_HDF5(path, face=None, combine_axis=0, average_axis=None,
+                        interweave=True, statistics=None, extension="h5",
+                        return_df=False, output_type="csv"):
+    '''
+    A more general function for combining sets of results. The output format
+    defaults to a csv file and should be compatible with the plotting routines
+    included in this module.
+
+    Parameters
+    ----------
+    path : str
+        Path to folder with the HDF5 files.
+    face : int, optional
+        If using a specific face to compare to, specify it here. This will
+        look for files in the provided path that contain, for example,
+        "face_0".
+    combine_axis : int, optional
+        The axis along which the data should be concatenated together.
+        Defaults to the first axis (ie. 0).
+    average_axis : int, optional
+        If specified, the data is averaged along this axis.
+    interweave : bool, optional
+        Instead of appending directly together, this order the indices by
+        grouping like labels.
+    statistics : list, optional
+        Which statistics to be extracted from the HDF5 files. If the statistic
+        is not contained in all of the files, an error will be raised. By
+        default, all statistics contained in all of the files will be returned.
+    extension : str, optional
+        The extension used for the HDF5 files. Defaults to ".h5". Several
+        extensions are permitted and this is in place to allow whichever has
+        been used.
+    '''
+
+    # Grab the files in the path
+    if face is None:
+        hdf5_files = glob.glob(os.path.join(path, "*", extension))
+    else:
+        if not isinstance(face, int):
+            raise TypeError("face must be an integer.")
+
+        hdf5_files = \
+            glob.glob(os.path.join(path, "*face_"+str(face)+"*"+extension))
+
+        if len(hdf5_files) == 0:
+            raise Warning("Did not find any HDF5 files in the path %s" % (path))
+
+    if statistics is None:
+
+        for i, hdf5 in enumerate(hdf5_files):
+            store = HDFStore(hdf5)
+
+            individ_stats = store.keys()
+
+            store.close()
+
+            if i == 0:
+                statistics = individ_stats
+            else:
+                statistics = list(set(statistics) & set(individ_stats))
+
+        if len(statistics) == 0:
+            raise Warning("There are no statistics that are contained in every file.")
+
+        statistics = [stat[1:] for stat in statistics]
+
+    for j, stat in enumerate(statistics):
+
+        # Loop through the files and extract the statistic's table
+        dfs = []
+        for hdf5 in hdf5_files:
+
+            store = HDFStore(hdf5)
+            dfs.append(DataFrame(store[stat]))
+            store.close()
+
+        if average_axis is not None:
+            for i in range(len(dfs)):
+                dfs[i] = DataFrame(dfs[i].mean(average_axis))
+
+        for i in range(len(dfs)):
+            num = dfs[i].shape[0]
+
+            dfs[i]['Names'] = dfs[i].index
+
+            dfs[i]['Order'] = Series([i] * num, index=dfs[i].index)
+
+            dfs[i].index = Index(range(num))
+
+        stats_df = concat(dfs, axis=combine_axis)
+
+        if interweave:
+            stats_df = stats_df.sort_index()
+
+            num = len(hdf5_files)
+
+            num_splits = stats_df.shape[0] / num
+            split_dfs = []
+            for i in range(num_splits):
+
+                split_df = stats_df[i*num:(i+1)*num].copy()
+                split_df = split_df.sort(columns=['Order'])
+
+                split_dfs.append(split_df)
+
+            stats_df = concat(split_dfs, axis=0)
+
+        if j == 0:
+            master_df = stats_df.copy()
+            del master_df[0]
+        master_df[stat] = DataFrame(stats_df[0], index=master_df.index)
+
+    if return_df:
+        return master_df
+    else:
+        if face is not None:
+            master_df.to_csv(os.path.join(path, "distances_"+str(face)+".csv"))
+        else:
+            master_df.to_csv(os.path.join(path, "combined_distances.csv"))
 
 
 @np.vectorize
