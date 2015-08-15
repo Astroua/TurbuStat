@@ -17,20 +17,23 @@ from turbustat.data_reduction import Mask_and_Moments
 
 np.random.seed(248954785)
 
-folder1 = str(sys.argv[1])
-folder2 = str(sys.argv[2])
+fits1 = str(sys.argv[1])
+fits2 = str(sys.argv[2])
 
-# dataset1 = fromfits(folder1, keywords, verbose=False)
-# dataset2 = fromfits(folder2, keywords, verbose=False)
+add_noise = sys.argv[3]
+if add_noise == "True" or add_noise == "T":
+    add_noise = True
+else:
+    add_noise = False
 
-data1, hdr1 = fits.getdata(folder1, header=True)
-data2, hdr2 = fits.getdata(folder2, header=True)
 
-# data1 += np.random.normal(0.0, 0.1277369117707014 / 2, data1.shape)
-data2 += np.random.normal(0.0, 0.788 / 10, data2.shape)
+data1, hdr1 = fits.getdata(fits1, header=True)
+data2, hdr2 = fits.getdata(fits2, header=True)
 
-# cube1 = SpectralCube.read(folder1)
-# cube2 = SpectralCube.read(folder2)
+if add_noise:
+    data1 += np.random.normal(0.0, 0.788 / 10, data1.shape)
+    data2 += np.random.normal(0.0, 0.788 / 10, data2.shape)
+
 cube1 = SpectralCube(data=data1, wcs=WCS(hdr1))
 cube1 = cube1.with_mask(LazyMask(np.isfinite, cube1))
 cube2 = SpectralCube(data=data2, wcs=WCS(hdr2))
@@ -53,67 +56,67 @@ dataset2 = set2.to_dict()
 
 # Wavelet Transform
 
-# from turbustat.statistics import Wavelet_Distance
+from turbustat.statistics import Wavelet_Distance
 
-# wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"],
-#                                     dataset2["integrated_intensity"]).distance_metric(verbose=True)
+wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"],
+                                    dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
-# print "Wavelet Distance: %s" % (wavelet_distance.distance)
+print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
-# # MVC
+# MVC
 
-# from turbustat.statistics import MVC_distance
+from turbustat.statistics import MVC_distance
 
-# mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)
+mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=True)
 
-# print "MVC Distance: %s" % (mvc_distance.distance)
+print "MVC Distance: %s" % (mvc_distance.distance)
 
-# # Spatial Power Spectrum/ Bispectrum
+# Spatial Power Spectrum/ Bispectrum
 
-# from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
+from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-# pspec_distance = \
-#     PSpec_Distance(dataset1["integrated_intensity"],
-#                    dataset2["integrated_intensity"],
-#                    weights1=dataset1["integrated_intensity_error"][0]**2.,
-#                    weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=True)
+pspec_distance = \
+    PSpec_Distance(dataset1["integrated_intensity"],
+                   dataset2["integrated_intensity"],
+                   weights1=dataset1["integrated_intensity_error"][0]**2.,
+                   weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=True)
 
-# print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
+print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
-# bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"],
-#                                       dataset2["integrated_intensity"]).distance_metric(verbose=True)
+bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"],
+                                      dataset2["integrated_intensity"]).distance_metric(verbose=True)
 
-# print "Bispectrum Distance: %s" % (bispec_distance.distance)
+print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
-# # Genus
+# Genus
 
-# from turbustat.statistics import GenusDistance
+from turbustat.statistics import GenusDistance
 
-# genus_distance = GenusDistance(dataset1["integrated_intensity"][0],
-#                                dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
+genus_distance = GenusDistance(dataset1["integrated_intensity"][0],
+                               dataset2["integrated_intensity"][0]).distance_metric(verbose=True)
 
-# print "Genus Distance: %s" % (genus_distance.distance)
+print "Genus Distance: %s" % (genus_distance.distance)
 
-# # Delta-Variance
+# Delta-Variance
 
-# from turbustat.statistics import DeltaVariance_Distance
+from turbustat.statistics import DeltaVariance_Distance
 
-# delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"],
-#                                          dataset2["integrated_intensity"],
-#                                          weights1=dataset1[
-#                                              "integrated_intensity_error"][0],
-#                                          weights2=dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
+delvar_distance = DeltaVariance_Distance(dataset1["integrated_intensity"],
+                                         dataset2["integrated_intensity"],
+                                         weights1=dataset1[
+                                             "integrated_intensity_error"][0],
+                                         weights2=dataset2["integrated_intensity_error"][0]).distance_metric(verbose=True)
 
-# print "Delta-Variance Distance: %s" % (delvar_distance.distance)
+print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
-# # VCA/VCS
+# VCA/VCS
 
 from turbustat.statistics import VCA_Distance, VCS_Distance
 
-# vcs_distance = VCS_Distance(dataset1["cube"],
-#                             dataset2["cube"], breaks=-0.5).distance_metric(verbose=True)
+vcs_distance = VCS_Distance(dataset1["cube"],
+                            dataset2["cube"], breaks=-0.5).distance_metric(verbose=True)
 
-# print "VCS Distance: %s" % (vcs_distance.distance)
+print "VCS Distance: %s" % (vcs_distance.distance)
 
 vca_distance = VCA_Distance(dataset1["cube"],
                             dataset2["cube"], breaks=1.5).distance_metric(verbose=True)

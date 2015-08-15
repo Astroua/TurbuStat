@@ -60,6 +60,9 @@ props1.make_moment_errors()
 
 dataset1 = props1.to_dict()
 
+# Save moments for testing i/o loading
+props1.to_fits(save_name="dataset1")
+
 ##############################################################################
 
 path2 = os.path.join(turb_path, "data/dataset2.npz")

@@ -8,20 +8,45 @@ from astropy.convolution import convolve
 from scipy import ndimage as nd
 import itertools as it
 import operator as op
+import os
 
 from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
 
 class Mask_and_Moments(object):
-    """docstring for Mask_and_Moments"""
+    """
+    A unified approach to deriving the noise level in a cube, applying a
+    mask, and deriving moments along with their errors. All the heavy lifting
+    is done with `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+
+    Parameters
+    ----------
+    cube : SpectralCube or str
+        Either a SpectralCube object, or the filename of a cube readable
+        by spectral-cube.
+    noise_type : {'constant'}, optional
+        *NO CURRENT FUNCTION* Once implemented, it will set parameters
+        for deriving the noise level.
+    clip : float, optional
+        Sigma level to clip data at.
+    scale : float, optional
+        The noise level in the cube. Overrides estimation using
+        `signal_id <https://github.com/radio-astro-tools/signal-id>`_
+    moment_method : {'slice', 'cube', 'ray'}, optional
+        The method to use for creating the moments. See the spectral-cube
+        docs for an explanation of the differences.
+    """
     def __init__(self, cube, noise_type='constant', clip=3, scale=None,
                  moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
 
         if isinstance(cube, SpectralCube):
             self.cube = cube
+            self.save_name = None
         else:
             self.cube = SpectralCube.read(cube)
+            # Default save name to the cube name without the suffix.
+            self.save_name = ".".join(cube.split(".")[:-1])
 
         self.noise_type = noise_type
         self.clip = clip
@@ -39,6 +64,15 @@ class Mask_and_Moments(object):
         self.prop_err_headers = None
 
     def find_noise(self, return_obj=False):
+        '''
+        Returns noise estimate, or the whole Noise object.
+
+        Parameters
+        ----------
+        return_obj : bool, optional
+            If True, returns the Noise object. Otherwise returns the estimated
+            noise level.
+        '''
 
         noise = Noise(self.cube)
 
@@ -50,6 +84,15 @@ class Mask_and_Moments(object):
         return noise.scale
 
     def make_mask(self, mask=None):
+        '''
+        Apply a mask to the cube.
+
+        Parameters
+        ----------
+        mask : spectral-cube Mask or numpy.ndarray, optional
+            The mask to be applied to the data. If None is given, RadioMask
+            is used with its default settings.
+        '''
 
         if mask is None:
             rad_mask = RadioMask(self.cube)
@@ -60,6 +103,16 @@ class Mask_and_Moments(object):
         return self
 
     def make_moments(self, axis=0, units=False):
+        '''
+        Calculate the moments.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis to calculate the moments along.
+        units : bool, optional
+            If enabled, the units of the arrays are kept.
+        '''
 
         self._moment0 = self.cube.moment0(axis=axis, how=self.moment_method)
         self._moment1 = self.cube.moment1(axis=axis, how=self.moment_method)
@@ -75,12 +128,20 @@ class Mask_and_Moments(object):
             self._intint = self._intint.value
         return self
 
-    def make_moment_errors(self):
+    def make_moment_errors(self, axis=0):
+        '''
+        Calculate the errors in the moments.
 
-        self._moment0_err = self._get_moment0_err()
-        self._moment1_err = self._get_moment1_err()
-        self._moment2_err = self._get_moment2_err()
-        self._intint_err = self._get_int_intensity_err()
+        Parameters
+        ----------
+        axis : int, optional
+            The axis to calculate the moments along.
+        '''
+
+        self._moment0_err = self._get_moment0_err(axis=axis)
+        self._moment1_err = self._get_moment1_err(axis=axis)
+        self._moment2_err = self._get_moment2_err(axis=axis)
+        self._intint_err = self._get_int_intensity_err(axis=axis)
 
         return self
 
@@ -204,6 +265,7 @@ class Mask_and_Moments(object):
 
     def get_prop_hdrs(self):
         '''
+        Generate headers for the moments.
         '''
 
         bunits = [self.cube.unit, self.cube.spectral_axis.unit,
@@ -235,13 +297,26 @@ class Mask_and_Moments(object):
 
         return self
 
-    def to_fits(self, save_name):
+    def to_fits(self, save_name=None):
         '''
         Save the property arrays as fits files.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Prefix to use when saving the moment arrays.
+            If None is given, 'default' is used.
         '''
 
         if self.prop_headers is None:
             self.get_prop_hdrs()
+
+        if save_name is None:
+            if self.save_name is None:
+                Warning("No save_name has been specified, using 'default'")
+                self.save_name = 'default'
+        else:
+            self.save_name = save_name
 
         labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
 
@@ -252,7 +327,129 @@ class Mask_and_Moments(object):
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
 
-            hdu.writeto(save_name+labels[i]+".fits")
+            hdu.writeto(self.save_name+labels[i]+".fits")
+
+    @staticmethod
+    def from_fits(fits_name, moments_prefix=None, moments_path=None,
+                  mask_name=None, moment0=None, centroid=None, linewidth=None,
+                  intint=None):
+        '''
+        Load pre-made moment arrays given a cube name. Saved moments must
+        match the naming of the cube for the automatic loading to work
+        (e.g. a cube called test.fits will have a moment 0 array solved
+        test_moment0.fits). Otherwise, specify a path to one of the keyword
+        arguments.
+
+        Parameters
+        ----------
+        fits_name : str
+            Filename of the cube or a SpectralCube object. If a filename is
+            given, it is also used as the prefix to the saved moment files.
+        moments_prefix : str, optional
+            If a SpectralCube object is given in ``fits_name``, the prefix
+            for the saved files can be provided here.
+        moments_path : str, optional
+            Path to where the moments are saved.
+        mask_name : str, optional
+            Filename of a saved mask to be applied to the data.
+        moment0 : str, optional
+            Filename of the moment0 array. Use if naming scheme is not valid
+            for automatic loading.
+        centroid : str, optional
+            Filename of the centroid array. Use if naming scheme is not valid
+            for automatic loading.
+        linewidth : str, optional
+            Filename of the linewidth array. Use if naming scheme is not valid
+            for automatic loading.
+        intint : str, optional
+            Filename of the integrated intensity array. Use if naming scheme
+            is not valid for automatic loading.
+        '''
+
+        if moments_path is None:
+            moments_path = ""
+
+        if not isinstance(fits_name, SpectralCube):
+            root_name = fits_name[:-4]
+        else:
+            root_name = moments_prefix
+
+        self = Mask_and_Moments(fits_name)
+
+        if mask_name is not None:
+            mask = fits.getdata(mask_name)
+            self.with_mask(mask=mask)
+
+        # Moment 0
+        if moment0 is not None:
+            moment0 = fits.open(moment0)
+            self._moment0 = moment0[0].data
+            self._moment0_err = moment0[1].data
+        else:
+            try:
+                moment0 = fits.open(os.path.join(moments_path,
+                                                 root_name+"_moment0.fits"))
+                self._moment0 = moment0[0].data
+                self._moment0_err = moment0[1].data
+            except IOError as e:
+                self._moment0 = None
+                self._moment0_err = None
+                print e
+                print("Moment 0 fits file not found.")
+
+        if centroid is not None:
+            moment1 = fits.open(centroid)
+            self._moment1 = moment1[0].data
+            self._moment1_err = moment1[1].data
+        else:
+            try:
+                moment1 = fits.open(os.path.join(moments_path,
+                                                 root_name+"_centroid.fits"))
+                self._moment1 = moment1[0].data
+                self._moment1_err = moment1[1].data
+            except IOError as e:
+                self._moment1 = None
+                self._moment1_err = None
+                print e
+                print("Centroid fits file not found.")
+
+        if linewidth is not None:
+            linewidth = fits.open(linewidth)
+
+            self._moment2 = np.power(linewidth[0].data, 2.)
+            self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
+        else:
+            try:
+                linewidth = \
+                    fits.open(os.path.join(moments_path,
+                                           root_name+"_linewidth.fits"))
+
+                self._moment2 = np.power(linewidth[0].data, 2.)
+                self._moment2_err = linewidth[1].data * \
+                    (2 * np.sqrt(self.moment2))
+            except IOError as e:
+                self._moment2 = None
+                self._moment2_err = None
+                print e
+                print("Linewidth fits file not found.")
+
+        if intint is not None:
+            intint = fits.open(intint)
+            self._intint = intint[0].data
+            self._intint_err = intint[1].data
+        else:
+            try:
+                intint = fits.open(os.path.join(moments_path,
+                                                root_name+"_intint.fits"))
+                self._intint = intint[0].data
+                self._intint_err = intint[1].data
+            except IOError as e:
+                self._intint = None
+                self._intint_err = None
+                print e
+                print("Integrated intensity fits file not found.")
+
+        return self
 
     def _get_int_intensity(self, axis=0):
         '''
@@ -260,7 +457,8 @@ class Mask_and_Moments(object):
 
         Parameters
         ----------
-
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         shape = self.cube.shape
@@ -294,6 +492,10 @@ class Mask_and_Moments(object):
 
     def _get_int_intensity_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
 
@@ -306,6 +508,10 @@ class Mask_and_Moments(object):
 
     def _get_moment0_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':
@@ -317,6 +523,10 @@ class Mask_and_Moments(object):
 
     def _get_moment1_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':
@@ -330,6 +540,10 @@ class Mask_and_Moments(object):
 
     def _get_moment2_err(self, axis=0):
         '''
+        Parameters
+        ----------
+        axis : int, optional
+            Axis to perform operations along.
         '''
 
         if self.moment_method is 'cube':

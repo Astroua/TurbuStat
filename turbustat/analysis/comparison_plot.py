@@ -4,7 +4,7 @@ import numpy as np
 import os
 import matplotlib as mpl
 import matplotlib.pyplot as p
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 
 
 def comparison_plot(path, num_fids=5, verbose=False,
@@ -19,7 +19,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
-                    out_path=None):
+                    out_path=None, design_matrix=None):
     '''
     Requires results converted into csv form!!
 
@@ -50,6 +50,11 @@ def comparison_plot(path, num_fids=5, verbose=False,
     comparisons : list, optional
         The face comparisons to include in the plots. The order is set here as
         well.
+    design_matrix : str or pandas.DataFrame, optional
+        The experimental design, which is used for the distances. If a string,
+        is given, it is assumed that it's the path to the saved csv file. When
+        given, the labels of the plots will be coded in 'binary' according to
+        the levels in the design.
     '''
 
     if path[-1] != "/":
@@ -119,6 +124,31 @@ def comparison_plot(path, num_fids=5, verbose=False,
         print "No csv files found in %s" % (path)
         return
 
+    # Check for a design
+    if design_matrix is not None:
+        if isinstance(design_matrix, DataFrame):
+            pass
+        elif isinstance(design_matrix, unicode) or isinstance(design_matrix, str):
+            design_matrix = read_csv(design_matrix, index_col=0)
+        else:
+            print type(design_matrix)
+            raise TypeError("design_matrix must be a pandas.DataFrame or "
+                            "a path to a csv file.")
+
+        # Set -1 to 0 for cleanliness
+        design_matrix[design_matrix == -1] = 0.0
+
+        design_labels = []
+
+        for ind in design_matrix.index:
+
+            label = "".join([str(int(val)) for val in design_matrix.ix[ind]])
+
+            design_labels.append(label)
+
+    else:
+        design_labels = None
+
     # Set the colour cycle
     colour_cycle = mpl.rcParams['axes.color_cycle']
     if len(colour_cycle) < num_fids:
@@ -154,11 +184,19 @@ def comparison_plot(path, num_fids=5, verbose=False,
                 left = True
             _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
                      num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend, legend_labels=legend_labels)
+                     legend=legend, legend_labels=legend_labels,
+                     labels=design_labels)
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
                                 num_fids, shading=obs_to_fid_shade)
+
+        # If the labels are given by the design, we need to adjust the bottom
+        # of the subplots
+        if design_labels is not None:
+            top = 0.95
+            bottom = 0.15
+            fig.subplots_adjust(top=top, bottom=bottom)
 
         if verbose:
             p.autoscale(True)
@@ -188,9 +226,16 @@ def _plot_size(num):
 
 
 def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
-             legend=True, legend_labels=None):
+             legend=True, legend_labels=None, labels=None):
 
     num_design = (max(data.shape) / num_fids)
+
+    if labels is not None:
+        if len(labels) != num_design:
+            raise Warning("Design matrix contains different number of designs "
+                          "than the data. Double check the inputted "
+                          "design_matrix.")
+
     x_vals = np.arange(0, num_design)
     xtick_labels = [str(i) for i in x_vals]
     fid_labels = [str(i) for i in range(num_fids-1)]
@@ -217,14 +262,19 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if bottom:
         trans = ax.get_xaxis_transform()
 
+        if labels is not None:
+            yposn = -0.28
+        else:
+            yposn = -0.15
+
         # Put two 'labels' for the x axis
-        ax.annotate("Designs", xy=(num_design/2 - 9, -0.15),
-                    xytext=(num_design/2 - 1, -0.15),
+        ax.annotate("Designs", xy=(num_design/2 - 9, yposn),
+                    xytext=(num_design/2 - 1, yposn),
                     va='top', xycoords=trans,
                     fontsize=12)
-        fid_x = num_design + num_fids/2 - 3
-        ax.annotate("Fiducials", xy=(fid_x, -0.15),
-                    xytext=(fid_x, -0.15),
+        fid_x = num_design + num_fids/2 - 2.5
+        ax.annotate("Fiducials", xy=(fid_x, yposn),
+                    xytext=(fid_x, yposn),
                     va='top', xycoords=trans,
                     fontsize=12)
 
@@ -242,7 +292,10 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 8])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
-    ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    if labels is None:
+        ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
+    else:
+        ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
