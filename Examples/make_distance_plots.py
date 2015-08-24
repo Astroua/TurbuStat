@@ -10,6 +10,7 @@ p.ioff()
 
 path = "/Users/eric/Dropbox/AstroStatistics/Full Factorial/"
 comparisons = ["0_0", "0_2", "2_0", "2_2"]
+paper_comparisons = ["0_0", "2_2"]
 design_matrix = os.path.join(path, "Design7Matrix.csv")
 
 # Clean results
@@ -19,11 +20,21 @@ comparison_plot(
     out_path=os.path.join(path, "Full Results", "Distance Plots"),
     num_fids=5, design_matrix=design_matrix)
 
+comparison_plot(
+    os.path.join(path, "Full Results"), comparisons=paper_comparisons,
+    out_path=os.path.join(path, "Full Results", "Distance Plots Paper"),
+    num_fids=5, design_matrix=design_matrix)
+
 # Noisy results
 
 comparison_plot(
     os.path.join(path, "Noisy Full Results/"), comparisons=comparisons,
     out_path=os.path.join(path, "Noisy Full Results", "Distance Plots"),
+    num_fids=5, design_matrix=design_matrix)
+
+comparison_plot(
+    os.path.join(path, "Noisy Full Results/"), comparisons=paper_comparisons,
+    out_path=os.path.join(path, "Noisy Full Results", "Distance Plots Paper"),
     num_fids=5, design_matrix=design_matrix)
 
 # Obs to Fid
