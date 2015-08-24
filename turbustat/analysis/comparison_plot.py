@@ -17,7 +17,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
-                    out_path=None, design_matrix=None):
+                    out_path=None, design_matrix=None, sharey=True):
     '''
     Requires results converted into csv form!!
 
@@ -53,6 +53,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
         is given, it is assumed that it's the path to the saved csv file. When
         given, the labels of the plots will be coded in 'binary' according to
         the levels in the design.
+    sharey : bool, optional
+        When enabled, each subplot has the same y limits.
     '''
 
     if path[-1] != "/":
@@ -164,7 +166,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
-        (fig, ax) = _plot_size(len(data_files.keys()))
+        (fig, ax) = _plot_size(len(data_files.keys()), sharey=sharey)
         if len(data_files.keys()) == 1:
             shape = (1, )
             ax = np.array([ax])
@@ -175,42 +177,31 @@ def comparison_plot(path, num_fids=5, verbose=False,
             ax = ax[:, np.newaxis]
             shape = ax.shape
 
-        # Set the maximum distance to put all subplots on same scale
-        # Also checks if that statistic's data is contained in the dataframes.
-        max_dist = 0.0
-        for key in order:
-            try:
-                distances = np.append(data_files[key][2][stat],
-                                      data_files[key][1][stat])
-                enable_continue = False
-            except KeyError:
-                warnings.warn(
-                    "Could not find "+stat+" in Data file for "+str(key)+". "
-                    "Skipping this statistic.")
-                enable_continue = True
-                break
-
-            if np.nanmax(distances) > max_dist:
-                max_dist = np.nanmax(distances)
-
-        if enable_continue:
-            continue
-
         for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
             if k >= len(ax.flatten()) - shape[1]:
                 bottom = True
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
-            _plotter(axis, data_files[key][2][stat],
-                     data_files[key][1][stat],
-                     num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend, legend_labels=legend_labels,
-                     labels=design_labels, ylims=(0.0, max_dist))
+            try:
+                _plotter(axis, data_files[key][2][stat],
+                         data_files[key][1][stat],
+                         num_fids, data_files[key][0], stat, bottom, left,
+                         legend=legend, legend_labels=legend_labels,
+                         labels=design_labels)
+                enable_continue = False
+            except KeyError:
+                warnings.warn("Could not find data for "+stat+" in "+key)
+                enable_continue = True
+                break
+
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
                                 num_fids, shading=obs_to_fid_shade)
+
+        if enable_continue:
+            continue
 
         # If the labels are given by the design, we need to adjust the bottom
         # of the subplots
@@ -233,14 +224,16 @@ def comparison_plot(path, num_fids=5, verbose=False,
             fig.clf()
 
 
-def _plot_size(num):
+def _plot_size(num, sharey=True):
     if num <= 3:
-        return p.subplots(num, sharex=True)
+        return p.subplots(num, sharex=True, sharey=sharey)
     elif num > 3 and num <= 8:
         rows = num / 2 + num % 2
-        return p.subplots(nrows=rows, ncols=2, figsize=(14, 14), dpi=100, sharex=True)
+        return p.subplots(nrows=rows, ncols=2, figsize=(14, 14),
+                          dpi=100, sharex=True, sharey=sharey)
     elif num == 9:
-        return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100, sharex=True)
+        return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100,
+                          sharex=True, sharey=sharey)
     else:
         print "There should be a maximum of 9 comparisons."
         return
