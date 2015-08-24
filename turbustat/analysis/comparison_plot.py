@@ -2,6 +2,7 @@
 
 import numpy as np
 import os
+import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
@@ -179,10 +180,17 @@ def comparison_plot(path, num_fids=5, verbose=False,
                 bottom = True
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
-            _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
-                     num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend, legend_labels=legend_labels,
-                     labels=design_labels)
+            try:
+                _plotter(axis, data_files[key][2][stat],
+                         data_files[key][1][stat],
+                         num_fids, data_files[key][0], stat, bottom, left,
+                         legend=legend, legend_labels=legend_labels,
+                         labels=design_labels)
+            except KeyError:
+                warnings.warn(
+                    "Could not find "+stat+" in Data file for "+str(key)+". "
+                    "Skipping this statistic.")
+                continue
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
