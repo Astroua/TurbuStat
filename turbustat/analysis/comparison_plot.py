@@ -293,7 +293,6 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
                     fontsize=12)
 
     #Plot fiducials
-    # fid_comps = (num_fids**2 + num_fids) / 2
     if fid_data is not None:
         x_fid_vals = np.arange(num_design, num_design + num_fids)
         prev = 0
