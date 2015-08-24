@@ -211,10 +211,10 @@ def comparison_plot(path, num_fids=5, verbose=False,
             fig.subplots_adjust(top=top, bottom=bottom)
 
         if verbose:
-            p.autoscale(True)
+            # p.autoscale(True)
             fig.show()
         else:
-            p.autoscale(True)
+            # p.autoscale(True)
             save_name = "distance_comparisons_" + stat + ".pdf"
             if out_path is not None:
                 if out_path[-1] != "/":
@@ -303,7 +303,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     # Make the legend
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
-    ax.set_xlim([-1, num_design + num_fids + 8])
+    ax.set_xlim([-1, num_design + num_fids + 5])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
     if labels is None:
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
