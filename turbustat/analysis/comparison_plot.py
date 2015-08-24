@@ -174,23 +174,39 @@ def comparison_plot(path, num_fids=5, verbose=False,
         if len(shape) == 1:
             ax = ax[:, np.newaxis]
             shape = ax.shape
+
+        # Set the maximum distance to put all subplots on same scale
+        # Also checks if that statistic's data is contained in the dataframes.
+        max_dist = 0.0
+        for key in order:
+            try:
+                distances = np.append(data_files[key][2][stat],
+                                      data_files[key][1][stat])
+                enable_continue = False
+            except KeyError:
+                warnings.warn(
+                    "Could not find "+stat+" in Data file for "+str(key)+". "
+                    "Skipping this statistic.")
+                enable_continue = True
+                break
+
+            if np.nanmax(distances) > max_dist:
+                max_dist = np.nanmax(distances)
+
+        if enable_continue:
+            continue
+
         for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
             if k >= len(ax.flatten()) - shape[1]:
                 bottom = True
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
-            try:
-                _plotter(axis, data_files[key][2][stat],
-                         data_files[key][1][stat],
-                         num_fids, data_files[key][0], stat, bottom, left,
-                         legend=legend, legend_labels=legend_labels,
-                         labels=design_labels)
-            except KeyError:
-                warnings.warn(
-                    "Could not find "+stat+" in Data file for "+str(key)+". "
-                    "Skipping this statistic.")
-                continue
+            _plotter(axis, data_files[key][2][stat],
+                     data_files[key][1][stat],
+                     num_fids, data_files[key][0], stat, bottom, left,
+                     legend=legend, legend_labels=legend_labels,
+                     labels=design_labels, ylims=(0.0, max_dist))
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
@@ -231,7 +247,7 @@ def _plot_size(num):
 
 
 def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
-             legend=True, legend_labels=None, labels=None):
+             legend=True, legend_labels=None, labels=None, ylims=None):
 
     num_design = (max(data.shape) / num_fids)
 
@@ -301,6 +317,9 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
+
+    if ylims is not None:
+        ax.set_ylim(ylims)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
