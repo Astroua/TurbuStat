@@ -6,16 +6,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
 
+from ..statistics import statistics_list
+
 
 def comparison_plot(path, num_fids=5, verbose=False,
                     obs_to_fid=False, obs_to_fid_shade=True, legend=True,
                     legend_labels=None,
-                    statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
-                                "DeltaVariance", "Genus", "VCS",
-                                "VCS_Density", "VCS_Velocity", "VCA",
-                                "Tsallis", "PCA", "SCF", "Cramer",
-                                "Skewness", "Kurtosis", "Dendrogram_Hist",
-                                "Dendrogram_Num", "PDF"],
+                    statistics=statistics_list,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
