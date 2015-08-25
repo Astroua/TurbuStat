@@ -2,24 +2,22 @@
 
 import numpy as np
 import os
+import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
+
+from ..statistics import statistics_list
 
 
 def comparison_plot(path, num_fids=5, verbose=False,
                     obs_to_fid=False, obs_to_fid_shade=True, legend=True,
                     legend_labels=None,
-                    statistics=["Wavelet", "MVC", "PSpec", "Bispectrum",
-                                "DeltaVariance", "Genus", "VCS",
-                                "VCS_Density", "VCS_Velocity", "VCA",
-                                "Tsallis", "PCA", "SCF", "Cramer",
-                                "Skewness", "Kurtosis", "Dendrogram_Hist",
-                                "Dendrogram_Num", "PDF"],
+                    statistics=statistics_list,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
-                    out_path=None, design_matrix=None):
+                    out_path=None, design_matrix=None, sharey=True):
     '''
     Requires results converted into csv form!!
 
@@ -55,6 +53,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
         is given, it is assumed that it's the path to the saved csv file. When
         given, the labels of the plots will be coded in 'binary' according to
         the levels in the design.
+    sharey : bool, optional
+        When enabled, each subplot has the same y limits.
     '''
 
     if path[-1] != "/":
@@ -166,7 +166,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
 
     for stat in statistics:
         # Divide by 2 b/c there should be 2 files for each comparison b/w faces
-        (fig, ax) = _plot_size(len(data_files.keys()))
+        (fig, ax) = _plot_size(len(data_files.keys()), sharey=sharey)
         if len(data_files.keys()) == 1:
             shape = (1, )
             ax = np.array([ax])
@@ -176,20 +176,32 @@ def comparison_plot(path, num_fids=5, verbose=False,
         if len(shape) == 1:
             ax = ax[:, np.newaxis]
             shape = ax.shape
+
         for k, (key, axis) in enumerate(zip(order, ax.flatten())):
             bottom = False
             if k >= len(ax.flatten()) - shape[1]:
                 bottom = True
             if k / float(shape[0]) in [0, 1, 2]:
                 left = True
-            _plotter(axis, data_files[key][2][stat], data_files[key][1][stat],
-                     num_fids, data_files[key][0], stat, bottom, left,
-                     legend=legend, legend_labels=legend_labels,
-                     labels=design_labels)
+            try:
+                _plotter(axis, data_files[key][2][stat],
+                         data_files[key][1][stat],
+                         num_fids, data_files[key][0], stat, bottom, left,
+                         legend=legend, legend_labels=legend_labels,
+                         labels=design_labels)
+                enable_continue = False
+            except KeyError:
+                warnings.warn("Could not find data for "+stat+" in "+key)
+                enable_continue = True
+                break
+
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
                                 num_fids, shading=obs_to_fid_shade)
+
+        if enable_continue:
+            continue
 
         # If the labels are given by the design, we need to adjust the bottom
         # of the subplots
@@ -199,10 +211,10 @@ def comparison_plot(path, num_fids=5, verbose=False,
             fig.subplots_adjust(top=top, bottom=bottom)
 
         if verbose:
-            p.autoscale(True)
+            # p.autoscale(True)
             fig.show()
         else:
-            p.autoscale(True)
+            # p.autoscale(True)
             save_name = "distance_comparisons_" + stat + ".pdf"
             if out_path is not None:
                 if out_path[-1] != "/":
@@ -212,21 +224,23 @@ def comparison_plot(path, num_fids=5, verbose=False,
             fig.clf()
 
 
-def _plot_size(num):
+def _plot_size(num, sharey=True):
     if num <= 3:
-        return p.subplots(num, sharex=True)
+        return p.subplots(num, sharex=True, sharey=sharey)
     elif num > 3 and num <= 8:
         rows = num / 2 + num % 2
-        return p.subplots(nrows=rows, ncols=2, figsize=(14, 14), dpi=100, sharex=True)
+        return p.subplots(nrows=rows, ncols=2, figsize=(14, 14),
+                          dpi=100, sharex=True, sharey=sharey)
     elif num == 9:
-        return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100, sharex=True)
+        return p.subplots(nrows=3, ncols=3, figsize=(14, 14), dpi=100,
+                          sharex=True, sharey=sharey)
     else:
         print "There should be a maximum of 9 comparisons."
         return
 
 
 def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
-             legend=True, legend_labels=None, labels=None):
+             legend=True, legend_labels=None, labels=None, ylims=None):
 
     num_design = (max(data.shape) / num_fids)
 
@@ -279,7 +293,6 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
                     fontsize=12)
 
     #Plot fiducials
-    # fid_comps = (num_fids**2 + num_fids) / 2
     if fid_data is not None:
         x_fid_vals = np.arange(num_design, num_design + num_fids)
         prev = 0
@@ -290,12 +303,15 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     # Make the legend
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
-    ax.set_xlim([-1, num_design + num_fids + 8])
+    ax.set_xlim([-1, num_design + num_fids + 5])
     ax.set_xticks(np.append(x_vals, x_fid_vals))
     if labels is None:
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
+
+    if ylims is not None:
+        ax.set_ylim(ylims)
 
 
 def _horiz_obs_plot(ax, data, num_fids, shading=False):
