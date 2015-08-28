@@ -11,6 +11,8 @@ import numpy as np
 from pandas import read_csv
 import warnings
 
+from turbustat.statistics import statistics_list
+
 p.rcParams.update({'font.size': 14})
 
 
@@ -185,9 +187,10 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
 
 def map_all_results(effects_file, min_zscore=2.0, save=False,
                     params=["fc", "pb", "m", "k", "sf", "vp"],
-                    statistics=None, normed=True, out_path=None):
+                    max_order=2, statistics=statistics_list,
+                    normed=True, out_path=None):
 
-    if isinstance(effects_file, str):
+    if isinstance(effects_file, str) or isinstance(effects_file, unicode):
         effects = read_csv(effects_file)
     else:
         effects = effects_file
@@ -205,6 +208,17 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     stat_labels = []
     for stat in statistics:
         stat_labels.append(stat.replace("_", " "))
+
+    # Find the cutoff if a maximum order is given
+    if max_order is not None:
+        for posn, effect in enumerate(model_effects):
+            splitted = effect.split(":")
+
+            if len(splitted) > max_order:
+                cutoff_posn = posn
+                break
+
+        model_effects = model_effects[:cutoff_posn]
 
     values = np.empty((len(effects.columns), len(model_effects)))
 
