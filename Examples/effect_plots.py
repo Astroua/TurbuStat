@@ -10,6 +10,9 @@ import matplotlib.cm as cm
 import numpy as np
 from pandas import read_csv
 import warnings
+import os
+
+from turbustat.statistics import statistics_list
 
 p.rcParams.update({'font.size': 14})
 
@@ -183,11 +186,14 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
             p.show()
 
 
-def map_all_results(effects_file, min_zscore=2.0, save=False,
-                    params=["fc", "pb", "m", "k", "sf", "vp"],
-                    statistics=None, normed=True, out_path=None):
+def map_all_results(effects_file, min_zscore=2.0, save_name=None,
+                    max_order=2, statistics=statistics_list,
+                    normed=True, out_path=None,
+                    params={"fc": "Face", "pb": r"$\beta$",
+                            "m": r"$\mathcal{M}$", "k": r"$k$",
+                            "sf": r"$b$", "vp": r"$\alpha$"}):
 
-    if isinstance(effects_file, str):
+    if isinstance(effects_file, str) or isinstance(effects_file, unicode):
         effects = read_csv(effects_file)
     else:
         effects = effects_file
@@ -206,7 +212,18 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     for stat in statistics:
         stat_labels.append(stat.replace("_", " "))
 
-    values = np.empty((len(effects.columns), len(model_effects)))
+    # Find the cutoff if a maximum order is given
+    if max_order is not None:
+        for posn, effect in enumerate(model_effects):
+            splitted = effect.split(":")
+
+            if len(splitted) > max_order:
+                cutoff_posn = posn
+                break
+
+        model_effects = model_effects[:cutoff_posn]
+
+    values = np.empty((len(statistics), len(model_effects)))
 
     for i, stat in enumerate(statistics):
         if normed:
@@ -222,7 +239,14 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
                     value = effects[stat][effect]
                 values[i, j] = value
         else:
-            values[i, :] = effects[stat]
+            values[i, :] = effects[stat][:len(model_effects)]
+
+    # Change parameter names to those provided in params
+    if params is not None:
+
+        for param in params:
+            model_effects = [eff.replace(param, params[param])
+                             for eff in model_effects]
 
     milagro = \
         colormap_milagro(0,
@@ -232,22 +256,24 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     p.figure(figsize=(16, 7))
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
-    p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
-    p.yticks(np.arange(len(statistics)), stat_labels)
-    cbar = p.colorbar()
+    p.xticks(np.arange(len(model_effects)), model_effects, rotation=90,
+             fontsize=18)
+    p.yticks(np.arange(len(statistics)), stat_labels, fontsize=18)
+    cbar = p.colorbar(fraction=0.05, shrink=0.9)
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
     # Avoid white lines in the pdf rendering
     cbar.solids.set_edgecolor("face")
 
-    if save:
-        save_name = "all_stat_results.pdf"
-        if normed:
-            save_name = "all_stat_results_normed.pdf"
-        if out_path is not None:
-            if out_path[-1] != "/":
-                out_path += "/"
-            save_name = out_path + save_name
+    p.tight_layout()
+
+    # Save if save_name has been given
+    if save_name is not None:
+
+        if out_path is None:
+            out_path = ""
+
+        save_name = os.path.join(out_path, save_name)
 
         p.savefig(save_name)
         p.close()
