@@ -10,6 +10,7 @@ import matplotlib.cm as cm
 import numpy as np
 from pandas import read_csv
 import warnings
+import os
 
 from turbustat.statistics import statistics_list
 
@@ -185,7 +186,7 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
             p.show()
 
 
-def map_all_results(effects_file, min_zscore=2.0, save=False,
+def map_all_results(effects_file, min_zscore=2.0, save_name=None,
                     max_order=2, statistics=statistics_list,
                     normed=True, out_path=None,
                     params={"fc": "Face", "pb": r"$\beta$",
@@ -266,14 +267,13 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
 
     p.tight_layout()
 
-    if save:
-        save_name = "all_stat_results.pdf"
-        if normed:
-            save_name = "all_stat_results_normed.pdf"
-        if out_path is not None:
-            if out_path[-1] != "/":
-                out_path += "/"
-            save_name = out_path + save_name
+    # Save if save_name has been given
+    if save_name is not None:
+
+        if out_path is None:
+            out_path = ""
+
+        save_name = os.path.join(out_path, save_name)
 
         p.savefig(save_name)
         p.close()
