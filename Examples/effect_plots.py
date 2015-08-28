@@ -220,7 +220,7 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
 
         model_effects = model_effects[:cutoff_posn]
 
-    values = np.empty((len(effects.columns), len(model_effects)))
+    values = np.empty((len(statistics), len(model_effects)))
 
     for i, stat in enumerate(statistics):
         if normed:
