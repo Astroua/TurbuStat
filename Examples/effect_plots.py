@@ -236,7 +236,7 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
                     value = effects[stat][effect]
                 values[i, j] = value
         else:
-            values[i, :] = effects[stat]
+            values[i, :] = effects[stat][:len(model_effects)]
 
     milagro = \
         colormap_milagro(0,
