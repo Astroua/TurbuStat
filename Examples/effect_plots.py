@@ -186,9 +186,11 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
 
 
 def map_all_results(effects_file, min_zscore=2.0, save=False,
-                    params=["fc", "pb", "m", "k", "sf", "vp"],
                     max_order=2, statistics=statistics_list,
-                    normed=True, out_path=None):
+                    normed=True, out_path=None,
+                    params={"fc": "Face", "pb": r"$\beta$",
+                            "m": r"$\mathcal{M}$", "k": r"$k$",
+                            "sf": r"$b$", "vp": r"$\alpha$"}):
 
     if isinstance(effects_file, str) or isinstance(effects_file, unicode):
         effects = read_csv(effects_file)
@@ -238,6 +240,13 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
         else:
             values[i, :] = effects[stat][:len(model_effects)]
 
+    # Change parameter names to those provided in params
+    if params is not None:
+
+        for param in params:
+            model_effects = [eff.replace(param, params[param])
+                             for eff in model_effects]
+
     milagro = \
         colormap_milagro(0,
                          10,
@@ -246,13 +255,16 @@ def map_all_results(effects_file, min_zscore=2.0, save=False,
     p.figure(figsize=(16, 7))
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
-    p.xticks(np.arange(len(model_effects)), model_effects, rotation=90)
-    p.yticks(np.arange(len(statistics)), stat_labels)
+    p.xticks(np.arange(len(model_effects)), model_effects, rotation=90,
+             fontsize=18)
+    p.yticks(np.arange(len(statistics)), stat_labels, fontsize=18)
     cbar = p.colorbar()
     cbar.ax.set_ylabel(r'$t$-value', size=18)
     cbar.ax.tick_params(labelsize=18)
     # Avoid white lines in the pdf rendering
     cbar.solids.set_edgecolor("face")
+
+    p.tight_layout()
 
     if save:
         save_name = "all_stat_results.pdf"
