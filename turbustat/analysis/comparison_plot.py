@@ -334,6 +334,8 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
     obs_names = data.index[:num_obs]
 
+    patterns = ('-', '+', 'x', '\\', '*', 'o', 'O', '.')
+
     for i, obs in enumerate(obs_names):
 
         y_vals = np.asarray(data.ix[i::num_obs])
@@ -349,7 +351,7 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
             ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
                             interpolate=True, alpha=0.4,
-                            edgecolor=colors[i])
+                            edgecolor=colors[i], hatch=patterns[i])
 
             middle = (ymax + ymin) / 2
 
