@@ -381,8 +381,8 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
                         horizontalalignment='left',
                         verticalalignment='center')
 
-        if legend:
-            ax.legend(loc=4)
+    if legend:
+        ax.legend(loc=4)
 
 
 def timestep_comparisons(path, verbose=False):
