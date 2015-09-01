@@ -351,15 +351,18 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
             ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
                             interpolate=True, alpha=0.4,
-                            edgecolor=colors[i], hatch=patterns[i])
+                            edgecolor=colors[i], hatch=patterns[i],
+                            label=labels_dict[obs])
 
             middle = (ymax + ymin) / 2
 
-            trans = ax.get_yaxis_transform()
-            ax.annotate(labels_dict[obs], xy=(0.9, middle), xytext=(0.9, middle),
-                        fontsize=12, xycoords=trans,
-                        verticalalignment='center',
-                        horizontalalignment='center')
+            if not legend:
+                trans = ax.get_yaxis_transform()
+                ax.annotate(labels_dict[obs], xy=(0.9, middle),
+                            xytext=(0.9, middle),
+                            fontsize=12, xycoords=trans,
+                            verticalalignment='center',
+                            horizontalalignment='center')
 
         else:
 
