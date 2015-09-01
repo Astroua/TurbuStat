@@ -17,7 +17,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
-                    out_path=None, design_matrix=None, sharey=True):
+                    out_path=None, design_matrix=None, sharey=True,
+                    obs_legend=False):
     '''
     Requires results converted into csv form!!
 
@@ -55,6 +56,9 @@ def comparison_plot(path, num_fids=5, verbose=False,
         the levels in the design.
     sharey : bool, optional
         When enabled, each subplot has the same y limits.
+    obs_legend : bool, optional
+        Turn on legend for the observational comparisons. When disabled,
+        labels are plotted over the shaded region.
     '''
 
     if path[-1] != "/":
@@ -198,7 +202,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
-                                num_fids, shading=obs_to_fid_shade)
+                                num_fids, shading=obs_to_fid_shade,
+                                legend=obs_legend)
 
         if enable_continue:
             continue
