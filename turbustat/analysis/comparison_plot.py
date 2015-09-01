@@ -314,7 +314,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.set_ylim(ylims)
 
 
-def _horiz_obs_plot(ax, data, num_fids, shading=False):
+def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
     '''
     Plot a horizontal line with surrounding shading across
     the plot to signify the distance of the observational data.
@@ -380,6 +380,9 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
                                         width=0.05, alpha=1.0, headwidth=0.1),
                         horizontalalignment='left',
                         verticalalignment='center')
+
+        if legend:
+            ax.legend(loc=4)
 
 
 def timestep_comparisons(path, verbose=False):
