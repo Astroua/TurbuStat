@@ -340,7 +340,9 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
     obs_names = data.index[:num_obs]
 
-    linestyles = ['-', '--', '-.', ':']
+    linestyles = ['solid', 'dashed', 'dashdot', 'dotted']
+
+    fill_betweens = []
 
     for i, (obs, style) in enumerate(zip(obs_names, linestyles)):
 
@@ -357,8 +359,12 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
             ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
                             interpolate=True, alpha=0.2,
-                            edgecolor=colors[i], linestyle=style,
-                            label=labels_dict[obs])
+                            edgecolor=colors[i], linestyle=style)
+
+            if legend:
+                rect = p.Rectangle((0, 0), 1, 1, fc=colors[i], linestyle=style,
+                                   alpha=0.2)
+                fill_betweens.append(rect)
 
             middle = (ymax + ymin) / 2
 
@@ -393,7 +399,7 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
                         verticalalignment='center')
 
     if legend:
-        ax.legend(loc=4)
+        ax.legend(fill_betweens, labels_dict.values())#, loc=4)
 
 
 def timestep_comparisons(path, verbose=False):
