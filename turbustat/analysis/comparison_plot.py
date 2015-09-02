@@ -3,6 +3,7 @@
 import numpy as np
 import os
 import warnings
+from itertools import repeat
 import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
@@ -339,9 +340,9 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
 
     obs_names = data.index[:num_obs]
 
-    patterns = ('-', '+', 'x', '\\', '*', 'o', 'O', '.')
+    linestyles = ['-', '--', '-.', ':']
 
-    for i, obs in enumerate(obs_names):
+    for i, (obs, style) in enumerate(zip(obs_names, linestyles)):
 
         y_vals = np.asarray(data.ix[i::num_obs])
 
@@ -355,8 +356,8 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
             # variance.
 
             ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
-                            interpolate=True, alpha=0.4,
-                            edgecolor=colors[i], hatch=patterns[i],
+                            interpolate=True, alpha=0.2,
+                            edgecolor=colors[i], linestyle=style,
                             label=labels_dict[obs])
 
             middle = (ymax + ymin) / 2
