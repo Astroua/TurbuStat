@@ -399,7 +399,8 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
                         verticalalignment='center')
 
     if legend:
-        ax.legend(fill_betweens, labels_dict.values())#, loc=4)
+        ax.legend(fill_betweens, [labels_dict[obs] for obs in obs_names],
+                  fontsize=12)
 
 
 def timestep_comparisons(path, verbose=False):
