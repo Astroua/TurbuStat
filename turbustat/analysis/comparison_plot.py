@@ -3,6 +3,7 @@
 import numpy as np
 import os
 import warnings
+from itertools import repeat
 import matplotlib as mpl
 import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
@@ -17,7 +18,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
                     comparisons=["0_0", "0_1", "0_2", "1_0", "1_1", "1_2",
                                  "2_0", "2_1", "2_2", "0_obs", "1_obs",
                                  "2_obs"],
-                    out_path=None, design_matrix=None, sharey=True):
+                    out_path=None, design_matrix=None, sharey=True,
+                    obs_legend=False):
     '''
     Requires results converted into csv form!!
 
@@ -55,6 +57,9 @@ def comparison_plot(path, num_fids=5, verbose=False,
         the levels in the design.
     sharey : bool, optional
         When enabled, each subplot has the same y limits.
+    obs_legend : bool, optional
+        Turn on legend for the observational comparisons. When disabled,
+        labels are plotted over the shaded region.
     '''
 
     if path[-1] != "/":
@@ -198,7 +203,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
             if obs_to_fid:
                 obs_key = int(key[0])
                 _horiz_obs_plot(axis, obs_to_fid_data[obs_key][stat],
-                                num_fids, shading=obs_to_fid_shade)
+                                num_fids, shading=obs_to_fid_shade,
+                                legend=obs_legend)
 
         if enable_continue:
             continue
@@ -314,7 +320,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.set_ylim(ylims)
 
 
-def _horiz_obs_plot(ax, data, num_fids, shading=False):
+def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
     '''
     Plot a horizontal line with surrounding shading across
     the plot to signify the distance of the observational data.
@@ -334,7 +340,11 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
 
     obs_names = data.index[:num_obs]
 
-    for i, obs in enumerate(obs_names):
+    linestyles = ['solid', 'dashed', 'dashdot', 'dotted']
+
+    fill_betweens = []
+
+    for i, (obs, style) in enumerate(zip(obs_names, linestyles)):
 
         y_vals = np.asarray(data.ix[i::num_obs])
 
@@ -348,16 +358,23 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
             # variance.
 
             ax.fill_between(x_vals, ymax, ymin, facecolor=colors[i],
-                            interpolate=True, alpha=0.4,
-                            edgecolor=colors[i])
+                            interpolate=True, alpha=0.2,
+                            edgecolor=colors[i], linestyle=style)
+
+            if legend:
+                rect = p.Rectangle((0, 0), 1, 1, fc=colors[i], linestyle=style,
+                                   alpha=0.2)
+                fill_betweens.append(rect)
 
             middle = (ymax + ymin) / 2
 
-            trans = ax.get_yaxis_transform()
-            ax.annotate(labels_dict[obs], xy=(0.9, middle), xytext=(0.9, middle),
-                        fontsize=12, xycoords=trans,
-                        verticalalignment='center',
-                        horizontalalignment='center')
+            if not legend:
+                trans = ax.get_yaxis_transform()
+                ax.annotate(labels_dict[obs], xy=(0.9, middle),
+                            xytext=(0.9, middle),
+                            fontsize=12, xycoords=trans,
+                            verticalalignment='center',
+                            horizontalalignment='center')
 
         else:
 
@@ -380,6 +397,10 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False):
                                         width=0.05, alpha=1.0, headwidth=0.1),
                         horizontalalignment='left',
                         verticalalignment='center')
+
+    if legend:
+        ax.legend(fill_betweens, [labels_dict[obs] for obs in obs_names],
+                  fontsize=12)
 
 
 def timestep_comparisons(path, verbose=False):
