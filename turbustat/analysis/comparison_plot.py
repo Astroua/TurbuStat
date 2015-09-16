@@ -9,6 +9,7 @@ import matplotlib.pyplot as p
 from pandas import read_csv, DataFrame
 
 from ..statistics import statistics_list
+from .analysis_utils import parameters_dict
 
 
 def comparison_plot(path, num_fids=5, verbose=False,
@@ -143,7 +144,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
         # Set -1 to 0 for cleanliness
         design_matrix[design_matrix == -1] = 0.0
 
-        design_labels = []
+        # Start with getting the parameter symbols
+        design_labels = [parameters_dict[col] for col in design_matrix.columns]
 
         for ind in design_matrix.index:
 
@@ -298,7 +300,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
                     va='top', xycoords=trans,
                     fontsize=12)
 
-    #Plot fiducials
+    # Plot fiducials
     if fid_data is not None:
         x_fid_vals = np.arange(num_design, num_design + num_fids)
         prev = 0
@@ -310,10 +312,11 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
     ax.set_xlim([-1, num_design + num_fids + 5])
-    ax.set_xticks(np.append(x_vals, x_fid_vals))
     if labels is None:
+        ax.set_xticks(np.append(x_vals, x_fid_vals))
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
+        ax.set_xticks(np.append([-1], x_vals, x_fid_vals))
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
 
     if ylims is not None:
