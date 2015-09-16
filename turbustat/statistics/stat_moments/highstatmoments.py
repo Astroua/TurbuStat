@@ -200,15 +200,21 @@ class StatMomentsDistance(object):
     '''
 
     ######### ADD ADDITIONAL ARGS !!!!!
-    def __init__(self, image1, image2, radius=5, fiducial_model=None):
+    def __init__(self, image1, image2, radius=5, nbins=None,
+                 fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
+
+        if nbins is None:
+            self.nbins = _auto_nbins(image1.size, image2.size)
+        else:
+            self.nbins = nbins
 
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(image1, radius).run()
+            self.moments1 = StatMoments(image1, radius, nbins=self.nbins).run()
 
-        self.moments2 = StatMoments(image2, radius).run()
+        self.moments2 = StatMoments(image2, radius, nbins=self.nbins).run()
 
         self.kurtosis_distance = None
         self.skewness_distance = None
@@ -331,3 +337,7 @@ def kl_divergence(P, Q):
     P = P[np.isfinite(P)]
     Q = Q[np.isfinite(Q)]
     return np.nansum(np.where(Q != 0, P * np.log(P / Q), 0))
+
+
+def _auto_nbins(size1, size2):
+    return int((size1 + size2)/2.)
