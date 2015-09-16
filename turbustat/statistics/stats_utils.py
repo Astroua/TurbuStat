@@ -25,3 +25,25 @@ def hellinger(data1, data2):
 
 def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
+
+
+def kl_divergence(P, Q):
+    '''
+    Kullback Leidler Divergence
+
+    Parameters
+    ----------
+
+    P,Q : numpy.ndarray
+        Two Discrete Probability distributions
+
+    Returns
+    -------
+
+    kl_divergence : float
+    '''
+    P = P[~np.isnan(P)]
+    Q = Q[~np.isnan(Q)]
+    P = P[np.isfinite(P)]
+    Q = Q[np.isfinite(Q)]
+    return np.nansum(np.where(Q != 0, P * np.log(P / Q), 0))
