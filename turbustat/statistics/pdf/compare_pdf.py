@@ -9,6 +9,8 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 
+from ..stats_utils import hellinger, standardize
+
 
 class PDF(object):
     '''
@@ -296,28 +298,3 @@ class PDF_Distance(object):
             p.show()
 
         return self
-
-
-def hellinger(data1, data2):
-    '''
-    Calculate the Hellinger Distance between two datasets.
-
-    Parameters
-    ----------
-    data1 : numpy.ndarray
-        1D array.
-    data2 : numpy.ndarray
-        1D array.
-
-    Returns
-    -------
-    distance : float
-        Distance value.
-    '''
-    distance = (1 / np.sqrt(2)) * \
-        np.sqrt(np.nansum((np.sqrt(data1) - np.sqrt(data2)) ** 2.))
-    return distance
-
-
-def standardize(x):
-    return (x - np.nanmean(x)) / np.nanstd(x)
