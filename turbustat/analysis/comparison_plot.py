@@ -145,7 +145,8 @@ def comparison_plot(path, num_fids=5, verbose=False,
         design_matrix[design_matrix == -1] = 0.0
 
         # Start with getting the parameter symbols
-        design_labels = [parameters_dict[col] for col in design_matrix.columns]
+        design_labels = \
+            [(" ".join([parameters_dict[col] for col in design_matrix.columns]))]
 
         for ind in design_matrix.index:
 
@@ -253,7 +254,7 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     num_design = (max(data.shape) / num_fids)
 
     if labels is not None:
-        if len(labels) != num_design:
+        if len(labels) - 1 != num_design:
             raise Warning("Design matrix contains different number of designs "
                           "than the data. Double check the inputted "
                           "design_matrix.")
@@ -316,7 +317,8 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         ax.set_xticks(np.append(x_vals, x_fid_vals))
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
-        ax.set_xticks(np.append([-1], x_vals, x_fid_vals))
+        xticks = np.append([-1], np.append(x_vals, x_fid_vals))
+        ax.set_xticks(xticks)
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
 
     if ylims is not None:
