@@ -20,22 +20,22 @@ class StatMoments(object):
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
-    bin_num : int, optional
+    nbins : int, optional
         Number of bins to use in the histogram.
 
     """
 
-    def __init__(self, img, radius=5, periodic=True, bin_num=1000):
+    def __init__(self, img, radius=5, periodic=True, nbins=None):
         super(StatMoments, self).__init__()
 
         self.img = img
         self.radius = radius
         self.periodic_flag = periodic
 
-        if bin_num is None:
-            self.bin_num = np.sqrt(self.img.size)
+        if nbins is None:
+            self.nbins = np.sqrt(self.img.size)
         else:
-            self.bin_num = bin_num
+            self.nbins = nbins
 
         self.mean = None
         self.variance = None
@@ -109,25 +109,25 @@ class StatMoments(object):
         '''
         # Mean
         mean_hist, edges = np.histogram(
-            self.mean_array[~np.isnan(self.mean_array)], self.bin_num,
+            self.mean_array[~np.isnan(self.mean_array)], self.nbins,
             density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.mean_hist = [bin_centres, mean_hist]
         # Variance
         variance_hist, edges = np.histogram(
-            self.variance_array[~np.isnan(self.variance_array)], self.bin_num,
+            self.variance_array[~np.isnan(self.variance_array)], self.nbins,
             density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.variance_hist = [bin_centres, variance_hist]
         # Skewness
         skewness_hist, edges = np.histogram(
-            self.skewness_array[~np.isnan(self.skewness_array)], self.bin_num,
+            self.skewness_array[~np.isnan(self.skewness_array)], self.nbins,
             density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.skewness_hist = [bin_centres, skewness_hist]
         # Kurtosis
         kurtosis_hist, edges = np.histogram(
-            self.kurtosis_array[~np.isnan(self.kurtosis_array)], self.bin_num,
+            self.kurtosis_array[~np.isnan(self.kurtosis_array)], self.nbins,
             density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [bin_centres, kurtosis_hist]
