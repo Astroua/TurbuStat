@@ -4,6 +4,8 @@
 import numpy as np
 from scipy.stats import nanmean, nanstd
 
+from ..stats_utils import hellinger, kl_divergence
+
 
 class StatMoments(object):
 
@@ -228,22 +230,32 @@ class StatMomentsDistance(object):
         self.kurtosis_distance = None
         self.skewness_distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, metric='Hellinger', verbose=False):
         '''
         Compute the distance.
 
         Parameters
         ----------
+        metric : 'Hellinger' (default) or "KL Divergence", optional
+            Set the metric to use compare the histograms.
         verbose : bool, optional
             Enables plotting.
 
         '''
-        self.kurtosis_distance = np.abs(
-            kl_divergence(self.moments1.kurtosis_hist[1],
-                          self.moments2.kurtosis_hist[1]))
-        self.skewness_distance = np.abs(
-            kl_divergence(self.moments1.skewness_hist[1],
-                          self.moments2.skewness_hist[1]))
+
+        if metric == "Hellinger":
+            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1])
+            self.skewness_distance = hellinger(self.moments1.skewness_hist[1])
+        elif metric == "KL Divergence":
+            self.kurtosis_distance = np.abs(
+                kl_divergence(self.moments1.kurtosis_hist[1],
+                              self.moments2.kurtosis_hist[1]))
+            self.skewness_distance = np.abs(
+                kl_divergence(self.moments1.skewness_hist[1],
+                              self.moments2.skewness_hist[1]))
+        else:
+            raise ValueError("metric must be 'Hellinger' or 'KL Divergence'. "
+                             "Was given as "+str(metric))
 
         if verbose:
             import matplotlib.pyplot as p
@@ -324,28 +336,6 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
     vector[:pad_width[0]] = np.NaN
     vector[-pad_width[1]:] = np.NaN
     return vector
-
-
-def kl_divergence(P, Q):
-    '''
-    Kullback Leidler Divergence
-
-    Parameters
-    ----------
-
-    P,Q : numpy.ndarray
-        Two Discrete Probability distributions
-
-    Returns
-    -------
-
-    kl_divergence : float
-    '''
-    P = P[~np.isnan(P)]
-    Q = Q[~np.isnan(Q)]
-    P = P[np.isfinite(P)]
-    Q = Q[np.isfinite(Q)]
-    return np.nansum(np.where(Q != 0, P * np.log(P / Q), 0))
 
 
 def _auto_nbins(size1, size2):
