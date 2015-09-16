@@ -146,7 +146,7 @@ def comparison_plot(path, num_fids=5, verbose=False,
 
         # Start with getting the parameter symbols
         design_labels = \
-            [(" ".join([parameters_dict[col] for col in design_matrix.columns]))]
+            [("".join([parameters_dict[col] for col in design_matrix.columns]))]
 
         for ind in design_matrix.index:
 
@@ -312,11 +312,12 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     # Make the legend
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
-    ax.set_xlim([-1, num_design + num_fids + 5])
     if labels is None:
+        ax.set_xlim([-1, num_design + num_fids + 5])
         ax.set_xticks(np.append(x_vals, x_fid_vals))
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
+        ax.set_xlim([-2, num_design + num_fids + 5])
         xticks = np.append([-1], np.append(x_vals, x_fid_vals))
         ax.set_xticks(xticks)
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
