@@ -19,6 +19,8 @@ import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
+from ..stats_utils import hellinger
+
 
 class Dendrogram_Stats(object):
 
@@ -502,9 +504,6 @@ def hellinger_stat(x, y):
     '''
 
     assert x.shape == y.shape
-
-    hellinger = lambda i, j: (
-        1 / np.sqrt(2)) * np.sqrt(np.nansum((np.sqrt(i) - np.sqrt(j)) ** 2.))
 
     if len(x.shape) == 1:
         return hellinger(x, y)
