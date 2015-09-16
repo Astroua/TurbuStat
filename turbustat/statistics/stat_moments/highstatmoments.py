@@ -199,9 +199,8 @@ class StatMomentsDistance(object):
 
     '''
 
-    ######### ADD ADDITIONAL ARGS !!!!!
     def __init__(self, image1, image2, radius=5, nbins=None,
-                 fiducial_model=None):
+                 periodic1=False, periodic2=False, fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
 
         if nbins is None:
@@ -212,9 +211,13 @@ class StatMomentsDistance(object):
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(image1, radius, nbins=self.nbins).run()
+            self.moments1 = StatMoments(image1, radius, nbins=self.nbins,
+                                        periodic=periodic1)
+            self.moments1.run()
 
-        self.moments2 = StatMoments(image2, radius, nbins=self.nbins).run()
+        self.moments2 = StatMoments(image2, radius, nbins=self.nbins,
+                                    periodic=periodic1)
+        self.moments2.run()
 
         self.kurtosis_distance = None
         self.skewness_distance = None
