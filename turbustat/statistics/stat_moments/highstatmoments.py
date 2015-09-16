@@ -244,8 +244,10 @@ class StatMomentsDistance(object):
         '''
 
         if metric == "Hellinger":
-            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1])
-            self.skewness_distance = hellinger(self.moments1.skewness_hist[1])
+            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
+                                               self.moments1.kurtosis_hist[2])
+            self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
+                                               self.moments1.skewness_hist[2])
         elif metric == "KL Divergence":
             self.kurtosis_distance = np.abs(
                 kl_divergence(self.moments1.kurtosis_hist[1],
