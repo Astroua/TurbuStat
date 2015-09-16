@@ -194,6 +194,12 @@ class StatMomentsDistance(object):
         2D Image.
     radius : int, optional
         Radius of circle to use when computing moments.
+    nbins : int, optional
+        Number of bins to use when constructing histograms.
+    periodic1 : bool, optional
+        If image1 is periodic in the spatial boundaries, set to True.
+    periodic2 : bool, optional
+        If image2 is periodic in the spatial boundaries, set to True.
     fiducial_model : StatMoments
         Computed StatMoments object. use to avoid recomputing.
 
