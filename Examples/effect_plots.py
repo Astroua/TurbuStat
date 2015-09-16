@@ -44,8 +44,8 @@ def effect_plots(distance_file, effects_file, min_zscore=2.0, statistics=None,
     model_effects = effects.index
 
     # Replace the shorthand names
-    rep_name = {'fc': "F", "pb": r'$b$', 'm': r'$\mathcal{M}$',
-                'k': r'$k$', 'sf': r'$\beta$',
+    rep_name = {'fc': "F", "pb": r'$\beta$', 'm': r'$\mathcal{M}$',
+                'k': r'$k$', 'sf': r'$\zeta$',
                 'vp': r'$\alpha$'}
 
     if statistics is None:
@@ -191,7 +191,7 @@ def map_all_results(effects_file, min_zscore=2.0, save_name=None,
                     normed=True, out_path=None,
                     params={"fc": "Face", "pb": r"$\beta$",
                             "m": r"$\mathcal{M}$", "k": r"$k$",
-                            "sf": r"$b$", "vp": r"$\alpha$"}):
+                            "sf": r"$\zeta$", "vp": r"$\alpha$"}):
 
     if isinstance(effects_file, str) or isinstance(effects_file, unicode):
         effects = read_csv(effects_file)
