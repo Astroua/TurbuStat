@@ -31,7 +31,11 @@ class StatMoments(object):
         self.img = img
         self.radius = radius
         self.periodic_flag = periodic
-        self.bin_num = bin_num
+
+        if bin_num is None:
+            self.bin_num = np.sqrt(self.img.size)
+        else:
+            self.bin_num = bin_num
 
         self.mean = None
         self.variance = None
