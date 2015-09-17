@@ -121,9 +121,21 @@ class StatMoments(object):
     def kurtosis_extrema(self):
         return np.nanmin(self.kurtosis_array), np.nanmax(self.kurtosis_array)
 
-    def make_spatial_histograms(self):
+    def make_spatial_histograms(self, mean_bins=None, variance_bins=None,
+                                skewness_bins=None, kurtosis_bins=None):
         '''
         Create histograms of the moments.
+
+        Parameters
+        ----------
+        mean_bins : array, optional
+            Bins to use for the histogram of the mean array
+        variance_bins : array, optional
+            Bins to use for the histogram of the variance array
+        skewness_bins : array, optional
+            Bins to use for the histogram of the skewness array
+        kurtosis_bins : array, optional
+            Bins to use for the histogram of the kurtosis array
         '''
         # Mean
         mean_hist, edges = np.histogram(
@@ -152,7 +164,7 @@ class StatMoments(object):
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, kwargs={}):
         '''
         Compute the entire method.
 
@@ -160,12 +172,14 @@ class StatMoments(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        kwargs : dict, optional
+            Passed to `make_spatial_histograms`. Bins to use in the histograms
+            can be given here.
         '''
 
         self.array_moments()
         self.compute_spatial_distrib()
-        self.make_spatial_histograms()
+        self.make_spatial_histograms(**kwargs)
 
         if verbose:
             import matplotlib.pyplot as p
