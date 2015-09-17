@@ -4,7 +4,7 @@
 import numpy as np
 from scipy.stats import nanmean, nanstd
 
-from ..stats_utils import hellinger, kl_divergence
+from ..stats_utils import hellinger, kl_divergence, standardize, common_histogram_bins
 
 
 class StatMoments(object):
@@ -22,7 +22,7 @@ class StatMoments(object):
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
-    nbins : int, optional
+    bins : array or int, optional
         Number of bins to use in the histogram.
 
     """
@@ -104,6 +104,22 @@ class StatMoments(object):
                         i - self.radius, j - self.radius] = moments[3]
 
         return self
+
+    @property
+    def mean_extrema(self):
+        return np.nanmin(self.mean_array), np.nanmax(self.mean_array)
+
+    @property
+    def variance_extrema(self):
+        return np.nanmin(self.variance_array), np.nanmax(self.variance_array)
+
+    @property
+    def skewness_extrema(self):
+        return np.nanmin(self.skewness_array), np.nanmax(self.skewness_array)
+
+    @property
+    def kurtosis_extrema(self):
+        return np.nanmin(self.kurtosis_array), np.nanmax(self.kurtosis_array)
 
     def make_spatial_histograms(self):
         '''
