@@ -138,27 +138,37 @@ class StatMoments(object):
             Bins to use for the histogram of the kurtosis array
         '''
         # Mean
-        mean_hist, edges = np.histogram(
-            self.mean_array[~np.isnan(self.mean_array)], self.nbins,
-            density=True)
+        if mean_bins is None:
+            mean_bins = self.nbins
+        mean_hist, edges = \
+            np.histogram(self.mean_array[~np.isnan(self.mean_array)],
+                         mean_bins, density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.mean_hist = [bin_centres, mean_hist]
+
         # Variance
-        variance_hist, edges = np.histogram(
-            self.variance_array[~np.isnan(self.variance_array)], self.nbins,
-            density=True)
+        if variance_bins is None:
+            variance_bins = self.nbins
+        variance_hist, edges = \
+            np.histogram(self.variance_array[~np.isnan(self.variance_array)],
+                         variance_bins, density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.variance_hist = [bin_centres, variance_hist]
+
         # Skewness
-        skewness_hist, edges = np.histogram(
-            self.skewness_array[~np.isnan(self.skewness_array)], self.nbins,
-            density=True)
+        if skewness_bins is None:
+            skewness_bins = self.nbins
+        skewness_hist, edges = \
+            np.histogram(self.skewness_array[~np.isnan(self.skewness_array)],
+                         skewness_bins, density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.skewness_hist = [bin_centres, skewness_hist]
         # Kurtosis
-        kurtosis_hist, edges = np.histogram(
-            self.kurtosis_array[~np.isnan(self.kurtosis_array)], self.nbins,
-            density=True)
+        if kurtosis_bins is None:
+            kurtosis_bins = self.nbins
+        kurtosis_hist, edges = \
+            np.histogram(self.kurtosis_array[~np.isnan(self.kurtosis_array)],
+                         kurtosis_bins, density=True)
         bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [bin_centres, kurtosis_hist]
 
