@@ -143,8 +143,8 @@ class StatMoments(object):
         mean_hist, edges = \
             np.histogram(self.mean_array[~np.isnan(self.mean_array)],
                          mean_bins, density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.mean_hist = [bin_centres, mean_hist]
+        mean_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.mean_hist = [mean_bin_centres, mean_hist]
 
         # Variance
         if variance_bins is None:
@@ -152,8 +152,8 @@ class StatMoments(object):
         variance_hist, edges = \
             np.histogram(self.variance_array[~np.isnan(self.variance_array)],
                          variance_bins, density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.variance_hist = [bin_centres, variance_hist]
+        var_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.variance_hist = [var_bin_centres, variance_hist]
 
         # Skewness
         if skewness_bins is None:
@@ -161,16 +161,16 @@ class StatMoments(object):
         skewness_hist, edges = \
             np.histogram(self.skewness_array[~np.isnan(self.skewness_array)],
                          skewness_bins, density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.skewness_hist = [bin_centres, skewness_hist]
+        skew_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.skewness_hist = [skew_bin_centres, skewness_hist]
         # Kurtosis
         if kurtosis_bins is None:
             kurtosis_bins = self.nbins
         kurtosis_hist, edges = \
             np.histogram(self.kurtosis_array[~np.isnan(self.kurtosis_array)],
                          kurtosis_bins, density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.kurtosis_hist = [bin_centres, kurtosis_hist]
+        kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
         return self
 
