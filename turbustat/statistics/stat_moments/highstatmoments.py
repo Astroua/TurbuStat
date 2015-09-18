@@ -226,7 +226,13 @@ class StatMomentsDistance(object):
     '''
     Compute the distance between two images based on their moments.
     The distance is calculated for the skewness and kurtosis. The distance
-    values for each for computed using the Kullback-Leidler Divergence.
+    values for each for computed using the Hellinger Distance (default),
+    or the Kullback-Leidler Divergence.
+
+    Unlike the other distance classes in TurbuStat, the computation of the
+    histograms needed for the distance metric has been split into its own
+    method. However, the change is fairly transparent, since it is called
+    within distance_metric.
 
     Parameters
     ----------
@@ -261,16 +267,41 @@ class StatMomentsDistance(object):
         else:
             self.moments1 = StatMoments(image1, radius, nbins=self.nbins,
                                         periodic=periodic1)
-            self.moments1.run()
+            self.moments1.compute_spatial_distrib()
 
         self.moments2 = StatMoments(image2, radius, nbins=self.nbins,
                                     periodic=periodic1)
-        self.moments2.run()
+        self.moments2.compute_spatial_distrib()
 
-        self.kurtosis_distance = None
-        self.skewness_distance = None
+    def create_common_histograms(self, nbins=None):
+        '''
+        Calculate the histograms using a common set of bins. Only
+        histograms of the kurtosis and skewness are calculated, since only
+        they are used in the distance metric.
 
-    def distance_metric(self, metric='Hellinger', verbose=False):
+        Parameters
+        ----------
+        nbins : int, optional
+            Bins to use in the histogram calculation.
+        '''
+
+        skew_bins = \
+            common_histogram_bins(self.moments1.skewness_array.flatten(),
+                                  self.moments2.skewness_array.flatten(),
+                                  nbins=nbins)
+
+        kurt_bins = \
+            common_histogram_bins(self.moments1.kurtosis_array.flatten(),
+                                  self.moments2.kurtosis_array.flatten(),
+                                  nbins=nbins)
+
+        self.moments1.make_spatial_histograms(skewness_bins=skew_bins,
+                                              kurtosis_bins=kurt_bins)
+
+        self.moments2.make_spatial_histograms(skewness_bins=skew_bins,
+                                              kurtosis_bins=kurt_bins)
+
+    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None):
         '''
         Compute the distance.
 
@@ -280,8 +311,11 @@ class StatMomentsDistance(object):
             Set the metric to use compare the histograms.
         verbose : bool, optional
             Enables plotting.
-
+        nbins : int, optional
+            Bins to use in the histogram calculation.
         '''
+
+        self.create_common_histograms(nbins=nbins)
 
         if metric == "Hellinger":
             self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
