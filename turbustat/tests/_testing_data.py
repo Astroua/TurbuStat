@@ -61,7 +61,10 @@ props1.make_moment_errors()
 dataset1 = props1.to_dict()
 
 # Save moments for testing i/o loading
-props1.to_fits(save_name="dataset1")
+try:
+    props1.to_fits(save_name="dataset1")
+except IOError:
+    warnigns.warn("It looks like the moment arrays are already saved...")
 
 ##############################################################################
 
