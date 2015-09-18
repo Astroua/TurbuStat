@@ -9,7 +9,7 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 
-from ..stats_utils import hellinger, standardize
+from ..stats_utils import hellinger, standardize, common_histogram_bins
 
 
 class PDF(object):
@@ -165,19 +165,7 @@ class PDF_Distance(object):
         stand2 = standardize((img2 * weights2)[np.isfinite(img2) |
                                                (img2 > min_val2)])
 
-        max_val = max(np.nanmax(stand1),
-                      np.nanmax(stand2))
-        min_val = min(np.nanmin(stand1),
-                      np.nanmin(stand2))
-
-        # Number of bins is the sqrt of the average between the number of
-        # good values.
-        num_bins = (stand1.shape[0] +
-                    stand2.shape[0]) / 2
-
-        num_bins = int(np.round(np.sqrt(num_bins)))
-
-        self.bins = np.linspace(min_val, max_val, num_bins)
+        self.bins = common_histogram_bins(stand1, stand2)
 
         self.PDF1 = PDF(stand1, bins=self.bins)
         self.PDF1.run(verbose=False)
