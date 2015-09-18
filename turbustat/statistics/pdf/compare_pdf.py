@@ -9,6 +9,8 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 
+from ..stats_utils import hellinger, standardize, common_histogram_bins
+
 
 class PDF(object):
     '''
@@ -163,19 +165,7 @@ class PDF_Distance(object):
         stand2 = standardize((img2 * weights2)[np.isfinite(img2) |
                                                (img2 > min_val2)])
 
-        max_val = max(np.nanmax(stand1),
-                      np.nanmax(stand2))
-        min_val = min(np.nanmin(stand1),
-                      np.nanmin(stand2))
-
-        # Number of bins is the sqrt of the average between the number of
-        # good values.
-        num_bins = (stand1.shape[0] +
-                    stand2.shape[0]) / 2
-
-        num_bins = int(np.round(np.sqrt(num_bins)))
-
-        self.bins = np.linspace(min_val, max_val, num_bins)
+        self.bins = common_histogram_bins(stand1, stand2)
 
         self.PDF1 = PDF(stand1, bins=self.bins)
         self.PDF1.run(verbose=False)
@@ -296,28 +286,3 @@ class PDF_Distance(object):
             p.show()
 
         return self
-
-
-def hellinger(data1, data2):
-    '''
-    Calculate the Hellinger Distance between two datasets.
-
-    Parameters
-    ----------
-    data1 : numpy.ndarray
-        1D array.
-    data2 : numpy.ndarray
-        1D array.
-
-    Returns
-    -------
-    distance : float
-        Distance value.
-    '''
-    distance = (1 / np.sqrt(2)) * \
-        np.sqrt(np.nansum((np.sqrt(data1) - np.sqrt(data2)) ** 2.))
-    return distance
-
-
-def standardize(x):
-    return (x - np.nanmean(x)) / np.nanstd(x)

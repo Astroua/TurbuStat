@@ -19,6 +19,8 @@ import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
+from ..stats_utils import hellinger, common_histogram_bins
+
 
 class Dendrogram_Stats(object):
 
@@ -415,10 +417,12 @@ class DendroDistance(object):
             self.nbins = [self.nbins] * \
                 len(self.dendro1.numfeatures[:self.cutoff])
 
-        self.histograms1 = np.empty(
-            (len(self.dendro1.numfeatures[:self.cutoff]), np.max(self.nbins)))
-        self.histograms2 = np.empty(
-            (len(self.dendro2.numfeatures[:self.cutoff]), np.max(self.nbins)))
+        self.histograms1 = \
+            np.empty((len(self.dendro1.numfeatures[:self.cutoff]),
+                     np.max(self.nbins)))
+        self.histograms2 = \
+            np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
+                     np.max(self.nbins)))
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -427,21 +431,20 @@ class DendroDistance(object):
             stand_data1 = standardize(data1)
             stand_data2 = standardize(data2)
 
-            # Create bins for both from the relative minimum and maximum.
-            bins = np.linspace(np.min(np.append(stand_data1, stand_data2)),
-                               np.max(np.append(stand_data1, stand_data2)),
-                               nbin + 1)
+            bins = common_histogram_bins(stand_data1, stand_data2,
+                                         nbins=nbin+1)
+
             self.bins.append(bins)
 
-            hist1 = np.histogram(
-                stand_data1, bins=bins, density=True)[0]
+            hist1 = np.histogram(stand_data1, bins=bins,
+                                 density=True)[0]
             self.histograms1[n, :] = \
-                np.append(hist1, (np.max(self.nbins) - nbin) * [np.NaN])
+                np.append(hist1, (np.max(self.nbins) - bins.size) * [np.NaN])
 
-            hist2 = np.histogram(
-                stand_data2, bins=bins, density=True)[0]
+            hist2 = np.histogram(stand_data2, bins=bins,
+                                 density=True)[0]
             self.histograms2[n, :] = \
-                np.append(hist2, (np.max(self.nbins) - nbin) * [np.NaN])
+                np.append(hist2, (np.max(self.nbins) - bins.size) * [np.NaN])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])
@@ -502,9 +505,6 @@ def hellinger_stat(x, y):
     '''
 
     assert x.shape == y.shape
-
-    hellinger = lambda i, j: (
-        1 / np.sqrt(2)) * np.sqrt(np.nansum((np.sqrt(i) - np.sqrt(j)) ** 2.))
 
     if len(x.shape) == 1:
         return hellinger(x, y)

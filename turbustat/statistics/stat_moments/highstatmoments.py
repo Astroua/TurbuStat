@@ -4,6 +4,8 @@
 import numpy as np
 from scipy.stats import nanmean, nanstd
 
+from ..stats_utils import hellinger, kl_divergence, standardize, common_histogram_bins
+
 
 class StatMoments(object):
 
@@ -20,18 +22,22 @@ class StatMoments(object):
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
-    bin_num : int, optional
+    bins : array or int, optional
         Number of bins to use in the histogram.
 
     """
 
-    def __init__(self, img, radius=5, periodic=True, bin_num=1000):
+    def __init__(self, img, radius=5, periodic=True, nbins=None):
         super(StatMoments, self).__init__()
 
         self.img = img
         self.radius = radius
         self.periodic_flag = periodic
-        self.bin_num = bin_num
+
+        if nbins is None:
+            self.nbins = np.sqrt(self.img.size)
+        else:
+            self.nbins = nbins
 
         self.mean = None
         self.variance = None
@@ -99,38 +105,76 @@ class StatMoments(object):
 
         return self
 
-    def make_spatial_histograms(self):
+    @property
+    def mean_extrema(self):
+        return np.nanmin(self.mean_array), np.nanmax(self.mean_array)
+
+    @property
+    def variance_extrema(self):
+        return np.nanmin(self.variance_array), np.nanmax(self.variance_array)
+
+    @property
+    def skewness_extrema(self):
+        return np.nanmin(self.skewness_array), np.nanmax(self.skewness_array)
+
+    @property
+    def kurtosis_extrema(self):
+        return np.nanmin(self.kurtosis_array), np.nanmax(self.kurtosis_array)
+
+    def make_spatial_histograms(self, mean_bins=None, variance_bins=None,
+                                skewness_bins=None, kurtosis_bins=None):
         '''
         Create histograms of the moments.
+
+        Parameters
+        ----------
+        mean_bins : array, optional
+            Bins to use for the histogram of the mean array
+        variance_bins : array, optional
+            Bins to use for the histogram of the variance array
+        skewness_bins : array, optional
+            Bins to use for the histogram of the skewness array
+        kurtosis_bins : array, optional
+            Bins to use for the histogram of the kurtosis array
         '''
         # Mean
-        mean_hist, edges = np.histogram(
-            self.mean_array[~np.isnan(self.mean_array)], self.bin_num,
-            density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.mean_hist = [bin_centres, mean_hist]
+        if mean_bins is None:
+            mean_bins = self.nbins
+        mean_hist, edges = \
+            np.histogram(self.mean_array[~np.isnan(self.mean_array)],
+                         mean_bins, density=True)
+        mean_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.mean_hist = [mean_bin_centres, mean_hist]
+
         # Variance
-        variance_hist, edges = np.histogram(
-            self.variance_array[~np.isnan(self.variance_array)], self.bin_num,
-            density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.variance_hist = [bin_centres, variance_hist]
+        if variance_bins is None:
+            variance_bins = self.nbins
+        variance_hist, edges = \
+            np.histogram(self.variance_array[~np.isnan(self.variance_array)],
+                         variance_bins, density=True)
+        var_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.variance_hist = [var_bin_centres, variance_hist]
+
         # Skewness
-        skewness_hist, edges = np.histogram(
-            self.skewness_array[~np.isnan(self.skewness_array)], self.bin_num,
-            density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.skewness_hist = [bin_centres, skewness_hist]
+        if skewness_bins is None:
+            skewness_bins = self.nbins
+        skewness_hist, edges = \
+            np.histogram(self.skewness_array[~np.isnan(self.skewness_array)],
+                         skewness_bins, density=True)
+        skew_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.skewness_hist = [skew_bin_centres, skewness_hist]
         # Kurtosis
-        kurtosis_hist, edges = np.histogram(
-            self.kurtosis_array[~np.isnan(self.kurtosis_array)], self.bin_num,
-            density=True)
-        bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.kurtosis_hist = [bin_centres, kurtosis_hist]
+        if kurtosis_bins is None:
+            kurtosis_bins = self.nbins
+        kurtosis_hist, edges = \
+            np.histogram(self.kurtosis_array[~np.isnan(self.kurtosis_array)],
+                         kurtosis_bins, density=True)
+        kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
+        self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
         return self
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, kwargs={}):
         '''
         Compute the entire method.
 
@@ -138,12 +182,14 @@ class StatMoments(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        kwargs : dict, optional
+            Passed to `make_spatial_histograms`. Bins to use in the histograms
+            can be given here.
         '''
 
         self.array_moments()
         self.compute_spatial_distrib()
-        self.make_spatial_histograms()
+        self.make_spatial_histograms(**kwargs)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -180,7 +226,13 @@ class StatMomentsDistance(object):
     '''
     Compute the distance between two images based on their moments.
     The distance is calculated for the skewness and kurtosis. The distance
-    values for each for computed using the Kullback-Leidler Divergence.
+    values for each for computed using the Hellinger Distance (default),
+    or the Kullback-Leidler Divergence.
+
+    Unlike the other distance classes in TurbuStat, the computation of the
+    histograms needed for the distance metric has been split into its own
+    method. However, the change is fairly transparent, since it is called
+    within distance_metric.
 
     Parameters
     ----------
@@ -190,41 +242,96 @@ class StatMomentsDistance(object):
         2D Image.
     radius : int, optional
         Radius of circle to use when computing moments.
+    nbins : int, optional
+        Number of bins to use when constructing histograms.
+    periodic1 : bool, optional
+        If image1 is periodic in the spatial boundaries, set to True.
+    periodic2 : bool, optional
+        If image2 is periodic in the spatial boundaries, set to True.
     fiducial_model : StatMoments
         Computed StatMoments object. use to avoid recomputing.
 
     '''
 
-    ######### ADD ADDITIONAL ARGS !!!!!
-    def __init__(self, image1, image2, radius=5, fiducial_model=None):
+    def __init__(self, image1, image2, radius=5, nbins=None,
+                 periodic1=False, periodic2=False, fiducial_model=None):
         super(StatMomentsDistance, self).__init__()
+
+        if nbins is None:
+            self.nbins = _auto_nbins(image1.size, image2.size)
+        else:
+            self.nbins = nbins
 
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(image1, radius).run()
+            self.moments1 = StatMoments(image1, radius, nbins=self.nbins,
+                                        periodic=periodic1)
+            self.moments1.compute_spatial_distrib()
 
-        self.moments2 = StatMoments(image2, radius).run()
+        self.moments2 = StatMoments(image2, radius, nbins=self.nbins,
+                                    periodic=periodic1)
+        self.moments2.compute_spatial_distrib()
 
-        self.kurtosis_distance = None
-        self.skewness_distance = None
+    def create_common_histograms(self, nbins=None):
+        '''
+        Calculate the histograms using a common set of bins. Only
+        histograms of the kurtosis and skewness are calculated, since only
+        they are used in the distance metric.
 
-    def distance_metric(self, verbose=False):
+        Parameters
+        ----------
+        nbins : int, optional
+            Bins to use in the histogram calculation.
+        '''
+
+        skew_bins = \
+            common_histogram_bins(self.moments1.skewness_array.flatten(),
+                                  self.moments2.skewness_array.flatten(),
+                                  nbins=nbins)
+
+        kurt_bins = \
+            common_histogram_bins(self.moments1.kurtosis_array.flatten(),
+                                  self.moments2.kurtosis_array.flatten(),
+                                  nbins=nbins)
+
+        self.moments1.make_spatial_histograms(skewness_bins=skew_bins,
+                                              kurtosis_bins=kurt_bins)
+
+        self.moments2.make_spatial_histograms(skewness_bins=skew_bins,
+                                              kurtosis_bins=kurt_bins)
+
+    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None):
         '''
         Compute the distance.
 
         Parameters
         ----------
+        metric : 'Hellinger' (default) or "KL Divergence", optional
+            Set the metric to use compare the histograms.
         verbose : bool, optional
             Enables plotting.
-
+        nbins : int, optional
+            Bins to use in the histogram calculation.
         '''
-        self.kurtosis_distance = np.abs(
-            kl_divergence(self.moments1.kurtosis_hist[1],
-                          self.moments2.kurtosis_hist[1]))
-        self.skewness_distance = np.abs(
-            kl_divergence(self.moments1.skewness_hist[1],
-                          self.moments2.skewness_hist[1]))
+
+        self.create_common_histograms(nbins=nbins)
+
+        if metric == "Hellinger":
+            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
+                                               self.moments2.kurtosis_hist[1])
+            self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
+                                               self.moments2.skewness_hist[1])
+        elif metric == "KL Divergence":
+            self.kurtosis_distance = np.abs(
+                kl_divergence(self.moments1.kurtosis_hist[1],
+                              self.moments2.kurtosis_hist[1]))
+            self.skewness_distance = np.abs(
+                kl_divergence(self.moments1.skewness_hist[1],
+                              self.moments2.skewness_hist[1]))
+        else:
+            raise ValueError("metric must be 'Hellinger' or 'KL Divergence'. "
+                             "Was given as "+str(metric))
 
         if verbose:
             import matplotlib.pyplot as p
@@ -307,23 +414,5 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
     return vector
 
 
-def kl_divergence(P, Q):
-    '''
-    Kullback Leidler Divergence
-
-    Parameters
-    ----------
-
-    P,Q : numpy.ndarray
-        Two Discrete Probability distributions
-
-    Returns
-    -------
-
-    kl_divergence : float
-    '''
-    P = P[~np.isnan(P)]
-    Q = Q[~np.isnan(Q)]
-    P = P[np.isfinite(P)]
-    Q = Q[np.isfinite(Q)]
-    return np.nansum(np.where(Q != 0, P * np.log(P / Q), 0))
+def _auto_nbins(size1, size2):
+    return int((size1 + size2)/2.)

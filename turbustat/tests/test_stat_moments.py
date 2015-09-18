@@ -17,23 +17,25 @@ from ._testing_data import \
 
 class TestMoments(TestCase):
 
-    def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-
     def test_moments(self):
-        self.tester = StatMoments(dataset1["integrated_intensity"][0], 5)
+        self.tester = StatMoments(dataset1["integrated_intensity"][0])
         self.tester.run()
-        assert np.allclose(self.tester.kurtosis_hist[1],
-                           computed_data['kurtosis_val'])
-        assert np.allclose(self.tester.skewness_hist[1],
-                           computed_data['skewness_val'])
+
+        # This simply ensures the data set will run.
+        # There are subtle differences due to matching the bins
+        # between the sets. So all tests are completed below
 
     def test_moment_distance(self):
         self.tester_dist = \
             StatMomentsDistance(dataset1["integrated_intensity"][0],
-                                dataset2["integrated_intensity"][0], 5)
+                                dataset2["integrated_intensity"][0])
         self.tester_dist.distance_metric()
+
+        assert np.allclose(self.tester_dist.moments1.kurtosis_hist[1],
+                           computed_data['kurtosis_val'])
+        assert np.allclose(self.tester_dist.moments1.skewness_hist[1],
+                           computed_data['skewness_val'])
+
         npt.assert_almost_equal(self.tester_dist.kurtosis_distance,
                                 computed_distances['kurtosis_distance'])
         npt.assert_almost_equal(self.tester_dist.skewness_distance,
