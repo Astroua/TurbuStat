@@ -64,7 +64,7 @@ dataset1 = props1.to_dict()
 try:
     props1.to_fits(save_name="dataset1")
 except IOError:
-    warnigns.warn("It looks like the moment arrays are already saved...")
+    warnings.warn("It looks like the moment arrays are already saved...")
 
 ##############################################################################
 
