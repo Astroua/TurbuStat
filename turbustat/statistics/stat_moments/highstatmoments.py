@@ -318,10 +318,15 @@ class StatMomentsDistance(object):
         self.create_common_histograms(nbins=nbins)
 
         if metric == "Hellinger":
+            kurt_bw = np.diff(self.moments1.kurtosis_hist[0])[0]
             self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
-                                               self.moments2.kurtosis_hist[1])
+                                               self.moments2.kurtosis_hist[1],
+                                               bin_width=kurt_bw)
+
+            skew_bw = np.diff(self.moments1.skewness_hist[0])[0]
             self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
-                                               self.moments2.skewness_hist[1])
+                                               self.moments2.skewness_hist[1],
+                                               bin_width=skew_bw)
         elif metric == "KL Divergence":
             self.kurtosis_distance = np.abs(
                 kl_divergence(self.moments1.kurtosis_hist[1],

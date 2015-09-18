@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def hellinger(data1, data2):
+def hellinger(data1, data2, bin_width=1.0):
     '''
     Calculate the Hellinger Distance between two datasets.
 
@@ -18,8 +18,9 @@ def hellinger(data1, data2):
     distance : float
         Distance value.
     '''
-    distance = (1 / np.sqrt(2)) * \
-        np.sqrt(np.nansum((np.sqrt(data1) - np.sqrt(data2)) ** 2.))
+    distance = (bin_width / np.sqrt(2)) * \
+        np.sqrt(np.nansum((np.sqrt(data1) -
+                           np.sqrt(data2)) ** 2.))
     return distance
 
 
