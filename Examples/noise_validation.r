@@ -4,7 +4,7 @@
 args = commandArgs(TRUE)
 
 startTime = Sys.time()
-setwd(args[1])
+# setwd(args[1])
 
 FidDes00 = read.csv('distances_0_0.csv', header = T)
 FidFid00 = read.csv('fiducials_0_0.csv', header = T)

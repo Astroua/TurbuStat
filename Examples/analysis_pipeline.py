@@ -1,6 +1,7 @@
 
 import numpy as np
 import turbustat.analysis as ta
+from turbustat.statistics import statistics_list
 import os
 import subprocess
 import sys
@@ -106,20 +107,21 @@ for fil in os.listdir(hdf5_path):
 print "Making distance plots."
 
 ta.comparison_plot(path, comparisons=good_comparison,
-                   out_path=path+"Distance Plots/")
+                   out_path=path+"Distance Plots/",
+                   design_matrix=design_matrix)
 
 # Run the R-script to fit the data to the model
 
 # Must have 0_0 and 2_2 comparisons to run
 
-if not "0_0" in good_comparison and not "2_2" in comparison_plot:
+if "0_0" not in good_comparison and "2_2" not in good_comparison:
     raise StandardError("Model fitting requires 0_0 and 2_2 to be available.")
 
 os.chdir(path)
 
 print "Fitting model of given design."
 
-subprocess.call(['Rscript', path+"FactorialAnalysis.R"])
+subprocess.call(['Rscript', "FactorialAnalysis.R"])
 
 # This should create two output tables of the whole dataset.
 
@@ -128,23 +130,28 @@ subprocess.call(['Rscript', path+"FactorialAnalysis.R"])
 print "Running metric validation."
 
 subprocess.call(['Rscript',
-                 "/Users/eric/Dropbox/code_development/TurbuStat/Examples/noise_validation.r",
+                 os.path.join(turbustat_path, "Examples/noise_validation.r"),
                  path, "10000"])
 
 subprocess.call(['Rscript',
-                 "/Users/eric/Dropbox/code_development/TurbuStat/Examples/signal_validation.r",
+                 os.path.join(turbustat_path, "Examples/signal_validation.r"),
                  path, "10000"])
 
 # Finally, create the model plots
 
 print "Creating model plots."
 
-execfile(turbustat_path+"Examples/effect_plots.py")
+execfile(os.path.join(turbustat_path, "Examples/effect_plots.py"))
 
-effect_plots(path+"DataforFits.csv", path+"ResultsFactorial.csv", save=True,
-             out_path=path+'Model Plots/')
+# Remove PDF_AD from the list
 
-map_all_results(path+"ResultsFactorial.csv", save=True, normed=True,
-                out_path=path+'Model Plots/')
+statistics_list.remove("PDF_AD")
+
+effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
+             out_path='Model Plots/')
+
+map_all_results("ResultsFactorial.csv", normed=True, max_order=2,
+                save_name="map_all_results.pdf",
+                out_path='Model Plots/')
 
 print "Finished!"
