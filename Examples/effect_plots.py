@@ -253,7 +253,6 @@ def map_all_results(effects_file, min_zscore=2.0, save_name=None,
                          10,
                          2)
 
-    p.figure(figsize=(16, 7))
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
     p.xticks(np.arange(len(model_effects)), model_effects, rotation=90,
@@ -265,6 +264,7 @@ def map_all_results(effects_file, min_zscore=2.0, save_name=None,
     # Avoid white lines in the pdf rendering
     cbar.solids.set_edgecolor("face")
 
+    p.axes().set_aspect('auto')
     p.tight_layout()
 
     # Save if save_name has been given

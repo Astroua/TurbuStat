@@ -150,8 +150,17 @@ statistics_list.remove("PDF_AD")
 effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
              out_path='Model Plots/')
 
-map_all_results("ResultsFactorial.csv", normed=True, max_order=2,
+# Only show results of the good statistics
+good_stats = ["Cramer", "DeltaVariance", "Dendrogram_Hist",
+              "Dendrogram_Num", "PCA", "PDF_Hellinger", "SCF", "VCA", "VCS",
+              "VCS_Density", "VCS_Velocity", "Skewness", "Kurtosis"]
+
+# THE ASPECT RATIO IS FUNKY
+# NEED TO ADJUST BY HAND
+# Use: p.ion(), and set save_name=None to alter by-hand
+
+map_all_results("ResultsFactorial.csv", normed=False, max_order=2,
                 save_name="map_all_results.pdf",
-                out_path='Model Plots/')
+                out_path='Model Plots/', statistics=good_stats)
 
 print "Finished!"
