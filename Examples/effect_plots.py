@@ -256,11 +256,11 @@ def map_all_results(effects_file, min_zscore=2.0, save_name=None,
     p.imshow(values, vmin=0, vmax=10, cmap=milagro,
              interpolation="nearest")
     p.xticks(np.arange(len(model_effects)), model_effects, rotation=90,
-             fontsize=18)
-    p.yticks(np.arange(len(statistics)), stat_labels, fontsize=18)
+             fontsize=24)
+    p.yticks(np.arange(len(statistics)), stat_labels, fontsize=24)
     cbar = p.colorbar(fraction=0.05, shrink=0.9)
-    cbar.ax.set_ylabel(r'$t$-value', size=18)
-    cbar.ax.tick_params(labelsize=18)
+    cbar.ax.set_ylabel(r'$t$-value', size=24)
+    cbar.ax.tick_params(labelsize=24)
     # Avoid white lines in the pdf rendering
     cbar.solids.set_edgecolor("face")
 
