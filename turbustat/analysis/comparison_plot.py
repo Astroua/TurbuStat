@@ -271,9 +271,10 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
             ax.plot(x_vals, y_vals, "-o", label="Fiducial " + str(i),
                     alpha=0.6)
     # Set title in upper left hand corner
-    ax.annotate(title, xy=(0, 1), xytext=(12, -6), va='top',
-                xycoords='axes fraction', textcoords='offset points',
-                fontsize=12, alpha=0.75)
+    ax.set_title(title, fontsize=12)
+    # ax.annotate(title, xy=(1, 0), xytext=(0.9, 0.05), va='top',
+    #             xycoords='axes fraction', textcoords='axes fraction',
+    #             fontsize=12, alpha=0.75)
     if left:
         # Set the ylabel using the stat name. Replace underscores
         ax.set_ylabel(stat.replace("_", " ")+"\nDistance", fontsize=10,
