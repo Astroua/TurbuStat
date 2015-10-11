@@ -48,7 +48,7 @@ comparison_plot(
     num_fids=5, design_matrix=design_matrix, obs_to_fid=True, legend=False,
     obs_legend=True,
     statistics=["Cramer", "DeltaVariance", "Dendrogram_Hist",
-                "Dendrogram_Num", "PCA", "PDF_Hellinger", "SCF", "VCA", "VCS",
+                "Dendrogram_Num", "PCA", "SCF", "VCA", "VCS",
                 "VCS_Density", "VCS_Velocity", "Skewness", "Kurtosis"])
 
 # Des to Obs
@@ -60,7 +60,7 @@ comparison_plot(
     des_to_obs_path, comparisons=des_to_obs_comparisons,
     out_path=os.path.join(des_to_obs_path, "Distance Plots"),
     num_fids=3, design_matrix=design_matrix,
-    legend_labels=["Oph A", "IC 348", "NGC 1333"],
+    legend_labels=["IC 348", "NGC 1333", "Oph A"],
     statistics=["Cramer", "DeltaVariance", "Dendrogram_Hist",
-                "Dendrogram_Num", "PCA", "PDF_Hellinger", "SCF", "VCA", "VCS",
+                "Dendrogram_Num", "PCA", "SCF", "VCA", "VCS",
                 "VCS_Density", "VCS_Velocity", "Skewness", "Kurtosis"])

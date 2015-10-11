@@ -314,11 +314,11 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
     if labels is None:
-        ax.set_xlim([-1, num_design + num_fids + 5])
+        ax.set_xlim([-1, num_design + num_fids + 8])
         ax.set_xticks(np.append(x_vals, x_fid_vals))
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
-        ax.set_xlim([-2, num_design + num_fids + 5])
+        ax.set_xlim([-2, num_design + num_fids + 8])
         xticks = np.append([-1], np.append(x_vals, x_fid_vals))
         ax.set_xticks(xticks)
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
