@@ -339,7 +339,7 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
                    "ic348.13co.fits": "IC 348"}
 
     # Also needs to be generalized
-    colors = ["r", "g", "b"]
+    colors = ["b", "g", "r"]
 
     x_vals = ax.axis()[:2]
 
