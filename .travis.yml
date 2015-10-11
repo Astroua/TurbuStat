@@ -19,7 +19,7 @@ install:
     - source activate test
 
     # Now install dependencies
-    - conda install --yes numpy==1.10.0
+    - conda install --yes numpy==1.9.0
     - conda install --yes scipy
     - conda install --yes matplotlib
     - conda install --yes pandas
