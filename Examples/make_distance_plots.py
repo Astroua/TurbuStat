@@ -60,7 +60,7 @@ comparison_plot(
     des_to_obs_path, comparisons=des_to_obs_comparisons,
     out_path=os.path.join(des_to_obs_path, "Distance Plots"),
     num_fids=3, design_matrix=design_matrix,
-    legend_labels=["IC 348", "NGC 1333", "Oph A"],
+    legend_labels=["Oph A", "IC 348", "NGC 1333"],
     statistics=["Cramer", "DeltaVariance", "Dendrogram_Hist",
                 "Dendrogram_Num", "PCA", "SCF", "VCA", "VCS",
                 "VCS_Density", "VCS_Velocity", "Skewness", "Kurtosis"])
