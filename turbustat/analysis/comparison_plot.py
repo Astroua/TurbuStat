@@ -271,9 +271,10 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
             ax.plot(x_vals, y_vals, "-o", label="Fiducial " + str(i),
                     alpha=0.6)
     # Set title in upper left hand corner
-    ax.annotate(title, xy=(0, 1), xytext=(12, -6), va='top',
-                xycoords='axes fraction', textcoords='offset points',
-                fontsize=12, alpha=0.75)
+    ax.set_title(title, fontsize=12)
+    # ax.annotate(title, xy=(1, 0), xytext=(0.9, 0.05), va='top',
+    #             xycoords='axes fraction', textcoords='axes fraction',
+    #             fontsize=12, alpha=0.75)
     if left:
         # Set the ylabel using the stat name. Replace underscores
         ax.set_ylabel(stat.replace("_", " ")+"\nDistance", fontsize=10,
@@ -313,11 +314,11 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
     if legend:
         ax.legend(loc="upper right", prop={'size': 10})
     if labels is None:
-        ax.set_xlim([-1, num_design + num_fids + 5])
+        ax.set_xlim([-1, num_design + num_fids + 8])
         ax.set_xticks(np.append(x_vals, x_fid_vals))
         ax.set_xticklabels(xtick_labels+fid_labels, rotation=90, size=12)
     else:
-        ax.set_xlim([-2, num_design + num_fids + 5])
+        ax.set_xlim([-2, num_design + num_fids + 8])
         xticks = np.append([-1], np.append(x_vals, x_fid_vals))
         ax.set_xticks(xticks)
         ax.set_xticklabels(labels+fid_labels, rotation=90, size=12)
@@ -338,7 +339,7 @@ def _horiz_obs_plot(ax, data, num_fids, shading=False, legend=False):
                    "ic348.13co.fits": "IC 348"}
 
     # Also needs to be generalized
-    colors = ["r", "g", "b"]
+    colors = ["g", "r", "b"]
 
     x_vals = ax.axis()[:2]
 
