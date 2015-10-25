@@ -410,7 +410,7 @@ class DendroDistance(object):
         '''
 
         if self.nbins == "best":
-            self.nbins = [np.floor(np.mean([n1, n2])) for n1, n2 in
+            self.nbins = [np.floor(np.sqrt((n1 + n2)/2.)) for n1, n2 in
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
@@ -419,10 +419,10 @@ class DendroDistance(object):
 
         self.histograms1 = \
             np.empty((len(self.dendro1.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)-1))
+                     np.max(self.nbins)))
         self.histograms2 = \
             np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)-1))
+                     np.max(self.nbins)))
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -432,19 +432,19 @@ class DendroDistance(object):
             stand_data2 = standardize(data2)
 
             bins = common_histogram_bins(stand_data1, stand_data2,
-                                         nbins=nbin)
+                                         nbins=nbin+1)
 
             self.bins.append(bins)
 
             hist1 = np.histogram(stand_data1, bins=bins,
                                  density=True)[0]
             self.histograms1[n, :] = \
-                np.append(hist1, (np.max(self.nbins) - bins.size) * [np.NaN])
+                np.append(hist1, (np.max(self.nbins)-bins.size+1) * [np.NaN])
 
             hist2 = np.histogram(stand_data2, bins=bins,
                                  density=True)[0]
             self.histograms2[n, :] = \
-                np.append(hist2, (np.max(self.nbins) - bins.size) * [np.NaN])
+                np.append(hist2, (np.max(self.nbins)-bins.size+1) * [np.NaN])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])
