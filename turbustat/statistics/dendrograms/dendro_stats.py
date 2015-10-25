@@ -19,7 +19,7 @@ import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
-from ..stats_utils import hellinger, common_histogram_bins
+from ..stats_utils import hellinger, common_histogram_bins, standardize
 
 
 class Dendrogram_Stats(object):
@@ -410,7 +410,7 @@ class DendroDistance(object):
         '''
 
         if self.nbins == "best":
-            self.nbins = [int(round(np.sqrt((n1 + n2) / 2.))) for n1, n2 in
+            self.nbins = [np.floor(np.sqrt((n1 + n2)/2.)) for n1, n2 in
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
@@ -439,12 +439,12 @@ class DendroDistance(object):
             hist1 = np.histogram(stand_data1, bins=bins,
                                  density=True)[0]
             self.histograms1[n, :] = \
-                np.append(hist1, (np.max(self.nbins) - bins.size) * [np.NaN])
+                np.append(hist1, (np.max(self.nbins)-bins.size+1) * [np.NaN])
 
             hist2 = np.histogram(stand_data2, bins=bins,
                                  density=True)[0]
             self.histograms2[n, :] = \
-                np.append(hist2, (np.max(self.nbins) - bins.size) * [np.NaN])
+                np.append(hist2, (np.max(self.nbins)-bins.size+1) * [np.NaN])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])
@@ -513,10 +513,6 @@ def hellinger_stat(x, y):
         for n in range(x.shape[0]):
             dists[n, 0] = hellinger(x[n, :], y[n, :])
         return np.mean(dists)
-
-
-def standardize(x):
-    return (x - np.nanmean(x)) / np.nanstd(x)
 
 
 def std_window(y, size=5, return_results=False):
