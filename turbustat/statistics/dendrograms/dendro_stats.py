@@ -410,7 +410,7 @@ class DendroDistance(object):
         '''
 
         if self.nbins == "best":
-            self.nbins = [int(round(np.sqrt((n1 + n2) / 2.))) for n1, n2 in
+            self.nbins = [np.floor(np.mean([n1, n2])) for n1, n2 in
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
