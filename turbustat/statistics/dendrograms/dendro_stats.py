@@ -19,7 +19,7 @@ import statsmodels.api as sm
 from mecdf import mecdf
 from astrodendro import Dendrogram
 
-from ..stats_utils import hellinger, common_histogram_bins
+from ..stats_utils import hellinger, common_histogram_bins, standardize
 
 
 class Dendrogram_Stats(object):
@@ -513,10 +513,6 @@ def hellinger_stat(x, y):
         for n in range(x.shape[0]):
             dists[n, 0] = hellinger(x[n, :], y[n, :])
         return np.mean(dists)
-
-
-def standardize(x):
-    return (x - np.nanmean(x)) / np.nanstd(x)
 
 
 def std_window(y, size=5, return_results=False):
