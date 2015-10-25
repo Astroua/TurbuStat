@@ -65,7 +65,8 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False):
     global_max = max(np.nanmax(dataset1), np.nanmax(dataset2))
 
     if nbins is None:
-        nbins = int(np.sqrt((dataset1.size + dataset2.size)/2.))
+        avg_num = np.sqrt((dataset1.size + dataset2.size)/2.)
+        nbins = np.floor(avg_num).astype(int)
 
     if logscale:
         return np.logspace(np.log10(global_min),
