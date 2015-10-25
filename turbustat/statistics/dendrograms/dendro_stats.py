@@ -419,10 +419,10 @@ class DendroDistance(object):
 
         self.histograms1 = \
             np.empty((len(self.dendro1.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                     np.max(self.nbins)-1))
         self.histograms2 = \
             np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                     np.max(self.nbins)-1))
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -432,7 +432,7 @@ class DendroDistance(object):
             stand_data2 = standardize(data2)
 
             bins = common_histogram_bins(stand_data1, stand_data2,
-                                         nbins=nbin)
+                                         nbins=nbin+1)
 
             self.bins.append(bins)
 
