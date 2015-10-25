@@ -432,7 +432,7 @@ class DendroDistance(object):
             stand_data2 = standardize(data2)
 
             bins = common_histogram_bins(stand_data1, stand_data2,
-                                         nbins=nbin+1)
+                                         nbins=nbin)
 
             self.bins.append(bins)
 
