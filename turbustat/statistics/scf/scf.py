@@ -105,13 +105,20 @@ class SCF(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(2, 1, 1)
+            p.subplot(1, 2, 1)
             p.imshow(self.scf_surface, origin="lower", interpolation="nearest")
-            p.colorbar()
+            cb = p.colorbar()
+            cb.set_label("SCF Value")
 
-            p.subplot(2, 1, 2)
+            p.subplot(2, 2, 2)
             p.hist(self.scf_surface.ravel())
+            p.xlabel("SCF Value")
 
+            p.subplot(2, 2, 4)
+            p.semilogx(self.lags, self.scf_spectrum, 'kD-')
+            p.xlabel("Lags")
+
+            p.tight_layout()
             p.show()
 
 
