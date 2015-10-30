@@ -2,6 +2,7 @@
 
 
 import numpy as np
+from ..psds import pspec
 
 
 class SCF(object):
@@ -27,12 +28,26 @@ class SCF(object):
         else:
             self.size = size
 
-        self.scf_surface = np.zeros((self.size, self.size))
+        self._scf_surface = None
 
-    def compute_scf(self):
+    @property
+    def scf_surface(self):
+        return self._scf_surface
+
+    @property
+    def scf_spectrum(self):
+        return self._scf_spectrum
+
+    @property
+    def lags(self):
+        return self._lags
+
+    def compute_surface(self):
         '''
         Compute the SCF up to the given size.
         '''
+
+        self._scf_surface = np.zeros((self.size, self.size))
 
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2
@@ -47,34 +62,63 @@ class SCF(object):
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self.scf_surface[
-                    i + self.size / 2, j + self.size / 2] = scf_value
+                self._scf_surface[i+self.size/2, j+self.size/2] = scf_value
 
         return self
 
-    def run(self, verbose=False):
+    def compute_spectrum(self, logspacing=False, **kwargs):
+        '''
+        Compute the 1D spectrum as a function of lag. Can optionally
+        use log-spaced bins. kwargs are passed into the pspec function,
+        which provides many options. The default settings are applicable in
+        nearly all use cases.
+
+        Parameters
+        ----------
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        '''
+
+        # If scf_surface hasn't been computed, do it
+        if self.scf_surface is None:
+            self.compute_surface()
+
+        self._lags, self._scf_spectrum = \
+            pspec(self.scf_surface, logspacing=logspacing,
+                  **kwargs)
+
+    def run(self, logspacing=False, verbose=False):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
         Parameters
         ----------
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
         verbose : bool, optional
             Enables plotting.
-
         '''
 
-        self.compute_scf()
+        self.compute_surface()
+        self.compute_spectrum()
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(2, 1, 1)
+            p.subplot(1, 2, 1)
             p.imshow(self.scf_surface, origin="lower", interpolation="nearest")
-            p.colorbar()
+            cb = p.colorbar()
+            cb.set_label("SCF Value")
 
-            p.subplot(2, 1, 2)
+            p.subplot(2, 2, 2)
             p.hist(self.scf_surface.ravel())
+            p.xlabel("SCF Value")
 
+            p.subplot(2, 2, 4)
+            p.semilogx(self.lags, self.scf_spectrum, 'kD-')
+            p.xlabel("Lags")
+
+            p.tight_layout()
             p.show()
 
 
