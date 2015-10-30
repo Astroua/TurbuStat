@@ -28,14 +28,26 @@ class SCF(object):
         else:
             self.size = size
 
-        self.scf_surface = None
+        self._scf_surface = None
+
+    @property
+    def scf_surface(self):
+        return self._scf_surface
+
+    @property
+    def scf_spectrum(self):
+        return self._scf_spectrum
+
+    @property
+    def lags(self):
+        return self._lags
 
     def compute_surface(self):
         '''
         Compute the SCF up to the given size.
         '''
 
-        self.scf_surface = np.zeros((self.size, self.size))
+        self._scf_surface = np.zeros((self.size, self.size))
 
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2
@@ -50,8 +62,7 @@ class SCF(object):
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self.scf_surface[
-                    i + self.size / 2, j + self.size / 2] = scf_value
+                self._scf_surface[i+self.size/2, j+self.size/2] = scf_value
 
         return self
 
@@ -72,7 +83,7 @@ class SCF(object):
         if self.scf_surface is None:
             self.compute_surface()
 
-        self.lags, self.scf_spectrum = \
+        self._lags, self._scf_spectrum = \
             pspec(self.scf_surface, logspacing=logspacing,
                   **kwargs)
 
