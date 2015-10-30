@@ -2,6 +2,7 @@
 
 
 import numpy as np
+from ..psds import pspec
 
 
 class SCF(object):
@@ -27,12 +28,14 @@ class SCF(object):
         else:
             self.size = size
 
-        self.scf_surface = np.zeros((self.size, self.size))
+        self.scf_surface = None
 
-    def compute_scf(self):
+    def compute_surface(self):
         '''
         Compute the SCF up to the given size.
         '''
+
+        self.scf_surface = np.zeros((self.size, self.size))
 
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2
@@ -52,18 +55,41 @@ class SCF(object):
 
         return self
 
-    def run(self, verbose=False):
+    def compute_spectrum(self, logspacing=False, **kwargs):
+        '''
+        Compute the 1D spectrum as a function of lag. Can optionally
+        use log-spaced bins. kwargs are passed into the pspec function,
+        which provides many options. The default settings are applicable in
+        nearly all use cases.
+
+        Parameters
+        ----------
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        '''
+
+        # If scf_surface hasn't been computed, do it
+        if self.scf_surface is None:
+            self.compute_surface()
+
+        self.lags, self.scf_spectrum = \
+            pspec(self.scf_surface, logspacing=logspacing,
+                  **kwargs)
+
+    def run(self, logspacing=False, verbose=False):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
         Parameters
         ----------
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
         verbose : bool, optional
             Enables plotting.
-
         '''
 
-        self.compute_scf()
+        self.compute_surface()
+        self.compute_spectrum()
 
         if verbose:
             import matplotlib.pyplot as p
