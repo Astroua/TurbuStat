@@ -225,12 +225,12 @@ class MVC_distance(object):
         '''
 
         clip_freq1 = \
-            self.mvc1.freq[clip_func(self.mvc1.freqs, low_cut, high_cut)]
+            self.mvc1.freqs[clip_func(self.mvc1.freqs, low_cut, high_cut)]
         clip_ps1D1 = \
             self.mvc1.ps1D[clip_func(self.mvc1.freqs, low_cut, high_cut)]
 
         clip_freq2 = \
-            self.mvc2.freq[clip_func(self.mvc2.freqs, low_cut, high_cut)]
+            self.mvc2.freqs[clip_func(self.mvc2.freqs, low_cut, high_cut)]
         clip_ps1D2 = \
             self.mvc2.ps1D[clip_func(self.mvc2.freqs, low_cut, high_cut)]
 

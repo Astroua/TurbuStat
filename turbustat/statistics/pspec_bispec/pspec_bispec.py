@@ -210,14 +210,14 @@ class PSpec_Distance(object):
         '''
 
         clip_freq1 = \
-            self.pspec1.freqs[clip_func(self.pspec1.freq, low_cut, high_cut)]
+            self.pspec1.freqs[clip_func(self.pspec1.freqs, low_cut, high_cut)]
         clip_ps1D1 = \
-            self.pspec1.ps1D[clip_func(self.pspec1.freq, low_cut, high_cut)]
+            self.pspec1.ps1D[clip_func(self.pspec1.freqs, low_cut, high_cut)]
 
         clip_freq2 = \
-            self.pspec2.freqs[clip_func(self.pspec2.freq, low_cut, high_cut)]
+            self.pspec2.freqs[clip_func(self.pspec2.freqs, low_cut, high_cut)]
         clip_ps1D2 = \
-            self.pspec2.ps1D[clip_func(self.pspec2.freq, low_cut, high_cut)]
+            self.pspec2.ps1D[clip_func(self.pspec2.freqs, low_cut, high_cut)]
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
