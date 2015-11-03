@@ -2,6 +2,8 @@
 
 
 import numpy as np
+import cPickle as pickle
+from copy import deepcopy
 from ..psds import pspec
 
 
@@ -103,7 +105,44 @@ class SCF(object):
                       **kwargs)
             self._stddev_flag = False
 
-    def run(self, logspacing=False, return_stddev=False, verbose=False):
+    def save_results(self, output_name=None, keep_data=False):
+        '''
+        Save the results of the dendrogram statistics to avoid re-computing.
+        The pickled file will not include the data cube by default.
+        '''
+
+        if output_name is None:
+            output_name = "scf_output.pkl"
+
+        if output_name[-4:] != ".pkl":
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy.cube = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    @staticmethod
+    def load_results(pickle_file):
+        '''
+        Load in a saved pickle file.
+        Parameters
+        ----------
+        pickle_file : str
+            Name of filename to load in.
+        '''
+
+        with open(pickle_file, 'rb') as input:
+                self = pickle.load(input)
+
+        return self
+
+    def run(self, logspacing=False, return_stddev=False, verbose=False,
+            save_results=False, output_name=None):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -118,6 +157,9 @@ class SCF(object):
         self.compute_surface()
         self.compute_spectrum(logspacing=logspacing,
                               return_stddev=return_stddev)
+
+        if save_results:
+            self.save_results(output_name=output_name)
 
         if verbose:
             import matplotlib.pyplot as p
