@@ -43,9 +43,27 @@ class PowerSpectrum(object):
 
         self.weighted_img = self.img * weights
 
-        self.ps2D = None
-        self.ps1D = None
-        self.freq = None
+        self._ps1D_stddev = None
+
+    @property
+    def ps2D(self):
+        return self._ps2D
+
+    @property
+    def ps1D(self):
+        return self._ps1D
+
+    @property
+    def ps1D_stddev(self):
+        if not self._stddev_flag:
+            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+                    " is enabled.")
+
+        return self._ps1D_stddev
+
+    @property
+    def freqs(self):
+        return self._freqs
 
     def compute_pspec(self):
         '''
@@ -54,13 +72,12 @@ class PowerSpectrum(object):
 
         fft = fftshift(rfft_to_fft(self.weighted_img))
 
-        self.ps2D = np.power(fft, 2.)
+        self._ps2D = np.power(fft, 2.)
 
         return self
 
-    def compute_radial_pspec(self, return_index=True, wavenumber=False,
-                             return_stddev=False, azbins=1,
-                             binsize=1.0, view=False, **kwargs):
+    def compute_radial_pspec(self, return_stddev=False, logspacing=True,
+                             **kwargs):
         '''
 
         Computes the radially averaged power spectrum.
@@ -68,15 +85,21 @@ class PowerSpectrum(object):
         See the above url for parameter explanations.
         '''
 
-        self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index,
-                                     wavenumber=wavenumber,
-                                     return_stddev=return_stddev,
-                                     azbins=azbins, binsize=binsize,
-                                     view=view, **kwargs)
+        if return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = \
+                pspec(self.ps2D, logspacing=logspacing,
+                      return_stddev=return_stddev, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._freqs, self._ps1D = \
+                pspec(self.ps2D, logspacing=logspacing,
+                      return_stddev=return_stddev, **kwargs)
+            self._stddev_flag = False
 
         return self
 
-    def run(self, phys_units=False, verbose=False):
+    def run(self, phys_units=False, verbose=False, return_stddev=False,
+            logspacing=True):
         '''
         Full computation of the Spatial Power Spectrum.
 
@@ -89,10 +112,11 @@ class PowerSpectrum(object):
         '''
 
         self.compute_pspec()
-        self.compute_radial_pspec(logspacing=True)
+        self.compute_radial_pspec(logspacing=logspacing,
+                                  return_stddev=return_stddev)
 
         if phys_units:
-            self.freq *= self.degperpix ** -1
+            self._freqs *= self.degperpix ** -1
 
         if verbose:
             import matplotlib.pyplot as p
@@ -100,10 +124,23 @@ class PowerSpectrum(object):
             p.imshow(
                 np.log10(self.ps2D), origin="lower", interpolation="nearest")
             p.colorbar()
-            p.subplot(122)
-            p.loglog(self.freq, self.ps1D, "bD")
-            p.xlabel("log K")
+            ax = p.subplot(122)
+            if self._stddev_flag:
+                ax.errorbar(self.freqs, self.ps1D, yerr=self.ps1D_stddev,
+                            fmt='D-', color='b', alpha=0.5, markersize=5)
+                ax.set_xscale("log", nonposy='clip')
+                ax.set_yscale("log", nonposy='clip')
+            else:
+                p.loglog(self.freqs, self.ps1D, "bD", alpha=0.5,
+                         markersize=5)
+            if phys_units:
+                ax.set_xlabel(r"log K/deg$^{-1}$")
+            else:
+                ax.set_xlabel(r"log K/pixel$^{-1}$")
+
             p.ylabel("Power (K)")
+
+            p.tight_layout()
             p.show()
 
         return self
@@ -173,12 +210,12 @@ class PSpec_Distance(object):
         '''
 
         clip_freq1 = \
-            self.pspec1.freq[clip_func(self.pspec1.freq, low_cut, high_cut)]
+            self.pspec1.freqs[clip_func(self.pspec1.freq, low_cut, high_cut)]
         clip_ps1D1 = \
             self.pspec1.ps1D[clip_func(self.pspec1.freq, low_cut, high_cut)]
 
         clip_freq2 = \
-            self.pspec2.freq[clip_func(self.pspec2.freq, low_cut, high_cut)]
+            self.pspec2.freqs[clip_func(self.pspec2.freq, low_cut, high_cut)]
         clip_ps1D2 = \
             self.pspec2.ps1D[clip_func(self.pspec2.freq, low_cut, high_cut)]
 
