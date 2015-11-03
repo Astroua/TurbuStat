@@ -2,6 +2,8 @@
 
 
 import numpy as np
+import cPickle as pickle
+from copy import deepcopy
 from ..psds import pspec
 
 
@@ -29,6 +31,7 @@ class SCF(object):
             self.size = size
 
         self._scf_surface = None
+        self._scf_spectrum_stddev = None
 
     @property
     def scf_surface(self):
@@ -37,6 +40,13 @@ class SCF(object):
     @property
     def scf_spectrum(self):
         return self._scf_spectrum
+
+    @property
+    def scf_spectrum_stddev(self):
+        if not self._stddev_flag:
+            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+                    " is enabled.")
+        return self._scf_spectrum_stddev
 
     @property
     def lags(self):
@@ -66,7 +76,8 @@ class SCF(object):
 
         return self
 
-    def compute_spectrum(self, logspacing=False, **kwargs):
+    def compute_spectrum(self, logspacing=False, return_stddev=False,
+                         **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
         use log-spaced bins. kwargs are passed into the pspec function,
@@ -77,17 +88,83 @@ class SCF(object):
         ----------
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        kwargs : passed to pspec
         '''
 
         # If scf_surface hasn't been computed, do it
         if self.scf_surface is None:
             self.compute_surface()
 
-        self._lags, self._scf_spectrum = \
-            pspec(self.scf_surface, logspacing=logspacing,
-                  **kwargs)
+        if return_stddev:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
+                pspec(self.scf_surface, logspacing=logspacing,
+                      return_stddev=return_stddev, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._lags, self._scf_spectrum = \
+                pspec(self.scf_surface, logspacing=logspacing,
+                      **kwargs)
+            self._stddev_flag = False
 
-    def run(self, logspacing=False, verbose=False):
+    def save_results(self, output_name=None, keep_data=False):
+        '''
+        Save the results of the dendrogram statistics to avoid re-computing.
+        The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str, optional
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
+        '''
+
+        if output_name is None:
+            output_name = "scf_output.pkl"
+
+        if output_name[-4:] != ".pkl":
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy.cube = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    @staticmethod
+    def load_results(pickle_file):
+        '''
+        Load in a saved pickle file.
+
+        Parameters
+        ----------
+        pickle_file : str
+            Name of filename to load in.
+
+        Returns
+        -------
+        self : SCF instance
+            SCF instance with saved results.
+
+        Examples
+        --------
+        Load saved results.
+        >>> scf = SCF.load_results("scf_saved.pkl")
+
+        '''
+
+        with open(pickle_file, 'rb') as input:
+                self = pickle.load(input)
+
+        return self
+
+    def run(self, logspacing=False, return_stddev=False, verbose=False,
+            save_results=False, output_name=None):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -95,12 +172,22 @@ class SCF(object):
         ----------
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
         verbose : bool, optional
             Enables plotting.
+        save_results : bool, optional
+            Pickle the results.
+        output_name : str, optional
+            Name of the outputted pickle file.
         '''
 
         self.compute_surface()
-        self.compute_spectrum()
+        self.compute_spectrum(logspacing=logspacing,
+                              return_stddev=return_stddev)
+
+        if save_results:
+            self.save_results(output_name=output_name)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -114,9 +201,16 @@ class SCF(object):
             p.hist(self.scf_surface.ravel())
             p.xlabel("SCF Value")
 
-            p.subplot(2, 2, 4)
-            p.semilogx(self.lags, self.scf_spectrum, 'kD-')
-            p.xlabel("Lags")
+            ax = p.subplot(2, 2, 4)
+            if self._stddev_flag:
+                ax.errorbar(self.lags, self.scf_spectrum,
+                            yerr=self.scf_spectrum_stddev,
+                            fmt='D-', color='k', markersize=5)
+                ax.set_xscale("log", nonposy='clip')
+            else:
+                p.semilogx(self.lags, self.scf_spectrum, 'kD-',
+                           markersize=5)
+            ax.set_xlabel("Lag (pixel)")
 
             p.tight_layout()
             p.show()

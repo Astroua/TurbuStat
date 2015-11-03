@@ -52,6 +52,28 @@ class VCA(object):
         if phys_units:
             self.phys_units_flag = True
 
+        self._ps1D_stddev = None
+
+    @property
+    def ps2D(self):
+        return self._ps2D
+
+    @property
+    def ps1D(self):
+        return self._ps1D
+
+    @property
+    def ps1D_stddev(self):
+        if not self._stddev_flag:
+            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+                    " is enabled.")
+
+        return self._ps1D_stddev
+
+    @property
+    def freqs(self):
+        return self._freqs
+
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
@@ -59,28 +81,37 @@ class VCA(object):
 
         vca_fft = fftshift(rfft_to_fft(self.cube))
 
-        self.ps2D = np.power(vca_fft, 2.).sum(axis=0)
+        self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
         return self
 
-    def compute_radial_pspec(self, return_index=True, wavenumber=False,
-                             return_stddev=False, azbins=1,
-                             binsize=1.0, view=False, **kwargs):
+    def compute_radial_pspec(self, return_stddev=False,
+                             logspacing=True, **kwargs):
         '''
-        Computes the radially averaged power spectrum
-        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
-        See the above url for parameter explanations.
+        Computes the radially averaged power spectrum.
+
+        Parameters
+        ----------
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        kwargs : passed to pspec
         '''
 
-        self.freqs, self.ps1D = \
-            pspec(self.ps2D, return_index=return_index,
-                  wavenumber=wavenumber,
-                  return_stddev=return_stddev,
-                  azbins=azbins, binsize=binsize,
-                  view=view, **kwargs)
+        if return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      logspacing=logspacing, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._freqs, self._ps1D = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      **kwargs)
+            self._stddev_flag = False
 
         if self.phys_units_flag:
-            self.freqs *= np.abs(self.header["CDELT2"]) ** -1.
+            self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
         return self
 
@@ -186,13 +217,23 @@ class VCA(object):
                      origin="lower")
             p.colorbar()
 
-            p.subplot(121)
+            ax = p.subplot(121)
+        else:
+            ax = p.subplot(111)
 
         good_interval = np.logical_and(self.freqs > self.low_cut,
                                        self.freqs <= self.high_cut)
 
-        p.loglog(self.freqs[good_interval],
-                 self.ps1D[good_interval], color+"D", alpha=0.5)
+        if self._stddev_flag:
+            ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
+                        yerr=self.ps1D_stddev[good_interval], color=color,
+                        fmt='D', markersize=5, alpha=0.5)
+            ax.set_xscale("log", nonposy='clip')
+            ax.set_yscale("log", nonposy='clip')
+        else:
+            p.loglog(self.freqs[good_interval],
+                     self.ps1D[good_interval], color+"D", alpha=0.5,
+                     markersize=5)
 
         y_fit = self.fit.fittedvalues
         p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
@@ -204,19 +245,25 @@ class VCA(object):
         if show:
             p.show()
 
-    def run(self, verbose=False, brk=None, **kwargs):
+    def run(self, verbose=False, brk=None, return_stddev=False,
+            logspacing=True):
         '''
         Full computation of VCA.
 
         Parameters
         ----------
-        verbose: bool, optional
+        verbose : bool, optional
             Enables plotting.
-        kwargs : passed to pspec.
+        brk : float, optional
+            Initial guess for the break point.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
         '''
 
         self.compute_pspec()
-        self.compute_radial_pspec(**kwargs)
+        self.compute_radial_pspec(return_stddev=return_stddev)
         self.fit_pspec(brk=brk)
 
         if verbose:
