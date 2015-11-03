@@ -85,25 +85,29 @@ class VCA(object):
 
         return self
 
-    def compute_radial_pspec(self, return_index=True,
-                             return_stddev=False, logspacing=True,
-                             **kwargs):
+    def compute_radial_pspec(self, return_stddev=False,
+                             logspacing=True, **kwargs):
         '''
-        Computes the radially averaged power spectrum
-        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
-        See the above url for parameter explanations.
+        Computes the radially averaged power spectrum.
+
+        Parameters
+        ----------
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        kwargs : passed to pspec
         '''
 
         if return_stddev:
             self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, return_index=return_index,
-                      return_stddev=return_stddev, logspacing=logspacing,
-                      **kwargs)
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      logspacing=logspacing, **kwargs)
             self._stddev_flag = True
         else:
             self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_index=return_index,
-                      return_stddev=return_stddev, **kwargs)
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      **kwargs)
             self._stddev_flag = False
 
         if self.phys_units_flag:
@@ -248,9 +252,14 @@ class VCA(object):
 
         Parameters
         ----------
-        verbose: bool, optional
+        verbose : bool, optional
             Enables plotting.
-        kwargs : passed to pspec.
+        brk : float, optional
+            Initial guess for the break point.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
         '''
 
         self.compute_pspec()

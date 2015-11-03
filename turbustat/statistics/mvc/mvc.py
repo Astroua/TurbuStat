@@ -16,16 +16,12 @@ class MVC(object):
 
     Parameters
     ----------
-
     centroid : numpy.ndarray
         Normalized first moment array.
-
     moment0 : numpy.ndarray
         Moment 0 array.
-
     linewidth : numpy.ndarray
         Normalized second moment array
-
     header : FITS header
         Header of any of the arrays. Used only to get the
         spatial scale.
@@ -100,8 +96,14 @@ class MVC(object):
                              logspacing=True, **kwargs):
         '''
         Computes the radially averaged power spectrum.
-        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
-        See the above url for parameter explanations.
+
+        Parameters
+        ----------
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        kwargs : passed to pspec
         '''
 
         if return_stddev:
@@ -128,6 +130,10 @@ class MVC(object):
             Sets frequency scale to physical units.
         verbose: bool, optional
             Enables plotting.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
         '''
 
         self.compute_pspec()

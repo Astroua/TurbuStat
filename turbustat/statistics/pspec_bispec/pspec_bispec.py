@@ -79,10 +79,15 @@ class PowerSpectrum(object):
     def compute_radial_pspec(self, return_stddev=False, logspacing=True,
                              **kwargs):
         '''
-
         Computes the radially averaged power spectrum.
-        This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
-        See the above url for parameter explanations.
+
+        Parameters
+        ----------
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        kwargs : passed to pspec
         '''
 
         if return_stddev:
@@ -109,6 +114,10 @@ class PowerSpectrum(object):
             Sets frequency scale to physical units.
         verbose: bool, optional
             Enables plotting.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
         '''
 
         self.compute_pspec()

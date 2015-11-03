@@ -88,6 +88,9 @@ class SCF(object):
         ----------
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        kwargs : passed to pspec
         '''
 
         # If scf_surface hasn't been computed, do it
@@ -109,6 +112,13 @@ class SCF(object):
         '''
         Save the results of the dendrogram statistics to avoid re-computing.
         The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str, optional
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
         '''
 
         if output_name is None:
@@ -130,10 +140,22 @@ class SCF(object):
     def load_results(pickle_file):
         '''
         Load in a saved pickle file.
+
         Parameters
         ----------
         pickle_file : str
             Name of filename to load in.
+
+        Returns
+        -------
+        self : SCF instance
+            SCF instance with saved results.
+
+        Examples
+        --------
+        Load saved results.
+        >>> scf = SCF.load_results("scf_saved.pkl")
+
         '''
 
         with open(pickle_file, 'rb') as input:
@@ -150,8 +172,14 @@ class SCF(object):
         ----------
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
         verbose : bool, optional
             Enables plotting.
+        save_results : bool, optional
+            Pickle the results.
+        output_name : str, optional
+            Name of the outputted pickle file.
         '''
 
         self.compute_surface()
