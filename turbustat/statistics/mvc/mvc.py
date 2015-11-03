@@ -47,9 +47,27 @@ class MVC(object):
         assert self.centroid.shape == self.linewidth.shape
         self.shape = self.centroid.shape
 
-        self.ps2D = None
-        self.ps1D = None
-        self.freq = None
+        self._ps1D_stddev = None
+
+    @property
+    def ps2D(self):
+        return self._ps2D
+
+    @property
+    def ps1D(self):
+        return self._ps1D
+
+    @property
+    def ps1D_stddev(self):
+        if not self._stddev_flag:
+            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+                    " is enabled.")
+
+        return self._ps1D_stddev
+
+    @property
+    def freqs(self):
+        return self._freqs
 
     def compute_pspec(self):
         '''
@@ -74,28 +92,33 @@ class MVC(object):
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
-        self.ps2D = np.abs(mvc_fft) ** 2.
+        self._ps2D = np.abs(mvc_fft) ** 2.
 
         return self
 
-    def compute_radial_pspec(self, return_index=True, wavenumber=False,
-                             return_stddev=False, azbins=1, binsize=1.0,
-                             view=False, **kwargs):
+    def compute_radial_pspec(self, return_stddev=False,
+                             logspacing=True, **kwargs):
         '''
         Computes the radially averaged power spectrum.
         This uses Adam Ginsburg's code (see https://github.com/keflavich/agpy).
         See the above url for parameter explanations.
         '''
 
-        self.freq, self.ps1D = pspec(self.ps2D, return_index=return_index,
-                                     wavenumber=wavenumber,
-                                     return_stddev=return_stddev,
-                                     azbins=azbins, binsize=binsize,
-                                     view=view, **kwargs)
+        if return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      logspacing=logspacing, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._freqs, self._ps1D = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      logspacing=logspacing, **kwargs)
+            self._stddev_flag = False
 
         return self
 
-    def run(self, phys_units=False, verbose=False):
+    def run(self, phys_units=False, verbose=False, logspacing=True,
+            return_stddev=False):
         '''
         Full computation of MVC.
 
@@ -108,10 +131,11 @@ class MVC(object):
         '''
 
         self.compute_pspec()
-        self.compute_radial_pspec(logspacing=True)
+        self.compute_radial_pspec(logspacing=logspacing,
+                                  return_stddev=return_stddev)
 
         if phys_units:
-            self.freqs *= self.degperpix ** -1
+            self._freqs *= self.degperpix ** -1
 
         if verbose:
             import matplotlib.pyplot as p
@@ -119,8 +143,21 @@ class MVC(object):
             p.imshow(
                 np.log10(self.ps2D), origin="lower", interpolation="nearest")
             p.colorbar()
-            p.subplot(122)
-            p.loglog(self.freq, self.ps1D, "bD-")
+            ax = p.subplot(122)
+            if self._stddev_flag:
+                ax.errorbar(self.freqs, self.ps1D, yerr=self.ps1D_stddev,
+                            fmt='D-', color='b', markersize=5, alpha=0.5)
+                ax.set_xscale("log", nonposy='clip')
+                ax.set_yscale("log", nonposy='clip')
+            else:
+                p.loglog(self.freqs, self.ps1D, "bD-", markersize=5,
+                         alpha=0.5)
+
+            if phys_units:
+                ax.set_xlabel("Frequency (1/deg)")
+            else:
+                ax.set_xlabel("Frequency (pixels)")
+
             p.show()
 
         return self
