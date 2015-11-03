@@ -29,6 +29,7 @@ class SCF(object):
             self.size = size
 
         self._scf_surface = None
+        self._scf_spectrum_stddev = None
 
     @property
     def scf_surface(self):
@@ -37,6 +38,13 @@ class SCF(object):
     @property
     def scf_spectrum(self):
         return self._scf_spectrum
+
+    @property
+    def scf_spectrum_stddev(self):
+        if not self._stddev_flag:
+            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+                    " is enabled.")
+        return self._scf_spectrum_stddev
 
     @property
     def lags(self):
@@ -66,7 +74,8 @@ class SCF(object):
 
         return self
 
-    def compute_spectrum(self, logspacing=False, **kwargs):
+    def compute_spectrum(self, logspacing=False, return_stddev=False,
+                         **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
         use log-spaced bins. kwargs are passed into the pspec function,
@@ -83,11 +92,18 @@ class SCF(object):
         if self.scf_surface is None:
             self.compute_surface()
 
-        self._lags, self._scf_spectrum = \
-            pspec(self.scf_surface, logspacing=logspacing,
-                  **kwargs)
+        if return_stddev:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
+                pspec(self.scf_surface, logspacing=logspacing,
+                      return_stddev=return_stddev, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._lags, self._scf_spectrum = \
+                pspec(self.scf_surface, logspacing=logspacing,
+                      **kwargs)
+            self._stddev_flag = False
 
-    def run(self, logspacing=False, verbose=False):
+    def run(self, logspacing=False, return_stddev=False, verbose=False):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -100,7 +116,8 @@ class SCF(object):
         '''
 
         self.compute_surface()
-        self.compute_spectrum()
+        self.compute_spectrum(logspacing=logspacing,
+                              return_stddev=return_stddev)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -114,9 +131,14 @@ class SCF(object):
             p.hist(self.scf_surface.ravel())
             p.xlabel("SCF Value")
 
-            p.subplot(2, 2, 4)
-            p.semilogx(self.lags, self.scf_spectrum, 'kD-')
-            p.xlabel("Lags")
+            ax = p.subplot(2, 2, 4)
+            if self._stddev_flag:
+                ax.errorbar(self.lags, self.scf_spectrum,
+                            yerr=self.scf_spectrum_stddev)
+                ax.set_xscale("log", nonposy='clip')
+            else:
+                p.semilogx(self.lags, self.scf_spectrum, 'kD-')
+            ax.set_xlabel("Lags")
 
             p.tight_layout()
             p.show()
