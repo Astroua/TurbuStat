@@ -134,11 +134,13 @@ class SCF(object):
             ax = p.subplot(2, 2, 4)
             if self._stddev_flag:
                 ax.errorbar(self.lags, self.scf_spectrum,
-                            yerr=self.scf_spectrum_stddev)
+                            yerr=self.scf_spectrum_stddev,
+                            fmt='D-', color='k', markersize=5)
                 ax.set_xscale("log", nonposy='clip')
             else:
-                p.semilogx(self.lags, self.scf_spectrum, 'kD-')
-            ax.set_xlabel("Lags")
+                p.semilogx(self.lags, self.scf_spectrum, 'kD-',
+                           markersize=5)
+            ax.set_xlabel("Lag (pixel)")
 
             p.tight_layout()
             p.show()
