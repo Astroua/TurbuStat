@@ -83,7 +83,13 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
         nbins = np.floor(avg_num).astype(int)
 
     if logscale:
-        return np.logspace(np.log10(global_min),
+        bins = np.logspace(np.log10(global_min),
                            np.log10(global_max), num=nbins)
+    else:
+        bins = np.linspace(global_min, global_max, num=nbins)
 
-    return np.linspace(global_min, global_max, num=nbins)
+    if return_centered:
+        center_bins = (bins[:-1] + bins[1:]) / 2
+        return bins, center_bins
+
+    return bins
