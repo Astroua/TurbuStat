@@ -16,7 +16,8 @@ class PDF(object):
     '''
     Create the PDF of a given array.
     '''
-    def __init__(self, img, min_val=0.0, bins=None, weights=None, norm=False):
+    def __init__(self, img, min_val=0.0, bins=None, weights=None,
+                 use_standardized=False):
         super(PDF, self).__init__()
 
         self.img = img
@@ -32,9 +33,9 @@ class PDF(object):
 
             self.data *= self.weights
 
-        if norm:
+        if use_standardized:
             # Normalize by the average
-            self.data /= np.mean(self.data, axis=None)
+            self.data = standardize(self.data)
 
         self._bins = bins
 
@@ -82,12 +83,12 @@ class PDF(object):
     def ecdf(self):
         return self._ecdf
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, bins=None):
         '''
         Run the whole thing.
         '''
 
-        self.make_pdf()
+        self.make_pdf(bins=bins)
         self.make_ecdf()
 
         if verbose:
@@ -156,22 +157,17 @@ class PDF_Distance(object):
         if weights2 is None:
             weights2 = np.ones_like(img2)
 
-        # We want to make sure we're using the same set of bins for the
-        # comparisons. Unfortunately, we have redundant calculations to
-        # do this, but it is somewhat necessary to keep PDF standalone.
 
-        stand1 = standardize((img1 * weights1)[np.isfinite(img1) |
-                                               (img1 > min_val1)])
-        stand2 = standardize((img2 * weights2)[np.isfinite(img2) |
-                                               (img2 > min_val2)])
+        self.PDF1 = PDF(self.img1, use_standardized=True)
 
-        self.bins = common_histogram_bins(stand1, stand2)
+        self.PDF2 = PDF(self.img2, use_standardized=True)
 
-        self.PDF1 = PDF(stand1, bins=self.bins)
-        self.PDF1.run(verbose=False)
+        self.bins = common_histogram_bins(self.PDF1.data, self.PDF2.data)
 
-        self.PDF2 = PDF(stand2, bins=self.bins)
-        self.PDF2.run(verbose=False)
+        # Feed the common set of bins to be used in the PDFs
+        self.PDF1.run(verbose=False, bins=self.bins)
+        self.PDF2.run(verbose=False, bins=self.bins)
+
 
     def compute_hellinger_distance(self):
         '''
