@@ -50,12 +50,26 @@ def kl_divergence(P, Q):
     return np.nansum(np.where(Q != 0, P * np.log(P / Q), 0))
 
 
-def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False):
+def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
+                          return_centered=False):
     '''
     Returns bins appropriate for both given datasets. If nbins is not
     specified, the number is set by the square root of the average
     number of elements in the datasets. This assumes that there are many
     (~>100) elements in each dataset.
+
+    Parameters
+    ----------
+    dataset1 : 1D numpy.ndarray
+        Dataset to use in finding matching set of bins.
+    dataset2 : 1D numpy.ndarray
+        Same as above.
+    nbins : int, optional
+        Specify the number of bins to use.
+    logscale : bool, optional
+        Return logarithmically spaced bins.
+    return_centered : bool, optional
+        Return the centers of the bins along the the usual edge output.
     '''
 
     if dataset1.ndim > 1 or dataset2.ndim > 1:
