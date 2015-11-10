@@ -252,8 +252,8 @@ class PDF_Distance(object):
 
             # ECDF
             p.subplot(132)
-            p.semilogx(self.PDF1.bins, self.PDF1.ecdf, 'b-')
-            p.semilogx(self.PDF2.bins, self.PDF2.ecdf, 'g-')
+            p.semilogx(np.sort(self.PDF1.data.ravel()), self.PDF1.ecdf, 'b-')
+            p.semilogx(np.sort(self.PDF2.data.ravel()), self.PDF2.ecdf, 'g-')
             p.grid(True)
             p.xlabel(r"$\Sigma/\overline{\Sigma}$")
             p.ylabel("ECDF")
