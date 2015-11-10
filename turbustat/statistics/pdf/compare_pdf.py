@@ -151,10 +151,10 @@ class PDF_Distance(object):
         self.img2 = img2
 
         if weights1 is None:
-            weights1 = np.ones(img1.shape)
+            weights1 = np.ones_like(img1)
 
         if weights2 is None:
-            weights2 = np.ones(img2.shape)
+            weights2 = np.ones_like(img2)
 
         # We want to make sure we're using the same set of bins for the
         # comparisons. Unfortunately, we have redundant calculations to
