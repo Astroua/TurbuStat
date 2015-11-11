@@ -156,7 +156,9 @@ class PDF_Distance(object):
         self.PDF2 = PDF(self.img2, min_val=min_val2, use_standardized=True,
                         weights=weights2)
 
-        self.bins = common_histogram_bins(self.PDF1.data, self.PDF2.data)
+        self.bins, self.bin_centers = \
+            common_histogram_bins(self.PDF1.data, self.PDF2.data,
+                                  return_centered=True)
 
         # Feed the common set of bins to be used in the PDFs
         self.PDF1.run(verbose=False, bins=self.bins)
@@ -231,9 +233,9 @@ class PDF_Distance(object):
                 label1 = labels[0]
                 label2 = labels[1]
             p.subplot(131)
-            p.loglog(self.PDF1.bins[self.PDF1.pdf > 0],
+            p.loglog(self.bin_centers[self.PDF1.pdf > 0],
                      self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label=label1)
-            p.loglog(self.PDF1.bins[self.PDF2.pdf > 0],
+            p.loglog(self.bin_centers[self.PDF2.pdf > 0],
                      self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
