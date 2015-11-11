@@ -8,6 +8,7 @@ The density PDF as described by Kowal et al. (2007)
 
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
+import warnings
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
 
@@ -187,8 +188,11 @@ class PDF_Distance(object):
 
     def compute_ad_distance(self):
         '''
-        Compute the distance using the Anderson Darling Test.
+        Compute the distance using the Anderson-Darling Test.
         '''
+
+        warnings.warn("Use of the Anderson-Darling test has not been well"
+                      " tested. Long runtimes and errors may occur.")
 
         D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
 
