@@ -150,15 +150,11 @@ class PDF_Distance(object):
         self.img1 = img1
         self.img2 = img2
 
-        if weights1 is None:
-            weights1 = np.ones_like(img1)
+        self.PDF1 = PDF(self.img1, min_val=min_val1, use_standardized=True,
+                        weights=weights1)
 
-        if weights2 is None:
-            weights2 = np.ones_like(img2)
-
-        self.PDF1 = PDF(self.img1, use_standardized=True)
-
-        self.PDF2 = PDF(self.img2, use_standardized=True)
+        self.PDF2 = PDF(self.img2, min_val=min_val2, use_standardized=True,
+                        weights=weights2)
 
         self.bins = common_histogram_bins(self.PDF1.data, self.PDF2.data)
 
