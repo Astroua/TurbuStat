@@ -98,7 +98,7 @@ class PDF(object):
             if self._standardize_flag:
                 xlabel = r"z-score"
             else:
-                xlabel = r"$\Sigma/\overline{\Sigma}$"
+                xlabel = r"$\Sigma$"
 
             import matplotlib.pyplot as p
             # PDF
