@@ -34,7 +34,6 @@ class PDF(object):
             self.data *= self.weights
 
         if use_standardized:
-            # Normalize by the average
             self.data = standardize(self.data)
 
         self._bins = bins
@@ -157,7 +156,6 @@ class PDF_Distance(object):
         if weights2 is None:
             weights2 = np.ones_like(img2)
 
-
         self.PDF1 = PDF(self.img1, use_standardized=True)
 
         self.PDF2 = PDF(self.img2, use_standardized=True)
@@ -167,7 +165,6 @@ class PDF_Distance(object):
         # Feed the common set of bins to be used in the PDFs
         self.PDF1.run(verbose=False, bins=self.bins)
         self.PDF2.run(verbose=False, bins=self.bins)
-
 
     def compute_hellinger_distance(self):
         '''
@@ -200,7 +197,7 @@ class PDF_Distance(object):
         self.ad_distance = D
         self.ad_pval = p
 
-    def distance_metric(self, statistic='both', labels=None, verbose=False):
+    def distance_metric(self, statistic='all', labels=None, verbose=False):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -214,7 +211,7 @@ class PDF_Distance(object):
             Enables plotting.
         '''
 
-        if statistic is 'both':
+        if statistic is 'all':
             self.compute_hellinger_distance()
             self.compute_ks_distance()
             self.compute_ad_distance()
@@ -225,7 +222,8 @@ class PDF_Distance(object):
         elif statistic is 'ad':
             self.compute_ad_distance()
         else:
-            raise TypeError("statistic must be 'both', 'hellinger', or 'ks'.")
+            raise TypeError("statistic must be 'both'," \
+                            "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
             import matplotlib.pyplot as p
