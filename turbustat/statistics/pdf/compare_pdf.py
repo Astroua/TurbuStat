@@ -16,6 +16,19 @@ from ..stats_utils import hellinger, standardize, common_histogram_bins
 class PDF(object):
     '''
     Create the PDF of a given array.
+
+    Parameters
+    ----------
+    img : numpy.ndarray
+        A 1-3D array.
+    min_val : float, optional
+        Minimum value to keep in the given image.
+    bins : list or numpy.ndarray or int, optional
+        Bins to compute the PDF from.
+    weights : numpy.ndarray, optional
+        Weights to apply to the image. Must have the same shape as the image.
+    use_standardized : bool, optional
+        Enable to standardize the data before computing the PDF and ECDF.
     '''
     def __init__(self, img, min_val=0.0, bins=None, weights=None,
                  use_standardized=False):
@@ -44,6 +57,11 @@ class PDF(object):
     def make_pdf(self, bins=None):
         '''
         Create the PDF.
+
+        Parameters
+        ----------
+        bins : list or numpy.ndarray or int, optional
+            Bins to compute the PDF from. Overrides initial bin input.
         '''
 
         if bins is not None:
@@ -87,7 +105,15 @@ class PDF(object):
 
     def run(self, verbose=False, bins=None):
         '''
-        Run the whole thing.
+        Compute the PDF and ECDF. Enabling verbose provides
+        a summary plot.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting of the results.
+        bins : list or numpy.ndarray or int, optional
+            Bins to compute the PDF from. Overrides initial bin input.
         '''
 
         self.make_pdf(bins=bins)
@@ -215,6 +241,8 @@ class PDF_Distance(object):
 
         Parameters
         ----------
+        statistic : 'all', 'hellinger', 'ks', 'ad'
+            Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
         verbose : bool, optional
