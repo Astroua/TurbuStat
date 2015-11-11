@@ -20,7 +20,7 @@ class testPDF(TestCase):
     def test_PDF(self):
         self.test = PDF(self.dataset1["integrated_intensity"][0],
                         use_standardized=True, min_val=0.05,
-                        weights1=self.dataset1["integrated_intensity_error"][0]**-2.,
+                        weights=self.dataset1["integrated_intensity_error"][0]**-2.,
                         bins=computed_data['pdf_bins'])
         self.test.run(verbose=False)
 
