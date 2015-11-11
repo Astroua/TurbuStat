@@ -159,6 +159,8 @@ pdf_distance = \
 pdf_distance.distance_metric(verbose=False)
 
 pdf_val = pdf_distance.PDF1.pdf
+pdf_ecdf = pdf_distance.PDF1.ecdf
+pdf_bins = pdf_distance.bins
 
 np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     mvc_val=mvc_val,
@@ -175,7 +177,9 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     scf_val=scf_val,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
-                    pdf_val=pdf_val)
+                    pdf_val=pdf_val,
+                    pdf_bins=pdf_bins,
+                    pdf_ecdf=pdf_ecdf)
 
 np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     pca_distance=pca_distance.distance,

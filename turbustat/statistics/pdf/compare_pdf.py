@@ -8,6 +8,7 @@ The density PDF as described by Kowal et al. (2007)
 
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
+import warnings
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
 
@@ -15,8 +16,22 @@ from ..stats_utils import hellinger, standardize, common_histogram_bins
 class PDF(object):
     '''
     Create the PDF of a given array.
+
+    Parameters
+    ----------
+    img : numpy.ndarray
+        A 1-3D array.
+    min_val : float, optional
+        Minimum value to keep in the given image.
+    bins : list or numpy.ndarray or int, optional
+        Bins to compute the PDF from.
+    weights : numpy.ndarray, optional
+        Weights to apply to the image. Must have the same shape as the image.
+    use_standardized : bool, optional
+        Enable to standardize the data before computing the PDF and ECDF.
     '''
-    def __init__(self, img, min_val=0.0, bins=None, weights=None, norm=False):
+    def __init__(self, img, min_val=0.0, bins=None, weights=None,
+                 use_standardized=False):
         super(PDF, self).__init__()
 
         self.img = img
@@ -32,15 +47,21 @@ class PDF(object):
 
             self.data *= self.weights
 
-        if norm:
-            # Normalize by the average
-            self.data /= np.mean(self.data, axis=None)
+        self._standardize_flag = False
+        if use_standardized:
+            self._standardize_flag = True
+            self.data = standardize(self.data)
 
         self._bins = bins
 
     def make_pdf(self, bins=None):
         '''
         Create the PDF.
+
+        Parameters
+        ----------
+        bins : list or numpy.ndarray or int, optional
+            Bins to compute the PDF from. Overrides initial bin input.
         '''
 
         if bins is not None:
@@ -82,28 +103,42 @@ class PDF(object):
     def ecdf(self):
         return self._ecdf
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, bins=None):
         '''
-        Run the whole thing.
+        Compute the PDF and ECDF. Enabling verbose provides
+        a summary plot.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting of the results.
+        bins : list or numpy.ndarray or int, optional
+            Bins to compute the PDF from. Overrides initial bin input.
         '''
 
-        self.make_pdf()
+        self.make_pdf(bins=bins)
         self.make_ecdf()
 
         if verbose:
+
+            if self._standardize_flag:
+                xlabel = r"z-score"
+            else:
+                xlabel = r"$\Sigma$"
+
             import matplotlib.pyplot as p
             # PDF
             p.subplot(131)
             p.loglog(self.bins[self.pdf > 0], self.pdf[self.pdf > 0], 'b-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             p.subplot(132)
             p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(xlabel)
             p.ylabel("ECDF")
 
             # Array representation.
@@ -150,28 +185,19 @@ class PDF_Distance(object):
         self.img1 = img1
         self.img2 = img2
 
-        if weights1 is None:
-            weights1 = np.ones(img1.shape)
+        self.PDF1 = PDF(self.img1, min_val=min_val1, use_standardized=True,
+                        weights=weights1)
 
-        if weights2 is None:
-            weights2 = np.ones(img2.shape)
+        self.PDF2 = PDF(self.img2, min_val=min_val2, use_standardized=True,
+                        weights=weights2)
 
-        # We want to make sure we're using the same set of bins for the
-        # comparisons. Unfortunately, we have redundant calculations to
-        # do this, but it is somewhat necessary to keep PDF standalone.
+        self.bins, self.bin_centers = \
+            common_histogram_bins(self.PDF1.data, self.PDF2.data,
+                                  return_centered=True)
 
-        stand1 = standardize((img1 * weights1)[np.isfinite(img1) |
-                                               (img1 > min_val1)])
-        stand2 = standardize((img2 * weights2)[np.isfinite(img2) |
-                                               (img2 > min_val2)])
-
-        self.bins = common_histogram_bins(stand1, stand2)
-
-        self.PDF1 = PDF(stand1, bins=self.bins)
-        self.PDF1.run(verbose=False)
-
-        self.PDF2 = PDF(stand2, bins=self.bins)
-        self.PDF2.run(verbose=False)
+        # Feed the common set of bins to be used in the PDFs
+        self.PDF1.run(verbose=False, bins=self.bins)
+        self.PDF2.run(verbose=False, bins=self.bins)
 
     def compute_hellinger_distance(self):
         '''
@@ -196,15 +222,18 @@ class PDF_Distance(object):
 
     def compute_ad_distance(self):
         '''
-        Compute the distance using the Anderson Darling Test.
+        Compute the distance using the Anderson-Darling Test.
         '''
+
+        warnings.warn("Use of the Anderson-Darling test has not been well"
+                      " tested. Long runtimes and errors may occur.")
 
         D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
 
         self.ad_distance = D
         self.ad_pval = p
 
-    def distance_metric(self, statistic='both', labels=None, verbose=False):
+    def distance_metric(self, statistic='all', labels=None, verbose=False):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -212,13 +241,15 @@ class PDF_Distance(object):
 
         Parameters
         ----------
+        statistic : 'all', 'hellinger', 'ks', 'ad'
+            Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
         verbose : bool, optional
             Enables plotting.
         '''
 
-        if statistic is 'both':
+        if statistic is 'all':
             self.compute_hellinger_distance()
             self.compute_ks_distance()
             self.compute_ad_distance()
@@ -229,7 +260,8 @@ class PDF_Distance(object):
         elif statistic is 'ad':
             self.compute_ad_distance()
         else:
-            raise TypeError("statistic must be 'both', 'hellinger', or 'ks'.")
+            raise TypeError("statistic must be 'all'," \
+                            "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
             import matplotlib.pyplot as p
@@ -241,21 +273,21 @@ class PDF_Distance(object):
                 label1 = labels[0]
                 label2 = labels[1]
             p.subplot(131)
-            p.loglog(self.PDF1.bins[self.PDF1.pdf > 0],
+            p.loglog(self.bin_centers[self.PDF1.pdf > 0],
                      self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label=label1)
-            p.loglog(self.PDF1.bins[self.PDF2.pdf > 0],
+            p.loglog(self.bin_centers[self.PDF2.pdf > 0],
                      self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(r"z-score")
             p.ylabel("PDF")
 
             # ECDF
             p.subplot(132)
-            p.semilogx(self.PDF1.bins, self.PDF1.ecdf, 'b-')
-            p.semilogx(self.PDF2.bins, self.PDF2.ecdf, 'g-')
+            p.semilogx(np.sort(self.PDF1.data.ravel()), self.PDF1.ecdf, 'b-')
+            p.semilogx(np.sort(self.PDF2.data.ravel()), self.PDF2.ecdf, 'g-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(r"z-score")
             p.ylabel("ECDF")
 
             # Array representation.
