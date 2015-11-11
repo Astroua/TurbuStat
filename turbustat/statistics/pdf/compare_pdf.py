@@ -232,7 +232,7 @@ class PDF_Distance(object):
         elif statistic is 'ad':
             self.compute_ad_distance()
         else:
-            raise TypeError("statistic must be 'both'," \
+            raise TypeError("statistic must be 'all'," \
                             "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
