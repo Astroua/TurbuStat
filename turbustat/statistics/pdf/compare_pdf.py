@@ -251,7 +251,7 @@ class PDF_Distance(object):
                      self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(r"z-score")
             p.ylabel("PDF")
 
             # ECDF
@@ -259,7 +259,7 @@ class PDF_Distance(object):
             p.semilogx(np.sort(self.PDF1.data.ravel()), self.PDF1.ecdf, 'b-')
             p.semilogx(np.sort(self.PDF2.data.ravel()), self.PDF2.ecdf, 'g-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(r"z-score")
             p.ylabel("ECDF")
 
             # Array representation.
