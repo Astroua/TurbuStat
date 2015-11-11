@@ -34,7 +34,9 @@ class PDF(object):
 
             self.data *= self.weights
 
+        self._standardize_flag = False
         if use_standardized:
+            self._standardize_flag = True
             self.data = standardize(self.data)
 
         self._bins = bins
@@ -92,19 +94,25 @@ class PDF(object):
         self.make_ecdf()
 
         if verbose:
+
+            if self._standardize_flag:
+                xlabel = r"z-score"
+            else:
+                xlabel = r"$\Sigma/\overline{\Sigma}$"
+
             import matplotlib.pyplot as p
             # PDF
             p.subplot(131)
             p.loglog(self.bins[self.pdf > 0], self.pdf[self.pdf > 0], 'b-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             p.subplot(132)
             p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
             p.grid(True)
-            p.xlabel(r"$\Sigma/\overline{\Sigma}$")
+            p.xlabel(xlabel)
             p.ylabel("ECDF")
 
             # Array representation.
