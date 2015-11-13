@@ -225,10 +225,9 @@ class PDF_Distance(object):
         Compute the distance using the Anderson-Darling Test.
         '''
 
-        warnings.warn("Use of the Anderson-Darling test has been disabled"
-                      " due to occurence of overflow errors may occur.")
-
-        return
+        raise NotImplementedError(
+            "Use of the Anderson-Darling test has been disabled"
+            " due to occurence of overflow errors.")
 
         # D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
 
@@ -243,7 +242,7 @@ class PDF_Distance(object):
 
         Parameters
         ----------
-        statistic : 'all', 'hellinger', 'ks', 'ad'
+        statistic : 'all', 'hellinger', 'ks'
             Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
