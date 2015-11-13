@@ -4,21 +4,19 @@ Wrapper to run all of the statistics between two data sets.
 For large-scale comparisons, this is the function that should be called.
 '''
 
-from turbustat.statistics import Wavelet_Distance, \
-    MVC_distance, \
-    PSpec_Distance, \
-    BiSpectrum_Distance, \
-    GenusDistance, \
-    DeltaVariance_Distance, \
-    VCA_Distance, \
-    VCS_Distance, \
-    Tsallis_Distance, \
-    StatMomentsDistance, \
-    PCA_Distance, \
-    SCF_Distance, \
-    Cramer_Distance, \
-    DendroDistance, \
-    PDF_Distance
+from .wavelets import Wavelet_Distance
+from .mvc import MVC_distance
+from .pspec_bispec import PSpec_Distance, BiSpectrum_Distance
+from .genus import GenusDistance
+from .delta_variance import DeltaVariance_Distance
+from .vca_vcs import VCA_Distance, VCS_Distance
+from .tsallis import Tsallis_Distance
+from .stat_moments import StatMomentsDistance
+from .pca import PCA_Distance
+from .scf import SCF_Distance
+from .cramer import Cramer_Distance
+from .dendrograms import DendroDistance
+from .pdf import PDF_Distance
 
 from statistics_list import statistics_list
 
