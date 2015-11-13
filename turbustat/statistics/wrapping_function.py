@@ -20,6 +20,8 @@ from turbustat.statistics import Wavelet_Distance, \
     DendroDistance, \
     PDF_Distance
 
+from statistics_list import statistics_list
+
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                   statistics=None, multicore=False, vca_break=None,
@@ -54,12 +56,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
     '''
 
     if statistics is None:  # Run them all
-        statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                      "Genus", "VCS", "VCA", "VCS_Density", "VCS_Velocity",
-                      "VCS_Break",
-                      "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
-                      "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
-                      "Dendrogram_Num", "PDF_Hellinger", "PDF_KS"]
+        statistics = statistics_list
 
     distances = {}
 
@@ -249,8 +246,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 del dendro_distance
 
         if any("PDF_Hellinger" in s for s in statistics) or \
-           any("PDF_KS" in s for s in statistics) or \
-           any("PDF_AD" in s for s in statistics):
+           any("PDF_KS" in s for s in statistics):  # or \
+           # any("PDF_AD" in s for s in statistics):
             pdf_distance = \
                 PDF_Distance(dataset1["integrated_intensity"][0],
                              dataset2["integrated_intensity"][0],
@@ -263,7 +260,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["PDF_Hellinger"] = pdf_distance.hellinger_distance
             distances["PDF_KS"] = pdf_distance.ks_distance
-            distances["PDF_AD"] = pdf_distance.ad_distance
+            # distances["PDF_AD"] = pdf_distance.ad_distance
             if not multicore:
                     fiducial_models["PDF"] = pdf_distance.PDF1
 
@@ -449,8 +446,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 del dendro_distance
 
         if any("PDF_Hellinger" in s for s in statistics) or \
-           any("PDF_KS" in s for s in statistics) or \
-           any("PDF_AD" in s for s in statistics):
+           any("PDF_KS" in s for s in statistics):  # or \
+           # any("PDF_AD" in s for s in statistics):
             pdf_distance = \
                 PDF_Distance(dataset1["integrated_intensity"][0],
                              dataset2["integrated_intensity"][0],
@@ -463,7 +460,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["PDF_Hellinger"] = pdf_distance.hellinger_distance
             distances["PDF_KS"] = pdf_distance.ks_distance
-            distances["PDF_AD"] = pdf_distance.ad_distance
+            # distances["PDF_AD"] = pdf_distance.ad_distance
 
             if cleanup:
                 del pdf_distance
