@@ -121,7 +121,8 @@ os.chdir(path)
 
 print "Fitting model of given design."
 
-subprocess.call(['Rscript', "FactorialAnalysis.R"])
+subprocess.call(['Rscript',
+                 os.path.join(turbustat_path, "Examples/FactorialAnalysis.R")])
 
 # This should create two output tables of the whole dataset.
 
