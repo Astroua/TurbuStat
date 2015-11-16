@@ -108,8 +108,8 @@ for fil in os.listdir(hdf5_path):
 
 print "Making distance plots."
 
-if not os.path.exists(os.path.join(path, "Distance\ Plots")):
-    os.mkdir(os.path.join(path, "Distance\ Plots"))
+if not os.path.exists(os.path.join(path, "Distance Plots")):
+    os.mkdir(os.path.join(path, "Distance Plots"))
 
 ta.comparison_plot(path, comparisons=good_comparison,
                    out_path=path+"Distance Plots/",
@@ -153,8 +153,8 @@ execfile(os.path.join(turbustat_path, "Examples/effect_plots.py"))
 
 statistics_list.remove("PDF_AD")
 
-if not os.path.exists(os.path.join(path, "Model\ Plots")):
-    os.mkdir(os.path.join(path, "Model\ Plots"))
+if not os.path.exists(os.path.join(path, "Model Plots")):
+    os.mkdir(os.path.join(path, "Model Plots"))
 
 effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
              out_path='Model Plots/')
