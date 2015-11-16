@@ -17,7 +17,7 @@ path = sys.argv[1]
 path = path.rstrip("/")
 
 if path.split("/")[-1] == "HDF5_files":
-    hdf5_path = path.copy() + "/"
+    hdf5_path = path + "/"
     path = "/".join(path.split("/")[:-1]) + "/"
 else:
     hdf5_path = path + "/HDF5_files/"
