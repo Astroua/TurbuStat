@@ -29,10 +29,10 @@ hdf5_path = "Des_to_Obs/HDF5/"
 
 concat_convert_HDF5(hdf5_path, face=0, interweave=True, average_axis=0)
 shutil.move(os.path.join(hdf5_path, "des_0.csv"), "Des_to_Obs")
-shutil.move("Des_to_Obs/des_0.csv", "Des_to_Obs/des_0_obs.csv")
+shutil.move("Des_to_Obs/des_0.csv", "Des_to_Obs/distances_0_obs.csv")
 
 concat_convert_HDF5(hdf5_path, face=2, interweave=True, average_axis=0)
 shutil.move(os.path.join(hdf5_path, "des_2.csv"), "Des_to_Obs")
-shutil.move("Des_to_Obs/des_2.csv", "Des_to_Obs/des_2_obs.csv")
+shutil.move("Des_to_Obs/des_2.csv", "Des_to_Obs/distances_2_obs.csv")
 
 # Make plots using make_distance_plots.py
