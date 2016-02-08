@@ -97,6 +97,30 @@ class PCA(object):
                 eigimgs = np.dstack((eigimgs, eigimg))
         return eigimgs.swapaxes(0, 2)
 
+    def noise_ACF(self, n_eigs=None):
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        # Calculate the eigenimages
+        eigimgs = self.eigimages(n_eigs=n_eigs)
+
+        for idx, image in enumerate(eigimgs):
+            fftx = np.fft.fft2(image)
+            fftxs = np.conjugate(fftx)
+            acor = np.fft.ifft2((fftx-fftx.mean())*(fftxs-fftxs.mean()))
+
+            if idx == 0:
+                acors = acor.real
+            else:
+                acors = np.dstack((acors, acor.real))
+
+        acors = acors.swapaxes(0, 2)
+
+        noise_ACF = np.nansum(acors, axis=0) / float(n_eigs)
+
+        return noise_ACF
+
     def run(self, verbose=False, normalize=True):
         '''
         Run method. Needed to maintain package standards.
