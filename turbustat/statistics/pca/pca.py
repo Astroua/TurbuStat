@@ -30,6 +30,17 @@ class PCA(object):
 
         self.n_velchan = self.cube.shape[0]
 
+    @property
+    def n_eigs(self):
+        return self._n_eigs
+
+    @n_eigs.setter
+    def n_eigs(self, value):
+        if value <= 0:
+            raise ValueError("n_eigs must be > 0.")
+
+        self._n_eigs = value
+
     def compute_pca(self, mean_sub=False, normalize=True):
         '''
         Create the covariance matrix and its eigenvalues.
