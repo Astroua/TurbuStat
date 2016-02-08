@@ -97,7 +97,7 @@ class PCA(object):
                 eigimgs = np.dstack((eigimgs, eigimg))
         return eigimgs.swapaxes(0, 2)
 
-    def noise_ACF(self, n_eigs=None):
+    def autocorr_images(self, n_eigs=None):
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -115,7 +115,30 @@ class PCA(object):
             else:
                 acors = np.dstack((acors, acor.real))
 
-        acors = acors.swapaxes(0, 2)
+        return acors.swapaxes(0, 2)
+
+    def autocorr_spec(self, n_eigs=None):
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        for idx in range(n_eigs):
+            fftx = np.fft.fft(self.eigvecs[:, idx])
+            fftxs = np.conjugate(fftx)
+            acor = np.fft.ifft((fftx-fftx.mean())*(fftxs-fftxs.mean()))
+            if idx == 0:
+                acors = acor.real
+            else:
+                acors = np.dstack((acors, acor.real))
+
+        return acors.swapaxes(0, 1).squeeze()
+
+    def noise_ACF(self, n_eigs=None):
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        acors = self.autocorr_images(n_eigs=n_eigs)
 
         noise_ACF = np.nansum(acors, axis=0) / float(n_eigs)
 
