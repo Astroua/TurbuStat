@@ -29,7 +29,6 @@ class PCA(object):
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
-        self.eigvals = None
 
     def compute_pca(self, mean_sub=False, normalize=True):
         '''
@@ -44,21 +43,48 @@ class PCA(object):
         self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
+        eigvecs = eigvecs[np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
         self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
             np.sum(all_eigsvals)
 
+        self._eigvecs = eigvecs[:, :self.n_eigs]
+
         if normalize:
-            self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
+            self._eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
-            self.eigvals = all_eigsvals[:self.n_eigs]
+            self._eigvals = all_eigsvals[:self.n_eigs]
 
         return self
 
     @property
     def var_proportion(self):
         return self._var_prop
+
+    @property
+    def eigvals(self):
+        return self._eigvals
+
+    @property
+    def eigvecs(self):
+        return self._eigvecs
+
+    def eigimages(self, n_eigs=None):
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        for idx in range(n_eigs):
+            eigimg = np.zeros(self.cube.shape[1:], dtype=float)
+            for channel in range(self.cube.shape[0]):
+                eigimg += np.nan_to_num(self.cube[channel] *
+                                        self.eigvecs[channel, idx])
+            if idx == 0:
+                eigimgs = eigimg
+            else:
+                eigimgs = np.dstack((eigimgs, eigimg))
+        return eigimgs.swapaxes(0, 2)
 
     def run(self, verbose=False, normalize=True):
         '''
