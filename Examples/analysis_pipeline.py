@@ -17,8 +17,10 @@ path = sys.argv[1]
 path = path.rstrip("/")
 
 if path.split("/")[-1] == "HDF5_files":
-    hdf5_path = path.copy() + "/"
+    hdf5_path = path + "/"
     path = "/".join(path.split("/")[:-1]) + "/"
+    if path == "/":
+        path = "./"
 else:
     hdf5_path = path + "/HDF5_files/"
     path += "/"
@@ -106,6 +108,9 @@ for fil in os.listdir(hdf5_path):
 
 print "Making distance plots."
 
+if not os.path.exists(os.path.join(path, "Distance Plots")):
+    os.mkdir(os.path.join(path, "Distance Plots"))
+
 ta.comparison_plot(path, comparisons=good_comparison,
                    out_path=path+"Distance Plots/",
                    design_matrix=design_matrix)
@@ -121,7 +126,8 @@ os.chdir(path)
 
 print "Fitting model of given design."
 
-subprocess.call(['Rscript', "FactorialAnalysis.R"])
+subprocess.call(['Rscript',
+                 os.path.join(turbustat_path, "Examples/FactorialAnalysis.R")])
 
 # This should create two output tables of the whole dataset.
 
@@ -146,6 +152,9 @@ execfile(os.path.join(turbustat_path, "Examples/effect_plots.py"))
 # Remove PDF_AD from the list
 
 statistics_list.remove("PDF_AD")
+
+if not os.path.exists(os.path.join(path, "Model Plots")):
+    os.mkdir(os.path.join(path, "Model Plots"))
 
 effect_plots("DataforFits.csv", "ResultsFactorial.csv", save=True,
              out_path='Model Plots/')
