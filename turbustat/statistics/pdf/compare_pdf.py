@@ -126,22 +126,29 @@ class PDF(object):
 
         if verbose:
 
+            import matplotlib.pyplot as p
+
             if self._standardize_flag:
                 xlabel = r"z-score"
             else:
                 xlabel = r"$\Sigma$"
 
-            import matplotlib.pyplot as p
             # PDF
             p.subplot(131)
-            p.loglog(self.bins[self.pdf > 0], self.pdf[self.pdf > 0], 'b-')
+            if self._standardize_flag:
+                p.plot(self.bins, self.pdf, 'b-')
+            else:
+                p.loglog(self.bins, self.pdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             p.subplot(132)
-            p.plot(self.bins, self.ecdf, 'b-')
+            if self._standardize_flag:
+                p.semilogx(self.bins, self.ecdf, 'b-')
+            else:
+                p.plot(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
