@@ -130,7 +130,7 @@ class PDF(object):
         if self.ecdf is None:
             self.make_ecdf()
 
-        return self._ecdf_function(values)
+        return self._ecdf_function(values) * 100.
 
     def find_at_percentile(self, percentiles):
         '''
