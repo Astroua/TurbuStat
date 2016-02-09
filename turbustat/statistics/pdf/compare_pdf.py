@@ -54,6 +54,8 @@ class PDF(object):
 
         self._bins = bins
 
+        self._pdf = None
+
     def make_pdf(self, bins=None):
         '''
         Create the PDF.
@@ -95,7 +97,10 @@ class PDF(object):
         Create the ECDF.
         '''
 
-        self._ecdf = np.cumsum(np.sort(self.data.ravel())) / np.sum(self.data)
+        if self.pdf is None:
+            self.make_pdf()
+
+        self._ecdf = np.cumsum(self.pdf)
 
         return self
 
