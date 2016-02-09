@@ -141,7 +141,7 @@ class PDF(object):
 
             # ECDF
             p.subplot(132)
-            p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
+            p.plot(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
