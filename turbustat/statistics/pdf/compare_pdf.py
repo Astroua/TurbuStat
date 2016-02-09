@@ -85,6 +85,10 @@ class PDF(object):
         return self
 
     @property
+    def is_standardized(self):
+        return self._standardize_flag
+
+    @property
     def pdf(self):
         return self._pdf
 
