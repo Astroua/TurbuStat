@@ -225,13 +225,14 @@ class PDF_Distance(object):
         Compute the distance using the Anderson-Darling Test.
         '''
 
-        warnings.warn("Use of the Anderson-Darling test has not been well"
-                      " tested. Long runtimes and errors may occur.")
+        raise NotImplementedError(
+            "Use of the Anderson-Darling test has been disabled"
+            " due to occurence of overflow errors.")
 
-        D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
+        # D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
 
-        self.ad_distance = D
-        self.ad_pval = p
+        # self.ad_distance = D
+        # self.ad_pval = p
 
     def distance_metric(self, statistic='all', labels=None, verbose=False):
         '''
@@ -241,7 +242,7 @@ class PDF_Distance(object):
 
         Parameters
         ----------
-        statistic : 'all', 'hellinger', 'ks', 'ad'
+        statistic : 'all', 'hellinger', 'ks'
             Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
@@ -252,16 +253,17 @@ class PDF_Distance(object):
         if statistic is 'all':
             self.compute_hellinger_distance()
             self.compute_ks_distance()
-            self.compute_ad_distance()
+            # self.compute_ad_distance()
         elif statistic is 'hellinger':
             self.compute_hellinger_distance()
         elif statistic is 'ks':
             self.compute_ks_distance()
-        elif statistic is 'ad':
-            self.compute_ad_distance()
+        # elif statistic is 'ad':
+        #     self.compute_ad_distance()
         else:
-            raise TypeError("statistic must be 'all'," \
-                            "'hellinger', 'ks' or 'ad'.")
+            raise TypeError("statistic must be 'all',"
+                            "'hellinger', or 'ks'.")
+                            # "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
             import matplotlib.pyplot as p

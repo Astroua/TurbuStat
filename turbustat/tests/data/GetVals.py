@@ -198,5 +198,5 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     dendrohist_distance=dendro_distance.histogram_distance,
                     dendronum_distance=dendro_distance.num_distance,
                     pdf_hellinger_distance=pdf_distance.hellinger_distance,
-                    pdf_ks_distance=pdf_distance.ks_distance,
-                    pdf_ad_distance=pdf_distance.ad_distance)
+                    pdf_ks_distance=pdf_distance.ks_distance)
+                    # pdf_ad_distance=pdf_distance.ad_distance)
