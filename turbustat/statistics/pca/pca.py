@@ -129,6 +129,7 @@ class PCA(object):
             fftx = np.fft.fft2(image)
             fftxs = np.conjugate(fftx)
             acor = np.fft.ifft2((fftx-fftx.mean())*(fftxs-fftxs.mean()))
+            acor = np.fft.fftshift(acor)
 
             if idx == 0:
                 acors = acor.real
