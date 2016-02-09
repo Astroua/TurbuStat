@@ -60,6 +60,7 @@ MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
                 'sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
                 'statsmodels.formula',
+                'statsmodels.distributions.empirical_distribution'
                 'astrodendro', 'signal_id', 'pandas',
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils']
