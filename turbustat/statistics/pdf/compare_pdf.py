@@ -139,11 +139,11 @@ class PDF(object):
         Parameters
         ----------
         percentiles : float or np.ndarray
-            Percentile or array of percentiles. Must be between 0 and 1.
+            Percentile or array of percentiles. Must be between 0 and 100.
         '''
 
-        if np.any(np.logical_or(percentiles > 1, percentiles < 0.)):
-            raise ValueError("Percentiles must be between 0 and 1.")
+        if np.any(np.logical_or(percentiles > 100, percentiles < 0.)):
+            raise ValueError("Percentiles must be between 0 and 100.")
 
         return np.percentile(self.data, percentiles)
 
