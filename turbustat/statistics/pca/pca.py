@@ -20,15 +20,35 @@ class PCA(object):
         Number of eigenvalues to compute.
     '''
 
-    def __init__(self, cube, n_eigs=50):
+    def __init__(self, cube, n_eigs=None):
         super(PCA, self).__init__()
         self.cube = cube
-        self.n_eigs = n_eigs
+
+        if n_eigs is None:
+            self.n_eigs = self.cube.shape[0]
+        else:
+            self.n_eigs = n_eigs
 
         # Remove NaNs
         self.cube[np.isnan(self.cube)] = 0
 
         self.n_velchan = self.cube.shape[0]
+
+    @property
+    def cube(self):
+        return self._cube
+
+    @cube.setter
+    def cube(self, input_cube):
+
+        if len(input_cube.shape) > 3:
+            input_cube = input_cube.squeeze()
+
+        if len(input_cube.shape) != 3:
+            raise ValueError("Must input a 3D cube "
+                             "(velocity, position, position).")
+
+        self._cube = input_cube
 
     @property
     def n_eigs(self):
