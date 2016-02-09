@@ -27,6 +27,12 @@ class testPDF(TestCase):
         npt.assert_almost_equal(self.test.pdf, computed_data["pdf_val"])
         npt.assert_almost_equal(self.test.ecdf, computed_data["pdf_ecdf"])
 
+        npt.assert_equal(np.median(self.test.data),
+                         self.test.find_at_percentile(50))
+
+        npt.assert_equal(50.,
+                         self.test.find_percentile(np.median(self.test.data)))
+
     def test_PDF_distance(self):
         self.test_dist = \
             PDF_Distance(self.dataset1["integrated_intensity"][0],
