@@ -120,12 +120,32 @@ class PDF(object):
         '''
         Return the percentiles of given values from the
         data distribution.
+
+        Parameters
+        ----------
+        values : float or np.ndarray
+            Value or array of values.
         '''
 
         if self.ecdf is None:
             self.make_ecdf()
 
         return self._ecdf_function(values)
+
+    def find_at_percentile(self, percentiles):
+        '''
+        Return the values at the given percentiles.
+
+        Parameters
+        ----------
+        percentiles : float or np.ndarray
+            Percentile or array of percentiles. Must be between 0 and 1.
+        '''
+
+        if np.any(np.logical_or(percentiles > 1, percentiles < 0.)):
+            raise ValueError("Percentiles must be between 0 and 1.")
+
+        return np.percentile(self.data, percentiles)
 
     def run(self, verbose=False, bins=None):
         '''
