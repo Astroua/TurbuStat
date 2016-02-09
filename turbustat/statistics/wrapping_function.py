@@ -4,21 +4,21 @@ Wrapper to run all of the statistics between two data sets.
 For large-scale comparisons, this is the function that should be called.
 '''
 
-from turbustat.statistics import Wavelet_Distance, \
-    MVC_distance, \
-    PSpec_Distance, \
-    BiSpectrum_Distance, \
-    GenusDistance, \
-    DeltaVariance_Distance, \
-    VCA_Distance, \
-    VCS_Distance, \
-    Tsallis_Distance, \
-    StatMomentsDistance, \
-    PCA_Distance, \
-    SCF_Distance, \
-    Cramer_Distance, \
-    DendroDistance, \
-    PDF_Distance
+from .wavelets import Wavelet_Distance
+from .mvc import MVC_distance
+from .pspec_bispec import PSpec_Distance, BiSpectrum_Distance
+from .genus import GenusDistance
+from .delta_variance import DeltaVariance_Distance
+from .vca_vcs import VCA_Distance, VCS_Distance
+from .tsallis import Tsallis_Distance
+from .stat_moments import StatMomentsDistance
+from .pca import PCA_Distance
+from .scf import SCF_Distance
+from .cramer import Cramer_Distance
+from .dendrograms import DendroDistance
+from .pdf import PDF_Distance
+
+from statistics_list import statistics_list
 
 
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
@@ -54,12 +54,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
     '''
 
     if statistics is None:  # Run them all
-        statistics = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
-                      "Genus", "VCS", "VCA", "VCS_Density", "VCS_Velocity",
-                      "VCS_Break",
-                      "Tsallis", "PCA", "SCF", "Cramer", "Skewness",
-                      "Kurtosis", "SCF", "PCA", "Dendrogram_Hist",
-                      "Dendrogram_Num", "PDF_Hellinger", "PDF_KS"]
+        statistics = statistics_list
 
     distances = {}
 
@@ -249,8 +244,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 del dendro_distance
 
         if any("PDF_Hellinger" in s for s in statistics) or \
-           any("PDF_KS" in s for s in statistics) or \
-           any("PDF_AD" in s for s in statistics):
+           any("PDF_KS" in s for s in statistics):  # or \
+           # any("PDF_AD" in s for s in statistics):
             pdf_distance = \
                 PDF_Distance(dataset1["integrated_intensity"][0],
                              dataset2["integrated_intensity"][0],
@@ -263,7 +258,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["PDF_Hellinger"] = pdf_distance.hellinger_distance
             distances["PDF_KS"] = pdf_distance.ks_distance
-            distances["PDF_AD"] = pdf_distance.ad_distance
+            # distances["PDF_AD"] = pdf_distance.ad_distance
             if not multicore:
                     fiducial_models["PDF"] = pdf_distance.PDF1
 
@@ -449,8 +444,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 del dendro_distance
 
         if any("PDF_Hellinger" in s for s in statistics) or \
-           any("PDF_KS" in s for s in statistics) or \
-           any("PDF_AD" in s for s in statistics):
+           any("PDF_KS" in s for s in statistics):  # or \
+           # any("PDF_AD" in s for s in statistics):
             pdf_distance = \
                 PDF_Distance(dataset1["integrated_intensity"][0],
                              dataset2["integrated_intensity"][0],
@@ -463,7 +458,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
             distances["PDF_Hellinger"] = pdf_distance.hellinger_distance
             distances["PDF_KS"] = pdf_distance.ks_distance
-            distances["PDF_AD"] = pdf_distance.ad_distance
+            # distances["PDF_AD"] = pdf_distance.ad_distance
 
             if cleanup:
                 del pdf_distance
