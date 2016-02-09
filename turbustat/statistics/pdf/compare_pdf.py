@@ -185,6 +185,7 @@ class PDF(object):
             else:
                 print("Visual representation works only up to 3D.")
 
+            p.tight_layout()
             p.show()
 
         return self
