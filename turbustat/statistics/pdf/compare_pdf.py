@@ -9,6 +9,7 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 import warnings
+from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
 
@@ -55,6 +56,7 @@ class PDF(object):
         self._bins = bins
 
         self._pdf = None
+        self._ecdf = None
 
     def make_pdf(self, bins=None):
         '''
@@ -104,13 +106,26 @@ class PDF(object):
         if self.pdf is None:
             self.make_pdf()
 
-        self._ecdf = np.cumsum(self.pdf)
+        self._ecdf_function = ECDF(self.data)
+
+        self._ecdf = self._ecdf_function(self.bins)
 
         return self
 
     @property
     def ecdf(self):
         return self._ecdf
+
+    def find_percentile(self, values):
+        '''
+        Return the percentiles of given values from the
+        data distribution.
+        '''
+
+        if self.ecdf is None:
+            self.make_ecdf()
+
+        return self._ecdf_function(values)
 
     def run(self, verbose=False, bins=None):
         '''
@@ -150,9 +165,9 @@ class PDF(object):
             # ECDF
             p.subplot(132)
             if self._standardize_flag:
-                p.semilogx(self.bins, self.ecdf, 'b-')
-            else:
                 p.plot(self.bins, self.ecdf, 'b-')
+            else:
+                p.semilogx(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
