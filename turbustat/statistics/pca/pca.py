@@ -174,14 +174,21 @@ class PCA(object):
         else:
             return noise_ACF
 
-    def spatial_widths(self, n_eigs=None, method='contour'):
+    def find_spatial_widths(self, n_eigs=None, method='contour'):
 
         if n_eigs is None:
             n_eigs = self.n_eigs
 
-        noise_ACF, acors = self.noise_ACF(return_acorrimgs=True)
+        acors = self.autocorr_images(n_eigs=n_eigs)
+        noise_ACF = self.noise_ACF(return_acorrimgs=False)
 
-        self._spatial_width = WidthEstimate2D(acors, NoiseACF=noise_ACF)
+        self._spatial_width, self._models = \
+            WidthEstimate2D(acors, NoiseACF=noise_ACF)
+
+    @property
+    def spatial_width(self):
+        return self._spatial_width
+
 
     def run(self, verbose=False, normalize=True):
         '''
