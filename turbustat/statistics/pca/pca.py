@@ -180,12 +180,27 @@ class PCA(object):
         noise_ACF = self.noise_ACF()
 
         self._spatial_width, self._models = \
-            WidthEstimate2D(acors, NoiseACF=noise_ACF)
+            WidthEstimate2D(acors, NoiseACF=noise_ACF, method=method)
 
     @property
     def spatial_width(self):
         return self._spatial_width
 
+    def find_spectral_widths(self, n_eigs=None, method='interpolate'):
+        '''
+        Calculate the spectral scales for the structure functions.
+        '''
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        acorr_spec = self.autocorr_spec(n_eigs=n_eigs)
+
+        self._spectral_width = WidthEstimate1D(acorr_spec, method=method)
+
+    @property
+    def spectral_width(self):
+        return self._spectral_width
 
     def run(self, verbose=False, normalize=True):
         '''
