@@ -4,6 +4,7 @@
 import numpy as np
 
 from ..threeD_to_twoD import var_cov_cube
+from width_estimate import WidthEstimate1D, WidthEstimate2D
 
 
 class PCA(object):
@@ -164,6 +165,16 @@ class PCA(object):
         noise_ACF = np.nansum(acors, axis=0) / float(n_eigs)
 
         return noise_ACF
+
+    def spatial_widths(self, n_eigs=None, method='contour'):
+
+        if n_eigs is None:
+            n_eigs = self.n_eigs
+
+        acors = self.autocorr_images()
+        noise_ACF = self.noise_ACF()
+
+        self._spatial_width = WidthEstimate2D(acors, NoiseACF=noise_ACF)
 
     def run(self, verbose=False, normalize=True):
         '''
