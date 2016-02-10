@@ -9,6 +9,7 @@ The density PDF as described by Kowal et al. (2007)
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 import warnings
+from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
 
@@ -54,6 +55,9 @@ class PDF(object):
 
         self._bins = bins
 
+        self._pdf = None
+        self._ecdf = None
+
     def make_pdf(self, bins=None):
         '''
         Create the PDF.
@@ -83,6 +87,10 @@ class PDF(object):
         return self
 
     @property
+    def is_standardized(self):
+        return self._standardize_flag
+
+    @property
     def pdf(self):
         return self._pdf
 
@@ -95,13 +103,49 @@ class PDF(object):
         Create the ECDF.
         '''
 
-        self._ecdf = np.cumsum(np.sort(self.data.ravel())) / np.sum(self.data)
+        if self.pdf is None:
+            self.make_pdf()
+
+        self._ecdf_function = ECDF(self.data)
+
+        self._ecdf = self._ecdf_function(self.bins)
 
         return self
 
     @property
     def ecdf(self):
         return self._ecdf
+
+    def find_percentile(self, values):
+        '''
+        Return the percentiles of given values from the
+        data distribution.
+
+        Parameters
+        ----------
+        values : float or np.ndarray
+            Value or array of values.
+        '''
+
+        if self.ecdf is None:
+            self.make_ecdf()
+
+        return self._ecdf_function(values) * 100.
+
+    def find_at_percentile(self, percentiles):
+        '''
+        Return the values at the given percentiles.
+
+        Parameters
+        ----------
+        percentiles : float or np.ndarray
+            Percentile or array of percentiles. Must be between 0 and 100.
+        '''
+
+        if np.any(np.logical_or(percentiles > 100, percentiles < 0.)):
+            raise ValueError("Percentiles must be between 0 and 100.")
+
+        return np.percentile(self.data, percentiles)
 
     def run(self, verbose=False, bins=None):
         '''
@@ -121,22 +165,29 @@ class PDF(object):
 
         if verbose:
 
+            import matplotlib.pyplot as p
+
             if self._standardize_flag:
                 xlabel = r"z-score"
             else:
                 xlabel = r"$\Sigma$"
 
-            import matplotlib.pyplot as p
             # PDF
             p.subplot(131)
-            p.loglog(self.bins[self.pdf > 0], self.pdf[self.pdf > 0], 'b-')
+            if self._standardize_flag:
+                p.plot(self.bins, self.pdf, 'b-')
+            else:
+                p.loglog(self.bins, self.pdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             p.subplot(132)
-            p.semilogx(np.sort(self.data.ravel()), self.ecdf, 'b-')
+            if self._standardize_flag:
+                p.plot(self.bins, self.ecdf, 'b-')
+            else:
+                p.semilogx(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
@@ -154,6 +205,7 @@ class PDF(object):
             else:
                 print("Visual representation works only up to 3D.")
 
+            p.tight_layout()
             p.show()
 
         return self
@@ -225,13 +277,14 @@ class PDF_Distance(object):
         Compute the distance using the Anderson-Darling Test.
         '''
 
-        warnings.warn("Use of the Anderson-Darling test has not been well"
-                      " tested. Long runtimes and errors may occur.")
+        raise NotImplementedError(
+            "Use of the Anderson-Darling test has been disabled"
+            " due to occurence of overflow errors.")
 
-        D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
+        # D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])
 
-        self.ad_distance = D
-        self.ad_pval = p
+        # self.ad_distance = D
+        # self.ad_pval = p
 
     def distance_metric(self, statistic='all', labels=None, verbose=False):
         '''
@@ -241,7 +294,7 @@ class PDF_Distance(object):
 
         Parameters
         ----------
-        statistic : 'all', 'hellinger', 'ks', 'ad'
+        statistic : 'all', 'hellinger', 'ks'
             Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
@@ -252,16 +305,17 @@ class PDF_Distance(object):
         if statistic is 'all':
             self.compute_hellinger_distance()
             self.compute_ks_distance()
-            self.compute_ad_distance()
+            # self.compute_ad_distance()
         elif statistic is 'hellinger':
             self.compute_hellinger_distance()
         elif statistic is 'ks':
             self.compute_ks_distance()
-        elif statistic is 'ad':
-            self.compute_ad_distance()
+        # elif statistic is 'ad':
+        #     self.compute_ad_distance()
         else:
-            raise TypeError("statistic must be 'all'," \
-                            "'hellinger', 'ks' or 'ad'.")
+            raise TypeError("statistic must be 'all',"
+                            "'hellinger', or 'ks'.")
+                            # "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
             import matplotlib.pyplot as p
