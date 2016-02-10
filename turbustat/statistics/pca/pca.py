@@ -160,7 +160,7 @@ class PCA(object):
 
         return acors.swapaxes(0, 1).squeeze()
 
-    def noise_ACF(self, n_eigs=-10, return_acorrimgs=False):
+    def noise_ACF(self, n_eigs=-10):
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -169,10 +169,7 @@ class PCA(object):
 
         noise_ACF = np.nansum(acors, axis=0) / float(n_eigs)
 
-        if return_acorrimgs:
-            return noise_ACF, acors
-        else:
-            return noise_ACF
+        return noise_ACF
 
     def find_spatial_widths(self, n_eigs=None, method='contour'):
 
@@ -180,7 +177,7 @@ class PCA(object):
             n_eigs = self.n_eigs
 
         acors = self.autocorr_images(n_eigs=n_eigs)
-        noise_ACF = self.noise_ACF(return_acorrimgs=False)
+        noise_ACF = self.noise_ACF()
 
         self._spatial_width, self._models = \
             WidthEstimate2D(acors, NoiseACF=noise_ACF)
