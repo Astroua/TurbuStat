@@ -18,7 +18,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         The list of autocorrelation images from which widths will be estimated
     method: 'contour', 'fit', 'interpolate', or 'xinterpolate'
         The width estimation method to use
-    NoiseACF: float or 2darray
+    noise_ACF: float or 2darray
         The noise autocorrelation function to subtract from the autocorrelation
         images
     diagnosticsplots: bool
