@@ -175,7 +175,7 @@ def fit_2D_ellipse(pts):
     ellip = EllipseModel()
     ellip.estimate(pts)
 
-    return np.mean(ellip.params[2:4]), ellip
+    return np.sqrt(ellip.params[2]**2 + ellip.params[3]**2) / 2., ellip
 
 
 def plot_stuff(raw, fit, residual, n_eigs):
