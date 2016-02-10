@@ -107,7 +107,12 @@ class PCA(object):
         if n_eigs is None:
             n_eigs = self.n_eigs
 
-        for idx in range(n_eigs):
+        if n_eigs > 0:
+            iterat = xrange(n_eigs)
+        elif n_eigs < 0:
+            iterat = xrange(n_eigs, 0, 1)
+
+        for idx in iterat:
             eigimg = np.zeros(self.cube.shape[1:], dtype=float)
             for channel in range(self.cube.shape[0]):
                 eigimg += np.nan_to_num(self.cube[channel] *
