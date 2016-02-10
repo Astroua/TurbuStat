@@ -4,7 +4,7 @@
 import numpy as np
 
 from ..threeD_to_twoD import var_cov_cube
-from width_estimate import WidthEstimate1D, WidthEstimate2D
+from .width_estimate import WidthEstimate1D, WidthEstimate2D
 
 
 class PCA(object):
