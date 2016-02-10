@@ -112,12 +112,12 @@ class PCA(object):
         elif n_eigs < 0:
             iterat = xrange(n_eigs, 0, 1)
 
-        for idx in iterat:
+        for ct, idx in enumerate(iterat):
             eigimg = np.zeros(self.cube.shape[1:], dtype=float)
             for channel in range(self.cube.shape[0]):
                 eigimg += np.nan_to_num(self.cube[channel] *
                                         self.eigvecs[channel, idx])
-            if idx == 0:
+            if ct == 0:
                 eigimgs = eigimg
             else:
                 eigimgs = np.dstack((eigimgs, eigimg))
@@ -160,7 +160,7 @@ class PCA(object):
 
         return acors.swapaxes(0, 1).squeeze()
 
-    def noise_ACF(self, n_eigs=None, return_acorrimgs=False):
+    def noise_ACF(self, n_eigs=-10, return_acorrimgs=False):
 
         if n_eigs is None:
             n_eigs = self.n_eigs
