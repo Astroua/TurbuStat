@@ -2,7 +2,7 @@
 import numpy as np
 import numpy.fft as fft
 from scipy.interpolate import LSQUnivariateSpline, interp1d
-from astropy.modeling import fitting
+from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
 from skimage.measure import EllipseModel, find_contours
