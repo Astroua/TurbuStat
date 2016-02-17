@@ -1,7 +1,6 @@
 
 from spectral_cube import SpectralCube, LazyMask
 from spectral_cube.wcs_utils import drop_axis
-from signal_id import Noise, RadioMask
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
@@ -9,6 +8,13 @@ from scipy import ndimage as nd
 import itertools as it
 import operator as op
 import os
+
+try:
+    from signal_id import Noise
+    signal_id_flag = True
+except ImportError:
+    Warning("signal-id is not installed. Disabling associated functionality.")
+    signal_id_flag = False
 
 from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
 
@@ -56,6 +62,10 @@ class Mask_and_Moments(object):
         self.moment_method = moment_method
 
         if scale is None:
+            if not signal_id_flag:
+                raise ImportError("signal-id is not installed."
+                                  " You must provide the scale.")
+
             self.scale = Noise(self.cube).scale
         else:
             self.scale = scale
@@ -74,6 +84,10 @@ class Mask_and_Moments(object):
             noise level.
         '''
 
+        if not signal_id_flag:
+            raise ImportError("signal-id is not installed."
+                              " This function is not available.")
+
         noise = Noise(self.cube)
 
         self.scale = noise.scale
@@ -83,7 +97,7 @@ class Mask_and_Moments(object):
 
         return noise.scale
 
-    def make_mask(self, mask=None):
+    def make_mask(self, mask):
         '''
         Apply a mask to the cube.
 
@@ -94,9 +108,9 @@ class Mask_and_Moments(object):
             is used with its default settings.
         '''
 
-        if mask is None:
-            rad_mask = RadioMask(self.cube)
-            mask = rad_mask.to_mask()
+        # if mask is None:
+        #     rad_mask = RadioMask(self.cube)
+        #     mask = rad_mask.to_mask()
 
         self.cube = self.cube.with_mask(mask)
 
@@ -559,6 +573,10 @@ class Mask_and_Moments(object):
 def moment_masking(cube, kernel_size, clip=5, dilations=1):
     '''
     '''
+
+    if not signal_id_flag:
+        raise ImportError("signal-id is not installed."
+                          " This function is not available.")
 
     smooth_data = convolve(cube.filled_data[:], gauss_kern(kernel_size))
 

@@ -17,7 +17,13 @@ from copy import deepcopy
 import cPickle as pickle
 import statsmodels.api as sm
 from mecdf import mecdf
-from astrodendro import Dendrogram
+
+try:
+    from astrodendro import Dendrogram
+    astrodendro_flag = True
+except ImportError:
+    Warning("Need to install astrodendro to use dendrogram statistics.")
+    astrodendro_flag = False
 
 from ..stats_utils import hellinger, common_histogram_bins, standardize
 
@@ -45,6 +51,11 @@ class Dendrogram_Stats(object):
 
     def __init__(self, cube, min_deltas=None, dendro_params=None):
         super(Dendrogram_Stats, self).__init__()
+
+        if not astrodendro_flag:
+            raise ImportError("astrodendro must be installed to use "
+                              "Dendrogram_Stats.")
+
         self.cube = cube
         self.min_deltas = min_deltas
 
@@ -296,6 +307,10 @@ class DendroDistance(object):
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
                  min_features=100, fiducial_model=None, dendro_params=None):
         super(DendroDistance, self).__init__()
+
+        if not astrodendro_flag:
+            raise ImportError("astrodendro must be installed to use "
+                              "Dendrogram_Stats.")
 
         self.nbins = nbins
 
