@@ -80,7 +80,7 @@ def check_dependencies():
     try:
         import signal_id
     except ImportError:
-        raise ImportError("Install signal-id before installing TurbuStat")
+        Warning("signal-id is an optional package for TurbuStat.")
 
 
 if __name__ == "__main__":
