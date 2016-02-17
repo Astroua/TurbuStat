@@ -5,7 +5,7 @@ from scipy.interpolate import LSQUnivariateSpline, interp1d
 from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
-from skimage.measure import EllipseModel, find_contours
+from ..stats_utils import EllipseModel
 import matplotlib.pyplot as plt
 
 

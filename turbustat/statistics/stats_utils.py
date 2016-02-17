@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.optimize import leastsq
 
 
 def hellinger(data1, data2, bin_width=1.0):
@@ -93,3 +94,216 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
         return bins, center_bins
 
     return bins
+
+
+class EllipseModel():
+
+    """
+
+    From scikit-image (https://github.com/scikit-image/scikit-image). A copy
+    of the license is below.
+
+    Total least squares estimator for 2D ellipses.
+    The functional model of the ellipse is::
+        xt = xc + a*cos(theta)*cos(t) - b*sin(theta)*sin(t)
+        yt = yc + a*sin(theta)*cos(t) + b*cos(theta)*sin(t)
+        d = sqrt((x - xt)**2 + (y - yt)**2)
+    where ``(xt, yt)`` is the closest point on the ellipse to ``(x, y)``. Thus
+    d is the shortest distance from the point to the ellipse.
+    This estimator minimizes the squared distances from all points to the
+    ellipse::
+        min{ sum(d_i**2) } = min{ sum((x_i - xt)**2 + (y_i - yt)**2) }
+    Thus you have ``2 * N`` equations (x_i, y_i) for ``N + 5`` unknowns (t_i,
+    xc, yc, a, b, theta), which gives you an effective redundancy of ``N - 5``.
+    The ``params`` attribute contains the parameters in the following order::
+        xc, yc, a, b, theta
+    A minimum number of 5 points is required to solve for the parameters.
+
+    Attributes
+    ----------
+    params : tuple
+        Ellipse model parameters in the following order `xc`, `yc`, `a`,
+        `b`, `theta`.
+
+    Copyright (C) 2011, the scikit-image team
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in
+        the documentation and/or other materials provided with the
+        distribution.
+     3. Neither the name of skimage nor the names of its contributors may be
+        used to endorse or promote products derived from this software without
+        specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+    INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+    IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+    """
+
+    def __init__(self):
+        self.params = None
+
+    def estimate(self, data):
+        """Estimate circle model from data using total least squares.
+        Parameters
+        ----------
+        data : (N, 2) array
+            N points with ``(x, y)`` coordinates, respectively.
+        Returns
+        -------
+        success : bool
+            True, if model estimation succeeds.
+        """
+
+        if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError('Input data must have shape (N, 2).')
+
+        x = data[:, 0]
+        y = data[:, 1]
+
+        N = data.shape[0]
+
+        # pre-allocate jacobian for all iterations
+        A = np.zeros((N + 5, 2 * N), dtype=np.double)
+        # same for all iterations: xc, yc
+        A[0, :N] = -1
+        A[1, N:] = -1
+
+        diag_idxs = np.diag_indices(N)
+
+        def fun(params):
+            xyt = self.predict_xy(params[5:], params[:5])
+            fx = x - xyt[:, 0]
+            fy = y - xyt[:, 1]
+            return np.append(fx, fy)
+
+        def Dfun(params):
+            xc, yc, a, b, theta = params[:5]
+            t = params[5:]
+
+            ct = np.cos(t)
+            st = np.sin(t)
+            ctheta = np.cos(theta)
+            stheta = np.sin(theta)
+
+            # derivatives for fx, fy in the following order:
+            #       xc, yc, a, b, theta, t_i
+
+            # fx
+            A[2, :N] = - ctheta * ct
+            A[3, :N] = stheta * st
+            A[4, :N] = a * stheta * ct + b * ctheta * st
+            A[5:, :N][diag_idxs] = a * ctheta * st + b * stheta * ct
+            # fy
+            A[2, N:] = - stheta * ct
+            A[3, N:] = - ctheta * st
+            A[4, N:] = - a * ctheta * ct + b * stheta * st
+            A[5:, N:][diag_idxs] = a * stheta * st - b * ctheta * ct
+
+            return A
+
+        # initial guess of parameters using a circle model
+        params0 = np.empty((N + 5, ), dtype=np.double)
+        xc0 = x.mean()
+        yc0 = y.mean()
+        r0 = np.sqrt((x - xc0)**2 + (y - yc0)**2).mean()
+        params0[:5] = (xc0, yc0, r0, 0, 0)
+        params0[5:] = np.arctan2(y - yc0, x - xc0)
+
+        params, _ = leastsq(fun, params0, Dfun=Dfun, col_deriv=True)
+
+        self.params = params[:5]
+
+        return True
+
+    def residuals(self, data):
+        """Determine residuals of data to model.
+        For each point the shortest distance to the ellipse is returned.
+        Parameters
+        ----------
+        data : (N, 2) array
+            N points with ``(x, y)`` coordinates, respectively.
+        Returns
+        -------
+        residuals : (N, ) array
+            Residual for each data point.
+        """
+
+        if data.ndim != 2 or data.shape[1] != 2:
+                raise ValueError('Input data must have shape (N, 2).')
+
+        xc, yc, a, b, theta = self.params
+
+        ctheta = np.cos(theta)
+        stheta = np.sin(theta)
+
+        x = data[:, 0]
+        y = data[:, 1]
+
+        N = data.shape[0]
+
+        def fun(t, xi, yi):
+            ct = np.cos(t)
+            st = np.sin(t)
+            xt = xc + a * ctheta * ct - b * stheta * st
+            yt = yc + a * stheta * ct + b * ctheta * st
+            return (xi - xt)**2 + (yi - yt)**2
+
+        residuals = np.empty((N, ), dtype=np.double)
+
+        # initial guess for parameter t of closest point on ellipse
+        t0 = np.arctan2(y - yc, x - xc) - theta
+
+        # determine shortest distance to ellipse for each point
+        for i in range(N):
+            xi = x[i]
+            yi = y[i]
+            # faster without Dfun, because of the python overhead
+            t, _ = leastsq(fun, t0[i], args=(xi, yi))
+            residuals[i] = np.sqrt(fun(t, xi, yi))
+
+        return residuals
+
+    def predict_xy(self, t, params=None):
+        """Predict x- and y-coordinates using the estimated model.
+        Parameters
+        ----------
+        t : array
+            Angles in circle in radians. Angles start to count from positive
+            x-axis to positive y-axis in a right-handed system.
+        params : (5, ) array, optional
+            Optional custom parameter set.
+        Returns
+        -------
+        xy : (..., 2) array
+            Predicted x- and y-coordinates.
+        """
+
+        if params is None:
+            params = self.params
+        xc, yc, a, b, theta = params
+
+        ct = np.cos(t)
+        st = np.sin(t)
+        ctheta = np.cos(theta)
+        stheta = np.sin(theta)
+
+        x = xc + a * ctheta * ct - b * stheta * st
+        y = yc + a * stheta * ct + b * ctheta * st
+
+        return np.concatenate((x[..., None], y[..., None]), axis=t.ndim)
