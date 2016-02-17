@@ -69,9 +69,9 @@ def check_dependencies():
     try:
         import astrodendro
     except:
-        Warning(("""NOTE : Install or upgrade astrodendro before installing
-                            TurbuStat. ***NOTE: Need dev version as
-                            of 17/06/14.***"""))
+        Warning("Install or upgrade astrodendro to use the dendrogram"
+                 " statistics in TurbuStat. ***NOTE: Need dev version as"
+                 "of 17/06/14.***")
     try:
         import spectral_cube
     except ImportError:
