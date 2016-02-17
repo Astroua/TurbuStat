@@ -69,9 +69,9 @@ def check_dependencies():
     try:
         import astrodendro
     except:
-        Warning(("""NOTE : Install or upgrade astrodendro before installing
-                            TurbuStat. ***NOTE: Need dev version as
-                            of 17/06/14.***"""))
+        Warning("Install or upgrade astrodendro to use the dendrogram"
+                 " statistics in TurbuStat. ***NOTE: Need dev version as"
+                 "of 17/06/14.***")
     try:
         import spectral_cube
     except ImportError:
@@ -80,7 +80,7 @@ def check_dependencies():
     try:
         import signal_id
     except ImportError:
-        raise ImportError("Install signal-id before installing TurbuStat")
+        Warning("signal-id is an optional package for TurbuStat.")
 
 
 if __name__ == "__main__":
