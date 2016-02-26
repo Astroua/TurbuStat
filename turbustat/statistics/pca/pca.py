@@ -30,9 +30,6 @@ class PCA(object):
         else:
             self.n_eigs = n_eigs
 
-        # Remove NaNs
-        self.cube[np.isnan(self.cube)] = 0
-
         self.n_velchan = self.cube.shape[0]
 
     @property

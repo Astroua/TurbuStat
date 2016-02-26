@@ -148,7 +148,7 @@ def var_cov_cube(cube, mean_sub=False):
 
     cov_matrix = cov_matrix + cov_matrix.T
 
-    return cov_matrix
+    return np.nan_to_num(cov_matrix)
 
 
 def _iter_2D(arr):
