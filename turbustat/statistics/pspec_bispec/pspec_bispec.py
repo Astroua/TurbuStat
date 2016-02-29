@@ -208,12 +208,13 @@ class PSpec_Distance(object):
 
         Parameters
         ----------
-        low_cut : int or float, optional
+        low_cut : float, optional
             Set the cut-off for low spatial frequencies. By default, this is
             set to the inverse of half of the smallest axis in the 2 images.
-        high_cut : int or float, optional
-            Set the cut-off for high spatial frequencies. Values beyond the
-            size of the root grid are found to have no meaningful contribution
+        high_cut : float, optional
+            Set the cut-off for high spatial frequencies. Defaults to a
+            frequency of 0.5; low pixel counts below this may lead to
+            significant scatter.
         verbose : bool, optional
             Enables plotting.
         '''
