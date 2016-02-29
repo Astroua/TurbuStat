@@ -255,8 +255,8 @@ def new_pspec(psd2, bins=10, return_stddev=False):
     if not return_stddev:
         return bin_cents, ps1D
     else:
-        ps1D_stddev, _, _ = binned_statistic(freqs_dist.ravel(),
-                                             psd2.ravel(),
-                                             bins=bins,
-                                             statistic=np.nanstd)
+        ps1D_stddev = binned_statistic(freqs_dist.ravel(),
+                                       psd2.ravel(),
+                                       bins=bins,
+                                       statistic=np.nanstd)[0]
         return bin_cents, ps1D, ps1D_stddev
