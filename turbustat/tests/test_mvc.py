@@ -22,16 +22,16 @@ class testMVC(TestCase):
         self.dataset2 = dataset2
 
     def test_MVC_method(self):
-        self.tester = MVC(dataset1["centroid"][0] * dataset1["centroid_error"][0] ** -2.,
-                            dataset1["moment0"][0] * dataset1["moment0_error"][0] ** -2.,
-                            dataset1["linewidth"][0] * dataset1["linewidth_error"][0] ** -2.,
-                            dataset1["centroid"][1])
+        self.tester = MVC(dataset1["centroid"][0],
+                          dataset1["moment0"][0],
+                          dataset1["linewidth"][0],
+                          dataset1["centroid"][1])
         self.tester.run()
 
         print self.tester.ps1D
         print computed_data['mvc_val']
 
-        assert np.allclose(self.tester.ps1D, computed_data['mvc_val'])
+        npt.assert_allclose(self.tester.ps1D, computed_data['mvc_val'])
 
     def test_MVC_distance(self):
         self.tester_dist = \
