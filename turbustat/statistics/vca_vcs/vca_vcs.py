@@ -65,7 +65,7 @@ class VCA(object):
     @property
     def ps1D_stddev(self):
         if not self._stddev_flag:
-            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+            Warning("ps1D_stddev is only calculated when return_stddev"
                     " is enabled.")
 
         return self._ps1D_stddev
