@@ -173,17 +173,24 @@ class MVC_distance(object):
 
     """
 
-    Distance metric for MVC and wrapper for whole analysis
+    Distance metric for MVC.
 
     Parameters
     ----------
-
     data1 : dict
-        dictionary containing necessary property arrays
+        A dictionary containing the centroid, moment 0, and linewidth arrays
+        of a spectral cube. This output is created by Mask_and_Moments.to_dict.
+        The minimum expected keys are 'centroid', 'moment0' and 'linewidth'. If
+        weight_by_error is enabled, the dictionary should also contain the
+        error arrays, where the keys are the three above with '_error'
+        appended to the end.
     data2 : dict
-        dictionary containing necessary property arrays
+        See data1.
     fiducial_model : MVC
         Computed MVC object. use to avoid recomputing.
+    weight_by_error : bool, optional
+        When enabled, the property arrays are weighted by the inverse
+        squared of the error arrays.
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
