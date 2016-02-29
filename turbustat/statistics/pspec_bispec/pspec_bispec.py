@@ -56,7 +56,7 @@ class PowerSpectrum(object):
     @property
     def ps1D_stddev(self):
         if not self._stddev_flag:
-            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+            Warning("ps1D_stddev is only calculated when return_stddev"
                     " is enabled.")
 
         return self._ps1D_stddev
@@ -76,7 +76,7 @@ class PowerSpectrum(object):
 
         return self
 
-    def compute_radial_pspec(self, return_stddev=False, logspacing=True,
+    def compute_radial_pspec(self, return_stddev=True, logspacing=True,
                              **kwargs):
         '''
         Computes the radially averaged power spectrum.
@@ -103,7 +103,7 @@ class PowerSpectrum(object):
 
         return self
 
-    def run(self, phys_units=False, verbose=False, return_stddev=False,
+    def run(self, phys_units=False, verbose=False, return_stddev=True,
             logspacing=True):
         '''
         Full computation of the Spatial Power Spectrum.
@@ -224,15 +224,21 @@ class PSpec_Distance(object):
             low_cut = 2. / float(min(min(self.pspec1.ps2D.shape),
                                      min(self.pspec2.ps2D.shape)))
 
+        keep_freqs1 = clip_func(self.pspec1.freqs, low_cut, high_cut)
         clip_freq1 = \
-            self.pspec1.freqs[clip_func(self.pspec1.freqs, low_cut, high_cut)]
+            self.pspec1.freqs[keep_freqs1]
         clip_ps1D1 = \
-            self.pspec1.ps1D[clip_func(self.pspec1.freqs, low_cut, high_cut)]
+            self.pspec1.ps1D[keep_freqs1]
+        clip_weights1 = \
+            (0.434*self.pspec1.ps1D_stddev[keep_freqs1]/clip_ps1D1)**-2
 
+        keep_freqs2 = clip_func(self.pspec2.freqs, low_cut, high_cut)
         clip_freq2 = \
-            self.pspec2.freqs[clip_func(self.pspec2.freqs, low_cut, high_cut)]
+            self.pspec2.freqs[keep_freqs2]
         clip_ps1D2 = \
-            self.pspec2.ps1D[clip_func(self.pspec2.freqs, low_cut, high_cut)]
+            self.pspec2.ps1D[keep_freqs2]
+        clip_weights2 = \
+            (0.434*self.pspec2.ps1D_stddev[keep_freqs2]/clip_ps1D2)**-2
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
@@ -245,8 +251,11 @@ class PSpec_Distance(object):
 
         df = DataFrame(d)
 
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
+        weights = np.concatenate([clip_weights1, clip_weights2])
+
+        model = sm.wls(
+            formula="log_ps1D ~ dummy + scales + regressor", data=df,
+            weights=weights)
 
         self.results = model.fit()
 
