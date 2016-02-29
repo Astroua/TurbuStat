@@ -115,7 +115,7 @@ class VCA(object):
 
         return self
 
-    def fit_pspec(self, brk=None, log_break=True, high_cut=np.sqrt(2),
+    def fit_pspec(self, brk=None, log_break=True, high_cut=0.5,
                   min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -170,12 +170,12 @@ class VCA(object):
                     self.low_cut = 10**brk_fit.brk
 
             else:
-                self.low_cut = self.freqs.max()
+                self.low_cut = self.freqs.min()
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
         else:
-            self.low_cut = self.freqs.max()
+            self.low_cut = self.freqs.min()
 
         x = sm.add_constant(x)
 
@@ -236,7 +236,8 @@ class VCA(object):
                      markersize=5)
 
         y_fit = self.fit.fittedvalues
-        p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
+
+        p.loglog(self.freqs[~np.isnan(self.ps1D)], 10**y_fit, color+'-',
                  label=label, linewidth=2)
         p.xlabel(xlab)
         p.ylabel(r"P$_2(K)$")
@@ -247,7 +248,7 @@ class VCA(object):
 
     def run(self, verbose=False, brk=None, return_stddev=False,
             logspacing=True):
-        '''
+        '''p
         Full computation of VCA.
 
         Parameters
