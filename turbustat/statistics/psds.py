@@ -30,6 +30,7 @@ try:
 except ImportError:
     pyplotOK = False
 from radialProfile import azimuthalAverageBins, radialAverageBins
+from scipy.stats import binned_statistic
 
 
 def hanning2d(M, N):
@@ -147,7 +148,7 @@ def PSD2(image, image2=None, oned=False,
     return psd2
 
 
-def pspec(psd2, return_index=True, wavenumber=False, return_stddev=False,
+def pspec(psd2, return_index=True, wavenumber=True, return_stddev=False,
           azbins=1, binsize=1.0, view=False, **kwargs):
     """
     Create a Power Spectrum (radial profile of a PSD) from a Power Spectral
@@ -176,7 +177,7 @@ def pspec(psd2, return_index=True, wavenumber=False, return_stddev=False,
 
     if return_index:
         if wavenumber:
-            fftwavenum = (np.fft.fftfreq(zz.size * 2)[:zz.size])
+            fftwavenum = np.fft.rfftfreq(zz.size)
             return_vals = list((fftwavenum, zz))
         else:
             return_vals = list((freq, zz))
@@ -227,3 +228,35 @@ def correlate2d(im1, im2, boundary='wrap', **kwargs):
 
     return convolve(np.conjugate(im1), im2[::-1, ::-1], normalize_kernel=False,
                     boundary=boundary, ignore_edge_zeros=False, **kwargs)
+
+
+def new_pspec(psd2, bins=10, return_stddev=False):
+    '''
+    Calculate the radial profile using scipy.stats.binned_statistic.
+    '''
+
+    yfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[0])))
+    xfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[1])))
+
+    yy, xx = np.meshgrid(yfreqs, xfreqs)
+
+    freqs_dist = np.sqrt(yy**2 + xx**2)
+
+    # nbins = int(np.round(freqs_dist.max()) + 1)
+    # bins = np.logspace(np.log10(freqs_dist.min()), 0., nbins+1)
+
+    ps1D, bin_edge, cts = binned_statistic(freqs_dist.ravel(),
+                                           psd2.ravel(),
+                                           bins=bins)#,
+                                           # statistic=np.nanmean)
+
+    bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
+
+    if not return_stddev:
+        return bin_cents, ps1D
+    else:
+        ps1D_stddev, _, _ = binned_statistic(freqs_dist.ravel(),
+                                             psd2.ravel(),
+                                             bins=bins,
+                                             statistic=np.nanstd)
+        return bin_cents, ps1D, ps1D_stddev
