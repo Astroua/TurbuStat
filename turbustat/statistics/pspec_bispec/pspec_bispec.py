@@ -7,7 +7,7 @@ from ..psds import pspec
 from ..rfft_to_fft import rfft_to_fft
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-from numpy.fft import fft2, fftshift
+from numpy.fft import fftshift
 
 
 class PowerSpectrum(object):
@@ -198,7 +198,7 @@ class PSpec_Distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=2.0, high_cut=64.0, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -209,14 +209,19 @@ class PSpec_Distance(object):
         Parameters
         ----------
         low_cut : int or float, optional
-            Set the cut-off for low spatial frequencies. Visually, below ~2
-            deviates from the power law (for the simulation set).
+            Set the cut-off for low spatial frequencies. By default, this is
+            set to the inverse of half of the smallest axis in the 2 images.
         high_cut : int or float, optional
             Set the cut-off for high spatial frequencies. Values beyond the
             size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
             Enables plotting.
         '''
+
+        if low_cut is None:
+            # Default to a frequency of 1/2 the smallest axis in the images.
+            low_cut = 2. / float(min(min(self.pspec1.ps2D.shape),
+                                     min(self.pspec2.ps2D.shape)))
 
         clip_freq1 = \
             self.pspec1.freqs[clip_func(self.pspec1.freqs, low_cut, high_cut)]
@@ -250,13 +255,17 @@ class PSpec_Distance(object):
 
             print self.results.summary()
 
+            fit_index = self.results.fittedvalues.index
+            one_index = fit_index < len(clip_freq1)
+            two_index = fit_index >= len(clip_freq1)
+
             import matplotlib.pyplot as p
             p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
                    np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
-            p.plot(df["scales"][:len(clip_freq1)],
-                   self.results.fittedvalues[:len(clip_freq1)], "b",
-                   df["scales"][-len(clip_freq2):],
-                   self.results.fittedvalues[-len(clip_freq2):], "g")
+            p.plot(df["scales"][fit_index[one_index]],
+                   self.results.fittedvalues[one_index], "b",
+                   df["scales"][fit_index[two_index]],
+                   self.results.fittedvalues[two_index], "g")
             p.grid(True)
             p.xlabel("log K")
             p.ylabel("Power (K)")
