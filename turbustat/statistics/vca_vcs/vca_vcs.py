@@ -221,7 +221,7 @@ class VCA(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = np.logical_and(self.freqs > self.low_cut,
+        good_interval = np.logical_and(self.freqs >= self.low_cut,
                                        self.freqs <= self.high_cut)
 
         if self._stddev_flag:
@@ -236,8 +236,9 @@ class VCA(object):
                      markersize=5)
 
         y_fit = self.fit.fittedvalues
+        fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
-        p.loglog(self.freqs[~np.isnan(self.ps1D)], 10**y_fit, color+'-',
+        p.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
                  label=label, linewidth=2)
         p.xlabel(xlab)
         p.ylabel(r"P$_2(K)$")
