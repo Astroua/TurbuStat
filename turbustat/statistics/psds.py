@@ -247,8 +247,8 @@ def new_pspec(psd2, bins=10, return_stddev=False):
 
     ps1D, bin_edge, cts = binned_statistic(freqs_dist.ravel(),
                                            psd2.ravel(),
-                                           bins=bins)#,
-                                           # statistic=np.nanmean)
+                                           bins=bins,
+                                           statistic=np.nanmean)
 
     bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
 
