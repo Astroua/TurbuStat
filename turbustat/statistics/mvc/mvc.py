@@ -92,7 +92,7 @@ class MVC(object):
 
         return self
 
-    def compute_radial_pspec(self, return_stddev=False,
+    def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, **kwargs):
         '''
         Computes the radially averaged power spectrum.
@@ -120,7 +120,7 @@ class MVC(object):
         return self
 
     def run(self, phys_units=False, verbose=False, logspacing=True,
-            return_stddev=False):
+            return_stddev=True):
         '''
         Full computation of MVC.
 
@@ -186,31 +186,50 @@ class MVC_distance(object):
         Computed MVC object. use to avoid recomputing.
     """
 
-    def __init__(self, data1, data2, fiducial_model=None):
+    def __init__(self, data1, data2, fiducial_model=None,
+                 weight_by_error=False):
         # super(mvc_distance, self).__init__()
 
         self.shape1 = data1["centroid"][0].shape
         self.shape2 = data2["centroid"][0].shape
 
+        # Create weighted or non-weighted versions
+        if weight_by_error:
+            centroid1 = data1["centroid"][0] * \
+                data1["centroid_error"][0] ** -2.
+            moment01 = data1["moment0"][0] * \
+                data1["moment0_error"][0] ** -2.
+            linewidth1 = data1["linewidth"][0] * \
+                data1["linewidth_error"][0] ** -2.
+            centroid2 = data2["centroid"][0] * \
+                data2["centroid_error"][0] ** -2.
+            moment02 = data2["moment0"][0] * \
+                data2["moment0_error"][0] ** -2.
+            linewidth2 = data2["linewidth"][0] * \
+                data2["linewidth_error"][0] ** -2.
+        else:
+            centroid1 = data1["centroid"][0]
+            moment01 = data1["moment0"][0]
+            linewidth1 = data1["linewidth"][0]
+            centroid2 = data2["centroid"][0]
+            moment02 = data2["moment0"][0]
+            linewidth2 = data2["linewidth"][0]
+
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
         else:
-            self.mvc1 = MVC(data1["centroid"][0] * data1["centroid_error"][0] ** -2.,
-                            data1["moment0"][0] * data1["moment0_error"][0] ** -2.,
-                            data1["linewidth"][0] * data1["linewidth_error"][0] ** -2.,
+            self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
             self.mvc1.run(phys_units=False)
 
-        self.mvc2 = MVC(data2["centroid"][0] * data2["centroid_error"][0] ** -2.,
-                        data2["moment0"][0] * data2["moment0_error"][0] ** -2.,
-                        data2["linewidth"][0] * data2["linewidth_error"][0] ** -2.,
+        self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
         self.mvc2.run(phys_units=False)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=2.0, high_cut=64.0, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -230,19 +249,32 @@ class MVC_distance(object):
             Enables plotting.
         '''
 
-        clip_freq1 = \
-            self.mvc1.freqs[clip_func(self.mvc1.freqs, low_cut, high_cut)]
-        clip_ps1D1 = \
-            self.mvc1.ps1D[clip_func(self.mvc1.freqs, low_cut, high_cut)]
+        if low_cut is None:
+            # Default to a frequency of 1/2 the smallest axis in the images.
+            low_cut = 2. / float(min(min(self.mvc1.ps2D.shape),
+                                     min(self.mvc2.ps2D.shape)))
 
+        keep_freqs1 = clip_func(self.mvc1.freqs, low_cut, high_cut)
+        clip_freq1 = \
+            self.mvc1.freqs[keep_freqs1]
+        clip_ps1D1 = \
+            self.mvc1.ps1D[keep_freqs1]
+        clip_weights1 = \
+            (0.434*self.mvc1.ps1D_stddev[keep_freqs1]/clip_ps1D1)**-2
+
+        keep_freqs2 = clip_func(self.mvc2.freqs, low_cut, high_cut)
         clip_freq2 = \
-            self.mvc2.freqs[clip_func(self.mvc2.freqs, low_cut, high_cut)]
+            self.mvc2.freqs[keep_freqs2]
         clip_ps1D2 = \
-            self.mvc2.ps1D[clip_func(self.mvc2.freqs, low_cut, high_cut)]
+            self.mvc2.ps1D[keep_freqs2]
+        clip_weights2 = \
+            (0.434*self.mvc2.ps1D_stddev[keep_freqs1]/clip_ps1D1)**-2
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
         regressor = x.T * dummy
+
+        weights = np.concatenate([clip_weights1, clip_weights2])
 
         log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
 
@@ -251,8 +283,9 @@ class MVC_distance(object):
 
         df = DataFrame(d)
 
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
+        model = sm.wls(
+            formula="log_ps1D ~ dummy + scales + regressor", data=df,
+            weights=weights)
 
         self.results = model.fit()
 
