@@ -85,7 +85,7 @@ class VCA(object):
 
         return self
 
-    def compute_radial_pspec(self, return_stddev=False,
+    def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, **kwargs):
         '''
         Computes the radially averaged power spectrum.
@@ -159,13 +159,13 @@ class VCA(object):
 
                 # Check to make sure this leaves enough to fit to.
                 if sum(x < brk_fit.brk) < min_fits_pts:
-                    warnings.warn("Not enough points to fit to."+
+                    warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max()
+                    self.low_cut = self.freqs.min()
                 else:
-                    x = x[x < brk_fit.brk]
-                    y = y[x < brk_fit.brk]
+                    x = x[x > brk_fit.brk]
+                    y = y[x > brk_fit.brk]
 
                     self.low_cut = 10**brk_fit.brk
 
@@ -179,7 +179,14 @@ class VCA(object):
 
         x = sm.add_constant(x)
 
-        model = sm.OLS(y, x, missing='drop')
+        if self._stddev_flag:
+            good_range = np.logical_and(self.freqs < self.high_cut,
+                                        self.freqs >= self.low_cut)
+            weights = self.ps1D_stddev[good_range]**-2
+        else:
+            weights = 1.0
+
+        model = sm.WLS(y, x, missing='drop', weights=weights)
 
         self.fit = model.fit()
 
@@ -247,7 +254,7 @@ class VCA(object):
         if show:
             p.show()
 
-    def run(self, verbose=False, brk=None, return_stddev=False,
+    def run(self, verbose=False, brk=None, return_stddev=True,
             logspacing=True):
         '''p
         Full computation of VCA.
