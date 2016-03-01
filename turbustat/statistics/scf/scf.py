@@ -100,12 +100,13 @@ class SCF(object):
         if return_stddev:
             self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
                 pspec(self.scf_surface, logspacing=logspacing,
-                      return_stddev=return_stddev, **kwargs)
+                      return_stddev=return_stddev, return_freqs=False,
+                      **kwargs)
             self._stddev_flag = True
         else:
             self._lags, self._scf_spectrum = \
                 pspec(self.scf_surface, logspacing=logspacing,
-                      **kwargs)
+                      return_freqs=False, **kwargs)
             self._stddev_flag = False
 
     def save_results(self, output_name=None, keep_data=False):
@@ -281,7 +282,8 @@ class SCF_Distance(object):
             dist_weight = np.ones((self.size, self.size))
 
         difference = (
-            (self.scf1.scf_surface - self.scf2.scf_surface) * dist_weight) ** 2.
+            (self.scf1.scf_surface -
+             self.scf2.scf_surface) * dist_weight) ** 2.
         self.distance = np.sqrt(
             np.nansum(difference) / np.sum(np.isfinite(difference)))
 
@@ -304,7 +306,7 @@ class SCF_Distance(object):
             p.imshow(difference, origin="lower", interpolation="nearest")
             p.title("Difference")
             p.colorbar()
-
+            p.tight_layout()
             p.show()
 
         return self

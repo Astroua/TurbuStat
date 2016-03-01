@@ -65,7 +65,7 @@ class VCA(object):
     @property
     def ps1D_stddev(self):
         if not self._stddev_flag:
-            Warning("scf_spectrum_stddev is only calculated when return_stddev"
+            Warning("ps1D_stddev is only calculated when return_stddev"
                     " is enabled.")
 
         return self._ps1D_stddev
@@ -85,7 +85,7 @@ class VCA(object):
 
         return self
 
-    def compute_radial_pspec(self, return_stddev=False,
+    def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, **kwargs):
         '''
         Computes the radially averaged power spectrum.
@@ -115,7 +115,7 @@ class VCA(object):
 
         return self
 
-    def fit_pspec(self, brk=None, log_break=True, low_cut=np.sqrt(2),
+    def fit_pspec(self, brk=None, log_break=True, high_cut=0.5,
                   min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -142,9 +142,9 @@ class VCA(object):
         '''
 
         # Make the data to fit to
-        self.low_cut = low_cut
-        x = np.log10(self.freqs[self.freqs > low_cut])
-        y = np.log10(self.ps1D[self.freqs > low_cut])
+        self.high_cut = high_cut
+        x = np.log10(self.freqs[self.freqs < high_cut])
+        y = np.log10(self.ps1D[self.freqs < high_cut])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -159,27 +159,34 @@ class VCA(object):
 
                 # Check to make sure this leaves enough to fit to.
                 if sum(x < brk_fit.brk) < min_fits_pts:
-                    warnings.warn("Not enough points to fit to."+
+                    warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max()
+                    self.low_cut = self.freqs.min()
                 else:
-                    x = x[x < brk_fit.brk]
-                    y = y[x < brk_fit.brk]
+                    x = x[x > brk_fit.brk]
+                    y = y[x > brk_fit.brk]
 
-                    self.high_cut = 10**brk_fit.brk
+                    self.low_cut = 10**brk_fit.brk
 
             else:
-                self.high_cut = self.freqs.max()
+                self.low_cut = self.freqs.min()
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
         else:
-            self.high_cut = self.freqs.max()
+            self.low_cut = self.freqs.min()
 
         x = sm.add_constant(x)
 
-        model = sm.OLS(y, x)
+        if self._stddev_flag:
+            good_range = np.logical_and(self.freqs < self.high_cut,
+                                        self.freqs >= self.low_cut)
+            weights = self.ps1D_stddev[good_range]**-2
+        else:
+            weights = 1.0
+
+        model = sm.WLS(y, x, missing='drop', weights=weights)
 
         self.fit = model.fit()
 
@@ -221,7 +228,7 @@ class VCA(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = np.logical_and(self.freqs > self.low_cut,
+        good_interval = np.logical_and(self.freqs >= self.low_cut,
                                        self.freqs <= self.high_cut)
 
         if self._stddev_flag:
@@ -236,7 +243,9 @@ class VCA(object):
                      markersize=5)
 
         y_fit = self.fit.fittedvalues
-        p.loglog(self.freqs[good_interval], 10**y_fit, color+'-',
+        fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
+
+        p.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
                  label=label, linewidth=2)
         p.xlabel(xlab)
         p.ylabel(r"P$_2(K)$")
@@ -245,9 +254,9 @@ class VCA(object):
         if show:
             p.show()
 
-    def run(self, verbose=False, brk=None, return_stddev=False,
+    def run(self, verbose=False, brk=None, return_stddev=True,
             logspacing=True):
-        '''
+        '''p
         Full computation of VCA.
 
         Parameters

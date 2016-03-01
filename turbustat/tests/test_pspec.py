@@ -27,7 +27,7 @@ class testPSpec(TestCase):
                           dataset1["integrated_intensity"][1],
                           dataset1["integrated_intensity_error"][0] ** 2.)
         self.tester.run()
-        assert np.allclose(self.tester.ps1D, computed_data['pspec_val'])
+        npt.assert_allclose(self.tester.ps1D, computed_data['pspec_val'])
 
     def test_PSpec_distance(self):
         self.tester_dist = \
