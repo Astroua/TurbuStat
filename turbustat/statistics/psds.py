@@ -40,8 +40,10 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         within each of the bins.
     '''
 
-    y = np.arange(psd2.shape[0] - np.floor(psd2.shape[0]/2.).astype(int))
-    x = np.arange(psd2.shape[1] - np.floor(psd2.shape[1]/2.).astype(int))
+    y = np.arange(-np.floor(psd2.shape[0]/2.).astype(int),
+                  psd2.shape[0] - np.floor(psd2.shape[0]/2.).astype(int))
+    x = np.arange(-np.floor(psd2.shape[1]/2.).astype(int),
+                  psd2.shape[1] - np.floor(psd2.shape[1]/2.).astype(int))
 
     yy, xx = np.meshgrid(y, x)
 
