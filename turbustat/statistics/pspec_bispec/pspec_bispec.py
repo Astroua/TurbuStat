@@ -307,19 +307,6 @@ class BiSpectrum(object):
         # Set nans to min
         self.img[np.isnan(self.img)] = np.nanmin(self.img)
 
-        self.kx = np.arange(0., self.shape[0] / 2., 1)
-        self.ky = np.arange(0., self.shape[1] / 2., 1)
-
-        self.bispectrum = np.zeros(
-            (int(self.shape[0] / 2.) - 1, int(self.shape[1] / 2.) - 1),
-            dtype=np.complex)
-        self.bicoherence = np.zeros(
-            (int(self.shape[0] / 2.) - 1, int(self.shape[1] / 2.) - 1))
-        self.bispectrum_amp = None
-        self.accumulator = np.zeros(
-            (int(self.shape[0] / 2.) - 1, int(self.shape[1] / 2.) - 1))
-        self.tracker = np.zeros(self.shape)
-
     def compute_bispectrum(self, nsamples=100, seed=1000):
         '''
         Do the computation.
@@ -333,12 +320,20 @@ class BiSpectrum(object):
             Sets the seed for the distribution draws.
         '''
 
-        fft = np.fft.fft2(self.img)
-        conjfft = np.conj(fft)
+        fftarr = np.fft.fft2(self.img)
+        conjfft = np.conj(fftarr)
         ra.seed(seed)
 
-        for k1mag in range(int(fft.shape[0] / 2.)):
-            for k2mag in range(int(fft.shape[1] / 2.)):
+        bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
+
+        self.bispectrum = np.zeros(bispec_shape, dtype=np.complex)
+        self.bicoherence = np.zeros(bispec_shape, dtype=np.float)
+        self.tracker = np.zeros(self.shape, dtype=np.int16)
+
+        biconorm = np.ones_like(self.bispectrum, dtype=float)
+
+        for k1mag in range(int(fftarr.shape[0] / 2.)):
+            for k2mag in range(int(fftarr.shape[1] / 2.)):
                 phi1 = ra.uniform(0, 2 * np.pi, nsamples)
                 phi2 = ra.uniform(0, 2 * np.pi, nsamples)
 
@@ -351,33 +346,26 @@ class BiSpectrum(object):
                 k2y = np.asarray([int(k2mag * np.sin(angle))
                                   for angle in phi2])
 
-                k3x = k1x + k2x
-                k3y = k1y + k2y
+                k3x = np.asarray([int(k1mag * np.cos(angle) +
+                                      k2mag * np.cos(angle))
+                                  for ang1, ang2 in zip(phi1, phi2)])
+                k3y = np.asarray([int(k1mag * np.sin(angle) +
+                                      k2mag * np.sin(angle))
+                                  for ang1, ang2 in zip(phi1, phi2)])
 
-                x = np.asarray([int(np.sqrt(i ** 2. + j ** 2.))
-                                for i, j in zip(k1x, k1y)])
-                y = np.asarray([int(np.sqrt(i ** 2. + j ** 2.))
-                                for i, j in zip(k2x, k2y)])
+                samps = fftarr[k1x, k1y] * fftarr[k2x, k2y] * conjfft[k3x, k3y]
 
-                for n in range(nsamples):
-                    self.bispectrum[x[n], y[n]] +=\
-                        fft[k1x[n], k1y[n]] *\
-                        fft[k2x[n], k2y[n]] *\
-                        conjfft[k3x[n], k3y[n]]
-                    self.bicoherence[x[n], y[n]] +=\
-                        np.abs(fft[k1x[n], k1y[n]] *
-                               fft[k2x[n], k2y[n]] *
-                               conjfft[k3x[n], k3y[n]])
-                    self.accumulator[x[n], y[n]] += 1.
+                self.bispectrum[k1mag, k2mag] = np.sum(samps)
+
+                biconorm[k1mag, k2mag] = np.sum(np.abs(samps))
 
                 # Track where we're sampling from in fourier space
-                    self.tracker[k1x[n], k1y[n]] += 1
-                    self.tracker[k2x[n], k2y[n]] += 1
-                    self.tracker[k3x[n], k3y[n]] += 1
+                self.tracker[k1x, k1y] += 1
+                self.tracker[k2x, k2y] += 1
+                self.tracker[k3x, k3y] += 1
 
-        self.bicoherence = (np.abs(self.bispectrum) / self.bicoherence)
-        self.bispectrum /= self.accumulator
-        self.bispectrum_amp = np.log10(np.abs(self.bispectrum) ** 2.)
+        self.bicoherence = (np.abs(self.bispectrum) / biconorm)
+        self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
 
         return self
 
