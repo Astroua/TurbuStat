@@ -284,16 +284,10 @@ class DeltaVariance_Distance(object):
         nans2 = np.logical_or(np.isnan(self.delvar2.delta_var),
                               self.delvar2.delta_var <= 0.0)
 
-        if nans1.any() or nans2.any():
-            all_nans = np.logical_or(nans1, nans2)
+        all_nans = np.logical_or(nans1, nans2)
 
-            deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
-            deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
-
-        else:
-
-            deltavar1 = np.log10(self.delvar1.delta_var)
-            deltavar2 = np.log10(self.delvar2.delta_var)
+        deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
+        deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
 
         self.distance = np.linalg.norm(deltavar1 - deltavar2)
 
