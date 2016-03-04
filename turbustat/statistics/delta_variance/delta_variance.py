@@ -32,10 +32,13 @@ class DeltaVariance(object):
         The ratio between the kernel sizes.
     lags : numpy.ndarray or list, optional
         The pixel scales to compute the delta-variance at.
+    nlags : int, optional
+        Number of lags to use.
 
     """
 
-    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None):
+    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None,
+                 nlags=25):
         super(DeltaVariance, self).__init__()
 
         self.img = img
@@ -61,18 +64,18 @@ class DeltaVariance(object):
                 if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
                     min_size = 3.0
             except ValueError:
-                print "No CDELT2 in header. Using pixel scales."
+                print("No CDELT2 in header. Using pixel scales.")
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
             self.lags = np.logspace(np.log10(min_size),
-                                    np.log10(min(self.img.shape) / 2.), 25)
+                                    np.log10(min(self.img.shape) / 2.), nlags)
         else:
             self.lags = lags
 
         self.convolved_arrays = []
         self.convolved_weights = []
         self.delta_var = np.empty((len(self.lags, )))
-        self.delta_var_error = np.empty((2, len(self.lags)))
+        self.delta_var_error = np.empty((len(self.lags, )))
 
     def do_convolutions(self):
         for i, lag in enumerate(self.lags):
@@ -84,25 +87,21 @@ class DeltaVariance(object):
             pad_weights = np.pad(self.weights, int(lag), padwithzeros)
             pad_img = np.pad(self.img, int(lag), padwithzeros) * pad_weights
 
-            interpolate_nan = False
-            if self.nanflag:
-                interpolate_nan = True
-
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
@@ -114,35 +113,25 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, bootstrap=False, nsamples=100, alpha=0.05):
+    def compute_deltavar(self):
 
-        for i, (convolved_array, convolved_weight) in \
-         enumerate(zip(self.convolved_arrays, self.convolved_weights)):
+        for i, (conv_arr,
+                conv_weight,
+                lag) in enumerate(zip(self.convolved_arrays,
+                                      self.convolved_weights,
+                                      self.lags)):
 
-            delta_var_val = _delvar(convolved_array, convolved_weight)
+            val, err = _delvar(conv_arr, conv_weight, lag)
 
-            # bootstrap to find an error
-            if bootstrap:
-                bootstrap_delvar = np.empty((nsamples, ))
-                for n in range(nsamples):
-                    resample = bootstrap_resample(convolved_array)
-                    bootstrap_delvar[n] = _delvar(resample, convolved_weight)
-
-                stat = np.sort(bootstrap_delvar)
-                error = (stat[int((alpha/2.0)*nsamples)],
-                         stat[int((1-alpha/2.0)*nsamples)])
-            else:
-                error = (0.0, 0.0)
-
-            self.delta_var[i] = delta_var_val
-            self.delta_var_error[:, i] = error
+            self.delta_var[i] = val
+            self.delta_var_error[i] = err
 
         return self
 
-    def run(self, bootstrap=False, verbose=False, ang_units=True):
+    def run(self, verbose=False, ang_units=True):
 
         self.do_convolutions()
-        self.compute_deltavar(bootstrap=bootstrap)
+        self.compute_deltavar()
 
         if ang_units:
             self.lags *= self.ang_size
@@ -152,9 +141,8 @@ class DeltaVariance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar = [self.delta_var_error[0, :],
-                         self.delta_var_error[1, :]]
-            p.errorbar(self.lags, self.delta_var, yerr=error_bar, fmt="bD-")
+            p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error,
+                       fmt="bD-")
             ax.grid(True)
             ax.set_xlabel("Lag (arcmin)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
@@ -186,7 +174,7 @@ def core_kernel(lag, x_size, y_size):
 
     x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
                        np.arange(-y_size / 2, y_size / 2 + 1, 1))
-    kernel = ((4 / np.pi * lag)) * \
+    kernel = ((4 / np.pi * lag**2)) * \
         np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
 
     return kernel / np.sum(kernel)
@@ -221,7 +209,7 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
     inner = np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
     outer = np.exp(-(x ** 2. + y ** 2.) / (diam_ratio * lag / 2.) ** 2.)
 
-    kernel = 4 / (np.pi * lag * (diam_ratio ** 2. - 1)) * (outer - inner)
+    kernel = 4 / (np.pi * lag**2 * (diam_ratio ** 2. - 1)) * (outer - inner)
 
     return kernel / np.sum(kernel)
 
@@ -245,9 +233,9 @@ class DeltaVariance_Distance(object):
     Parameters
     ----------
 
-    dataset1 : FITS hdu
+    dataset1 : tuple
         Contains the data and header for one dataset.
-    dataset2 : FITS hdu
+    dataset2 : tuple
         See above.
     weights1 : numpy.ndarray
         Weights for dataset1.
@@ -290,28 +278,16 @@ class DeltaVariance_Distance(object):
             Enables plotting.
         '''
 
-        errors1 = np.abs(self.delvar1.delta_var_error[1, :] -
-                         self.delvar1.delta_var_error[0, :])
-        errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
-                         self.delvar2.delta_var_error[0, :])
-
-
         # Check for NaNs and negatives
         nans1 = np.logical_or(np.isnan(self.delvar1.delta_var),
                               self.delvar1.delta_var <= 0.0)
         nans2 = np.logical_or(np.isnan(self.delvar2.delta_var),
                               self.delvar2.delta_var <= 0.0)
 
-        if nans1.any() or nans2.any():
-            all_nans = np.logical_or(nans1, nans2)
+        all_nans = np.logical_or(nans1, nans2)
 
-            deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
-            deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
-
-        else:
-
-            deltavar1 = np.log10(self.delvar1.delta_var)
-            deltavar2 = np.log10(self.delvar2.delta_var)
+        deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
+        deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
 
         self.distance = np.linalg.norm(deltavar1 - deltavar2)
 
@@ -320,15 +296,11 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar1 = [self.delvar1.delta_var_error[0, :],
-                         self.delvar1.delta_var_error[1, :]]
             p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
-                       yerr=error_bar1, fmt="bD-",
+                       yerr=self.delvar1.delta_var_error, fmt="bD-",
                        label="Delta Var 1")
-            error_bar = [self.delvar2.delta_var_error[0, :],
-                         self.delvar2.delta_var_error[1, :]]
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
-                       yerr=error_bar2, fmt="gD-",
+                       yerr=self.delvar2.delta_var_error, fmt="gD-",
                        label="Delta Var 2")
             ax.legend(loc='best')
             ax.grid(True)
@@ -339,36 +311,23 @@ class DeltaVariance_Distance(object):
         return self
 
 
-def _delvar(array, weight):
+def _delvar(array, weight, lag):
     '''
     Computes the delta variance of the given array.
     '''
-    avg_value = nanmean(array, axis=None)
+    arr_cent = array.copy() - nanmean(array, axis=None)
 
-    val = np.nansum((array - avg_value) ** 2. * weight) /\
+    val = np.nansum(arr_cent ** 2. * weight) /\
         np.nansum(weight)
 
-    return val
+    # The error needs to be normalized by the number of independent
+    # pixels in the array.
+    # Take width to be 1/2 FWHM. Note that lag is defined as 2*sigma.
+    # So 2ln(2) sigma^2 = ln(2)/2 * lag^2
+    kern_area = np.ceil(0.5*np.pi*np.log(2)*lag**2).astype(int)
+    nindep = np.sqrt(np.isfinite(arr_cent).sum() / kern_area)
 
+    val_err = np.sqrt((np.nansum(arr_cent ** 4. * weight) /
+                       np.nansum(weight)) - val**2) / nindep
 
-def bootstrap_resample(X, n=None):
-    """
-    Code based on: http://nbviewer.ipython.org/gist/aflaxman/6871948
-    Bootstrap resample an array_like
-    Parameters
-    ----------
-    X : array_like
-      data to resample
-    n : int, optional
-      length of resampled array, equal to len(X) if n==None
-
-    Returns
-    -------
-    returns X_resamples
-    """
-    if n is None:
-        n = len(X)
-
-    resample_i = np.floor(np.random.rand(n)*len(X)).astype(int)
-    X_resample = X[resample_i]
-    return X_resample
+    return val, val_err

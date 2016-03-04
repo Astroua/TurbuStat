@@ -59,3 +59,6 @@ docs/_build/
 *.pyc
 
 *.DS_Store
+
+turbustat/version.py
+turbustat/cython_version.py
