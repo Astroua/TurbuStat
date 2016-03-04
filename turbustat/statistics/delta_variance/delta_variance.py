@@ -141,9 +141,8 @@ class DeltaVariance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar = [self.delta_var_error[0, :],
-                         self.delta_var_error[1, :]]
-            p.errorbar(self.lags, self.delta_var, yerr=error_bar, fmt="bD-")
+            p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error,
+                       fmt="bD-")
             ax.grid(True)
             ax.set_xlabel("Lag (arcmin)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
