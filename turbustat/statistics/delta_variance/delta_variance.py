@@ -32,10 +32,13 @@ class DeltaVariance(object):
         The ratio between the kernel sizes.
     lags : numpy.ndarray or list, optional
         The pixel scales to compute the delta-variance at.
+    nlags : int, optional
+        Number of lags to use.
 
     """
 
-    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None):
+    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None,
+                 nlags=25):
         super(DeltaVariance, self).__init__()
 
         self.img = img
@@ -65,7 +68,7 @@ class DeltaVariance(object):
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
             self.lags = np.logspace(np.log10(min_size),
-                                    np.log10(min(self.img.shape) / 2.), 25)
+                                    np.log10(min(self.img.shape) / 2.), nlags)
         else:
             self.lags = lags
 
@@ -84,25 +87,21 @@ class DeltaVariance(object):
             pad_weights = np.pad(self.weights, int(lag), padwithzeros)
             pad_img = np.pad(self.img, int(lag), padwithzeros) * pad_weights
 
-            interpolate_nan = False
-            if self.nanflag:
-                interpolate_nan = True
-
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
-                interpolate_nan=interpolate_nan,
+                interpolate_nan=self.nanflag,
                 ignore_edge_zeros=True)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
