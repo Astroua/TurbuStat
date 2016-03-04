@@ -233,9 +233,9 @@ class DeltaVariance_Distance(object):
     Parameters
     ----------
 
-    dataset1 : FITS hdu
+    dataset1 : tuple
         Contains the data and header for one dataset.
-    dataset2 : FITS hdu
+    dataset2 : tuple
         See above.
     weights1 : numpy.ndarray
         Weights for dataset1.
