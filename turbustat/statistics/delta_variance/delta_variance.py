@@ -339,16 +339,25 @@ class DeltaVariance_Distance(object):
         return self
 
 
-def _delvar(array, weight):
+def _delvar(array, weight, lag):
     '''
     Computes the delta variance of the given array.
     '''
-    avg_value = nanmean(array, axis=None)
+    arr_cent = array.copy() - nanmean(array, axis=None)
 
-    val = np.nansum((array - avg_value) ** 2. * weight) /\
+    val = np.nansum(arr_cent ** 2. * weight) /\
         np.nansum(weight)
 
-    return val
+    # The error needs to be normalized by the number of independent
+    # pixels in the array.
+    # Take width to be 1/2 FWHM
+    kern_area = np.ceil(np.pi*2*np.log(2)*lag**2).astype(int)
+    nindep = np.sqrt(np.isfinite(arr_cent).sum() / kern_area)
+
+    val_err = np.sqrt((np.nansum(arr_cent ** 4. * weight) /
+                       np.nansum(weight)) - val**2) / nindep
+
+    return val, val_err
 
 
 def bootstrap_resample(X, n=None):
