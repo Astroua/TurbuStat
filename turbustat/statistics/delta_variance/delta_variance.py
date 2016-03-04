@@ -61,7 +61,7 @@ class DeltaVariance(object):
                 if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
                     min_size = 3.0
             except ValueError:
-                print "No CDELT2 in header. Using pixel scales."
+                print("No CDELT2 in header. Using pixel scales.")
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
             self.lags = np.logspace(np.log10(min_size),
@@ -72,7 +72,7 @@ class DeltaVariance(object):
         self.convolved_arrays = []
         self.convolved_weights = []
         self.delta_var = np.empty((len(self.lags, )))
-        self.delta_var_error = np.empty((2, len(self.lags)))
+        self.delta_var_error = np.empty((len(self.lags, )))
 
     def do_convolutions(self):
         for i, lag in enumerate(self.lags):
@@ -114,35 +114,25 @@ class DeltaVariance(object):
 
         return self
 
-    def compute_deltavar(self, bootstrap=False, nsamples=100, alpha=0.05):
+    def compute_deltavar(self):
 
-        for i, (convolved_array, convolved_weight) in \
-         enumerate(zip(self.convolved_arrays, self.convolved_weights)):
+        for i, (conv_arr,
+                conv_weight,
+                lag) in enumerate(zip(self.convolved_arrays,
+                                      self.convolved_weights,
+                                      self.lags)):
 
-            delta_var_val = _delvar(convolved_array, convolved_weight)
+            val, err = _delvar(conv_arr, conv_weight, lag)
 
-            # bootstrap to find an error
-            if bootstrap:
-                bootstrap_delvar = np.empty((nsamples, ))
-                for n in range(nsamples):
-                    resample = bootstrap_resample(convolved_array)
-                    bootstrap_delvar[n] = _delvar(resample, convolved_weight)
-
-                stat = np.sort(bootstrap_delvar)
-                error = (stat[int((alpha/2.0)*nsamples)],
-                         stat[int((1-alpha/2.0)*nsamples)])
-            else:
-                error = (0.0, 0.0)
-
-            self.delta_var[i] = delta_var_val
-            self.delta_var_error[:, i] = error
+            self.delta_var[i] = val
+            self.delta_var_error[i] = err
 
         return self
 
-    def run(self, bootstrap=False, verbose=False, ang_units=True):
+    def run(self, verbose=False, ang_units=True):
 
         self.do_convolutions()
-        self.compute_deltavar(bootstrap=bootstrap)
+        self.compute_deltavar()
 
         if ang_units:
             self.lags *= self.ang_size
@@ -290,12 +280,6 @@ class DeltaVariance_Distance(object):
             Enables plotting.
         '''
 
-        errors1 = np.abs(self.delvar1.delta_var_error[1, :] -
-                         self.delvar1.delta_var_error[0, :])
-        errors2 = np.abs(self.delvar2.delta_var_error[1, :] -
-                         self.delvar2.delta_var_error[0, :])
-
-
         # Check for NaNs and negatives
         nans1 = np.logical_or(np.isnan(self.delvar1.delta_var),
                               self.delvar1.delta_var <= 0.0)
@@ -320,15 +304,11 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            error_bar1 = [self.delvar1.delta_var_error[0, :],
-                         self.delvar1.delta_var_error[1, :]]
             p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
-                       yerr=error_bar1, fmt="bD-",
+                       yerr=self.delvar1.delta_var_error, fmt="bD-",
                        label="Delta Var 1")
-            error_bar = [self.delvar2.delta_var_error[0, :],
-                         self.delvar2.delta_var_error[1, :]]
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
-                       yerr=error_bar2, fmt="gD-",
+                       yerr=self.delvar2.delta_var_error, fmt="gD-",
                        label="Delta Var 2")
             ax.legend(loc='best')
             ax.grid(True)
@@ -358,26 +338,3 @@ def _delvar(array, weight, lag):
                        np.nansum(weight)) - val**2) / nindep
 
     return val, val_err
-
-
-def bootstrap_resample(X, n=None):
-    """
-    Code based on: http://nbviewer.ipython.org/gist/aflaxman/6871948
-    Bootstrap resample an array_like
-    Parameters
-    ----------
-    X : array_like
-      data to resample
-    n : int, optional
-      length of resampled array, equal to len(X) if n==None
-
-    Returns
-    -------
-    returns X_resamples
-    """
-    if n is None:
-        n = len(X)
-
-    resample_i = np.floor(np.random.rand(n)*len(X)).astype(int)
-    X_resample = X[resample_i]
-    return X_resample
