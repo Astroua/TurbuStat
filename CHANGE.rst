@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #96 - Fix error calculation in Delta Variance
 * #95 - remove double rounding and clean-up unused code in Bispectrum
 * #93 - Updated this file :).
 * #92 - Re-wrote pspec to use binned_statistic; now returns the proper spatial frequencies
