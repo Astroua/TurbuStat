@@ -174,7 +174,7 @@ def core_kernel(lag, x_size, y_size):
 
     x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
                        np.arange(-y_size / 2, y_size / 2 + 1, 1))
-    kernel = ((4 / np.pi * lag)) * \
+    kernel = ((4 / np.pi * lag**2)) * \
         np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
 
     return kernel / np.sum(kernel)
@@ -209,7 +209,7 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
     inner = np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
     outer = np.exp(-(x ** 2. + y ** 2.) / (diam_ratio * lag / 2.) ** 2.)
 
-    kernel = 4 / (np.pi * lag * (diam_ratio ** 2. - 1)) * (outer - inner)
+    kernel = 4 / (np.pi * lag**2 * (diam_ratio ** 2. - 1)) * (outer - inner)
 
     return kernel / np.sum(kernel)
 
@@ -328,8 +328,9 @@ def _delvar(array, weight, lag):
 
     # The error needs to be normalized by the number of independent
     # pixels in the array.
-    # Take width to be 1/2 FWHM
-    kern_area = np.ceil(np.pi*2*np.log(2)*lag**2).astype(int)
+    # Take width to be 1/2 FWHM. Note that lag is defined as 2*sigma.
+    # So 2ln(2) sigma^2 = ln(2)/2 * lag^2
+    kern_area = np.ceil(0.5*np.pi*np.log(2)*lag**2).astype(int)
     nindep = np.sqrt(np.isfinite(arr_cent).sum() / kern_area)
 
     val_err = np.sqrt((np.nansum(arr_cent ** 4. * weight) /
