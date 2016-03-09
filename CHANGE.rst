@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #98 - Removed scripts for the paper results from TurbuStat. Now available in a separate repo.
 * #96 - Fix error calculation in Delta Variance
 * #95 - remove double rounding and clean-up unused code in Bispectrum
 * #93 - Updated this file :).
