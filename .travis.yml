@@ -27,7 +27,7 @@ install:
     - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION pip cython nose
     - source activate test
 
-    - conda install numpy=$NP_VER $CONDA_ADDITIONAL
+    - conda install --yes numpy=$NP_VER $CONDA_ADDITIONAL
 
     # Now install dependencies
     - if [[ $ASTRO_VER == dev ]]; then pip install -e git+git://github.com/astropy/astropy.git#egg=astropy; else conda install --yes numpy=$NP_VER astropy=$ASTRO_VER; fi
