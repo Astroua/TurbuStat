@@ -27,7 +27,8 @@ install:
     - source activate test
 
     # Now install dependencies
-    - conda install --yes numpy=$NP_VER $CONDA_ADDITIONAL astropy=$ASTRO_VER
+    - conda install --yes $CONDA_ADDITIONAL
+    - conda install --yes numpy=$NP_VER astropy=$ASTRO_VER
 
     # Use pip to install development versions
     - pip install git+https://github.com/dendrograms/astrodendro.git
