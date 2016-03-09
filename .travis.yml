@@ -5,6 +5,13 @@ sudo : false
 python:
     - 2.7
 
+env:
+    global:
+        - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
+    matrix:
+        - NP_VER=1.9 ASTRO_VER=1.0
+        - NP_VER=1.10 ASTRO_VER=1.0
+
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
     - chmod +x miniconda.sh
@@ -19,13 +26,8 @@ install:
     - source activate test
 
     # Now install dependencies
-    - conda install --yes numpy==1.9.0
-    - conda install --yes scipy
-    - conda install --yes matplotlib
-    - conda install --yes pandas
-    - conda install --yes statsmodels
-    - conda install --yes scikit-learn
-    - conda install --yes astropy
+    - conda install --yes $CONDA_ADDITIONAL
+    - conda install --yes numpy=$NP_VER astropy=$ASTRO_VER
 
     # Use pip to install development versions
     - pip install git+https://github.com/dendrograms/astrodendro.git
