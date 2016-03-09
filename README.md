@@ -26,8 +26,7 @@ The key properties are:
 *   sensitive to differences in physical scale
 *   independent of noise levels in the data
 
-Not all of the metrics satisfy the idealized properties. A full description of all
-statistics in this package will be shown in Koch et al. (in prep).
+Not all of the metrics satisfy the idealized properties. A full description of all statistics in this package will be shown in Koch et al. (submitted). The paper results can be reproduced using the scripts in [AstroStat_Results](https://github.com/Astroua/AstroStat_Results).
 
 Installing
 ----------
