@@ -11,8 +11,7 @@ env:
     matrix:
         - NP_VER=1.9 ASTRO_VER=1.0
         - NP_VER=1.8 ASTRO_VER=1.0
-        - NP_VER=1.8 ASTRO_VER=0.4
-        - NP_VER=1.9 ASTRO_VER=dev
+        - NP_VER=1.10 ASTRO_VER=1.0
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
