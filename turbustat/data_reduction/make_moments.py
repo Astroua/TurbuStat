@@ -384,7 +384,7 @@ class Mask_and_Moments(object):
             moments_path = ""
 
         if not isinstance(fits_name, SpectralCube):
-            root_name = fits_name[:-4]
+            root_name = os.path.basename(fits_name[:-4])
         else:
             root_name = moments_prefix
 
