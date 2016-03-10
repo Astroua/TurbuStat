@@ -327,10 +327,10 @@ class PDF_Distance(object):
                 label1 = labels[0]
                 label2 = labels[1]
             p.subplot(131)
-            p.loglog(self.bin_centers[self.PDF1.pdf > 0],
-                     self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label=label1)
-            p.loglog(self.bin_centers[self.PDF2.pdf > 0],
-                     self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
+            p.loglog(self.bin_centers,
+                     self.PDF1.pdf, 'b-', label=label1)
+            p.loglog(self.bin_centers,
+                     self.PDF2.pdf, 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
             p.xlabel(r"z-score")
@@ -338,8 +338,8 @@ class PDF_Distance(object):
 
             # ECDF
             p.subplot(132)
-            p.semilogx(np.sort(self.PDF1.data.ravel()), self.PDF1.ecdf, 'b-')
-            p.semilogx(np.sort(self.PDF2.data.ravel()), self.PDF2.ecdf, 'g-')
+            p.semilogx(self.bin_centers, self.PDF1.ecdf, 'b-')
+            p.semilogx(self.bin_centers, self.PDF2.ecdf, 'g-')
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("ECDF")
