@@ -164,6 +164,8 @@ class MVC(object):
             else:
                 ax.set_xlabel("Frequency (pixels)")
 
+            ax.set_ylabel("MVC Power")
+
             p.show()
 
         return self
@@ -266,12 +268,16 @@ class MVC_distance(object):
             self.mvc1.freqs[keep_freqs1]
         clip_ps1D1 = \
             self.mvc1.ps1D[keep_freqs1]
+        clip_errors1 = \
+            (0.434*self.mvc1.ps1D_stddev[keep_freqs1]/clip_ps1D1)
 
         keep_freqs2 = clip_func(self.mvc2.freqs, low_cut, high_cut)
         clip_freq2 = \
             self.mvc2.freqs[keep_freqs2]
         clip_ps1D2 = \
             self.mvc2.ps1D[keep_freqs2]
+        clip_errors2 = \
+            (0.434*self.mvc2.ps1D_stddev[keep_freqs2]/clip_ps1D2)
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
@@ -300,15 +306,20 @@ class MVC_distance(object):
             two_index = fit_index >= len(clip_freq1)
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
-                   np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
             p.plot(df["scales"][fit_index[one_index]],
                    self.results.fittedvalues[one_index], "b",
                    df["scales"][fit_index[two_index]],
                    self.results.fittedvalues[two_index], "g")
+            p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
+                       yerr=clip_errors1, color="b", fmt="D", markersize=5,
+                       alpha=0.5)
+            p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
+                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
+                       alpha=0.5)
             p.grid(True)
-            p.xlabel("log K")
-            p.ylabel("MVC Power (K)")
+            p.ylabel("MVC Power")
+            p.xlabel("Frequency (pixels)")
+
             p.show()
 
         return self
