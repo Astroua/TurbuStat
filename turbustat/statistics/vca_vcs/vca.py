@@ -182,7 +182,10 @@ class VCA(object):
         if self._stddev_flag:
             good_range = np.logical_and(self.freqs < self.high_cut,
                                         self.freqs >= self.low_cut)
-            weights = self.ps1D_stddev[good_range]**-2
+            stddev_vals = self.ps1D_stddev[good_range]
+            stddev_vals[np.isnan(stddev_vals)] = np.nanmax(stddev_vals)
+            stddev_vals[stddev_vals == 0.0] = np.nanmax(stddev_vals)
+            weights = stddev_vals**-2
         else:
             weights = 1.0
 
