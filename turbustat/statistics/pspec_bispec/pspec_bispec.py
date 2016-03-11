@@ -148,7 +148,7 @@ class PowerSpectrum(object):
             else:
                 ax.set_xlabel(r"log K/pixel$^{-1}$")
 
-            p.ylabel("Power (K)")
+            p.ylabel("Power")
 
             p.tight_layout()
             p.show()
