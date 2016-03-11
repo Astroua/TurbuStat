@@ -136,8 +136,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                                         dataset2["cube"],
                                         breaks=vcs_break).distance_metric()
             distances["VCS"] = vcs_distance.distance
-            distances["VCS_Density"] = vcs_distance.density_distance
-            distances["VCS_Velocity"] = vcs_distance.velocity_distance
+            distances["VCS_Small_Scale"] = vcs_distance.small_scale_distance
+            distances["VCS_Large_Scale"] = vcs_distance.large_scale_distance
             distances["VCS_Break"] = vcs_distance.break_distance
             if not multicore:
                 fiducial_models["VCS"] = vcs_distance.vcs1
@@ -342,8 +342,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                              dataset2["cube"],
                              fiducial_model=fiducial_models["VCS"],
                              breaks=vcs_break).distance_metric()
-            distances["VCS_Density"] = vcs_distance.density_distance
-            distances["VCS_Velocity"] = vcs_distance.velocity_distance
+            distances["VCS_Small_Scale"] = vcs_distance.small_scale_distance
+            distances["VCS_Large_Scale"] = vcs_distance.large_scale_distance
             distances["VCS_Break"] = vcs_distance.break_distance
             distances["VCS"] = vcs_distance.distance
 
