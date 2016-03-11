@@ -234,10 +234,19 @@ class VCA(object):
         good_interval = np.logical_and(self.freqs >= self.low_cut,
                                        self.freqs <= self.high_cut)
 
+        y_fit = self.fit.fittedvalues
+        fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
+
+        ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
+                  label=label, linewidth=2)
+        ax.set_xlabel(xlab)
+        ax.set_ylabel(r"P$_2(K)$")
+
         if self._stddev_flag:
             ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
                         yerr=self.ps1D_stddev[good_interval], color=color,
-                        fmt='D', markersize=5, alpha=0.5)
+                        fmt='D', markersize=5, alpha=0.5, capsize=10,
+                        elinewidth=3)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
         else:
@@ -245,13 +254,6 @@ class VCA(object):
                      self.ps1D[good_interval], color+"D", alpha=0.5,
                      markersize=5)
 
-        y_fit = self.fit.fittedvalues
-        fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
-
-        p.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
-                 label=label, linewidth=2)
-        p.xlabel(xlab)
-        p.ylabel(r"P$_2(K)$")
         p.grid(True)
 
         if show:
