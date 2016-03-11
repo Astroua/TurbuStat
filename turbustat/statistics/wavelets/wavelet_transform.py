@@ -58,7 +58,7 @@ class wt2D(object):
     '''
 
     def __init__(self, array, header, scales=None, dx=0.25, dy=0.25,
-                 wavelet=Mexican_hat(), num=50, ang_units=True):
+                 wavelet=Mexican_hat(), num=50, ang_units=False):
         super(wt2D, self).__init__()
         self.array = array.astype("f8")
         self.header = header
@@ -254,7 +254,7 @@ class Wavelet_Distance(object):
     '''
 
     def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(),
-                 ang_units=True, scales=None, num=50, dx=0.25, dy=0.25,
+                 ang_units=False, scales=None, num=50, dx=0.25, dy=0.25,
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
