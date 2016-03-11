@@ -13,7 +13,7 @@ from numpy.fft import fftshift
 class PowerSpectrum(object):
 
     """
-    Compute the power spectrum of a given image. (Burkhart et al., 2010)
+    Compute the power spectrum of a given image. (e.g., Burkhart et al., 2010)
 
     Parameters
     ----------
@@ -21,10 +21,13 @@ class PowerSpectrum(object):
         2D image.
     header : FITS header
         The image header. Needed for the pixel scale.
-
+    weights : numpy.ndarray
+        Weights to be applied to the image.
+    ang_units : bool, optional
+        Convert frequencies into angular units using the given header.
     """
 
-    def __init__(self, img, header, weights=None):
+    def __init__(self, img, header, weights=None, ang_units=False):
         super(PowerSpectrum, self).__init__()
         self.img = img
         # Get rid of nans
@@ -32,6 +35,7 @@ class PowerSpectrum(object):
 
         self.header = header
         self.degperpix = np.abs(header["CDELT2"])
+        self.ang_units = ang_units
 
         if weights is None:
             weights = np.ones(img.shape)
@@ -74,8 +78,6 @@ class PowerSpectrum(object):
 
         self._ps2D = np.power(fft, 2.)
 
-        return self
-
     def compute_radial_pspec(self, return_stddev=True, logspacing=True,
                              **kwargs):
         '''
@@ -101,9 +103,10 @@ class PowerSpectrum(object):
                       return_stddev=return_stddev, **kwargs)
             self._stddev_flag = False
 
-        return self
+        if self.ang_units:
+            self._freqs *= self.degperpix ** -1
 
-    def run(self, phys_units=False, verbose=False, return_stddev=True,
+    def run(self, verbose=False, return_stddev=True,
             logspacing=True):
         '''
         Full computation of the Spatial Power Spectrum.
@@ -124,9 +127,6 @@ class PowerSpectrum(object):
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
 
-        if phys_units:
-            self._freqs *= self.degperpix ** -1
-
         if verbose:
             import matplotlib.pyplot as p
             p.subplot(121)
@@ -142,7 +142,8 @@ class PowerSpectrum(object):
             else:
                 p.loglog(self.freqs, self.ps1D, "bD", alpha=0.5,
                          markersize=5)
-            if phys_units:
+
+            if self.ang_units:
                 ax.set_xlabel(r"log K/deg$^{-1}$")
             else:
                 ax.set_xlabel(r"log K/pixel$^{-1}$")
