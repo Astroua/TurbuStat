@@ -25,13 +25,17 @@ class MVC(object):
     header : FITS header
         Header of any of the arrays. Used only to get the
         spatial scale.
-
+    ang_units : bool, optional
+        When enabled, the frequencies are converted to 1/deg using the
+        given header.
     """
 
-    def __init__(self, centroid, moment0, linewidth, header):
+    def __init__(self, centroid, moment0, linewidth, header,
+                 ang_units=False):
         self.centroid = centroid
         self.moment0 = moment0
         self.linewidth = linewidth
+        self.ang_units = ang_units
 
         # Get rid of nans.
         self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
@@ -90,8 +94,6 @@ class MVC(object):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-        return self
-
     def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, **kwargs):
         '''
@@ -117,9 +119,10 @@ class MVC(object):
                       logspacing=logspacing, **kwargs)
             self._stddev_flag = False
 
-        return self
+        if self.ang_units:
+            self._freqs *= self.degperpix ** -1
 
-    def run(self, phys_units=False, verbose=False, logspacing=True,
+    def run(self, verbose=False, logspacing=True,
             return_stddev=True):
         '''
         Full computation of MVC.
@@ -140,9 +143,6 @@ class MVC(object):
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
 
-        if phys_units:
-            self._freqs *= self.degperpix ** -1
-
         if verbose:
             import matplotlib.pyplot as p
             p.subplot(121)
@@ -159,10 +159,10 @@ class MVC(object):
                 p.loglog(self.freqs, self.ps1D, "bD-", markersize=5,
                          alpha=0.5)
 
-            if phys_units:
+            if self.ang_units:
                 ax.set_xlabel("Frequency (1/deg)")
             else:
-                ax.set_xlabel("Frequency (pixels)")
+                ax.set_xlabel("Frequency (1/pixel)")
 
             ax.set_ylabel("MVC Power")
 
@@ -196,7 +196,7 @@ class MVC_distance(object):
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
-                 weight_by_error=False):
+                 weight_by_error=False, ang_units=False):
         # super(mvc_distance, self).__init__()
 
         self.shape1 = data1["centroid"][0].shape
@@ -228,12 +228,12 @@ class MVC_distance(object):
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
-                            data1["centroid"][1])
-            self.mvc1.run(phys_units=False)
+                            data1["centroid"][1], ang_units=ang_units)
+            self.mvc1.run()
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
-                        data2["centroid"][1])
-        self.mvc2.run(phys_units=False)
+                        data2["centroid"][1], ang_units=ang_units)
+        self.mvc2.run()
 
         self.results = None
         self.distance = None
@@ -318,7 +318,11 @@ class MVC_distance(object):
                        alpha=0.5)
             p.grid(True)
             p.ylabel("MVC Power")
-            p.xlabel("Frequency (pixels)")
+
+            if self.ang_units:
+                p.xlabel("log Frequency (1/deg)")
+            else:
+                p.xlabel("log Frequency (1/pixel)")
 
             p.show()
 
