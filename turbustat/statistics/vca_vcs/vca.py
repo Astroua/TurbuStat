@@ -115,7 +115,7 @@ class VCA(object):
 
         return self
 
-    def fit_pspec(self, brk=None, log_break=True, high_cut=0.5,
+    def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -142,9 +142,14 @@ class VCA(object):
         '''
 
         # Make the data to fit to
-        self.high_cut = high_cut
-        x = np.log10(self.freqs[self.freqs < high_cut])
-        y = np.log10(self.ps1D[self.freqs < high_cut])
+        if low_cut is None:
+            # Default to the largest frequency, since this is just 1 pixel
+            # in the 2D PSpec.
+            self.low_cut = 1/float(max(self.ps2D.shape))
+        else:
+            self.low_cut = low_cut
+        x = np.log10(self.freqs[self.freqs > self.low_cut])
+        y = np.log10(self.ps1D[self.freqs > self.low_cut])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -162,34 +167,24 @@ class VCA(object):
                     warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.low_cut = self.freqs.min()
+                    self.high_cut = self.freqs.max()
                 else:
-                    x = x[x > brk_fit.brk]
-                    y = y[x > brk_fit.brk]
+                    x = x[x < brk_fit.brk]
+                    y = y[x < brk_fit.brk]
 
-                    self.low_cut = 10**brk_fit.brk
+                    self.high_cut = 10**brk_fit.brk
 
             else:
-                self.low_cut = self.freqs.min()
+                self.high_cut = self.freqs.max()
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
         else:
-            self.low_cut = self.freqs.min()
+            self.high_cut = self.freqs.max()
 
         x = sm.add_constant(x)
 
-        if self._stddev_flag:
-            good_range = np.logical_and(self.freqs < self.high_cut,
-                                        self.freqs >= self.low_cut)
-            stddev_vals = self.ps1D_stddev[good_range]
-            stddev_vals[np.isnan(stddev_vals)] = np.nanmax(stddev_vals)
-            stddev_vals[stddev_vals == 0.0] = np.nanmax(stddev_vals)
-            weights = stddev_vals**-2
-        else:
-            weights = 1.0
-
-        model = sm.WLS(y, x, missing='drop', weights=weights)
+        model = sm.OLS(y, x, missing='drop')
 
         self.fit = model.fit()
 
@@ -261,7 +256,7 @@ class VCA(object):
 
     def run(self, verbose=False, brk=None, return_stddev=True,
             logspacing=True):
-        '''p
+        '''
         Full computation of VCA.
 
         Parameters
