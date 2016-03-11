@@ -263,6 +263,8 @@ class Wavelet_Distance(object):
         array2 = dataset2[0]
         header2 = dataset2[1]
 
+        self.ang_units = ang_units
+
         if fiducial_model is None:
             self.wt1 = wt2D(array1, header1, scales=scales, wavelet=wavelet,
                             ang_units=ang_units)
@@ -325,7 +327,12 @@ class Wavelet_Distance(object):
                    self.curve2[0, :],
                    self.results.fittedvalues[-len(self.curve2[1, :]):], "g")
             p.grid(True)
-            p.xlabel("log a")
+
+            if self.ang_units:
+                xunit = "deg"
+            else:
+                xunit = "pixel"
+            p.xlabel("log a ("+xunit+")")
             p.ylabel(r"log $T_g$")
             p.show()
 
