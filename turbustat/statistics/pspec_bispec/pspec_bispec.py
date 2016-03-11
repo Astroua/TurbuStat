@@ -229,16 +229,16 @@ class PSpec_Distance(object):
             self.pspec1.freqs[keep_freqs1]
         clip_ps1D1 = \
             self.pspec1.ps1D[keep_freqs1]
-        clip_weights1 = \
-            (0.434*self.pspec1.ps1D_stddev[keep_freqs1]/clip_ps1D1)**-2
+        clip_errors1 = \
+            (0.434*self.pspec1.ps1D_stddev[keep_freqs1]/clip_ps1D1)
 
         keep_freqs2 = clip_func(self.pspec2.freqs, low_cut, high_cut)
         clip_freq2 = \
             self.pspec2.freqs[keep_freqs2]
         clip_ps1D2 = \
             self.pspec2.ps1D[keep_freqs2]
-        clip_weights2 = \
-            (0.434*self.pspec2.ps1D_stddev[keep_freqs2]/clip_ps1D2)**-2
+        clip_errors2 = \
+            (0.434*self.pspec2.ps1D_stddev[keep_freqs2]/clip_ps1D2)
 
         dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
         x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
@@ -251,11 +251,8 @@ class PSpec_Distance(object):
 
         df = DataFrame(d)
 
-        weights = np.concatenate([clip_weights1, clip_weights2])
-
-        model = sm.wls(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df,
-            weights=weights)
+        model = sm.ols(
+            formula="log_ps1D ~ dummy + scales + regressor", data=df)
 
         self.results = model.fit()
 
@@ -270,12 +267,16 @@ class PSpec_Distance(object):
             two_index = fit_index >= len(clip_freq1)
 
             import matplotlib.pyplot as p
-            p.plot(np.log10(clip_freq1), np.log10(clip_ps1D1), "bD",
-                   np.log10(clip_freq2), np.log10(clip_ps1D2), "gD")
             p.plot(df["scales"][fit_index[one_index]],
                    self.results.fittedvalues[one_index], "b",
                    df["scales"][fit_index[two_index]],
                    self.results.fittedvalues[two_index], "g")
+            p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
+                       yerr=clip_errors1, color="b", fmt="D", markersize=5,
+                       alpha=0.5)
+            p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
+                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
+                       alpha=0.5)
             p.grid(True)
             p.xlabel("log K")
             p.ylabel("Power (K)")
