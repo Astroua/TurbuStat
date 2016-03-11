@@ -168,8 +168,8 @@ class wt2D(object):
         for i, an in enumerate(self.scales):
             psi = MexicanHat2DKernel(an, x_size=n0, y_size=m0)
             self.Wf[i, :, :] = convolve_fft(self.array, psi,
-                                            interpolate_nan=True,
-                                            normalize_kernel=True,
+                                            interpolate_nan=False,
+                                            normalize_kernel=False,
                                             fftn=fftn, ifftn=ifftn)
 
         self.Wf = self.Wf[:, :n0, :m0]
