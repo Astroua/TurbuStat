@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #101 - Fixed some bugs brought in with #92 for segmented fitting. Using OLS instead of WLS.
 * #100 - Fix plotting in PDF_Distance
 * #99 - Fixed moment array loading when a full path to the cube is given.
 * #98 - Removed scripts for the paper results from TurbuStat. Now available in a separate repo.
