@@ -518,12 +518,22 @@ class DendroDistance(object):
 
         return self
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
+        Calculate both distance metrics.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
-        self.histogram_stat(verbose=verbose)
-        self.numfeature_stat(verbose=verbose)
+        self.histogram_stat(verbose=verbose, label1=None, label2=None)
+        self.numfeature_stat(verbose=verbose, label1=None, label2=None)
 
         return self
 
