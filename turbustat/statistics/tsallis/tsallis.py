@@ -2,8 +2,10 @@
 
 
 import numpy as np
-from scipy.stats import nanmean, nanstd, chisquare
+from scipy.stats import chisquare
 from scipy.optimize import curve_fit
+
+from ..stats_utils import standardize
 
 
 class Tsallis(object):
@@ -70,7 +72,7 @@ class Tsallis(object):
                 clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) -\
                     pad_img[lag:-lag, lag:-lag]
             # Normalize the data
-            data = normalize(clip_resulting)
+            data = standardize(clip_resulting)
 
             # Ignore nans for the histogram
             hist, bin_edges = np.histogram(data[~np.isnan(data)],
@@ -82,8 +84,6 @@ class Tsallis(object):
             self.tsallis_arrays[i, :] = data
             self.tsallis_distrib[i, 0, :] = bin_centres
             self.tsallis_distrib[i, 1, :] = normlog_hist
-
-        return self
 
     def fit_tsallis(self, sigma_clip=2):
         '''
@@ -220,9 +220,11 @@ class Tsallis_Distance(object):
             import matplotlib.pyplot as p
             lags = self.tsallis1.lags
             p.plot(lags, diff_w, "rD", label="Difference of w")
-            p.plot(lags, diff_q, "gD", label="Difference of q")
+            p.plot(lags, diff_q, "go", label="Difference of q")
             p.legend()
             p.xscale('log', basex=2)
+            p.ylabel("Normalized Difference")
+            p.xlabel("Lags (pixels)")
             p.grid(True)
             p.show()
 
@@ -243,7 +245,7 @@ def tsallis_function(x, *p):
     '''
     loga, wsquare, q = p
     return (-1 / (q - 1)) * (np.log10(1 + (q - 1) *
-           (x ** 2. / wsquare)) + loga)
+                                      (x ** 2. / wsquare)) + loga)
 
 
 def clip_to_sigma(x, y, sigma=2):
@@ -265,22 +267,6 @@ def clip_to_sigma(x, y, sigma=2):
     clip_y = y[np.where(clip_mask == 1)]
 
     return clip_x[np.isfinite(clip_y)], clip_y[np.isfinite(clip_y)]
-
-
-def normalize(data):
-    '''
-    Standardize the data.
-
-    Parameters
-    ----------
-    data : numpy.ndarray
-        Data to standardize.
-    '''
-
-    av_val = nanmean(data, axis=None)
-    st_dev = nanstd(data, axis=None)
-
-    return (data - av_val) / st_dev
 
 
 def padwithzeros(vector, pad_width, iaxis, kwargs):
