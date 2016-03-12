@@ -215,7 +215,7 @@ class StatMoments(object):
         return self
 
 
-class StatMomentsDistance(object):
+class StatMoments_Distance(object):
 
     '''
     Compute the distance between two images based on their moments.
@@ -361,7 +361,6 @@ class StatMomentsDistance(object):
                    self.moments2.skewness_hist[0],
                    self.moments2.skewness_hist[1], 'g', alpha=0.5)
             p.xlabel("Skewness")
-            p.ylabel("PDF")
             p.show()
 
         return self
