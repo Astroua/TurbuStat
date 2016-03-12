@@ -144,9 +144,9 @@ class PowerSpectrum(object):
                          markersize=5)
 
             if self.ang_units:
-                ax.set_xlabel(r"log K/deg$^{-1}$")
+                ax.set_xlabel(r"log k/deg$^{-1}$")
             else:
-                ax.set_xlabel(r"log K/pixel$^{-1}$")
+                ax.set_xlabel(r"log k/pixel$^{-1}$")
 
             p.ylabel("Power")
 
@@ -168,32 +168,36 @@ class PSpec_Distance(object):
     ----------
 
     data1 : dict
-        Dictionary containing necessary property arrays.
+        List containing the integrated intensity image and its header.
     data2 : dict
-        Dictionary containing necessary property arrays.
+        List containing the integrated intensity image and its header.
+    weights1 : numpy.ndarray, optional
+        Weights to apply to data1
+    weights2 : numpy.ndarray, optional
+        Weights to apply to data2
     fiducial_model : PowerSpectrum
         Computed PowerSpectrum object. use to avoid recomputing.
-
+    ang_units : bool, optional
+        Convert the frequencies to angular units using the header.
     """
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None):
+                 fiducial_model=None, ang_units=False):
         super(PSpec_Distance, self).__init__()
 
-        self.shape1 = data1[0].shape
-        self.shape2 = data2[0].shape
+        self.ang_units = ang_units
 
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1[0],
                                         data1[1],
-                                        weights=weights1)
+                                        weights=weights1, ang_units=ang_units)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2[0],
                                     data2[1],
-                                    weights=weights2)
+                                    weights=weights2, ang_units=ang_units)
         self.pspec2.run()
 
         self.results = None
@@ -279,8 +283,15 @@ class PSpec_Distance(object):
                        yerr=clip_errors2, color="g", fmt="D", markersize=5,
                        alpha=0.5)
             p.grid(True)
-            p.xlabel("log K")
-            p.ylabel("Power (K)")
+            p.ylabel("Power")
+
+            if self.ang_units:
+                p.xlabel(r"log k/deg$^{-1}$")
+            else:
+                p.xlabel(r"log k/pixel$^{-1}$")
+
+            p.ylabel("Power")
+
             p.show()
 
         return self
