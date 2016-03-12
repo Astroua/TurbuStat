@@ -54,8 +54,6 @@ class PCA(object):
         else:
             self.eigvals = all_eigsvals[:self.n_eigs]
 
-        return self
-
     @property
     def var_proportion(self):
         return self._var_prop
@@ -88,6 +86,8 @@ class PCA(object):
             p.xlabel('Eigenvalues')
             p.ylabel('Variance')
             p.show()
+
+        return self
 
 
 class PCA_Distance(object):
@@ -126,9 +126,7 @@ class PCA_Distance(object):
         self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
         self.pca2.run(normalize=normalize)
 
-        self.distance = None
-
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
         Computes the distance between the cubes.
 
@@ -136,6 +134,10 @@ class PCA_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         difference = np.abs((self.pca1.eigvals - self.pca2.eigvals) ** 2.)
@@ -149,21 +151,25 @@ class PCA_Distance(object):
 
             p.subplot(2, 2, 1)
             p.imshow(
-                self.pca1.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca1.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca1.cov_matrix))
             p.colorbar()
-            p.title("PCA1")
+            p.title(label1)
             p.subplot(2, 2, 3)
-            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5,
+                  color='r')
             p.xlim([0, self.pca1.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+            p.ylabel('Proportion of Variance')
             p.subplot(2, 2, 2)
             p.imshow(
-                self.pca2.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca2.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca2.cov_matrix))
             p.colorbar()
-            p.title("PCA2")
+            p.title(label2)
             p.subplot(2, 2, 4)
-            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5,
+                  color='r')
             p.xlim([0, self.pca2.n_eigs + 1])
             p.xlabel('Eigenvalues')
 
