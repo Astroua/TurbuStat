@@ -25,11 +25,11 @@ class VCA(object):
         Corresponding FITS header.
     slice_sizes : float or int, optional
         Slices to degrade the cube to.
-    phys_units : bool, optional
-        Sets whether physical scales can be used.
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     '''
 
-    def __init__(self, cube, header, slice_size=None, phys_units=False):
+    def __init__(self, cube, header, slice_size=None, ang_units=False):
         super(VCA, self).__init__()
 
         self.cube = cube.astype("float64")
@@ -45,12 +45,10 @@ class VCA(object):
 
         if slice_size != 1.0:
             self.cube = \
-                change_slice_thickness(self.cube.copy(),
+                change_slice_thickness(self.cube,
                                        slice_thickness=self.slice_size)
 
-        self.phys_units_flag = False
-        if phys_units:
-            self.phys_units_flag = True
+        self.ang_units = ang_units
 
         self._ps1D_stddev = None
 
@@ -83,8 +81,6 @@ class VCA(object):
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
-        return self
-
     def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, **kwargs):
         '''
@@ -110,10 +106,8 @@ class VCA(object):
                       **kwargs)
             self._stddev_flag = False
 
-        if self.phys_units_flag:
+        if self.ang_units:
             self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
-
-        return self
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   min_fits_pts=10, verbose=False):
@@ -193,8 +187,6 @@ class VCA(object):
         cov_matrix = self.fit.cov_params()
         self._slope_err = np.sqrt(cov_matrix[1, 1])
 
-        return self
-
     @property
     def slope(self):
         return self._slope
@@ -203,17 +195,18 @@ class VCA(object):
     def slope_err(self):
         return self._slope_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', label=None):
+    def plot_fit(self, show=True, show_2D=False, color='r', label=None,
+                 symbol="D"):
         '''
         Plot the fitted model.
         '''
 
         import matplotlib.pyplot as p
 
-        if self.phys_units_flag:
-            xlab = r"log K"
+        if self.ang_units:
+            xlab = r"log k"
         else:
-            xlab = r"K (pixel$^{-1}$)"
+            xlab = r"k (pixel$^{-1}$)"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -233,7 +226,7 @@ class VCA(object):
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
         ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
-                  label=label, linewidth=2)
+                  linewidth=2)
         ax.set_xlabel(xlab)
         ax.set_ylabel(r"P$_2(K)$")
 
@@ -241,13 +234,13 @@ class VCA(object):
             ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
                         yerr=self.ps1D_stddev[good_interval], color=color,
                         fmt='D', markersize=5, alpha=0.5, capsize=10,
-                        elinewidth=3)
+                        elinewidth=3, label=label)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
         else:
             p.loglog(self.freqs[good_interval],
-                     self.ps1D[good_interval], color+"D", alpha=0.5,
-                     markersize=5)
+                     self.ps1D[good_interval], color+symbol, alpha=0.5,
+                     markersize=5, label=label)
 
         p.grid(True)
 
@@ -304,15 +297,17 @@ class VCA_Distance(object):
         spline. If not specified, no break point will be used.
     fiducial_model : VCA
         Computed VCA object. use to avoid recomputing.
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     '''
 
     def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
-                 fiducial_model=None):
+                 fiducial_model=None, ang_units=False):
         super(VCA_Distance, self).__init__()
         cube1, header1 = cube1
         cube2, header2 = cube2
-        self.shape1 = cube1.shape[1:]  # Shape of the plane
-        self.shape2 = cube2.shape[1:]
+
+        self.ang_units = ang_units
 
         assert isinstance(slice_size, float)
 
@@ -323,12 +318,14 @@ class VCA_Distance(object):
             self.vca1 = fiducial_model
         else:
             self.vca1 = \
-                VCA(cube1, header1, slice_size=slice_size).run(brk=breaks[0])
+                VCA(cube1, header1, slice_size=slice_size,
+                    ang_units=ang_units).run(brk=breaks[0])
 
         self.vca2 = \
-            VCA(cube2, header2, slice_size=slice_size).run(brk=breaks[1])
+            VCA(cube2, header2, slice_size=slice_size,
+                ang_units=ang_units).run(brk=breaks[1])
 
-    def distance_metric(self, labels=None, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -337,10 +334,12 @@ class VCA_Distance(object):
 
         Parameters
         ----------
-        labels : list, optional
-            Contains names of datacubes given in order.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         # Construct t-statistic
@@ -350,18 +349,16 @@ class VCA_Distance(object):
                            self.vca2.slope_err**2))
 
         if verbose:
-            if labels is None:
-                labels = ['1', '2']
 
-            print "Fit to %s" % (labels[0])
+            print "Fit to %s" % (label1)
             print self.vca1.fit.summary()
-            print "Fit to %s" % (labels[1])
+            print "Fit to %s" % (label2)
             print self.vca2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.vca1.plot_fit(show=False, color='b', label=labels[0])
-            self.vca2.plot_fit(show=False, color='r', label=labels[1])
-            p.legend(loc='best')
+            self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D')
+            self.vca2.plot_fit(show=False, color='r', label=label2, symbol='o')
+            p.legend(loc='upper right')
             p.show()
 
         return self
