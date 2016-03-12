@@ -336,7 +336,7 @@ class Wavelet_Distance(object):
             if self.ang_units:
                 xunit = "deg"
             else:
-                xunit = "pixel"
+                xunit = "pixels"
             p.xlabel("log a ("+xunit+")")
             p.ylabel(r"log $T_g$")
             p.legend(loc='upper right')

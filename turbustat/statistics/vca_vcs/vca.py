@@ -228,7 +228,7 @@ class VCA(object):
         ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
                   linewidth=2)
         ax.set_xlabel(xlab)
-        ax.set_ylabel(r"P$_2(K)$")
+        ax.set_ylabel(r"P$_2(k)$")
 
         if self._stddev_flag:
             ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],

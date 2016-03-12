@@ -303,7 +303,7 @@ class VCS_Distance(object):
             if self.vel_units:
                 xlab = r"log k$_v$/$(km^{-1}s)$"
             else:
-                xlab = r"log k$_v$/pixel$^{-1}$)"
+                xlab = r"log k$_v$/pixel$^{-1}$"
 
             import matplotlib.pyplot as p
             p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
