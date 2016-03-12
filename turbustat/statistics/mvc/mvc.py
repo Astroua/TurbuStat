@@ -171,10 +171,8 @@ class MVC(object):
         return self
 
 
-class MVC_distance(object):
-
+class MVC_Distance(object):
     """
-
     Distance metric for MVC.
 
     Parameters
@@ -197,10 +195,6 @@ class MVC_distance(object):
 
     def __init__(self, data1, data2, fiducial_model=None,
                  weight_by_error=False, ang_units=False):
-        # super(mvc_distance, self).__init__()
-
-        self.shape1 = data1["centroid"][0].shape
-        self.shape2 = data2["centroid"][0].shape
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -235,8 +229,7 @@ class MVC_distance(object):
                         data2["centroid"][1], ang_units=ang_units)
         self.mvc2.run()
 
-        self.results = None
-        self.distance = None
+        self.ang_units = ang_units
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
                         label1=None, label2=None):
