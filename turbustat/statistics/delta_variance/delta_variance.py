@@ -1,12 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
 
-
-'''
-
-Implementation of the Delta-Variance Method from Stutzki et al. 1998.
-
-'''
-
 import numpy as np
 from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
@@ -34,16 +27,18 @@ class DeltaVariance(object):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
-
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     """
 
     def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None,
-                 nlags=25):
+                 nlags=25, ang_units=False):
         super(DeltaVariance, self).__init__()
 
         self.img = img
         self.header = header
         self.diam_ratio = diam_ratio
+        self.ang_units = ang_units
 
         if weights is None:
             self.weights = np.ones(img.shape)
@@ -71,6 +66,9 @@ class DeltaVariance(object):
                                     np.log10(min(self.img.shape) / 2.), nlags)
         else:
             self.lags = lags
+
+        if self.ang_units:
+            self.lags *= self.ang_size
 
         self.convolved_arrays = []
         self.convolved_weights = []
@@ -128,13 +126,10 @@ class DeltaVariance(object):
 
         return self
 
-    def run(self, verbose=False, ang_units=True):
+    def run(self, verbose=False):
 
         self.do_convolutions()
         self.compute_deltavar()
-
-        if ang_units:
-            self.lags *= self.ang_size
 
         if verbose:
             import matplotlib.pyplot as p
@@ -144,7 +139,11 @@ class DeltaVariance(object):
             p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error,
                        fmt="bD-")
             ax.grid(True)
-            ax.set_xlabel("Lag (arcmin)")
+
+            if self.ang_units:
+                ax.set_xlabel("Lag (deg)")
+            else:
+                ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
             p.show()
 
@@ -247,28 +246,33 @@ class DeltaVariance_Distance(object):
         The pixel scales to compute the delta-variance at.
     fiducial_model : DeltaVariance
         A computed DeltaVariance model. Used to avoid recomputing.
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     """
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
-                 diam_ratio=1.5, lags=None, fiducial_model=None):
+                 diam_ratio=1.5, lags=None, fiducial_model=None,
+                 ang_units=False):
         super(DeltaVariance_Distance, self).__init__()
+
+        self.ang_units = ang_units
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
             self.delvar1 = DeltaVariance(dataset1[0], dataset1[1],
                                          weights=weights1,
-                                         diam_ratio=diam_ratio, lags=lags)
+                                         diam_ratio=diam_ratio, lags=lags,
+                                         ang_units=ang_units)
             self.delvar1.run()
 
         self.delvar2 = DeltaVariance(dataset2[0], dataset2[1],
                                      weights=weights2,
-                                     diam_ratio=diam_ratio, lags=lags)
+                                     diam_ratio=diam_ratio, lags=lags,
+                                     ang_units=ang_units)
         self.delvar2.run()
 
-        self.distance = None
-
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -276,6 +280,10 @@ class DeltaVariance_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for img1
+        label2 : str, optional
+            Object or region name for img2
         '''
 
         # Check for NaNs and negatives
@@ -298,13 +306,16 @@ class DeltaVariance_Distance(object):
             ax.set_yscale("log", nonposx="clip")
             p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
                        yerr=self.delvar1.delta_var_error, fmt="bD-",
-                       label="Delta Var 1")
+                       label=label1)
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
                        yerr=self.delvar2.delta_var_error, fmt="gD-",
-                       label="Delta Var 2")
+                       label=label2)
             ax.legend(loc='best')
             ax.grid(True)
-            ax.set_xlabel("Lag (arcmin)")
+            if self.ang_units:
+                ax.set_xlabel("Lag (deg)")
+            else:
+                ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
             p.show()
 
