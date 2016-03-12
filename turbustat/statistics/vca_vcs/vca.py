@@ -204,9 +204,9 @@ class VCA(object):
         import matplotlib.pyplot as p
 
         if self.ang_units:
-            xlab = r"log k"
+            xlab = r"log k/deg$^{-1}$"
         else:
-            xlab = r"k (pixel$^{-1}$)"
+            xlab = r"log k/pixel$^{-1}$"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
