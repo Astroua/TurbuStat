@@ -281,9 +281,9 @@ class DeltaVariance_Distance(object):
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
-            Object or region name for img1
+            Object or region name for dataset1
         label2 : str, optional
-            Object or region name for img2
+            Object or region name for dataset2
         '''
 
         # Check for NaNs and negatives
