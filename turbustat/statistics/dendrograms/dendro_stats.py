@@ -379,7 +379,7 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, verbose=False):
+    def numfeature_stat(self, verbose=False, label1=None, label2=None):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -387,6 +387,10 @@ class DendroDistance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         self.num_distance = \
@@ -399,22 +403,22 @@ class DendroDistance(object):
             import matplotlib.pyplot as p
 
             # Dendrogram 1
-            p.plot(self.dendro1.x, self.dendro1.y, 'gD', label='Dendro 1')
-            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'g')
+            p.plot(self.dendro1.x, self.dendro1.y, 'bD', label=label1)
+            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.x, self.dendro2.y, 'bD', label='Dendro 2')
-            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'b')
+            p.plot(self.dendro2.x, self.dendro2.y, 'g0', label=label2)
+            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'g')
 
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
-            p.legend()
+            p.legend(loc='upper right')
             p.show()
 
         return self
 
-    def histogram_stat(self, verbose=False):
+    def histogram_stat(self, verbose=False, label1=None, label2=None):
         '''
         Computes the distance using histograms.
 
@@ -422,6 +426,10 @@ class DendroDistance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         if self.nbins == "best":
@@ -474,32 +482,38 @@ class DendroDistance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(2, 2, 1)
-            p.title("ECDF 1")
-            p.xlabel("Intensities")
+            ax1 = p.subplot(2, 2, 1)
+            ax1.set_title(label1)
+            ax1.set_ylabel("ECDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                       self.mecdf1[n, :][:self.nbins[n]])
-            p.subplot(2, 2, 2)
-            p.title("ECDF 2")
-            p.xlabel("Intensities")
+                ax1.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                         self.mecdf1[n, :][:self.nbins[n]])
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2 = p.subplot(2, 2, 2)
+            ax2.set_title(label2)
+            ax2.axes.xaxis.set_ticklabels([])
+            ax2.axes.yaxis.set_ticklabels([])
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                       self.mecdf2[n, :][:self.nbins[n]])
-            p.subplot(2, 2, 3)
-            p.title("PDF 1")
+                ax2.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                         self.mecdf2[n, :][:self.nbins[n]])
+            ax3 = p.subplot(2, 2, 3)
+            ax3.set_ylabel("PDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                      self.histograms1[n, :][:self.nbins[n]],
-                      align="center", width=bin_width, alpha=0.25)
-            p.subplot(2, 2, 4)
-            p.title("PDF 2")
+                ax3.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                        self.histograms1[n, :][:self.nbins[n]],
+                        align="center", width=bin_width, alpha=0.25)
+            ax3.set_xlabel("z-score")
+            ax4 = p.subplot(2, 2, 4)
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                      self.histograms2[n, :][:self.nbins[n]],
-                      align="center", width=bin_width, alpha=0.25)
+                ax4.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                        self.histograms2[n, :][:self.nbins[n]],
+                        align="center", width=bin_width, alpha=0.25)
+            ax4.set_xlabel("z-score")
+            ax4.axes.yaxis.set_ticklabels([])
+
+            p.tight_layout()
             p.show()
 
         return self
