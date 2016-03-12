@@ -160,9 +160,9 @@ class MVC(object):
                          alpha=0.5)
 
             if self.ang_units:
-                ax.set_xlabel("Frequency (1/deg)")
+                ax.set_xlabel(r"log k/deg$^{-1}$")
             else:
-                ax.set_xlabel("Frequency (1/pixel)")
+                ax.set_xlabel(r"log k/pixel$^{-1}$")
 
             ax.set_ylabel("MVC Power")
 
@@ -320,9 +320,9 @@ class MVC_distance(object):
             p.ylabel("MVC Power")
 
             if self.ang_units:
-                p.xlabel("log Frequency (1/deg)")
+                p.xlabel(r"log k/deg$^{-1}$")
             else:
-                p.xlabel("log Frequency (1/pixel)")
+                p.xlabel(r"log k/pixel$^{-1}$")
 
             p.show()
 
