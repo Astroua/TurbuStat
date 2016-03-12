@@ -463,8 +463,7 @@ class BiSpectrum_Distance(object):
             p.title("Bicoherence 1")
             p.imshow(
                 self.bispec1.bicoherence, origin="lower",
-                interpolation="nearest")
-            p.colorbar()
+                interpolation="nearest", vmax=1.0, vmin=0.0)
             p.xlabel("k1")
             p.ylabel("k2")
 
@@ -472,19 +471,21 @@ class BiSpectrum_Distance(object):
             p.title("Bicoherence 2")
             p.imshow(
                 self.bispec2.bicoherence, origin="lower",
-                interpolation="nearest")
-            p.colorbar()
+                interpolation="nearest", vmax=1.0, vmin=0.0)
             p.xlabel("k1")
             p.ylabel("k2")
 
             p.subplot(1, 3, 3)
             p.title("Difference")
-            p.imshow(np.abs(self.bispec1.bicoherence - self.bispec2.bicoherence),
+            p.imshow(np.abs(self.bispec1.bicoherence -
+                            self.bispec2.bicoherence),
                      origin="lower", interpolation="nearest",
                      vmax=1.0, vmin=0.0)
             p.colorbar()
             p.xlabel("k1")
             p.ylabel("k2")
+
+            p.tight_layout()
 
             p.show()
 
