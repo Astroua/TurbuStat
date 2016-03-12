@@ -13,6 +13,8 @@ try:
 except ImportError:
     from numpy.fft import fft2
 
+from ..stats_utils import standardize
+
 
 class Genus(object):
 
@@ -33,20 +35,13 @@ class Genus(object):
         Number of thresholds to calculate statistic at.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
-    save_name : str, optional
-        Object or region name. Used when plotting.
     """
 
     def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100,
-                 smoothing_radii=None, save_name=None):
+                 smoothing_radii=None):
         super(Genus, self).__init__()
 
         self.img = img
-
-        if save_name is None:
-            self.save_name = "Untitled"
-        else:
-            self.save_name = save_name
 
         self.nanflag = False
         if np.isnan(self.img).any():
@@ -85,7 +80,6 @@ class Genus(object):
                                  interpolate_nan=True))
             else:
                 self.smoothed_images.append(convolve_fft(self.img, kernel))
-        return self
 
     # def clean_fft(self):
 
@@ -100,8 +94,6 @@ class Genus(object):
         '''
 
         self.genus_stats = compute_genus(self.smoothed_images, self.thresholds)
-
-        return self
 
     def run(self, verbose=False):
         '''
@@ -126,6 +118,7 @@ class Genus(object):
                     "".join(["Smooth Size: ",
                             str(self.smoothing_radii[i - 1])]))
                 p.plot(self.thresholds, self.genus_stats[i - 1], "bD")
+                p.xlabel("Intensity")
                 p.grid(True)
             p.show()
 
@@ -232,7 +225,6 @@ class GenusDistance(object):
         Kernel radii to smooth data to.
     fiducial_model : Genus
         Computed Genus object. Use to avoid recomputing.
-
     """
 
     def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
@@ -240,8 +232,8 @@ class GenusDistance(object):
 
         # Standardize the intensity values in the images
 
-        img1 = normalize(img1)
-        img2 = normalize(img2)
+        img1 = standardize(img1)
+        img2 = standardize(img2)
 
         if fiducial_model is not None:
             self.genus1 = fiducial_model
@@ -254,7 +246,7 @@ class GenusDistance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
 
         Data is centered and normalized (via normalize).
@@ -264,7 +256,10 @@ class GenusDistance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        label1 : str, optional
+            Object or region name for img1
+        label2 : str, optional
+            Object or region name for img2
         '''
 
         # 2 times the average number between the two
@@ -295,25 +290,18 @@ class GenusDistance(object):
 
             p.plot(self.genus1.thresholds,
                    self.genus1.genus_stats[0, :], "bD",
-                   label=self.genus1.save_name)
+                   label=label1)
             p.plot(self.genus2.thresholds,
                    self.genus2.genus_stats[0, :], "gD",
-                   label=self.genus2.save_name)
+                   label=label2)
             p.plot(points, interp1(points), "b")
             p.plot(points, interp2(points), "g")
+            p.xlabel("z-score")
             p.grid(True)
             p.legend(loc="upper right")
             p.show()
 
         return self
-
-
-def normalize(data):
-
-    av_val = nanmean(data, axis=None)
-    st_dev = nanstd(data, axis=None)
-
-    return (data - av_val) / st_dev
 
 
 def remove_small_objects(arr, min_size, connectivity=8):
