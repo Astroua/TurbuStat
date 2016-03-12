@@ -313,7 +313,7 @@ class MVC_Distance(object):
                        alpha=0.5, label=label1)
             p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
                        yerr=clip_errors2, color="g", fmt="o", markersize=5,
-                       alpha=0.5, label=label1)
+                       alpha=0.5, label=label2)
             p.grid(True)
             p.ylabel("MVC Power")
 
