@@ -282,7 +282,8 @@ class Wavelet_Distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, non_linear=True, verbose=False):
+    def distance_metric(self, non_linear=True, verbose=False, label1=None,
+                        label2=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -293,6 +294,10 @@ class Wavelet_Distance(object):
             Enables clipping of non-linear portions of the transform.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for dataset1
+        label2 : str, optional
+            Object or region name for dataset2
         '''
 
         if non_linear:
@@ -320,8 +325,8 @@ class Wavelet_Distance(object):
             print self.results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(self.curve1[0, :], self.curve1[1, :], 'bD',
-                   self.curve2[0, :], self.curve2[1, :], 'gD')
+            p.plot(self.curve1[0, :], self.curve1[1, :], 'bD', label=label1)
+            p.plot(self.curve2[0, :], self.curve2[1, :], 'go', label=label2)
             p.plot(self.curve1[0, :],
                    self.results.fittedvalues[:len(self.curve1[1, :])], "b",
                    self.curve2[0, :],
@@ -334,6 +339,7 @@ class Wavelet_Distance(object):
                 xunit = "pixel"
             p.xlabel("log a ("+xunit+")")
             p.ylabel(r"log $T_g$")
+            p.legend(loc='upper right')
             p.show()
 
         return self

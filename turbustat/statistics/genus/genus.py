@@ -292,7 +292,7 @@ class GenusDistance(object):
                    self.genus1.genus_stats[0, :], "bD",
                    label=label1)
             p.plot(self.genus2.thresholds,
-                   self.genus2.genus_stats[0, :], "gD",
+                   self.genus2.genus_stats[0, :], "go",
                    label=label2)
             p.plot(points, interp1(points), "b")
             p.plot(points, interp2(points), "g")

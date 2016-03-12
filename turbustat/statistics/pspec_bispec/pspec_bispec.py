@@ -203,7 +203,8 @@ class PSpec_Distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
+                        label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -222,6 +223,10 @@ class PSpec_Distance(object):
             significant scatter.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for data1
+        label2 : str, optional
+            Object or region name for data2
         '''
 
         if low_cut is None:
@@ -278,10 +283,10 @@ class PSpec_Distance(object):
                    self.results.fittedvalues[two_index], "g")
             p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
                        yerr=clip_errors1, color="b", fmt="D", markersize=5,
-                       alpha=0.5)
+                       alpha=0.5, label=label1)
             p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
-                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
-                       alpha=0.5)
+                       yerr=clip_errors2, color="g", fmt="o", markersize=5,
+                       alpha=0.5, label=label2)
             p.grid(True)
             p.ylabel("Power")
 
@@ -291,7 +296,7 @@ class PSpec_Distance(object):
                 p.xlabel(r"log k/pixel$^{-1}$")
 
             p.ylabel("Power")
-
+            p.legend(loc='upper right')
             p.show()
 
         return self
@@ -451,7 +456,15 @@ class BiSpectrum_Distance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
+        '''
+        verbose : bool, optional
+            Enable plotting.
+        label1 : str, optional
+            Object or region name for data1
+        label2 : str, optional
+            Object or region name for data2
+        '''
 
         self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
                                        self.bispec2.bicoherence.ravel())
@@ -460,7 +473,7 @@ class BiSpectrum_Distance(object):
             import matplotlib.pyplot as p
 
             p.subplot(1, 3, 1)
-            p.title("Bicoherence 1")
+            p.title(label1)
             p.imshow(
                 self.bispec1.bicoherence, origin="lower",
                 interpolation="nearest", vmax=1.0, vmin=0.0)
@@ -468,7 +481,7 @@ class BiSpectrum_Distance(object):
             p.ylabel("k2")
 
             p.subplot(1, 3, 2)
-            p.title("Bicoherence 2")
+            p.title(label2)
             p.imshow(
                 self.bispec2.bicoherence, origin="lower",
                 interpolation="nearest", vmax=1.0, vmin=0.0)

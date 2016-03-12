@@ -315,8 +315,8 @@ class VCS_Distance(object):
             p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
             p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b',
                    label=label1)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'ro', alpha=0.3)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'r',
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.3)
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g',
                    label=label2)
             p.grid(True)
             p.legend()

@@ -238,7 +238,8 @@ class MVC_distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
+                        label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -256,6 +257,10 @@ class MVC_distance(object):
             size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for dataset1
+        label2 : str, optional
+            Object or region name for dataset2
         '''
 
         if low_cut is None:
@@ -312,10 +317,10 @@ class MVC_distance(object):
                    self.results.fittedvalues[two_index], "g")
             p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
                        yerr=clip_errors1, color="b", fmt="D", markersize=5,
-                       alpha=0.5)
+                       alpha=0.5, label=label1)
             p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
-                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
-                       alpha=0.5)
+                       yerr=clip_errors2, color="g", fmt="o", markersize=5,
+                       alpha=0.5, label=label1)
             p.grid(True)
             p.ylabel("MVC Power")
 
@@ -324,6 +329,7 @@ class MVC_distance(object):
             else:
                 p.xlabel(r"log k/pixel$^{-1}$")
 
+            p.legend(loc='upper right')
             p.show()
 
         return self
