@@ -69,8 +69,6 @@ class VCS(object):
         self.fftcube = rfft_to_fft(self.cube)
         self.correlated_cube = np.power(self.fftcube, 2.)
 
-        return self
-
     def make_ps1D(self):
         '''
         Create a 1D power spectrum by averaging the correlation cube over
@@ -80,8 +78,6 @@ class VCS(object):
         self.ps1D = np.nansum(
             np.nansum(self.correlated_cube, axis=2), axis=1) /\
             self.good_pixel_count
-
-        return self
 
     def fit_pspec(self, breaks=None, log_break=True, lg_scale_cut=2,
                   verbose=False):
@@ -155,8 +151,6 @@ class VCS(object):
             Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut]),
                    np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut]), breaks)
         self.fit.fit_model(verbose=verbose)
-
-        return self
 
     @property
     def slopes(self):
