@@ -380,8 +380,6 @@ class BiSpectrum(object):
         self.bicoherence = (np.abs(self.bispectrum) / biconorm)
         self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
 
-        return self
-
     def run(self, nsamples=100, verbose=False):
         '''
         Compute the bispectrum. Necessary to maintiain package standards.
@@ -416,6 +414,8 @@ class BiSpectrum(object):
             p.ylabel("k2")
 
             p.show()
+
+        return self
 
 
 class BiSpectrum_Distance(object):
