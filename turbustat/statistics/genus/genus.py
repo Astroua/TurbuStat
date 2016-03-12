@@ -297,6 +297,7 @@ class GenusDistance(object):
             p.plot(points, interp1(points), "b")
             p.plot(points, interp2(points), "g")
             p.xlabel("z-score")
+            p.ylabel("Genus Score")
             p.grid(True)
             p.legend(loc="upper right")
             p.show()
