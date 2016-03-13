@@ -6,38 +6,9 @@ import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
-from numpy.fft import fftn, ifftn, fftfreq
 
 
-class Mexican_hat():
-    '''
-    Implements the Mexican hat wavelet class.
-    Code is from kPyWavelet.
-    '''
-
-    name = 'Mexican hat'
-
-    def __init__(self):
-        # Reconstruction factor $C_{\psi, \delta}$
-        self.cpsi = 1.  # pi
-
-    def psi_ft(self, k, l):
-        '''
-        Fourier transform of the Mexican hat wavelet as in Wang and
-        Lu (2010), equation [15].
-        '''
-        K, L = np.meshgrid(k, l)
-        return (K ** 2. + L ** 2.) * np.exp(-0.5 * (K ** 2. + L ** 2.))
-
-    def psi(self, x, y):
-        '''
-        Mexican hat wavelet as in Wang and Lu (2010), equation [14].
-        '''
-        X, Y = np.meshgrid(x, y)
-        return (2. - (X ** 2. + Y ** 2.)) * np.exp(-0.5 * (X ** 2. + Y ** 2.))
-
-
-class wt2D(object):
+class Wavelet(object):
     '''
     Compute the wavelet transform of a 2D array.
 
@@ -49,35 +20,24 @@ class wt2D(object):
         Header for the array.
     scales : numpy.ndarray or list
         The scales where the transform is calculated.
-    dx : float, optional
-        Spacing in the x-direction.
-    dy : float, optional
-        Spacing in the y-direction.
-    wavelet : wavelet class
-        The wavelet class to use.
+    num : int, optional
+        Number of scales to compute the transform at.
+    ang_units : bool, optional
+        Convert scales to angular units using the given header.
+    scale_normalization: bool, optional
+        Compute the transform with the correct scale-invariant normalization.
     '''
 
-    def __init__(self, array, header, scales=None, dx=0.25, dy=0.25,
-                 wavelet=Mexican_hat(), num=50, ang_units=True):
-        super(wt2D, self).__init__()
-        self.array = array.astype("f8")
-        self.header = header
-        self.wavelet = wavelet
+    def __init__(self, array, header, scales=None, num=50, ang_units=False,
+                 scale_normalization=True):
 
-        if scales is None:
-            a_min = round((5. / 3.), 3)  # Smallest scale given by paper
-            self.scales = np.logspace(
-                np.log10(a_min), np.log10(min(self.array.shape)), num)
-        else:
-            self.scales = scales
-
-        ### NOTE: can't use nan_interpolating from astropy
-        ### until the normalization for sum to zeros kernels is fixed!!!
+        self.array = array
+        # NOTE: can't use nan_interpolating from astropy
+        # until the normalization for sum to zeros kernels is fixed!!!
         self.array[np.isnan(self.array)] = np.nanmin(self.array)
 
-        self.nan_flag = False
-        if np.isnan(self.array).any():
-            self.nan_flag = True
+        self.header = header
+        self.ang_units = ang_units
 
         if ang_units:
             try:
@@ -89,139 +49,70 @@ class wt2D(object):
         if not ang_units:
             self.imgscale = 1.0
 
-        a_min = 5 / 3.  # Minimum scale size given by Gill and Henriksen (90)
-        self.dx = dx * a_min
-        self.dy = dy * a_min
+        if scales is None:
+            a_min = round((5. / 3.), 3)  # Smallest scale given by paper
+            a_max = min(self.array.shape)/2
+            # Log spaces scales up to half of the smallest size of the array
+            self.scales = np.logspace(np.log10(a_min), np.log10(a_max), num) *\
+                self.imgscale
+        else:
+            self.scales = scales
 
-        self.Wf = None
-        self.iWf = None
+        self.scale_normalization = scale_normalization
 
-    def cwt2d(self, dx=None, dy=None):
+        if not self.scale_normalization:
+            Warning("Transform values are only reliable with the proper scale"
+                    " normalization. When disabled, the slope of the transform"
+                    " CANNOT be used for physical interpretation.")
+
+    def compute_transform(self):
         '''
-        Bi-dimensional continuous wavelet transform of the signal at
-        specified scale a.
-
-        Parameters
-        ----------
-        dx : float, optional
-            Spacing in the x-direction.
-        dy : float, optional
-            Spacing in the y-direction.
+        Compute the wavelet transform at each scale.
         '''
-        if dx is not None:
-            assert isinstance(dx, list)
-            self.dx = dx
-        if dy is not None:
-            assert isinstance(dy, list)
-            self.dx = dy
-
-        # Determines the shape of the arrays and the discrete scales.
-        n0, m0 = self.array.shape
-        N, M = 2 ** int(np.ceil(np.log2(n0))), 2 ** int(np.ceil(np.log2(m0)))
-        if self.scales is None:
-            self.scales = 2 ** np.arange(int(np.floor(np.log2(min(n0, m0)))))
-        A = len(self.scales)
-        # Calculates the zonal and meridional wave numbers.
-        l, k = fftfreq(N, self.dy), fftfreq(M, self.dx)
-
-        # Calculates the Fourier transform of the input signal.
-        f_ft = fftn(self.array)
-        # Creates empty wavelet transform array and fills it for every discrete
-        # scale using the convolution theorem.
-        self.Wf = np.zeros((A, N, M), 'complex')
-        for i, an in enumerate(self.scales):
-            psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
-            self.Wf[i, :, :] = ifftn(f_ft * psi_ft_bar)
-
-        self.Wf = self.Wf[:, :n0, :m0]
-
-        return self
-
-    def astropy_cwt2d(self, dx=None, dy=None):
-        '''
-        Same as cwt2D except it uses astropy.convolve_fft's ability
-        to interpolate over NaNs.
-
-        Parameters
-        ----------
-        dx : float, optional
-            Spacing in the x-direction.
-        dy : float, optional
-            Spacing in the y-direction.
-        '''
-
-        if dx is not None:
-            assert isinstance(dx, list)
-            self.dx = dx
-        if dy is not None:
-            assert isinstance(dy, list)
-            self.dx = dy
 
         n0, m0 = self.array.shape
-        N, M = 2 ** int(np.ceil(np.log2(n0))), 2 ** int(np.ceil(np.log2(m0)))
-        if self.scales is None:
-            self.scales = 2 ** np.arange(int(np.floor(np.log2(min(n0, m0)))))
         A = len(self.scales)
 
-        self.Wf = np.zeros((A, N, M), 'complex')
+        self.Wf = np.zeros((A, n0, m0), 'complex')
+
+        factor = 2
+        if not self.scale_normalization:
+            factor = 4
+            Warning("Transform values are only reliable with the proper scale"
+                    " normalization. When disabled, the slope of the transform"
+                    " CANNOT be used for physical interpretation.")
 
         for i, an in enumerate(self.scales):
-            psi = MexicanHat2DKernel(an, x_size=n0, y_size=m0)
-            self.Wf[i, :, :] = convolve_fft(self.array, psi,
-                                            interpolate_nan=True,
-                                            normalize_kernel=True,
-                                            fftn=fftn, ifftn=ifftn)
-
-        self.Wf = self.Wf[:, :n0, :m0]
-
-        return self
-
-    def icwt2d(self, da=0.25):
-        '''
-        Inverse bi-dimensional continuous wavelet transform as in Wang and
-        Lu (2010), equation [5].
-
-        Parameters
-        ----------
-        da : float, optional
-            Spacing in the frequency axis.
-        '''
-        if self.Wf is None:
-            raise TypeError("Run cwt2D before icwt2D")
-        m0, l0, k0 = self.Wf.shape
-
-        if m0 != self.scales.size:
-            raise Warning('Scale parameter array shape does not match\
-                           wavelet transform array shape.')
-        # Calculates the zonal and meridional wave numters.
-        L, K = 2 ** int(np.ceil(np.log2(l0))), 2 ** int(np.ceil(np.log2(k0)))
-        # Calculates the zonal and meridional wave numbers.
-        l, k = fftfreq(L, self.dy), fftfreq(K, self.dx)
-        # Creates empty inverse wavelet transform array and fills it for every
-        # discrete scale using the convolution theorem.
-        self.iWf = np.zeros((m0, L, K), 'complex')
-        for i, an in enumerate(self.scales):
-            psi_ft_bar = an * self.wavelet.psi_ft(an * k, an * l)
-            W_ft = fftn(self.Wf[i, :, :], s=(L, K))
-            self.iWf[i, :, :] = ifftn(W_ft * psi_ft_bar, s=(L, K)) *\
-                da / an ** 2.
-
-        self.iWf = self.iWf[:, :l0, :k0].real.sum(axis=0) / self.wavelet.cpsi
-
-        return self
+            psi = MexicanHat2DKernel(an)
+            self.Wf[i] = convolve_fft(self.array, psi,
+                                      interpolate_nan=False,
+                                      normalize_kernel=False) * an**factor
 
     def make_1D_transform(self):
-        self.curve = transform((self.Wf, self.scales), self.imgscale)
+        '''
+        Create the 1D transform.
+        '''
 
-    def run(self):
+        self.values = np.empty_like(self.scales)
+        for i, plane in enumerate(self.Wf):
+            self.values[i] = (plane[plane > 0]).mean()
+
+    def run(self, verbose=True):
         '''
         Compute the Wavelet transform.
         '''
-        if self.nan_flag:
-            self.astropy_cwt2d()
-        else:
-            self.cwt2d()
+        self.astropy_cwt2d()
         self.make_1D_transform()
+
+        if verbose:
+            import matplotlib.pyplot as p
+
+            p.loglog(self.scales, self.values, 'bD-')
+
+            if self.ang_units:
+                p.xlabel("Scales (deg)")
+            else:
+                p.xlabel("Scales (pixels)")
 
 
 class Wavelet_Distance(object):
@@ -253,8 +144,8 @@ class Wavelet_Distance(object):
         Computed wt2D object. use to avoid recomputing.
     '''
 
-    def __init__(self, dataset1, dataset2, wavelet=Mexican_hat(),
-                 ang_units=True, scales=None, num=50, dx=0.25, dy=0.25,
+    def __init__(self, dataset1, dataset2,
+                 ang_units=False, scales=None, num=50, dx=0.25, dy=0.25,
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
@@ -263,24 +154,20 @@ class Wavelet_Distance(object):
         array2 = dataset2[0]
         header2 = dataset2[1]
 
+        self.ang_units = ang_units
+
         if fiducial_model is None:
-            self.wt1 = wt2D(array1, header1, scales=scales, wavelet=wavelet,
-                            ang_units=ang_units)
+            self.wt1 = Wavelet(array1, header1, scales=scales,
+                               ang_units=ang_units)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = wt2D(array2, header2, scales=scales, wavelet=wavelet,
-                        ang_units=ang_units)
+        self.wt2 = Wavelet(array2, header2, scales=scales, ang_units=ang_units)
         self.wt2.run()
 
-        self.curve1 = self.wt1.curve
-        self.curve2 = self.wt2.curve
-
-        self.results = None
-        self.distance = None
-
-    def distance_metric(self, non_linear=True, verbose=False):
+    def distance_metric(self, non_linear=False, verbose=False, label1=None,
+                        label2=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -291,17 +178,26 @@ class Wavelet_Distance(object):
             Enables clipping of non-linear portions of the transform.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for dataset1
+        label2 : str, optional
+            Object or region name for dataset2
         '''
+
+        scales1 = np.log10(self.wt1.scales)
+        values1 = np.log10(self.wt1.values)
+        scales2 = np.log10(self.wt2.scales)
+        values2 = np.log10(self.wt2.values)
 
         if non_linear:
             self.curve1 = clip_to_linear(self.curve1)
             self.curve2 = clip_to_linear(self.curve2)
 
-        dummy = [0] * len(self.curve1[0, :]) + [1] * len(self.curve2[0, :])
-        x = np.concatenate((self.curve1[0, :], self.curve2[0, :]))
+        dummy = [0] * len(scales1) + [1] * len(scales2)
+        x = np.concatenate((scales1, scales2))
         regressor = x.T * dummy
 
-        log_T_g = np.concatenate((self.curve1[1, :], self.curve2[1, :]))
+        log_T_g = np.concatenate((values1, values2))
 
         d = {"dummy": Series(dummy), "scales": Series(
             x), "log_T_g": Series(log_T_g), "regressor": Series(regressor)}
@@ -318,21 +214,27 @@ class Wavelet_Distance(object):
             print self.results.summary()
 
             import matplotlib.pyplot as p
-            p.plot(self.curve1[0, :], self.curve1[1, :], 'bD',
-                   self.curve2[0, :], self.curve2[1, :], 'gD')
-            p.plot(self.curve1[0, :],
-                   self.results.fittedvalues[:len(self.curve1[1, :])], "b",
-                   self.curve2[0, :],
-                   self.results.fittedvalues[-len(self.curve2[1, :]):], "g")
+            p.plot(scales1, values1, 'bD', label=label1)
+            p.plot(scales2, values2, 'go', label=label2)
+            p.plot(scales1,
+                   self.results.fittedvalues[:len(values1)], "b",
+                   scales2,
+                   self.results.fittedvalues[-len(values2):], "g")
             p.grid(True)
-            p.xlabel("log a")
+
+            if self.ang_units:
+                xunit = "deg"
+            else:
+                xunit = "pixels"
+            p.xlabel("log a ("+xunit+")")
             p.ylabel(r"log $T_g$")
+            p.legend(loc='best')
             p.show()
 
         return self
 
 
-def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
+def clip_to_linear(data, threshold=1.0, kernel_width=0.05, ends_clipped=0.05):
     '''
     Takes the second derivative of the data with a ricker wavelet.
     Data is clipped to the linear portion (2nd derivative ~ 0)
@@ -371,9 +273,9 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
     if ends_clipped > 0.0:
         clipped_pts = int(num_pts * ends_clipped)
 
-        sec_deriv = sec_deriv[clipped_pts: num_pts - clipped_pts]
-        y = y[clipped_pts: num_pts - clipped_pts]
-        x = x[clipped_pts: num_pts - clipped_pts]
+        sec_deriv = sec_deriv[: num_pts - clipped_pts]
+        y = y[: num_pts - clipped_pts]
+        x = x[: num_pts - clipped_pts]
 
     linear_pts = np.abs(sec_deriv) < threshold
 
@@ -381,35 +283,3 @@ def clip_to_linear(data, threshold=1.0, kernel_width=0.1, ends_clipped=0.05):
     data_clipped[:, :] = x[linear_pts], y[linear_pts]
 
     return data_clipped
-
-
-def transform(data, imgscale):
-    '''
-    Put output of the wavelet transform into the mean of the nonzero components
-    This reduces the dataset to 1D.
-
-    Parameters
-    ----------
-    data : tuple
-        Contains N arrays and scales from the transform.
-
-    Returns
-    -------
-    data_1D - numpy.ndarray
-        Scales in the first column and log <T_g> in the second.
-    '''
-
-    wav_arrays = data[0]
-    scales = data[1]
-
-    log_av_T_g = []
-    for i in range(len(scales)):
-        average_Tg_i = np.log10(np.abs(wav_arrays[i, :, :]
-                                [wav_arrays[i, :, :] > 0]).mean())
-        log_av_T_g.append(average_Tg_i)
-
-    physical_scales = np.log10(scales * imgscale)
-
-    data_1D = np.array([physical_scales, log_av_T_g])
-
-    return data_1D
