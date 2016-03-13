@@ -95,7 +95,10 @@ class PCA(object):
             p.bar(np.arange(1, self.n_eigs + 1), self.eigvals, 0.5, color='r')
             p.xlim([0, self.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+            if normalize:
+                p.ylabel("Proportion of Variance")
+            else:
+                p.ylabel('Variance')
             p.show()
 
         return self
@@ -129,6 +132,8 @@ class PCA_Distance(object):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
+
+        self.normalize = normalize
 
         if fiducial_model is not None:
             self.pca1 = fiducial_model
@@ -173,7 +178,10 @@ class PCA_Distance(object):
                   color='r')
             p.xlim([0, self.pca1.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Proportion of Variance')
+            if self.normalize:
+                p.ylabel("Proportion of Variance")
+            else:
+                p.ylabel('Variance')
             p.subplot(2, 2, 2)
             p.imshow(
                 self.pca2.cov_matrix, origin="lower", interpolation="nearest",
