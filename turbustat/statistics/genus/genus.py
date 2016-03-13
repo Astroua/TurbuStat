@@ -299,7 +299,7 @@ class GenusDistance(object):
             p.xlabel("z-score")
             p.ylabel("Genus Score")
             p.grid(True)
-            p.legend(loc="upper right")
+            p.legend(loc="best")
             p.show()
 
         return self

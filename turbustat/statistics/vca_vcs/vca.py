@@ -233,14 +233,14 @@ class VCA(object):
         if self._stddev_flag:
             ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
                         yerr=self.ps1D_stddev[good_interval], color=color,
-                        fmt='D', markersize=5, alpha=0.5, capsize=10,
+                        fmt=symbol, alpha=0.5, capsize=10,
                         elinewidth=3, label=label)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
         else:
             p.loglog(self.freqs[good_interval],
                      self.ps1D[good_interval], color+symbol, alpha=0.5,
-                     markersize=5, label=label)
+                     label=label)
 
         p.grid(True)
 

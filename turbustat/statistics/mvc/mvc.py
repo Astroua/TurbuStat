@@ -322,7 +322,7 @@ class MVC_Distance(object):
             else:
                 p.xlabel(r"log k/pixel$^{-1}$")
 
-            p.legend(loc='upper right')
+            p.legend(loc='best')
             p.show()
 
         return self

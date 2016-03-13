@@ -413,7 +413,7 @@ class DendroDistance(object):
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
-            p.legend(loc='upper right')
+            p.legend(loc='best')
             p.show()
 
         return self

@@ -339,7 +339,7 @@ class Wavelet_Distance(object):
                 xunit = "pixels"
             p.xlabel("log a ("+xunit+")")
             p.ylabel(r"log $T_g$")
-            p.legend(loc='upper right')
+            p.legend(loc='best')
             p.show()
 
         return self

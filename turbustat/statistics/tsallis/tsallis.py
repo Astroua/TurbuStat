@@ -139,7 +139,7 @@ class Tsallis(object):
                 p.plot(dist[0], tsallis_function(dist[0], *params), "r")
                 p.plot(dist[0], dist[1], 'rD', label="".join(
                     ["Tsallis Distribution with Lag ", str(self.lags[i / 2])]))
-                p.legend(loc="upper left", prop={"size": 10})
+                p.legend(loc="best")
 
                 i += 2
             p.show()

@@ -296,7 +296,7 @@ class PSpec_Distance(object):
                 p.xlabel(r"log k/pixel$^{-1}$")
 
             p.ylabel("Power")
-            p.legend(loc='upper right')
+            p.legend(loc='best')
             p.show()
 
         return self

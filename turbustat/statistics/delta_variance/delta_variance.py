@@ -310,7 +310,7 @@ class DeltaVariance_Distance(object):
             p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
                        yerr=self.delvar2.delta_var_error, fmt="go-",
                        label=label2)
-            ax.legend(loc='upper right')
+            ax.legend(loc='best')
             ax.grid(True)
             if self.ang_units:
                 ax.set_xlabel("Lag (deg)")

@@ -249,7 +249,7 @@ class StatMoments_Distance(object):
 
     def __init__(self, image1, image2, radius=5, nbins=None,
                  periodic1=False, periodic2=False, fiducial_model=None):
-        super(StatMomentsDistance, self).__init__()
+        super(StatMoments_Distance, self).__init__()
 
         if nbins is None:
             self.nbins = _auto_nbins(image1.size, image2.size)

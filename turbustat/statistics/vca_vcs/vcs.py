@@ -306,12 +306,12 @@ class VCS_Distance(object):
                 xlab = r"log k$_v$/pixel$^{-1}$"
 
             import matplotlib.pyplot as p
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b',
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
                    label=label1)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.3)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g',
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
                    label=label2)
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
             p.grid(True)
             p.legend()
             p.xlabel(xlab)
