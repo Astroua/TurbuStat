@@ -58,7 +58,7 @@ class PCA(object):
     def var_proportion(self):
         return self._var_prop
 
-    def run(self, verbose=False, normalize=True):
+    def run(self, verbose=False, normalize=True, mean_sub=False):
         '''
         Run method. Needed to maintain package standards.
 
@@ -70,7 +70,7 @@ class PCA(object):
             See ```compute_pca```.
         '''
 
-        self.compute_pca(normalize=normalize)
+        self.compute_pca(normalize=normalize, mean_sub=mean_sub)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -108,11 +108,13 @@ class PCA_Distance(object):
         Computed PCA object. Use to avoid recomputing.
     normalize : bool, optional
         Sets whether to normalize the eigenvalues by the 0th eigenvalue.
-
+    mean_sub : bool, optional
+        Subtracts the mean before computing the covariance matrix. The default
+        is to not subtract the mean, as is done in the Heyer & Brunt works.
     '''
 
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None,
-                 normalize=True):
+                 normalize=True, mean_sub=False):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
