@@ -25,7 +25,7 @@ class testWavelet(TestCase):
         self.tester = Wavelet(dataset1["integrated_intensity"][0],
                               dataset1["integrated_intensity"][1])
         self.tester.run()
-        assert np.allclose(self.tester.curve, computed_data['wavelet_val'])
+        assert np.allclose(self.tester.values, computed_data['wavelet_val'])
 
     def test_Wavelet_distance(self):
         self.tester_dist = \
