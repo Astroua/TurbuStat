@@ -73,7 +73,7 @@ class Wavelet(object):
         n0, m0 = self.array.shape
         A = len(self.scales)
 
-        self.Wf = np.zeros((A, n0, m0), 'complex')
+        self.Wf = np.zeros((A, n0, m0), dtype=np.float)
 
         factor = 2
         if not self.scale_normalization:
@@ -84,9 +84,11 @@ class Wavelet(object):
 
         for i, an in enumerate(self.scales):
             psi = MexicanHat2DKernel(an)
-            self.Wf[i] = convolve_fft(self.array, psi,
-                                      interpolate_nan=False,
-                                      normalize_kernel=False) * an**factor
+            out_slice = slice(int(an), -int(an))
+
+            self.Wf[i] = \
+                convolve_fft(np.pad(self.array, int(an), mode='constant'),
+                             psi).real[out_slice, out_slice] * an**factor
 
     def make_1D_transform(self):
         '''
@@ -97,11 +99,11 @@ class Wavelet(object):
         for i, plane in enumerate(self.Wf):
             self.values[i] = (plane[plane > 0]).mean()
 
-    def run(self, verbose=True):
+    def run(self, verbose=False):
         '''
         Compute the Wavelet transform.
         '''
-        self.astropy_cwt2d()
+        self.compute_transform()
         self.make_1D_transform()
 
         if verbose:
