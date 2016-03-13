@@ -4,8 +4,8 @@
 import numpy as np
 import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
-import statsmodels.formula.api as sm
-from pandas import Series, DataFrame
+import statsmodels.api as sm
+# from pandas import Series, DataFrame
 
 
 class Wavelet(object):
@@ -99,12 +99,38 @@ class Wavelet(object):
         for i, plane in enumerate(self.Wf):
             self.values[i] = (plane[plane > 0]).mean()
 
+    def fit_transform(self):
+        '''
+        Perform a fit to the transform in log-log space.
+        '''
+
+        x = np.log10(self.scales)
+        y = np.log10(self.values)
+
+        x = sm.add_constant(x)
+
+        model = sm.OLS(y, x, missing='drop')
+
+        self.fit = model.fit()
+
+        self._slope = self.fit.params[1]
+        self._slope_err = self.fit.bse[1]
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
     def run(self, verbose=False):
         '''
         Compute the Wavelet transform.
         '''
         self.compute_transform()
         self.make_1D_transform()
+        self.fit_transform()
 
         if verbose:
             import matplotlib.pyplot as p
@@ -177,38 +203,29 @@ class Wavelet_Distance(object):
             Object or region name for dataset2
         '''
 
-        scales1 = np.log10(self.wt1.scales)
-        values1 = np.log10(self.wt1.values)
-        scales2 = np.log10(self.wt2.scales)
-        values2 = np.log10(self.wt2.values)
-
-        dummy = [0] * len(scales1) + [1] * len(scales2)
-        x = np.concatenate((scales1, scales2))
-        regressor = x.T * dummy
-
-        log_T_g = np.concatenate((values1, values2))
-
-        d = {"dummy": Series(dummy), "scales": Series(
-            x), "log_T_g": Series(log_T_g), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(formula="log_T_g ~ dummy + scales + regressor", data=df)
-
-        self.results = model.fit()
-
-        self.distance = np.abs(self.results.tvalues["regressor"])
+        # Construct t-statistic
+        self.distance = \
+            np.abs((self.wt1.slope - self.wt2.slope) /
+                   np.sqrt(self.wt1.slope_err**2 +
+                           self.wt2.slope_err**2))
 
         if verbose:
-            print self.results.summary()
+
+            print(self.wt1.fit.summary())
+            print(self.wt2.fit.summary())
+
+            scales1 = np.log10(self.wt1.scales)
+            values1 = np.log10(self.wt1.values)
+            scales2 = np.log10(self.wt2.scales)
+            values2 = np.log10(self.wt2.values)
 
             import matplotlib.pyplot as p
             p.plot(scales1, values1, 'bD', label=label1)
             p.plot(scales2, values2, 'go', label=label2)
             p.plot(scales1,
-                   self.results.fittedvalues[:len(values1)], "b",
+                   self.wt1.fit.fittedvalues[:len(values1)], "b",
                    scales2,
-                   self.results.fittedvalues[-len(values2):], "g")
+                   self.wt2.fit.fittedvalues[-len(values2):], "g")
             p.grid(True)
 
             if self.ang_units:
