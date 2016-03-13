@@ -37,8 +37,15 @@ class PCA(object):
 
         Parameters
         ----------
+        mean_sub : bool, optional
+            When enabled, subtracts the means of the channels before
+            calculating the covariance. By default, this is disabled to
+            match the Heyer & Brunt method.
         normalize : bool, optional
-            Normalize the set of eigenvalues by the 0th component.
+            Normalize the set of eigenvalues by the 0th component when mean
+            subtraction has not been done. Otherwise this is normalized by the
+            sum of the eigenvalues, so each represents the proportion of
+            variance that eigenvector describes.
         '''
 
         self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
@@ -50,7 +57,11 @@ class PCA(object):
             np.sum(all_eigsvals)
 
         if normalize:
-            self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
+            if mean_sub:
+                self.eigvals = all_eigsvals[:self.n_eigs] / \
+                    np.sum(all_eigsvals[:self.n_eigs])
+            else:
+                self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
             self.eigvals = all_eigsvals[:self.n_eigs]
 
