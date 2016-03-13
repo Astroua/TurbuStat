@@ -130,25 +130,18 @@ class Wavelet_Distance(object):
         2D image.
     dataset2 : FITS hdu
         2D image.
-    wavelet : class
-        Wavelet class. Only Mexican_hat() is implemented.
     ang_units : bool, optional
         Sets whether to use angular units.
     scales : numpy.ndarray or list
         The scales where the transform is calculated.
     num : int
         Number of scales to calculate the transform at.
-    dx : float, optional
-        Spacing in the x-direction.
-    dy : float, optional
-        Spacing in the y-direction.
     fiducial_model : wt2D
         Computed wt2D object. use to avoid recomputing.
     '''
 
     def __init__(self, dataset1, dataset2,
-                 ang_units=False, scales=None, num=50, dx=0.25, dy=0.25,
-                 fiducial_model=None):
+                 ang_units=False, scales=None, num=50, fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
         array1 = dataset1[0]
@@ -168,7 +161,7 @@ class Wavelet_Distance(object):
         self.wt2 = Wavelet(array2, header2, scales=scales, ang_units=ang_units)
         self.wt2.run()
 
-    def distance_metric(self, non_linear=False, verbose=False, label1=None,
+    def distance_metric(self, verbose=False, label1=None,
                         label2=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
@@ -176,8 +169,6 @@ class Wavelet_Distance(object):
 
         Parameters
         ----------
-        non_linear : bool, optional
-            Enables clipping of non-linear portions of the transform.
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
@@ -190,10 +181,6 @@ class Wavelet_Distance(object):
         values1 = np.log10(self.wt1.values)
         scales2 = np.log10(self.wt2.scales)
         values2 = np.log10(self.wt2.values)
-
-        if non_linear:
-            self.curve1 = clip_to_linear(self.curve1)
-            self.curve2 = clip_to_linear(self.curve2)
 
         dummy = [0] * len(scales1) + [1] * len(scales2)
         x = np.concatenate((scales1, scales2))
@@ -236,52 +223,52 @@ class Wavelet_Distance(object):
         return self
 
 
-def clip_to_linear(data, threshold=1.0, kernel_width=0.05, ends_clipped=0.05):
-    '''
-    Takes the second derivative of the data with a ricker wavelet.
-    Data is clipped to the linear portion (2nd derivative ~ 0)
+# def clip_to_linear(data, threshold=1.0, kernel_width=0.05, ends_clipped=0.05):
+#     '''
+#     Takes the second derivative of the data with a ricker wavelet.
+#     Data is clipped to the linear portion (2nd derivative ~ 0)
 
-    Parameters
-    ----------
+#     Parameters
+#     ----------
 
-    data : numpy.ndarray
-        x and y data.
-    threshold : float, optional
-        Acceptable value of the second derivative to be called linear.
-    kernel_width : float, optional
-        Kernel width set to this percentage of the data length
-    ends_clipped : float, optional
-        Percentage of data to clip off at the ends. End points have residual
-        effects from the convolution.
+#     data : numpy.ndarray
+#         x and y data.
+#     threshold : float, optional
+#         Acceptable value of the second derivative to be called linear.
+#     kernel_width : float, optional
+#         Kernel width set to this percentage of the data length
+#     ends_clipped : float, optional
+#         Percentage of data to clip off at the ends. End points have residual
+#         effects from the convolution.
 
-    Returns
-    -------
-    data_clipped : numpy.ndarray
-        Linear portion of the data set returned.
-    '''
+#     Returns
+#     -------
+#     data_clipped : numpy.ndarray
+#         Linear portion of the data set returned.
+#     '''
 
-    from scipy.signal import ricker
+#     from scipy.signal import ricker
 
-    y = data[1, :]
-    x = data[0, :]
+#     y = data[1, :]
+#     x = data[0, :]
 
-    num_pts = len(y)
+#     num_pts = len(y)
 
-    kernel = ricker(num_pts, num_pts * kernel_width)
+#     kernel = ricker(num_pts, num_pts * kernel_width)
 
-    sec_deriv = np.convolve(y, kernel, mode="same")
+#     sec_deriv = np.convolve(y, kernel, mode="same")
 
-    # Ends go back to being ~ linear, so clip them off
-    if ends_clipped > 0.0:
-        clipped_pts = int(num_pts * ends_clipped)
+#     # Ends go back to being ~ linear, so clip them off
+#     if ends_clipped > 0.0:
+#         clipped_pts = int(num_pts * ends_clipped)
 
-        sec_deriv = sec_deriv[: num_pts - clipped_pts]
-        y = y[: num_pts - clipped_pts]
-        x = x[: num_pts - clipped_pts]
+#         sec_deriv = sec_deriv[: num_pts - clipped_pts]
+#         y = y[: num_pts - clipped_pts]
+#         x = x[: num_pts - clipped_pts]
 
-    linear_pts = np.abs(sec_deriv) < threshold
+#     linear_pts = np.abs(sec_deriv) < threshold
 
-    data_clipped = np.empty((2, len(y[linear_pts])))
-    data_clipped[:, :] = x[linear_pts], y[linear_pts]
+#     data_clipped = np.empty((2, len(y[linear_pts])))
+#     data_clipped[:, :] = x[linear_pts], y[linear_pts]
 
-    return data_clipped
+#     return data_clipped
