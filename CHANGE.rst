@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #103 - implement a corrected version of the wavelet transform
 * #101 - Fixed some bugs brought in with #92 for segmented fitting. Using OLS instead of WLS.
 * #100 - Fix plotting in PDF_Distance
 * #99 - Fixed moment array loading when a full path to the cube is given.

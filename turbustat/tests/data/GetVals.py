@@ -21,7 +21,7 @@ from turbustat.statistics import Wavelet_Distance
 wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"],
                                     dataset2["integrated_intensity"]).distance_metric(verbose=False)
 
-wavelet_val = wavelet_distance.wt1.curve
+wavelet_val = wavelet_distance.wt1.values
 
 ## MVC#
 

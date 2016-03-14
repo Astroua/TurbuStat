@@ -10,7 +10,7 @@ from unittest import TestCase
 import numpy as np
 import numpy.testing as npt
 
-from ..statistics import wt2D, Wavelet_Distance
+from ..statistics import Wavelet, Wavelet_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -22,10 +22,10 @@ class testWavelet(TestCase):
         self.dataset2 = dataset2
 
     def test_Wavelet_method(self):
-        self.tester = wt2D(dataset1["integrated_intensity"][0],
-                           dataset1["integrated_intensity"][1])
+        self.tester = Wavelet(dataset1["integrated_intensity"][0],
+                              dataset1["integrated_intensity"][1])
         self.tester.run()
-        assert np.allclose(self.tester.curve, computed_data['wavelet_val'])
+        assert np.allclose(self.tester.values, computed_data['wavelet_val'])
 
     def test_Wavelet_distance(self):
         self.tester_dist = \
