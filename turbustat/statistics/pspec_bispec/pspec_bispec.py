@@ -3,14 +3,16 @@
 
 import numpy as np
 import numpy.random as ra
-from ..psds import pspec
-from ..rfft_to_fft import rfft_to_fft
 import statsmodels.formula.api as sm
 from pandas import Series, DataFrame
 from numpy.fft import fftshift
 
+from ..psds import pspec
+from ..rfft_to_fft import rfft_to_fft
+from ..base_pspec2 import StatisticBase_PSpec2D
 
-class PowerSpectrum(object):
+
+class PowerSpectrum(StatisticBase_PSpec2D):
 
     """
     Compute the power spectrum of a given image. (Burkhart et al., 2010)
@@ -24,7 +26,7 @@ class PowerSpectrum(object):
 
     """
 
-    def __init__(self, img, header, weights=None):
+    def __init__(self, img, header, weights=None, ang_units=False):
         super(PowerSpectrum, self).__init__()
         self.img = img
         # Get rid of nans
@@ -32,6 +34,7 @@ class PowerSpectrum(object):
 
         self.header = header
         self.degperpix = np.abs(header["CDELT2"])
+        self.ang_units = ang_units
 
         if weights is None:
             weights = np.ones(img.shape)
@@ -45,26 +48,6 @@ class PowerSpectrum(object):
 
         self._ps1D_stddev = None
 
-    @property
-    def ps2D(self):
-        return self._ps2D
-
-    @property
-    def ps1D(self):
-        return self._ps1D
-
-    @property
-    def ps1D_stddev(self):
-        if not self._stddev_flag:
-            Warning("ps1D_stddev is only calculated when return_stddev"
-                    " is enabled.")
-
-        return self._ps1D_stddev
-
-    @property
-    def freqs(self):
-        return self._freqs
-
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
@@ -74,84 +57,33 @@ class PowerSpectrum(object):
 
         self._ps2D = np.power(fft, 2.)
 
-        return self
-
-    def compute_radial_pspec(self, return_stddev=True, logspacing=True,
-                             **kwargs):
+    def run(self, verbose=False, logspacing=True,
+            return_stddev=True, low_cut=None, high_cut=0.5):
         '''
-        Computes the radially averaged power spectrum.
+        Full computation of MVC.
 
         Parameters
         ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
-        kwargs : passed to pspec
-        '''
-
-        if return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, logspacing=logspacing,
-                      return_stddev=return_stddev, **kwargs)
-            self._stddev_flag = True
-        else:
-            self._freqs, self._ps1D = \
-                pspec(self.ps2D, logspacing=logspacing,
-                      return_stddev=return_stddev, **kwargs)
-            self._stddev_flag = False
-
-        return self
-
-    def run(self, phys_units=False, verbose=False, return_stddev=True,
-            logspacing=True):
-        '''
-        Full computation of the Spatial Power Spectrum.
-
-        Parameters
-        ----------
-        phys_units : bool, optional
-            Sets frequency scale to physical units.
         verbose: bool, optional
             Enables plotting.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        low_cut : float, optional
+            Low frequency cut off in frequencies used in the fitting.
+        high_cut : float, optional
+            High frequency cut off in frequencies used in the fitting.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
-
-        if phys_units:
-            self._freqs *= self.degperpix ** -1
-
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
+                       large_scale=0.5)
         if verbose:
-            import matplotlib.pyplot as p
-            p.subplot(121)
-            p.imshow(
-                np.log10(self.ps2D), origin="lower", interpolation="nearest")
-            p.colorbar()
-            ax = p.subplot(122)
-            if self._stddev_flag:
-                ax.errorbar(self.freqs, self.ps1D, yerr=self.ps1D_stddev,
-                            fmt='D-', color='b', alpha=0.5, markersize=5)
-                ax.set_xscale("log", nonposy='clip')
-                ax.set_yscale("log", nonposy='clip')
-            else:
-                p.loglog(self.freqs, self.ps1D, "bD", alpha=0.5,
-                         markersize=5)
-            if phys_units:
-                ax.set_xlabel(r"log K/deg$^{-1}$")
-            else:
-                ax.set_xlabel(r"log K/pixel$^{-1}$")
-
-            p.ylabel("Power (K)")
-
-            p.tight_layout()
-            p.show()
-
+            print self.fit.summary()
+            self.plot_fit(show=True, show_2D=True)
         return self
 
 
@@ -198,7 +130,8 @@ class PSpec_Distance(object):
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
+                        labels=None):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -219,67 +152,24 @@ class PSpec_Distance(object):
             Enables plotting.
         '''
 
-        if low_cut is None:
-            # Default to a frequency of 1/2 the smallest axis in the images.
-            low_cut = 2. / float(min(min(self.pspec1.ps2D.shape),
-                                     min(self.pspec2.ps2D.shape)))
-
-        keep_freqs1 = clip_func(self.pspec1.freqs, low_cut, high_cut)
-        clip_freq1 = \
-            self.pspec1.freqs[keep_freqs1]
-        clip_ps1D1 = \
-            self.pspec1.ps1D[keep_freqs1]
-        clip_errors1 = \
-            (0.434*self.pspec1.ps1D_stddev[keep_freqs1]/clip_ps1D1)
-
-        keep_freqs2 = clip_func(self.pspec2.freqs, low_cut, high_cut)
-        clip_freq2 = \
-            self.pspec2.freqs[keep_freqs2]
-        clip_ps1D2 = \
-            self.pspec2.ps1D[keep_freqs2]
-        clip_errors2 = \
-            (0.434*self.pspec2.ps1D_stddev[keep_freqs2]/clip_ps1D2)
-
-        dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
-        x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
-        regressor = x.T * dummy
-
-        log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
-
-        d = {"dummy": Series(dummy), "scales": Series(
-            x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
-
-        self.results = model.fit()
-
-        self.distance = np.abs(self.results.tvalues["regressor"])
+        self.distance = \
+            np.abs((self.pspec1.slope - self.pspec2.slope) /
+                   np.sqrt(self.pspec1.slope_err**2 +
+                           self.pspec2.slope_err**2))
 
         if verbose:
+            if labels is None:
+                labels = ['1', '2']
 
-            print self.results.summary()
-
-            fit_index = self.results.fittedvalues.index
-            one_index = fit_index < len(clip_freq1)
-            two_index = fit_index >= len(clip_freq1)
+            print "Fit to %s" % (labels[0])
+            print self.pspec1.fit.summary()
+            print "Fit to %s" % (labels[1])
+            print self.pspec2.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(df["scales"][fit_index[one_index]],
-                   self.results.fittedvalues[one_index], "b",
-                   df["scales"][fit_index[two_index]],
-                   self.results.fittedvalues[two_index], "g")
-            p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
-                       yerr=clip_errors1, color="b", fmt="D", markersize=5,
-                       alpha=0.5)
-            p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
-                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
-                       alpha=0.5)
-            p.grid(True)
-            p.xlabel("log K")
-            p.ylabel("Power (K)")
+            self.mvc1.plot_fit(show=False, color='b', label=labels[0])
+            self.mvc2.plot_fit(show=False, color='r', label=labels[1])
+            p.legend(loc='best')
             p.show()
 
         return self
