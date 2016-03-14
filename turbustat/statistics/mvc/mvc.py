@@ -95,29 +95,10 @@ class MVC(StatisticBase_PSpec2D):
                        large_scale=0.5)
 
         if verbose:
-            import matplotlib.pyplot as p
-            p.subplot(121)
-            p.imshow(
-                np.log10(self.ps2D), origin="lower", interpolation="nearest")
-            p.colorbar()
-            ax = p.subplot(122)
-            if self._stddev_flag:
-                ax.errorbar(self.freqs, self.ps1D, yerr=self.ps1D_stddev,
-                            fmt='D-', color='b', markersize=5, alpha=0.5)
-                ax.set_xscale("log", nonposy='clip')
-                ax.set_yscale("log", nonposy='clip')
-            else:
-                p.loglog(self.freqs, self.ps1D, "bD-", markersize=5,
-                         alpha=0.5)
 
-            if self.ang_units:
-                ax.set_xlabel("Frequency (1/deg)")
-            else:
-                ax.set_xlabel("Frequency (pixels)")
+            print self.fit.summary()
 
-            ax.set_ylabel("MVC Power")
-
-            p.show()
+            self.plot_fit(show=True, show_2D=True)
 
         return self
 
@@ -183,11 +164,11 @@ class MVC_distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
-            self.mvc1.run(phys_units=False, low_cut=low_cut)
+            self.mvc1.run(low_cut=low_cut)
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
-        self.mvc2.run(phys_units=False, low_cut=low_cut)
+        self.mvc2.run(low_cut=low_cut)
 
         self.results = None
         self.distance = None
@@ -232,11 +213,6 @@ class MVC_distance(object):
             self.mvc1.plot_fit(show=False, color='b', label=labels[0])
             self.mvc2.plot_fit(show=False, color='r', label=labels[1])
             p.legend(loc='best')
-            p.show()
-            p.grid(True)
-            p.ylabel("MVC Power")
-            p.xlabel("Frequency (pixels)")
-
             p.show()
 
         return self
