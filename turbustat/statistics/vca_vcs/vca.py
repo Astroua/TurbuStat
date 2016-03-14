@@ -27,7 +27,7 @@ class VCA(StatisticBase_PSpec2D):
         Sets whether physical scales can be used.
     '''
 
-    def __init__(self, cube, header, slice_size=None, phys_units=False):
+    def __init__(self, cube, header, slice_size=None, ang_units=False):
         super(VCA, self).__init__()
 
         self.cube = cube.astype("float64")
@@ -44,9 +44,7 @@ class VCA(StatisticBase_PSpec2D):
                 change_slice_thickness(self.cube.copy(),
                                        slice_thickness=self.slice_size)
 
-        self.phys_units_flag = False
-        if phys_units:
-            self.phys_units_flag = True
+        self.ang_units = ang_units
 
         self._ps1D_stddev = None
 

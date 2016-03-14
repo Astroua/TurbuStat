@@ -59,7 +59,7 @@ class StatisticBase_PSpec2D(object):
                       **kwargs)
             self._stddev_flag = False
 
-        if self.phys_units_flag:
+        if self.ang_units:
             self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
@@ -170,10 +170,10 @@ class StatisticBase_PSpec2D(object):
 
         import matplotlib.pyplot as p
 
-        if self.phys_units_flag:
-            xlab = r"log K"
+        if self.ang_units:
+            xlab = r"log k/deg$^{-1}$"
         else:
-            xlab = r"K (pixel$^{-1}$)"
+            xlab = r"log k/pixel$^{-1}$"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
