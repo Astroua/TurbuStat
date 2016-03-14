@@ -78,14 +78,16 @@ class MVC(StatisticBase_PSpec2D):
 
         Parameters
         ----------
-        phys_units : bool, optional
-            Sets frequency scale to physical units.
         verbose: bool, optional
             Enables plotting.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
+        low_cut : float, optional
+            Low frequency cut off in frequencies used in the fitting.
+        high_cut : float, optional
+            High frequency cut off in frequencies used in the fitting.
         '''
 
         self.compute_pspec()
