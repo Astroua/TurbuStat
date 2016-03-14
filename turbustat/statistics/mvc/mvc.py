@@ -71,7 +71,7 @@ class MVC(StatisticBase_PSpec2D):
 
         return self
 
-    def run(self, phys_units=False, verbose=False, logspacing=True,
+    def run(self, verbose=False, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5):
         '''
         Full computation of MVC.
@@ -94,9 +94,6 @@ class MVC(StatisticBase_PSpec2D):
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
 
-        if phys_units:
-            self._freqs *= self.degperpix ** -1
-
         if verbose:
             import matplotlib.pyplot as p
             p.subplot(121)
@@ -113,7 +110,7 @@ class MVC(StatisticBase_PSpec2D):
                 p.loglog(self.freqs, self.ps1D, "bD-", markersize=5,
                          alpha=0.5)
 
-            if phys_units:
+            if self.ang_units:
                 ax.set_xlabel("Frequency (1/deg)")
             else:
                 ax.set_xlabel("Frequency (pixels)")
