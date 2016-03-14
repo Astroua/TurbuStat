@@ -87,6 +87,10 @@ class StatisticBase_PSpec2D(object):
             break found is rejected.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
+        large_scale : float, optional
+            Set fraction of array shape corresponding to the largest frequency
+            to include while fitting (i.e., 1. uses all frequencies, 0.5 limits
+            the maximum frequency to half of the smallest array shape).
         '''
 
         # Make the data to fit to
