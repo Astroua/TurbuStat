@@ -10,7 +10,7 @@ from unittest import TestCase
 import numpy as np
 import numpy.testing as npt
 
-from ..statistics import MVC, MVC_distance
+from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -35,6 +35,6 @@ class testMVC(TestCase):
 
     def test_MVC_distance(self):
         self.tester_dist = \
-            MVC_distance(dataset1, dataset2).distance_metric()
+            MVC_Distance(dataset1, dataset2).distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['mvc_distance'])
