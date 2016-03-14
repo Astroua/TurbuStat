@@ -63,7 +63,8 @@ class StatisticBase_PSpec2D(object):
             self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
-                  min_fits_pts=10, verbose=False):
+                  high_cut=None, min_fits_pts=10, verbose=False,
+                  large_scale=1.):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -92,11 +93,19 @@ class StatisticBase_PSpec2D(object):
         if low_cut is None:
             # Default to the largest frequency, since this is just 1 pixel
             # in the 2D PSpec.
-            self.low_cut = 1/float(max(self.ps2D.shape))
+            self.low_cut = 1/(large_scale*float(max(self.ps2D.shape)))
         else:
             self.low_cut = low_cut
-        x = np.log10(self.freqs[self.freqs > self.low_cut])
-        y = np.log10(self.ps1D[self.freqs > self.low_cut])
+
+        if high_cut is None:
+            self.high_cut = self.freqs.max() + 1
+        else:
+            self.high_cut = high_cut
+
+        x = np.log10(self.freqs[clip_func(self.freqs, self.low_cut,
+                                          self.high_cut)])
+        y = np.log10(self.ps1D[clip_func(self.freqs, self.low_cut,
+                                         self.high_cut)])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -200,3 +209,7 @@ class StatisticBase_PSpec2D(object):
 
         if show:
             p.show()
+
+
+def clip_func(arr, low, high):
+    return np.logical_and(arr > low, arr < high)
