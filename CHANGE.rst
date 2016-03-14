@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #104 - Common base class for 2D power spectra
 * #103 - implement a corrected version of the wavelet transform
 * #101 - Fixed some bugs brought in with #92 for segmented fitting. Using OLS instead of WLS.
 * #100 - Fix plotting in PDF_Distance
