@@ -532,8 +532,8 @@ class DendroDistance(object):
             Object or region name for cube2
         '''
 
-        self.histogram_stat(verbose=verbose, label1=None, label2=None)
-        self.numfeature_stat(verbose=verbose, label1=None, label2=None)
+        self.histogram_stat(verbose=verbose, label1=label1, label2=label2)
+        self.numfeature_stat(verbose=verbose, label1=label1, label2=label2)
 
         return self
 
