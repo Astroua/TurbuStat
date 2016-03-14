@@ -35,8 +35,6 @@ class VCA(object):
         self.cube = cube.astype("float64")
         if np.isnan(self.cube).any():
             self.cube[np.isnan(self.cube)] = 0
-            # Feel like this should be more specific
-            self.good_channel_count = np.sum(self.cube.max(axis=0) != 0)
         self.header = header
         self.shape = self.cube.shape
 
