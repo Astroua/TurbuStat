@@ -2,14 +2,12 @@
 
 
 import numpy as np
-import statsmodels.formula.api as sm
-from pandas import Series, DataFrame
 from numpy.fft import fft2, fftshift
 
-from ..psds import pspec
+from ..base_pspec2 import StatisticBase_PSpec2D
 
 
-class MVC(object):
+class MVC(StatisticBase_PSpec2D):
 
     """
     Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
@@ -28,10 +26,11 @@ class MVC(object):
 
     """
 
-    def __init__(self, centroid, moment0, linewidth, header):
+    def __init__(self, centroid, moment0, linewidth, header, ang_units=False):
         self.centroid = centroid
         self.moment0 = moment0
         self.linewidth = linewidth
+        self.ang_units = ang_units
 
         # Get rid of nans.
         self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
@@ -45,26 +44,6 @@ class MVC(object):
 
         self._ps1D_stddev = None
 
-    @property
-    def ps2D(self):
-        return self._ps2D
-
-    @property
-    def ps1D(self):
-        return self._ps1D
-
-    @property
-    def ps1D_stddev(self):
-        if not self._stddev_flag:
-            Warning("scf_spectrum_stddev is only calculated when return_stddev"
-                    " is enabled.")
-
-        return self._ps1D_stddev
-
-    @property
-    def freqs(self):
-        return self._freqs
-
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
@@ -75,8 +54,8 @@ class MVC(object):
         and the linewidth.
 
         An unnormalized centroid can be constructed by multiplying the centroid
-        array by the moment0. Velocity dispersion is the square of the linewidth
-        subtracted by the square of the normalized centroid.
+        array by the moment0. Velocity dispersion is the square of the
+        linewidth subtracted by the square of the normalized centroid.
         '''
 
         term1 = fft2(self.centroid*self.moment0)
@@ -92,35 +71,8 @@ class MVC(object):
 
         return self
 
-    def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=True, **kwargs):
-        '''
-        Computes the radially averaged power spectrum.
-
-        Parameters
-        ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
-        kwargs : passed to pspec
-        '''
-
-        if return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, **kwargs)
-            self._stddev_flag = True
-        else:
-            self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, **kwargs)
-            self._stddev_flag = False
-
-        return self
-
     def run(self, phys_units=False, verbose=False, logspacing=True,
-            return_stddev=True):
+            return_stddev=True, low_cut=None, high_cut=0.5):
         '''
         Full computation of MVC.
 
@@ -139,6 +91,8 @@ class MVC(object):
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
+                       large_scale=0.5)
 
         if phys_units:
             self._freqs *= self.degperpix ** -1
@@ -202,6 +156,9 @@ class MVC_distance(object):
         self.shape1 = data1["centroid"][0].shape
         self.shape2 = data2["centroid"][0].shape
 
+        low_cut = 2. / float(min(min(self.shape1),
+                                 min(self.shape2)))
+
         # Create weighted or non-weighted versions
         if weight_by_error:
             centroid1 = data1["centroid"][0] * \
@@ -229,16 +186,17 @@ class MVC_distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
-            self.mvc1.run(phys_units=False)
+            self.mvc1.run(phys_units=False, low_cut=low_cut)
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
-        self.mvc2.run(phys_units=False)
+        self.mvc2.run(phys_units=False, low_cut=low_cut)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False):
+    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
+                        labels=None):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -258,64 +216,26 @@ class MVC_distance(object):
             Enables plotting.
         '''
 
-        if low_cut is None:
-            # Default to a frequency of 1/2 the smallest axis in the images.
-            low_cut = 2. / float(min(min(self.mvc1.ps2D.shape),
-                                     min(self.mvc2.ps2D.shape)))
-
-        keep_freqs1 = clip_func(self.mvc1.freqs, low_cut, high_cut)
-        clip_freq1 = \
-            self.mvc1.freqs[keep_freqs1]
-        clip_ps1D1 = \
-            self.mvc1.ps1D[keep_freqs1]
-        clip_errors1 = \
-            (0.434*self.mvc1.ps1D_stddev[keep_freqs1]/clip_ps1D1)
-
-        keep_freqs2 = clip_func(self.mvc2.freqs, low_cut, high_cut)
-        clip_freq2 = \
-            self.mvc2.freqs[keep_freqs2]
-        clip_ps1D2 = \
-            self.mvc2.ps1D[keep_freqs2]
-        clip_errors2 = \
-            (0.434*self.mvc2.ps1D_stddev[keep_freqs2]/clip_ps1D2)
-
-        dummy = [0] * len(clip_freq1) + [1] * len(clip_freq2)
-        x = np.concatenate((np.log10(clip_freq1), np.log10(clip_freq2)))
-        regressor = x.T * dummy
-
-        log_ps1D = np.concatenate((np.log10(clip_ps1D1), np.log10(clip_ps1D2)))
-
-        d = {"dummy": Series(dummy), "scales": Series(
-            x), "log_ps1D": Series(log_ps1D), "regressor": Series(regressor)}
-
-        df = DataFrame(d)
-
-        model = sm.ols(
-            formula="log_ps1D ~ dummy + scales + regressor", data=df)
-
-        self.results = model.fit()
-
-        self.distance = np.abs(self.results.tvalues["regressor"])
+        # Construct t-statistic
+        self.distance = \
+            np.abs((self.mvc1.slope - self.mvc2.slope) /
+                   np.sqrt(self.mvc1.slope_err**2 +
+                           self.mvc2.slope_err**2))
 
         if verbose:
+            if labels is None:
+                labels = ['1', '2']
 
-            print self.results.summary()
-
-            fit_index = self.results.fittedvalues.index
-            one_index = fit_index < len(clip_freq1)
-            two_index = fit_index >= len(clip_freq1)
+            print "Fit to %s" % (labels[0])
+            print self.mvc1.fit.summary()
+            print "Fit to %s" % (labels[1])
+            print self.mvc2.fit.summary()
 
             import matplotlib.pyplot as p
-            p.plot(df["scales"][fit_index[one_index]],
-                   self.results.fittedvalues[one_index], "b",
-                   df["scales"][fit_index[two_index]],
-                   self.results.fittedvalues[two_index], "g")
-            p.errorbar(np.log10(clip_freq1), np.log10(clip_ps1D1),
-                       yerr=clip_errors1, color="b", fmt="D", markersize=5,
-                       alpha=0.5)
-            p.errorbar(np.log10(clip_freq2), np.log10(clip_ps1D2),
-                       yerr=clip_errors2, color="g", fmt="D", markersize=5,
-                       alpha=0.5)
+            self.mvc1.plot_fit(show=False, color='b', label=labels[0])
+            self.mvc2.plot_fit(show=False, color='r', label=labels[1])
+            p.legend(loc='best')
+            p.show()
             p.grid(True)
             p.ylabel("MVC Power")
             p.xlabel("Frequency (pixels)")
@@ -323,7 +243,3 @@ class MVC_distance(object):
             p.show()
 
         return self
-
-
-def clip_func(arr, low, high):
-    return np.logical_and(arr > low, arr < high)
