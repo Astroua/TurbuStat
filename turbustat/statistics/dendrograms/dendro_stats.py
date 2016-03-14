@@ -168,10 +168,7 @@ class Dendrogram_Stats(object):
         if verbose:
             print self.model.summary()
 
-        cov_matrix = self.model.cov_params()
-        errors = \
-            np.asarray([np.sqrt(cov_matrix[i, i])
-                        for i in range(cov_matrix.shape[0])])
+        errors = self.model.bse
 
         self.tail_slope = self.model.params[-1]
         self.tail_slope_err = errors[-1]

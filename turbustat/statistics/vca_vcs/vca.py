@@ -184,8 +184,7 @@ class VCA(object):
 
         self._slope = self.fit.params[1]
 
-        cov_matrix = self.fit.cov_params()
-        self._slope_err = np.sqrt(cov_matrix[1, 1])
+        self._slope_err = self.fit.bse[1]
 
     @property
     def slope(self):

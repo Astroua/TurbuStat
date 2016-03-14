@@ -164,11 +164,9 @@ class Lm_Seg(object):
         model = sm.OLS(self.y, X_all)
         self.fit = model.fit()
         self._params = self.fit.params
-        cov_matrix = self.fit.cov_params()
-        self._errs = np.asarray([np.sqrt(cov_matrix[i, i])
-                                 for i in range(cov_matrix.shape[0])])
+        self._errs = self.fit.bse
 
-        self.brk_err = brk_errs(fit.params, fit.cov_params())
+        self.brk_err = brk_errs(self.params, fit.cov_params())
 
         self.get_slopes()
 
