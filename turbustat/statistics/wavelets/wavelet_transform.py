@@ -142,6 +142,8 @@ class Wavelet(object):
             else:
                 p.xlabel("Scales (pixels)")
 
+        return self
+
 
 class Wavelet_Distance(object):
     '''
