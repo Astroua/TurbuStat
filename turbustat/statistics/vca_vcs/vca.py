@@ -5,7 +5,6 @@ import numpy as np
 import warnings
 from numpy.fft import fftshift
 
-from ..psds import pspec
 from ..rfft_to_fft import rfft_to_fft
 from slice_thickness import change_slice_thickness
 from ..base_pspec2 import StatisticBase_PSpec2D
@@ -59,36 +58,6 @@ class VCA(StatisticBase_PSpec2D):
         vca_fft = fftshift(rfft_to_fft(self.cube))
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
-
-        return self
-
-    def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=True, **kwargs):
-        '''
-        Computes the radially averaged power spectrum.
-
-        Parameters
-        ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
-        kwargs : passed to pspec
-        '''
-
-        if return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, **kwargs)
-            self._stddev_flag = True
-        else:
-            self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      **kwargs)
-            self._stddev_flag = False
-
-        if self.phys_units_flag:
-            self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
         return self
 

@@ -6,6 +6,7 @@ import statsmodels.api as sm
 import warnings
 
 from .lm_seg import Lm_Seg
+from .psds import pspec
 
 
 class StatisticBase_PSpec2D(object):
@@ -32,6 +33,34 @@ class StatisticBase_PSpec2D(object):
     @property
     def freqs(self):
         return self._freqs
+
+    def compute_radial_pspec(self, return_stddev=True,
+                             logspacing=True, **kwargs):
+        '''
+        Computes the radially averaged power spectrum.
+
+        Parameters
+        ----------
+        return_stddev : bool, optional
+            Return the standard deviation in the 1D bins.
+        logspacing : bool, optional
+            Return logarithmically spaced bins for the lags.
+        kwargs : passed to pspec
+        '''
+
+        if return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      logspacing=logspacing, **kwargs)
+            self._stddev_flag = True
+        else:
+            self._freqs, self._ps1D = \
+                pspec(self.ps2D, return_stddev=return_stddev,
+                      **kwargs)
+            self._stddev_flag = False
+
+        if self.phys_units_flag:
+            self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   min_fits_pts=10, verbose=False):
