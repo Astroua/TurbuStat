@@ -174,8 +174,10 @@ class PSpec_Distance(object):
             print self.pspec2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.mvc1.plot_fit(show=False, color='b', label=label1)
-            self.mvc2.plot_fit(show=False, color='r', label=label2)
+            self.pspec1.plot_fit(show=False, color='b',
+                                 label=label1, symbol='D')
+            self.pspec2.plot_fit(show=False, color='g',
+                                 label=label2, symbol='o')
             p.legend(loc='best')
             p.show()
 

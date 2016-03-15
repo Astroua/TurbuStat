@@ -131,9 +131,6 @@ class MVC_Distance(object):
     def __init__(self, data1, data2, fiducial_model=None,
                  weight_by_error=False, ang_units=False):
 
-        low_cut = 2. / float(min(min(self.shape1),
-                                 min(self.shape2)))
-
         # Create weighted or non-weighted versions
         if weight_by_error:
             centroid1 = data1["centroid"][0] * \
@@ -206,8 +203,8 @@ class MVC_Distance(object):
             print self.mvc2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.mvc1.plot_fit(show=False, color='b', label=labels1)
-            self.mvc2.plot_fit(show=False, color='r', label=labels2)
+            self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D')
+            self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o')
             p.legend(loc='best')
             p.show()
 
