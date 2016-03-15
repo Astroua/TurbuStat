@@ -158,11 +158,11 @@ class MVC_Distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1], ang_units=ang_units)
-            self.mvc1.run(low_cut=low_cut)
+            self.mvc1.run()
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1], ang_units=ang_units)
-        self.mvc2.run(low_cut=low_cut)
+        self.mvc2.run()
 
         self.ang_units = ang_units
 
