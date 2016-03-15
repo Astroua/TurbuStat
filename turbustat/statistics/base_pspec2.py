@@ -163,7 +163,8 @@ class StatisticBase_PSpec2D(object):
     def slope_err(self):
         return self._slope_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', label=None):
+    def plot_fit(self, show=True, show_2D=False, color='r', label=None,
+                 symbol="D"):
         '''
         Plot the fitted model.
         '''
@@ -200,13 +201,13 @@ class StatisticBase_PSpec2D(object):
         if self._stddev_flag:
             ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
                         yerr=self.ps1D_stddev[good_interval], color=color,
-                        fmt='D', markersize=5, alpha=0.5, capsize=10,
+                        fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
         else:
             p.loglog(self.freqs[good_interval],
-                     self.ps1D[good_interval], color+"D", alpha=0.5,
+                     self.ps1D[good_interval], color+symbol, alpha=0.5,
                      markersize=5)
 
         p.grid(True)
