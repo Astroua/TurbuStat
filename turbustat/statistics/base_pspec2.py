@@ -139,8 +139,6 @@ class StatisticBase_PSpec2D(object):
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
-        else:
-            self.high_cut = self.freqs.max()
 
         x = sm.add_constant(x)
 
@@ -183,8 +181,7 @@ class StatisticBase_PSpec2D(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = np.logical_and(self.freqs >= self.low_cut,
-                                       self.freqs <= self.high_cut)
+        good_interval = clip_func(self.freqs, self.low_cut, self.high_cut)
 
         y_fit = self.fit.fittedvalues
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
