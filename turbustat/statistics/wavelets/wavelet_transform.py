@@ -135,8 +135,10 @@ class Wavelet(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.loglog(self.scales, self.values, 'bD-')
+            p.loglog(self.scales, self.values, 'bD')
+            p.loglog(self.scales, 10**self.fit.fittedvalues, 'b-')
 
+            p.ylabel(r"$T_g$")
             if self.ang_units:
                 p.xlabel("Scales (deg)")
             else:
