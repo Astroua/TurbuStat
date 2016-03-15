@@ -404,7 +404,7 @@ class DendroDistance(object):
             p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.x, self.dendro2.y, 'g0', label=label2)
+            p.plot(self.dendro2.x, self.dendro2.y, 'go', label=label2)
             p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'g')
 
             p.grid(True)
