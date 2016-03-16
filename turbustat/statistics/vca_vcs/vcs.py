@@ -30,9 +30,6 @@ class VCS(object):
 
         self.header = header
         self.cube = cube
-        self.fftcube = None
-        self.correlated_cube = None
-        self.ps1D = None
         self.vel_units = vel_units
 
         if np.isnan(self.cube).any():
@@ -61,22 +58,14 @@ class VCS(object):
         self.vel_freqs = \
             np.abs(fftfreq(self.cube.shape[0])) / self.vel_to_pix
 
-    def compute_fft(self):
+    def compute_pspec(self):
         '''
         Take the FFT of each spectrum in velocity dimension.
         '''
 
-        self.fftcube = rfft_to_fft(self.cube)
-        self.correlated_cube = np.power(self.fftcube, 2.)
-
-    def make_ps1D(self):
-        '''
-        Create a 1D power spectrum by averaging the correlation cube over
-        all pixels.
-        '''
-
+        ps3D = np.power(rfft_to_fft(self.cube), 2.)
         self.ps1D = np.nansum(
-            np.nansum(self.correlated_cube, axis=2), axis=1) /\
+            np.nansum(ps3D, axis=2), axis=1) /\
             self.good_pixel_count
 
     def fit_pspec(self, breaks=None, log_break=True, lg_scale_cut=2,
@@ -180,8 +169,7 @@ class VCS(object):
             Specify where the break point is. If None, attempts to find using
             spline.
         '''
-        self.compute_fft()
-        self.make_ps1D()
+        self.compute_pspec()
         self.fit_pspec(verbose=verbose, breaks=breaks)
 
         if verbose:
