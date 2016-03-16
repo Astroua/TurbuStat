@@ -84,11 +84,9 @@ class Wavelet(object):
 
         for i, an in enumerate(self.scales):
             psi = MexicanHat2DKernel(an)
-            out_slice = slice(int(an), -int(an))
 
             self.Wf[i] = \
-                convolve_fft(np.pad(self.array, int(an), mode='constant'),
-                             psi).real[out_slice, out_slice] * an**factor
+                convolve_fft(self.array, psi).real * an**factor
 
     def make_1D_transform(self):
         '''
