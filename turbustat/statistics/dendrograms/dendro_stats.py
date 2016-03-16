@@ -159,6 +159,10 @@ class Dendrogram_Stats(object):
             Shows the model summary.
         '''
 
+        if len(self.numfeatures) == 1:
+            raise Exception("Must provide multiple min_delta values to perform"
+                            " fitting. Only one value was given.")
+
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
 
