@@ -355,6 +355,8 @@ class BiSpectrum_Distance(object):
         elif metric is 'average':
             self.distance = np.abs(self.bispec1.bicoherence.mean() -
                                    self.bispec2.bicoherence.mean())
+        else:
+            raise ValueError("metric must be 'surface' or 'average'.")
 
         if verbose:
             import matplotlib.pyplot as p
