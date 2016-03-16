@@ -246,11 +246,11 @@ class BiSpectrum(object):
                 k2y = np.asarray([int(k2mag * np.sin(angle))
                                   for angle in phi2])
 
-                k3x = np.asarray([int(k1mag * np.cos(angle) +
-                                      k2mag * np.cos(angle))
+                k3x = np.asarray([int(k1mag * np.cos(ang1) +
+                                      k2mag * np.cos(ang2))
                                   for ang1, ang2 in zip(phi1, phi2)])
-                k3y = np.asarray([int(k1mag * np.sin(angle) +
-                                      k2mag * np.sin(angle))
+                k3y = np.asarray([int(k1mag * np.sin(ang1) +
+                                      k2mag * np.sin(ang2))
                                   for ang1, ang2 in zip(phi1, phi2)])
 
                 samps = fftarr[k1x, k1y] * fftarr[k2x, k2y] * conjfft[k3x, k3y]
@@ -338,7 +338,8 @@ class BiSpectrum_Distance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, metric='average', verbose=False, label1=None,
+                        label2=None):
         '''
         verbose : bool, optional
             Enable plotting.
@@ -348,8 +349,12 @@ class BiSpectrum_Distance(object):
             Object or region name for data2
         '''
 
-        self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
-                                       self.bispec2.bicoherence.ravel())
+        if metric is 'surface':
+            self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
+                                           self.bispec2.bicoherence.ravel())
+        elif metric is 'average':
+            self.distance = np.abs(self.bispec1.bicoherence.mean() -
+                                   self.bispec2.bicoherence.mean())
 
         if verbose:
             import matplotlib.pyplot as p
