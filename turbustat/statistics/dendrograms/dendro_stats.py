@@ -58,14 +58,6 @@ class Dendrogram_Stats(object):
 
         self.cube = cube
 
-        # In the case where only one min_delta is given
-        if "min_delta" in dendro_params:
-            self.min_deltas = [dendro_params["min_delta"]]
-        elif not isinstance(min_deltas, list):
-            self.min_deltas = [min_deltas]
-        else:
-            self.min_deltas = min_deltas
-
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
                                   "min_value": 0.001}
@@ -75,6 +67,14 @@ class Dendrogram_Stats(object):
             #     if key not in poss_keys:
             #         raise KeyError(key + " is not a valid pruning parameter.")
             self.dendro_params = dendro_params
+
+        # In the case where only one min_delta is given
+        if "min_delta" in self.dendro_params and min_deltas is None:
+            self.min_deltas = np.array([self.dendro_params["min_delta"]])
+        elif not isinstance(min_deltas, np.ndarray):
+            self.min_deltas = np.array([min_deltas])
+        else:
+            self.min_deltas = min_deltas
 
         self.numfeatures = np.empty(self.min_deltas.shape)
         self.values = []
