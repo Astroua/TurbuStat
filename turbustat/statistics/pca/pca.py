@@ -37,8 +37,15 @@ class PCA(object):
 
         Parameters
         ----------
+        mean_sub : bool, optional
+            When enabled, subtracts the means of the channels before
+            calculating the covariance. By default, this is disabled to
+            match the Heyer & Brunt method.
         normalize : bool, optional
-            Normalize the set of eigenvalues by the 0th component.
+            Normalize the set of eigenvalues by the 0th component when mean
+            subtraction has not been done. Otherwise this is normalized by the
+            sum of the eigenvalues, so each represents the proportion of
+            variance that eigenvector describes.
         '''
 
         self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
@@ -50,17 +57,19 @@ class PCA(object):
             np.sum(all_eigsvals)
 
         if normalize:
-            self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
+            if mean_sub:
+                self.eigvals = all_eigsvals[:self.n_eigs] / \
+                    np.sum(all_eigsvals[:self.n_eigs])
+            else:
+                self.eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
         else:
             self.eigvals = all_eigsvals[:self.n_eigs]
-
-        return self
 
     @property
     def var_proportion(self):
         return self._var_prop
 
-    def run(self, verbose=False, normalize=True):
+    def run(self, verbose=False, normalize=True, mean_sub=False):
         '''
         Run method. Needed to maintain package standards.
 
@@ -72,7 +81,7 @@ class PCA(object):
             See ```compute_pca```.
         '''
 
-        self.compute_pca(normalize=normalize)
+        self.compute_pca(normalize=normalize, mean_sub=mean_sub)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -86,8 +95,13 @@ class PCA(object):
             p.bar(np.arange(1, self.n_eigs + 1), self.eigvals, 0.5, color='r')
             p.xlim([0, self.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+            if normalize:
+                p.ylabel("Proportion of Variance")
+            else:
+                p.ylabel('Variance')
             p.show()
+
+        return self
 
 
 class PCA_Distance(object):
@@ -108,14 +122,18 @@ class PCA_Distance(object):
         Computed PCA object. Use to avoid recomputing.
     normalize : bool, optional
         Sets whether to normalize the eigenvalues by the 0th eigenvalue.
-
+    mean_sub : bool, optional
+        Subtracts the mean before computing the covariance matrix. The default
+        is to not subtract the mean, as is done in the Heyer & Brunt works.
     '''
 
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None,
-                 normalize=True):
+                 normalize=True, mean_sub=False):
         super(PCA_Distance, self).__init__()
         self.cube1 = cube1
         self.cube2 = cube2
+
+        self.normalize = normalize
 
         if fiducial_model is not None:
             self.pca1 = fiducial_model
@@ -126,9 +144,7 @@ class PCA_Distance(object):
         self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
         self.pca2.run(normalize=normalize)
 
-        self.distance = None
-
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
         Computes the distance between the cubes.
 
@@ -136,6 +152,10 @@ class PCA_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         difference = np.abs((self.pca1.eigvals - self.pca2.eigvals) ** 2.)
@@ -149,21 +169,28 @@ class PCA_Distance(object):
 
             p.subplot(2, 2, 1)
             p.imshow(
-                self.pca1.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca1.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca1.cov_matrix))
             p.colorbar()
-            p.title("PCA1")
+            p.title(label1)
             p.subplot(2, 2, 3)
-            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5,
+                  color='r')
             p.xlim([0, self.pca1.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+            if self.normalize:
+                p.ylabel("Proportion of Variance")
+            else:
+                p.ylabel('Variance')
             p.subplot(2, 2, 2)
             p.imshow(
-                self.pca2.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca2.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca2.cov_matrix))
             p.colorbar()
-            p.title("PCA2")
+            p.title(label2)
             p.subplot(2, 2, 4)
-            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5,
+                  color='r')
             p.xlim([0, self.pca2.n_eigs + 1])
             p.xlabel('Eigenvalues')
 

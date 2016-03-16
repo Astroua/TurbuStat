@@ -23,8 +23,8 @@ class VCA(StatisticBase_PSpec2D):
         Corresponding FITS header.
     slice_sizes : float or int, optional
         Slices to degrade the cube to.
-    phys_units : bool, optional
-        Sets whether physical scales can be used.
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     '''
 
     def __init__(self, cube, header, slice_size=None, ang_units=False):
@@ -41,7 +41,7 @@ class VCA(StatisticBase_PSpec2D):
 
         if slice_size != 1.0:
             self.cube = \
-                change_slice_thickness(self.cube.copy(),
+                change_slice_thickness(self.cube,
                                        slice_thickness=self.slice_size)
 
         self.ang_units = ang_units
@@ -56,8 +56,6 @@ class VCA(StatisticBase_PSpec2D):
         vca_fft = fftshift(rfft_to_fft(self.cube))
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
-
-        return self
 
     def run(self, verbose=False, brk=None, return_stddev=True,
             logspacing=True):
@@ -109,15 +107,17 @@ class VCA_Distance(object):
         spline. If not specified, no break point will be used.
     fiducial_model : VCA
         Computed VCA object. use to avoid recomputing.
+    ang_units : bool, optional
+        Convert frequencies to angular units using the given header.
     '''
 
     def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
-                 fiducial_model=None):
+                 fiducial_model=None, ang_units=False):
         super(VCA_Distance, self).__init__()
         cube1, header1 = cube1
         cube2, header2 = cube2
-        self.shape1 = cube1.shape[1:]  # Shape of the plane
-        self.shape2 = cube2.shape[1:]
+
+        self.ang_units = ang_units
 
         assert isinstance(slice_size, float)
 
@@ -128,12 +128,14 @@ class VCA_Distance(object):
             self.vca1 = fiducial_model
         else:
             self.vca1 = \
-                VCA(cube1, header1, slice_size=slice_size).run(brk=breaks[0])
+                VCA(cube1, header1, slice_size=slice_size,
+                    ang_units=ang_units).run(brk=breaks[0])
 
         self.vca2 = \
-            VCA(cube2, header2, slice_size=slice_size).run(brk=breaks[1])
+            VCA(cube2, header2, slice_size=slice_size,
+                ang_units=ang_units).run(brk=breaks[1])
 
-    def distance_metric(self, labels=None, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -142,10 +144,12 @@ class VCA_Distance(object):
 
         Parameters
         ----------
-        labels : list, optional
-            Contains names of datacubes given in order.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         # Construct t-statistic
@@ -155,18 +159,16 @@ class VCA_Distance(object):
                            self.vca2.slope_err**2))
 
         if verbose:
-            if labels is None:
-                labels = ['1', '2']
 
-            print "Fit to %s" % (labels[0])
+            print "Fit to %s" % (label1)
             print self.vca1.fit.summary()
-            print "Fit to %s" % (labels[1])
+            print "Fit to %s" % (label2)
             print self.vca2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.vca1.plot_fit(show=False, color='b', label=labels[0])
-            self.vca2.plot_fit(show=False, color='r', label=labels[1])
-            p.legend(loc='best')
+            self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D')
+            self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o')
+            p.legend(loc='upper right')
             p.show()
 
         return self

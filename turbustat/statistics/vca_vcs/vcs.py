@@ -4,6 +4,7 @@
 import numpy as np
 import warnings
 from numpy.fft import fftfreq
+from astropy import units as u
 
 from ..lm_seg import Lm_Seg
 from ..rfft_to_fft import rfft_to_fft
@@ -20,19 +21,16 @@ class VCS(object):
         Data cube.
     header : FITS header
         Corresponding FITS header.
-    phys_units : bool, optional
-        Sets whether physical scales can be used.
+    vel_units : bool, optional
+        Convert frequencies to the spectral unit in the header.
     '''
 
-    def __init__(self, cube, header, phys_units=False):
+    def __init__(self, cube, header, vel_units=False):
         super(VCS, self).__init__()
 
         self.header = header
         self.cube = cube
-        self.fftcube = None
-        self.correlated_cube = None
-        self.ps1D = None
-        self.phys_units = phys_units
+        self.vel_units = vel_units
 
         if np.isnan(self.cube).any():
             self.cube[np.isnan(self.cube)] = 0
@@ -42,41 +40,33 @@ class VCS(object):
             self.good_pixel_count = float(
                 self.cube.shape[1] * self.cube.shape[2])
 
-        # Lazy check to make sure we have units of km/s
-        if np.abs(self.header["CDELT3"]) > 1:
-            self.vel_to_pix = np.abs(self.header["CDELT3"]) / 1000.
+        if vel_units:
+            try:
+                spec_unit = u.Unit(header["CUNIT3"])
+                self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
+                                   spec_unit).to(u.km/u.s).value
+            except (KeyError, u.UnitsError) as e:
+                print("Spectral unit not in the header or it cannot be parsed "
+                      "by astropy.units. Using pixel units.")
+                print(e)
+                self.vel_to_pix = 1.0
         else:
-            self.vel_to_pix = np.abs(self.header["CDELT3"])
+            self.vel_to_pix = 1.0
 
         self.vel_channels = np.arange(1, self.cube.shape[0], 1)
 
-        if self.phys_units:
-            self.vel_freqs = np.abs(
-                fftfreq(self.cube.shape[0])) / self.vel_to_pix
-        else:
-            self.vel_freqs = np.abs(fftfreq(self.cube.shape[0]))
+        self.vel_freqs = \
+            np.abs(fftfreq(self.cube.shape[0])) / self.vel_to_pix
 
-    def compute_fft(self):
+    def compute_pspec(self):
         '''
         Take the FFT of each spectrum in velocity dimension.
         '''
 
-        self.fftcube = rfft_to_fft(self.cube)
-        self.correlated_cube = np.power(self.fftcube, 2.)
-
-        return self
-
-    def make_ps1D(self):
-        '''
-        Create a 1D power spectrum by averaging the correlation cube over
-        all pixels.
-        '''
-
+        ps3D = np.power(rfft_to_fft(self.cube), 2.)
         self.ps1D = np.nansum(
-            np.nansum(self.correlated_cube, axis=2), axis=1) /\
+            np.nansum(ps3D, axis=2), axis=1) /\
             self.good_pixel_count
-
-        return self
 
     def fit_pspec(self, breaks=None, log_break=True, lg_scale_cut=2,
                   verbose=False):
@@ -151,8 +141,6 @@ class VCS(object):
                    np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut]), breaks)
         self.fit.fit_model(verbose=verbose)
 
-        return self
-
     @property
     def slopes(self):
         return self.fit.slopes
@@ -181,17 +169,16 @@ class VCS(object):
             Specify where the break point is. If None, attempts to find using
             spline.
         '''
-        self.compute_fft()
-        self.make_ps1D()
+        self.compute_pspec()
         self.fit_pspec(verbose=verbose, breaks=breaks)
 
         if verbose:
             import matplotlib.pyplot as p
 
-            if self.phys_units:
-                xlab = r"log k$_v$ $(km^{-1}s)$"
+            if self.vel_units:
+                xlab = r"log k$_v$/$(km^{-1}s)$"
             else:
-                xlab = r"log k (pixel$^{-1}$)"
+                xlab = r"log k$_v$/pixel$^{-1}$)"
 
             p.loglog(self.vel_freqs, self.ps1D, "bD", label='Data')
             p.loglog(10**self.fit.x, 10**self.fit.model(self.fit.x), 'r',
@@ -226,12 +213,17 @@ class VCS_Distance(object):
         spline.
     fiducial_model : VCS
         Computed VCS object. use to avoid recomputing.
+    vel_units : bool, optional
+        Convert frequencies to the spectral unit in the headers.
     '''
 
-    def __init__(self, cube1, cube2, breaks=None, fiducial_model=None):
+    def __init__(self, cube1, cube2, breaks=None, fiducial_model=None,
+                 vel_units=False):
         super(VCS_Distance, self).__init__()
         self.cube1, self.header1 = cube1
         self.cube2, self.header2 = cube2
+
+        self.vel_units = vel_units
 
         if not isinstance(breaks, list) or not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
@@ -239,11 +231,13 @@ class VCS_Distance(object):
         if fiducial_model is not None:
             self.vcs1 = fiducial_model
         else:
-            self.vcs1 = VCS(self.cube1, self.header1).run(breaks=breaks[0])
+            self.vcs1 = VCS(self.cube1, self.header1,
+                            vel_units=vel_units).run(breaks=breaks[0])
 
-        self.vcs2 = VCS(self.cube2, self.header2).run(breaks=breaks[1])
+        self.vcs2 = VCS(self.cube2, self.header2,
+                        vel_units=vel_units).run(breaks=breaks[1])
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -254,6 +248,10 @@ class VCS_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         # Now construct the t-statistics for each portion
@@ -290,16 +288,21 @@ class VCS_Distance(object):
             print "Fit 2"
             print self.vcs2.fit.fit.summary()
 
+            if self.vel_units:
+                xlab = r"log k$_v$/$(km^{-1}s)$"
+            else:
+                xlab = r"log k$_v$/pixel$^{-1}$"
+
             import matplotlib.pyplot as p
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.3)
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'g',
-                   label='Fit 1')
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'mD', alpha=0.3)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'r',
-                   label='Fit 2')
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
+                   label=label1)
+            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
+                   label=label2)
+            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
             p.grid(True)
             p.legend()
-            p.xlabel(r"log k$_v$")
+            p.xlabel(xlab)
             p.ylabel(r"$P_{1}(k_v)$")
             p.show()
 

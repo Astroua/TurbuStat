@@ -139,8 +139,6 @@ class StatisticBase_PSpec2D(object):
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
-        else:
-            self.high_cut = self.freqs.max()
 
         x = sm.add_constant(x)
 
@@ -149,11 +147,7 @@ class StatisticBase_PSpec2D(object):
         self.fit = model.fit()
 
         self._slope = self.fit.params[1]
-
-        cov_matrix = self.fit.cov_params()
-        self._slope_err = np.sqrt(cov_matrix[1, 1])
-
-        return self
+        self._slope_err = self.fit.bse[1]
 
     @property
     def slope(self):
@@ -163,7 +157,8 @@ class StatisticBase_PSpec2D(object):
     def slope_err(self):
         return self._slope_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', label=None):
+    def plot_fit(self, show=True, show_2D=False, color='r', label=None,
+                 symbol="D"):
         '''
         Plot the fitted model.
         '''
@@ -171,9 +166,9 @@ class StatisticBase_PSpec2D(object):
         import matplotlib.pyplot as p
 
         if self.ang_units:
-            xlab = r"log k/deg$^{-1}$"
+            xlab = r"k/deg$^{-1}$"
         else:
-            xlab = r"log k/pixel$^{-1}$"
+            xlab = r"k/pixel$^{-1}$"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -186,28 +181,35 @@ class StatisticBase_PSpec2D(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = np.logical_and(self.freqs >= self.low_cut,
-                                       self.freqs <= self.high_cut)
+        good_interval = clip_func(self.freqs, self.low_cut, self.high_cut)
 
         y_fit = self.fit.fittedvalues
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
-        ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
-                  label=label, linewidth=2)
-        ax.set_xlabel(xlab)
-        ax.set_ylabel(r"P$_2(K)$")
-
         if self._stddev_flag:
-            ax.errorbar(self.freqs[good_interval], self.ps1D[good_interval],
-                        yerr=self.ps1D_stddev[good_interval], color=color,
-                        fmt='D', markersize=5, alpha=0.5, capsize=10,
+            ax.errorbar(np.log10(self.freqs[good_interval]),
+                        np.log10(self.ps1D[good_interval]),
+                        yerr=0.434*(self.ps1D_stddev[good_interval] /
+                                    self.ps1D[good_interval]),
+                        color=color,
+                        fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
-            ax.set_xscale("log", nonposy='clip')
-            ax.set_yscale("log", nonposy='clip')
+
+            ax.plot(np.log10(self.freqs[fit_index]), y_fit, color+'-',
+                    label=label, linewidth=2)
+            ax.set_xlabel("log "+xlab)
+            ax.set_ylabel(r"log P$_2(K)$")
+
         else:
-            p.loglog(self.freqs[good_interval],
-                     self.ps1D[good_interval], color+"D", alpha=0.5,
-                     markersize=5)
+            ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
+                      label=label, linewidth=2)
+
+            ax.loglog(self.freqs[good_interval],
+                      self.ps1D[good_interval], color+symbol, alpha=0.5,
+                      markersize=5)
+
+            ax.set_xlabel(xlab)
+            ax.set_ylabel(r"P$_2(K)$")
 
         p.grid(True)
 

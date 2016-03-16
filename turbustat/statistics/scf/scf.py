@@ -17,13 +17,18 @@ class SCF(object):
     ----------
     cube : numpy.ndarray
         Data cube.
+    header : FITS header
+        Header for the cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
+    ang_units : bool, optional
+        Convert the lags to angular units using the given header.
     '''
 
-    def __init__(self, cube, size=11):
+    def __init__(self, cube, header, size=11, ang_units=False):
         super(SCF, self).__init__()
         self.cube = cube
+        self.header = header
         if size % 2 == 0:
             print "Size must be odd. Reducing size to next lowest odd number."
             self.size = size - 1
@@ -32,6 +37,8 @@ class SCF(object):
 
         self._scf_surface = None
         self._scf_spectrum_stddev = None
+
+        self.ang_units = ang_units
 
     @property
     def scf_surface(self):
@@ -74,8 +81,6 @@ class SCF(object):
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
                 self._scf_surface[i+self.size/2, j+self.size/2] = scf_value
 
-        return self
-
     def compute_spectrum(self, logspacing=False, return_stddev=False,
                          **kwargs):
         '''
@@ -108,6 +113,9 @@ class SCF(object):
                 pspec(self.scf_surface, logspacing=logspacing,
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
+
+        if self.ang_units:
+            self._lags *= np.abs(self.header["CDELT2"])
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -211,7 +219,11 @@ class SCF(object):
             else:
                 p.semilogx(self.lags, self.scf_spectrum, 'kD-',
                            markersize=5)
-            ax.set_xlabel("Lag (pixel)")
+
+            if self.ang_units:
+                ax.set_xlabel("Lag (deg)")
+            else:
+                ax.set_xlabel("Lag (pixel)")
 
             p.tight_layout()
             p.show()
@@ -236,29 +248,30 @@ class SCF_Distance(object):
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
         Sets whether to apply the 1/r^2 weighting to the distance.
-
+    ang_units : bool, optional
+        Convert the lags to angular units using the given header.
     '''
 
-    def __init__(self, cube1, cube2, size=11, fiducial_model=None,
-                 weighted=True):
+    def __init__(self, cube1, cube2, size=21, fiducial_model=None,
+                 weighted=True, ang_units=False):
         super(SCF_Distance, self).__init__()
-        self.cube1 = cube1
-        self.cube2 = cube2
+        cube1, header1 = cube1
+        cube2, header2 = cube2
         self.size = size
         self.weighted = weighted
 
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(self.cube1, self.size)
-            self.scf1.run()
+            self.scf1 = SCF(cube1, header1, size=self.size,
+                            ang_units=ang_units)
+            self.scf1.run(return_stddev=True)
 
-        self.scf2 = SCF(self.cube2, self.size)
-        self.scf2.run()
+        self.scf2 = SCF(cube2, header2, size=self.size,
+                        ang_units=ang_units)
+        self.scf2.run(return_stddev=True)
 
-        self.distance = None
-
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
         Compute the distance between the surfaces.
 
@@ -266,7 +279,10 @@ class SCF_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         dx = np.arange(self.size) - self.size / 2
@@ -281,31 +297,39 @@ class SCF_Distance(object):
         else:
             dist_weight = np.ones((self.size, self.size))
 
-        difference = (
-            (self.scf1.scf_surface -
-             self.scf2.scf_surface) * dist_weight) ** 2.
-        self.distance = np.sqrt(
-            np.nansum(difference) / np.sum(np.isfinite(difference)))
+        difference = (self.scf1.scf_surface - self.scf2.scf_surface) ** 2. * \
+            dist_weight
+        self.distance = np.sqrt(np.sum(difference) / np.sum(dist_weight))
 
         if verbose:
             import matplotlib.pyplot as p
 
             # print "Distance: %s" % (self.distance)
 
-            p.subplot(1, 3, 1)
+            p.subplot(2, 2, 1)
             p.imshow(
                 self.scf1.scf_surface, origin="lower", interpolation="nearest")
-            p.title("SCF1")
+            p.title(label1)
             p.colorbar()
-            p.subplot(1, 3, 2)
+            p.subplot(2, 2, 2)
             p.imshow(
-                self.scf2.scf_surface, origin="lower", interpolation="nearest")
-            p.title("SCF2")
+                self.scf2.scf_surface, origin="lower", interpolation="nearest",
+                label=label2)
+            p.title(label2)
             p.colorbar()
-            p.subplot(1, 3, 3)
+            p.subplot(2, 2, 3)
             p.imshow(difference, origin="lower", interpolation="nearest")
-            p.title("Difference")
+            p.title("Weighted Difference")
             p.colorbar()
+            ax = p.subplot(2, 2, 4)
+            ax.errorbar(self.scf1.lags, self.scf1.scf_spectrum,
+                        yerr=self.scf1.scf_spectrum_stddev,
+                        fmt='D-', color='b', markersize=5, label=label1)
+            ax.errorbar(self.scf2.lags, self.scf2.scf_spectrum,
+                        yerr=self.scf2.scf_spectrum_stddev,
+                        fmt='o-', color='g', markersize=5, label=label2)
+            ax.set_xscale("log", nonposy='clip')
+            ax.legend(loc='upper right')
             p.tight_layout()
             p.show()
 

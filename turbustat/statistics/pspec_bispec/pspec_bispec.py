@@ -15,7 +15,7 @@ from ..base_pspec2 import StatisticBase_PSpec2D
 class PowerSpectrum(StatisticBase_PSpec2D):
 
     """
-    Compute the power spectrum of a given image. (Burkhart et al., 2010)
+    Compute the power spectrum of a given image. (e.g., Burkhart et al., 2010)
 
     Parameters
     ----------
@@ -23,7 +23,10 @@ class PowerSpectrum(StatisticBase_PSpec2D):
         2D image.
     header : FITS header
         The image header. Needed for the pixel scale.
-
+    weights : numpy.ndarray
+        Weights to be applied to the image.
+    ang_units : bool, optional
+        Convert frequencies into angular units using the given header.
     """
 
     def __init__(self, img, header, weights=None, ang_units=False):
@@ -60,7 +63,7 @@ class PowerSpectrum(StatisticBase_PSpec2D):
     def run(self, verbose=False, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5):
         '''
-        Full computation of MVC.
+        Full computation of the spatial power spectrum.
 
         Parameters
         ----------
@@ -79,6 +82,7 @@ class PowerSpectrum(StatisticBase_PSpec2D):
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
+
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
         if verbose:
@@ -99,39 +103,43 @@ class PSpec_Distance(object):
     ----------
 
     data1 : dict
-        Dictionary containing necessary property arrays.
+        List containing the integrated intensity image and its header.
     data2 : dict
-        Dictionary containing necessary property arrays.
+        List containing the integrated intensity image and its header.
+    weights1 : numpy.ndarray, optional
+        Weights to apply to data1
+    weights2 : numpy.ndarray, optional
+        Weights to apply to data2
     fiducial_model : PowerSpectrum
         Computed PowerSpectrum object. use to avoid recomputing.
-
+    ang_units : bool, optional
+        Convert the frequencies to angular units using the header.
     """
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None):
+                 fiducial_model=None, ang_units=False):
         super(PSpec_Distance, self).__init__()
 
-        self.shape1 = data1[0].shape
-        self.shape2 = data2[0].shape
+        self.ang_units = ang_units
 
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1[0],
                                         data1[1],
-                                        weights=weights1)
+                                        weights=weights1, ang_units=ang_units)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2[0],
                                     data2[1],
-                                    weights=weights2)
+                                    weights=weights2, ang_units=ang_units)
         self.pspec2.run()
 
         self.results = None
         self.distance = None
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        labels=None):
+                        label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -150,6 +158,10 @@ class PSpec_Distance(object):
             significant scatter.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for data1
+        label2 : str, optional
+            Object or region name for data2
         '''
 
         self.distance = \
@@ -158,17 +170,14 @@ class PSpec_Distance(object):
                            self.pspec2.slope_err**2))
 
         if verbose:
-            if labels is None:
-                labels = ['1', '2']
-
-            print "Fit to %s" % (labels[0])
             print self.pspec1.fit.summary()
-            print "Fit to %s" % (labels[1])
             print self.pspec2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.mvc1.plot_fit(show=False, color='b', label=labels[0])
-            self.mvc2.plot_fit(show=False, color='r', label=labels[1])
+            self.pspec1.plot_fit(show=False, color='b',
+                                 label=label1, symbol='D')
+            self.pspec2.plot_fit(show=False, color='g',
+                                 label=label2, symbol='o')
             p.legend(loc='best')
             p.show()
 
@@ -237,11 +246,11 @@ class BiSpectrum(object):
                 k2y = np.asarray([int(k2mag * np.sin(angle))
                                   for angle in phi2])
 
-                k3x = np.asarray([int(k1mag * np.cos(angle) +
-                                      k2mag * np.cos(angle))
+                k3x = np.asarray([int(k1mag * np.cos(ang1) +
+                                      k2mag * np.cos(ang2))
                                   for ang1, ang2 in zip(phi1, phi2)])
-                k3y = np.asarray([int(k1mag * np.sin(angle) +
-                                      k2mag * np.sin(angle))
+                k3y = np.asarray([int(k1mag * np.sin(ang1) +
+                                      k2mag * np.sin(ang2))
                                   for ang1, ang2 in zip(phi1, phi2)])
 
                 samps = fftarr[k1x, k1y] * fftarr[k2x, k2y] * conjfft[k3x, k3y]
@@ -257,8 +266,6 @@ class BiSpectrum(object):
 
         self.bicoherence = (np.abs(self.bispectrum) / biconorm)
         self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
-
-        return self
 
     def run(self, nsamples=100, verbose=False):
         '''
@@ -295,6 +302,8 @@ class BiSpectrum(object):
 
             p.show()
 
+        return self
+
 
 class BiSpectrum_Distance(object):
 
@@ -329,40 +338,56 @@ class BiSpectrum_Distance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, metric='average', verbose=False, label1=None,
+                        label2=None):
+        '''
+        verbose : bool, optional
+            Enable plotting.
+        label1 : str, optional
+            Object or region name for data1
+        label2 : str, optional
+            Object or region name for data2
+        '''
 
-        self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
-                                       self.bispec2.bicoherence.ravel())
+        if metric is 'surface':
+            self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
+                                           self.bispec2.bicoherence.ravel())
+        elif metric is 'average':
+            self.distance = np.abs(self.bispec1.bicoherence.mean() -
+                                   self.bispec2.bicoherence.mean())
+        else:
+            raise ValueError("metric must be 'surface' or 'average'.")
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(1, 3, 1)
-            p.title("Bicoherence 1")
-            p.imshow(
+            ax1 = p.subplot(221)
+            ax1.set_title(label1)
+            ax1.imshow(
                 self.bispec1.bicoherence, origin="lower",
-                interpolation="nearest")
-            p.colorbar()
-            p.xlabel("k1")
-            p.ylabel("k2")
+                interpolation="nearest", vmax=1.0, vmin=0.0)
+            ax1.set_xlabel(r"$k_1$")
+            ax1.set_ylabel(r"$k_2$")
 
-            p.subplot(1, 3, 2)
-            p.title("Bicoherence 2")
-            p.imshow(
+            ax2 = p.subplot(223)
+            ax2.set_title(label2)
+            ax2.imshow(
                 self.bispec2.bicoherence, origin="lower",
-                interpolation="nearest")
-            p.colorbar()
-            p.xlabel("k1")
-            p.ylabel("k2")
+                interpolation="nearest", vmax=1.0, vmin=0.0)
+            ax2.set_xlabel(r"$k_1$")
+            ax2.set_ylabel(r"$k_2$")
 
-            p.subplot(1, 3, 3)
-            p.title("Difference")
-            p.imshow(np.abs(self.bispec1.bicoherence - self.bispec2.bicoherence),
+            ax3 = p.subplot(122)
+            ax3.set_title("Difference")
+            p.imshow(np.abs(self.bispec1.bicoherence -
+                            self.bispec2.bicoherence),
                      origin="lower", interpolation="nearest",
                      vmax=1.0, vmin=0.0)
-            p.colorbar()
-            p.xlabel("k1")
-            p.ylabel("k2")
+            cbar = p.colorbar(ax=ax3)
+            ax3.set_xlabel(r"$k_1$")
+            ax3.set_ylabel(r"$k_2$")
+
+            p.tight_layout()
 
             p.show()
 

@@ -23,7 +23,9 @@ class MVC(StatisticBase_PSpec2D):
     header : FITS header
         Header of any of the arrays. Used only to get the
         spatial scale.
-
+    ang_units : bool, optional
+        When enabled, the frequencies are converted to 1/deg using the
+        given header.
     """
 
     def __init__(self, centroid, moment0, linewidth, header, ang_units=False):
@@ -69,8 +71,6 @@ class MVC(StatisticBase_PSpec2D):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-        return self
-
     def run(self, verbose=False, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5):
         '''
@@ -93,6 +93,7 @@ class MVC(StatisticBase_PSpec2D):
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
+
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
 
@@ -105,10 +106,8 @@ class MVC(StatisticBase_PSpec2D):
         return self
 
 
-class MVC_distance(object):
-
+class MVC_Distance(object):
     """
-
     Distance metric for MVC.
 
     Parameters
@@ -130,14 +129,7 @@ class MVC_distance(object):
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
-                 weight_by_error=False):
-        # super(mvc_distance, self).__init__()
-
-        self.shape1 = data1["centroid"][0].shape
-        self.shape2 = data2["centroid"][0].shape
-
-        low_cut = 2. / float(min(min(self.shape1),
-                                 min(self.shape2)))
+                 weight_by_error=False, ang_units=False):
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -165,18 +157,17 @@ class MVC_distance(object):
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
-                            data1["centroid"][1])
-            self.mvc1.run(low_cut=low_cut)
+                            data1["centroid"][1], ang_units=ang_units)
+            self.mvc1.run()
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
-                        data2["centroid"][1])
-        self.mvc2.run(low_cut=low_cut)
+                        data2["centroid"][1], ang_units=ang_units)
+        self.mvc2.run()
 
-        self.results = None
-        self.distance = None
+        self.ang_units = ang_units
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        labels=None):
+                        label1=None, label2=None):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -194,6 +185,10 @@ class MVC_distance(object):
             size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for dataset1
+        label2 : str, optional
+            Object or region name for dataset2
         '''
 
         # Construct t-statistic
@@ -203,17 +198,13 @@ class MVC_distance(object):
                            self.mvc2.slope_err**2))
 
         if verbose:
-            if labels is None:
-                labels = ['1', '2']
 
-            print "Fit to %s" % (labels[0])
             print self.mvc1.fit.summary()
-            print "Fit to %s" % (labels[1])
             print self.mvc2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.mvc1.plot_fit(show=False, color='b', label=labels[0])
-            self.mvc2.plot_fit(show=False, color='r', label=labels[1])
+            self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D')
+            self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o')
             p.legend(loc='best')
             p.show()
 

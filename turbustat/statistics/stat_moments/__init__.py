@@ -1,1 +1,1 @@
-from highstatmoments import StatMoments, StatMomentsDistance
+from highstatmoments import StatMoments, StatMoments_Distance

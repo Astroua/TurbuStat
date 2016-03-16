@@ -4,7 +4,7 @@
 import numpy as np
 from scipy.stats import nanmean, nanstd
 
-from ..stats_utils import hellinger, kl_divergence, standardize, common_histogram_bins
+from ..stats_utils import hellinger, kl_divergence, common_histogram_bins
 
 
 class StatMoments(object):
@@ -61,8 +61,6 @@ class StatMoments(object):
         self.mean, self.variance, self.skewness, self.kurtosis =\
             compute_moments(self.img)
 
-        return self
-
     def compute_spatial_distrib(self):
         '''
         Compute the moments over circular region with the specified radius.
@@ -102,8 +100,6 @@ class StatMoments(object):
                         i - self.radius, j - self.radius] = moments[2]
                     self.kurtosis_array[
                         i - self.radius, j - self.radius] = moments[3]
-
-        return self
 
     @property
     def mean_extrema(self):
@@ -172,8 +168,6 @@ class StatMoments(object):
         kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
-        return self
-
     def run(self, verbose=False, kwargs={}):
         '''
         Compute the entire method.
@@ -221,7 +215,7 @@ class StatMoments(object):
         return self
 
 
-class StatMomentsDistance(object):
+class StatMoments_Distance(object):
 
     '''
     Compute the distance between two images based on their moments.
@@ -255,7 +249,7 @@ class StatMomentsDistance(object):
 
     def __init__(self, image1, image2, radius=5, nbins=None,
                  periodic1=False, periodic2=False, fiducial_model=None):
-        super(StatMomentsDistance, self).__init__()
+        super(StatMoments_Distance, self).__init__()
 
         if nbins is None:
             self.nbins = _auto_nbins(image1.size, image2.size)
@@ -301,7 +295,8 @@ class StatMomentsDistance(object):
         self.moments2.make_spatial_histograms(skewness_bins=skew_bins,
                                               kurtosis_bins=kurt_bins)
 
-    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None):
+    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None,
+                        label1=None, label2=None):
         '''
         Compute the distance.
 
@@ -313,6 +308,10 @@ class StatMomentsDistance(object):
             Enables plotting.
         nbins : int, optional
             Bins to use in the histogram calculation.
+        label1 : str, optional
+            Object or region name for image1
+        label2 : str, optional
+            Object or region name for image2
         '''
 
         self.create_common_histograms(nbins=nbins)
@@ -342,14 +341,16 @@ class StatMomentsDistance(object):
             import matplotlib.pyplot as p
             p.subplot(121)
             p.plot(self.moments1.kurtosis_hist[0],
-                   self.moments1.kurtosis_hist[1], 'b',
-                   self.moments2.kurtosis_hist[0],
-                   self.moments2.kurtosis_hist[1], 'g')
+                   self.moments1.kurtosis_hist[1], 'b', label=label1)
+            p.plot(self.moments2.kurtosis_hist[0],
+                   self.moments2.kurtosis_hist[1], 'g', label=label2)
             p.fill(self.moments1.kurtosis_hist[0],
                    self.moments1.kurtosis_hist[1], 'b',
                    self.moments2.kurtosis_hist[0],
                    self.moments2.kurtosis_hist[1], 'g', alpha=0.5)
             p.xlabel("Kurtosis")
+            p.ylabel("PDF")
+            p.legend(loc='upper right')
             p.subplot(122)
             p.plot(self.moments1.skewness_hist[0],
                    self.moments1.skewness_hist[1], 'b',

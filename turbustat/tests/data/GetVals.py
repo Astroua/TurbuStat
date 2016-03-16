@@ -25,9 +25,9 @@ wavelet_val = wavelet_distance.wt1.values
 
 ## MVC#
 
-from turbustat.statistics import MVC_distance
+from turbustat.statistics import MVC_Distance
 
-mvc_distance = MVC_distance(dataset1, dataset2).distance_metric(verbose=False)
+mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric(verbose=False)
 
 mvc_val = mvc_distance.mvc1.ps1D
 
@@ -98,11 +98,11 @@ tsallis_val = tsallis_distance.tsallis1.tsallis_fits
 
 # High-order stats
 
-from turbustat.statistics import StatMomentsDistance
+from turbustat.statistics import StatMoments_Distance
 
 moment_distance = \
-    StatMomentsDistance(dataset1["integrated_intensity"][0],
-                        dataset2["integrated_intensity"][0]).distance_metric(verbose=False)
+    StatMoments_Distance(dataset1["integrated_intensity"][0],
+                         dataset2["integrated_intensity"][0]).distance_metric(verbose=False)
 
 kurtosis_val = moment_distance.moments1.kurtosis_hist[1]
 skewness_val = moment_distance.moments1.skewness_hist[1]
@@ -119,8 +119,8 @@ pca_val = pca_distance.pca1.eigvals
 
 from turbustat.statistics import SCF_Distance
 
-scf_distance = SCF_Distance(dataset1["cube"][0],
-                            dataset2["cube"][0]).distance_metric(verbose=False)
+scf_distance = SCF_Distance(dataset1["cube"],
+                            dataset2["cube"], size=11).distance_metric(verbose=False)
 scf_val = scf_distance.scf1.scf_surface
 
 ## Cramer Statistic

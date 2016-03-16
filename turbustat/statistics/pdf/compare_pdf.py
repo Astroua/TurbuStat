@@ -1,14 +1,7 @@
 # Licensed under an MIT open source license - see LICENSE
 
-'''
-
-The density PDF as described by Kowal et al. (2007)
-
-'''
-
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
-import warnings
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
@@ -84,8 +77,6 @@ class PDF(object):
 
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-        return self
-
     @property
     def is_standardized(self):
         return self._standardize_flag
@@ -109,8 +100,6 @@ class PDF(object):
         self._ecdf_function = ECDF(self.data)
 
         self._ecdf = self._ecdf_function(self.bins)
-
-        return self
 
     @property
     def ecdf(self):
@@ -258,8 +247,6 @@ class PDF_Distance(object):
 
         self.hellinger_distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
 
-        return self
-
     def compute_ks_distance(self):
         '''
         Compute the distance using the KS Test.
@@ -269,8 +256,6 @@ class PDF_Distance(object):
 
         self.ks_distance = D
         self.ks_pval = p
-
-        return self
 
     def compute_ad_distance(self):
         '''
@@ -286,7 +271,9 @@ class PDF_Distance(object):
         # self.ad_distance = D
         # self.ad_pval = p
 
-    def distance_metric(self, statistic='all', labels=None, verbose=False):
+    def distance_metric(self, statistic='all', verbose=False,
+                        label1=None, label2=None,
+                        show_data=True):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -300,6 +287,12 @@ class PDF_Distance(object):
             Sets the labels in the output plot.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for img1
+        label2 : str, optional
+            Object or region name for img2
+        show_data : bool, optional
+            Plot the moment0, image, or 1D data.
         '''
 
         if statistic is 'all':
@@ -320,54 +313,55 @@ class PDF_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
             # PDF
-            if labels is None:
-                label1 = "Input 1"
-                label2 = "Input 2"
+            if show_data:
+                p.subplot(131)
             else:
-                label1 = labels[0]
-                label2 = labels[1]
-            p.subplot(131)
-            p.loglog(self.bin_centers,
-                     self.PDF1.pdf, 'b-', label=label1)
-            p.loglog(self.bin_centers,
-                     self.PDF2.pdf, 'g-', label=label2)
+                p.subplot(121)
+            p.plot(self.bin_centers,
+                   self.PDF1.pdf, 'b-', label=label1)
+            p.plot(self.bin_centers,
+                   self.PDF2.pdf, 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("PDF")
 
             # ECDF
-            p.subplot(132)
-            p.semilogx(self.bin_centers, self.PDF1.ecdf, 'b-')
-            p.semilogx(self.bin_centers, self.PDF2.ecdf, 'g-')
+            if show_data:
+                p.subplot(132)
+            else:
+                p.subplot(122)
+            p.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
+            p.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("ECDF")
 
             # Array representation.
-            p.subplot(233)
-            if self.img1.ndim == 1:
-                p.plot(self.img1, 'b-')
-            elif self.img1.ndim == 2:
-                p.imshow(self.img1, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img1.ndim == 3:
-                p.imshow(np.nansum(self.img1, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
+            if show_data:
+                p.subplot(233)
+                if self.img1.ndim == 1:
+                    p.plot(self.img1, 'b-')
+                elif self.img1.ndim == 2:
+                    p.imshow(self.img1, origin="lower",
+                             interpolation="nearest", cmap="binary")
+                elif self.img1.ndim == 3:
+                    p.imshow(np.nansum(self.img1, axis=0), origin="lower",
+                             interpolation="nearest", cmap="binary")
+                else:
+                    print("Visual representation works only up to 3D.")
 
-            p.subplot(236)
-            if self.img2.ndim == 1:
-                p.plot(self.img2, 'b-')
-            elif self.img2.ndim == 2:
-                p.imshow(self.img2, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img2.ndim == 3:
-                p.imshow(np.nansum(self.img2, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
+                p.subplot(236)
+                if self.img2.ndim == 1:
+                    p.plot(self.img2, 'b-')
+                elif self.img2.ndim == 2:
+                    p.imshow(self.img2, origin="lower",
+                             interpolation="nearest", cmap="binary")
+                elif self.img2.ndim == 3:
+                    p.imshow(np.nansum(self.img2, axis=0), origin="lower",
+                             interpolation="nearest", cmap="binary")
+                else:
+                    print("Visual representation works only up to 3D.")
 
             p.show()
 

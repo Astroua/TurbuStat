@@ -5,13 +5,13 @@ For large-scale comparisons, this is the function that should be called.
 '''
 
 from .wavelets import Wavelet_Distance
-from .mvc import MVC_distance
+from .mvc import MVC_Distance
 from .pspec_bispec import PSpec_Distance, BiSpectrum_Distance
 from .genus import GenusDistance
 from .delta_variance import DeltaVariance_Distance
 from .vca_vcs import VCA_Distance, VCS_Distance
 from .tsallis import Tsallis_Distance
-from .stat_moments import StatMomentsDistance
+from .stat_moments import StatMoments_Distance
 from .pca import PCA_Distance
 from .scf import SCF_Distance
 from .cramer import Cramer_Distance
@@ -171,8 +171,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
         if any("Skewness" in s for s in statistics) or\
            any("Kurtosis" in s for s in statistics):
             moment_distance = \
-                StatMomentsDistance(dataset1["integrated_intensity"][0],
-                                    dataset2["integrated_intensity"][0], 5).distance_metric()
+                StatMoments_Distance(dataset1["integrated_intensity"][0],
+                                     dataset2["integrated_intensity"][0], 5).distance_metric()
             distances["Skewness"] = moment_distance.skewness_distance
             distances["Kurtosis"] = moment_distance.kurtosis_distance
             if not multicore:
@@ -194,8 +194,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("SCF" in s for s in statistics):
             scf_distance = \
-                SCF_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0]).distance_metric()
+                SCF_Distance(dataset1["cube"],
+                             dataset2["cube"]).distance_metric()
             distances["SCF"] = scf_distance.distance
             if not multicore:
                 fiducial_models["SCF"] = scf_distance.scf1
@@ -373,9 +373,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("Skewness" in s for s in statistics) or any("Kurtosis" in s for s in statistics):
             moment_distance = \
-                StatMomentsDistance(dataset1["integrated_intensity"][0],
-                                    dataset2["integrated_intensity"][0],
-                                    5,
+                StatMoments_Distance(dataset1["integrated_intensity"][0],
+                                     dataset2["integrated_intensity"][0],
+                                     5,
                                     fiducial_model=fiducial_models["stat_moments"]).distance_metric()
             distances["Skewness"] = moment_distance.skewness_distance
             distances["Kurtosis"] = moment_distance.kurtosis_distance
@@ -395,8 +395,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("SCF" in s for s in statistics):
             scf_distance = \
-                SCF_Distance(dataset1["cube"][0],
-                             dataset2["cube"][0],
+                SCF_Distance(dataset1["cube"],
+                             dataset2["cube"],
                              fiducial_model=fiducial_models["SCF"]).distance_metric()
             distances["SCF"] = scf_distance.distance
 

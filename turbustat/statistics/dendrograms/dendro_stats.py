@@ -57,7 +57,6 @@ class Dendrogram_Stats(object):
                               "Dendrogram_Stats.")
 
         self.cube = cube
-        self.min_deltas = min_deltas
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
@@ -68,6 +67,14 @@ class Dendrogram_Stats(object):
             #     if key not in poss_keys:
             #         raise KeyError(key + " is not a valid pruning parameter.")
             self.dendro_params = dendro_params
+
+        # In the case where only one min_delta is given
+        if "min_delta" in self.dendro_params and min_deltas is None:
+            self.min_deltas = np.array([self.dendro_params["min_delta"]])
+        elif not isinstance(min_deltas, np.ndarray):
+            self.min_deltas = np.array([min_deltas])
+        else:
+            self.min_deltas = min_deltas
 
         self.numfeatures = np.empty(self.min_deltas.shape)
         self.values = []
@@ -106,19 +113,21 @@ class Dendrogram_Stats(object):
         self.values.append(
             np.asarray([struct.vmax for struct in d.all_structures]))
 
-        for i, delta in enumerate(self.min_deltas[1:]):
-            if verbose:
-                print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
-            d.prune(min_delta=delta)
-            self.numfeatures[i + 1] = len(d)
-            self.values.append([struct.vmax for struct in d.all_structures])
+        if len(self.min_deltas) > 1:
+            for i, delta in enumerate(self.min_deltas[1:]):
+                if verbose:
+                    print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
+                d.prune(min_delta=delta)
+                self.numfeatures[i + 1] = len(d)
+                self.values.append([struct.vmax for struct in
+                                    d.all_structures])
 
         return self
 
     def make_hist(self):
         '''
         Creates histograms based on values from the tree.
-        *Note:* These histograms are remade whenc calculating the distance to
+        *Note:* These histograms are remade when calculating the distance to
         ensure the proper form for the Hellinger distance.
 
         Returns
@@ -150,6 +159,10 @@ class Dendrogram_Stats(object):
             Shows the model summary.
         '''
 
+        if len(self.numfeatures) == 1:
+            raise Exception("Must provide multiple min_delta values to perform"
+                            " fitting. Only one value was given.")
+
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
 
@@ -168,15 +181,10 @@ class Dendrogram_Stats(object):
         if verbose:
             print self.model.summary()
 
-        cov_matrix = self.model.cov_params()
-        errors = \
-            np.asarray([np.sqrt(cov_matrix[i, i])
-                        for i in range(cov_matrix.shape[0])])
+        errors = self.model.bse
 
         self.tail_slope = self.model.params[-1]
         self.tail_slope_err = errors[-1]
-
-        return self
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -379,7 +387,7 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, verbose=False):
+    def numfeature_stat(self, verbose=False, label1=None, label2=None):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -387,6 +395,10 @@ class DendroDistance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         self.num_distance = \
@@ -399,22 +411,22 @@ class DendroDistance(object):
             import matplotlib.pyplot as p
 
             # Dendrogram 1
-            p.plot(self.dendro1.x, self.dendro1.y, 'gD', label='Dendro 1')
-            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'g')
+            p.plot(self.dendro1.x, self.dendro1.y, 'bD', label=label1)
+            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.x, self.dendro2.y, 'bD', label='Dendro 2')
-            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'b')
+            p.plot(self.dendro2.x, self.dendro2.y, 'go', label=label2)
+            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'g')
 
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
-            p.legend()
+            p.legend(loc='best')
             p.show()
 
         return self
 
-    def histogram_stat(self, verbose=False):
+    def histogram_stat(self, verbose=False, label1=None, label2=None):
         '''
         Computes the distance using histograms.
 
@@ -422,6 +434,10 @@ class DendroDistance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
         if self.nbins == "best":
@@ -474,42 +490,58 @@ class DendroDistance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.subplot(2, 2, 1)
-            p.title("ECDF 1")
-            p.xlabel("Intensities")
+            ax1 = p.subplot(2, 2, 1)
+            ax1.set_title(label1)
+            ax1.set_ylabel("ECDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                       self.mecdf1[n, :][:self.nbins[n]])
-            p.subplot(2, 2, 2)
-            p.title("ECDF 2")
-            p.xlabel("Intensities")
+                ax1.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                         self.mecdf1[n, :][:self.nbins[n]])
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2 = p.subplot(2, 2, 2)
+            ax2.set_title(label2)
+            ax2.axes.xaxis.set_ticklabels([])
+            ax2.axes.yaxis.set_ticklabels([])
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
-                p.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                       self.mecdf2[n, :][:self.nbins[n]])
-            p.subplot(2, 2, 3)
-            p.title("PDF 1")
+                ax2.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                         self.mecdf2[n, :][:self.nbins[n]])
+            ax3 = p.subplot(2, 2, 3)
+            ax3.set_ylabel("PDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                      self.histograms1[n, :][:self.nbins[n]],
-                      align="center", width=bin_width, alpha=0.25)
-            p.subplot(2, 2, 4)
-            p.title("PDF 2")
+                ax3.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                        self.histograms1[n, :][:self.nbins[n]],
+                        align="center", width=bin_width, alpha=0.25)
+            ax3.set_xlabel("z-score")
+            ax4 = p.subplot(2, 2, 4)
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
-                p.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                      self.histograms2[n, :][:self.nbins[n]],
-                      align="center", width=bin_width, alpha=0.25)
+                ax4.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
+                        self.histograms2[n, :][:self.nbins[n]],
+                        align="center", width=bin_width, alpha=0.25)
+            ax4.set_xlabel("z-score")
+            ax4.axes.yaxis.set_ticklabels([])
+
+            p.tight_layout()
             p.show()
 
         return self
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
+        Calculate both distance metrics.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
-        self.histogram_stat(verbose=verbose)
-        self.numfeature_stat(verbose=verbose)
+        self.histogram_stat(verbose=verbose, label1=label1, label2=label2)
+        self.numfeature_stat(verbose=verbose, label1=label1, label2=label2)
 
         return self
 
