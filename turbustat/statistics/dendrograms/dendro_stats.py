@@ -57,7 +57,14 @@ class Dendrogram_Stats(object):
                               "Dendrogram_Stats.")
 
         self.cube = cube
-        self.min_deltas = min_deltas
+
+        # In the case where only one min_delta is given
+        if "min_delta" in dendro_params:
+            self.min_deltas = [dendro_params["min_delta"]]
+        elif not isinstance(min_deltas, list):
+            self.min_deltas = [min_deltas]
+        else:
+            self.min_deltas = min_deltas
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
@@ -106,19 +113,21 @@ class Dendrogram_Stats(object):
         self.values.append(
             np.asarray([struct.vmax for struct in d.all_structures]))
 
-        for i, delta in enumerate(self.min_deltas[1:]):
-            if verbose:
-                print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
-            d.prune(min_delta=delta)
-            self.numfeatures[i + 1] = len(d)
-            self.values.append([struct.vmax for struct in d.all_structures])
+        if len(self.min_deltas) > 1:
+            for i, delta in enumerate(self.min_deltas[1:]):
+                if verbose:
+                    print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
+                d.prune(min_delta=delta)
+                self.numfeatures[i + 1] = len(d)
+                self.values.append([struct.vmax for struct in
+                                    d.all_structures])
 
         return self
 
     def make_hist(self):
         '''
         Creates histograms based on values from the tree.
-        *Note:* These histograms are remade whenc calculating the distance to
+        *Note:* These histograms are remade when calculating the distance to
         ensure the proper form for the Hellinger distance.
 
         Returns
@@ -172,8 +181,6 @@ class Dendrogram_Stats(object):
 
         self.tail_slope = self.model.params[-1]
         self.tail_slope_err = errors[-1]
-
-        return self
 
     def save_results(self, output_name=None, keep_data=False):
         '''
