@@ -120,7 +120,7 @@ pca_val = pca_distance.pca1.eigvals
 from turbustat.statistics import SCF_Distance
 
 scf_distance = SCF_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric(verbose=False)
+                            dataset2["cube"], size=11).distance_metric(verbose=False)
 scf_val = scf_distance.scf1.scf_surface
 
 ## Cramer Statistic
