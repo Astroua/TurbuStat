@@ -297,11 +297,9 @@ class SCF_Distance(object):
         else:
             dist_weight = np.ones((self.size, self.size))
 
-        difference = (
-            (self.scf1.scf_surface -
-             self.scf2.scf_surface) * dist_weight) ** 2.
-        self.distance = np.sqrt(
-            np.nansum(difference) / np.sum(np.isfinite(difference)))
+        difference = (self.scf1.scf_surface - self.scf2.scf_surface) ** 2. * \
+            dist_weight
+        self.distance = np.sqrt(np.sum(difference) / np.sum(dist_weight))
 
         if verbose:
             import matplotlib.pyplot as p
