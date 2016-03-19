@@ -75,7 +75,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                 del wavelet_distance
 
         if any("MVC" in s for s in statistics):
-            mvc_distance = MVC_distance(dataset1, dataset2).distance_metric()
+            mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric()
             distances["MVC"] = mvc_distance.distance
             if not multicore:
                 fiducial_models["MVC"] = mvc_distance.mvc1
@@ -284,7 +284,7 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
 
         if any("MVC" in s for s in statistics):
             mvc_distance = \
-                MVC_distance(dataset1,
+                MVC_Distance(dataset1,
                              dataset2,
                              fiducial_model=fiducial_models["MVC"]).distance_metric()
             distances["MVC"] = mvc_distance.distance
