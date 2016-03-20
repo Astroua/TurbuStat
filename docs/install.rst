@@ -20,7 +20,7 @@ TurbuStat requires the follow packages:
 
  To install the packages, clone the repository:
  ::
-    >>> git clone https://github.com/Astroua/TurbuStat
+    >>> git clone https://github.com/Astroua/TurbuStat # doctest: +SKIP
 
  Then install the package:
  ::
