@@ -20,6 +20,7 @@ import numpy as np
 import numpy.random as ra
 from astropy.io.fits import getheader
 from astropy.wcs import WCS
+from astropy.io import fits
 
 # Set seed for adding noise.
 ra.seed(121212)
@@ -59,6 +60,9 @@ props1.make_moments()
 props1.make_moment_errors()
 
 dataset1 = props1.to_dict()
+
+moment0_hdu1 = fits.PrimaryHDU(dataset1["moment0"][0],
+                               header=dataset1["moment0"][1])
 
 # Save moments for testing i/o loading
 try:
