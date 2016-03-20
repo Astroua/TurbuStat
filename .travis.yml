@@ -5,10 +5,19 @@ sudo : false
 python:
     - 2.7
 
+addons:
+    apt:
+        packages:
+            - graphviz
+            - texlive-latex-extra
+            - dvipng
+
 env:
     global:
+        - SETUP_CMD='test'
         - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
     matrix:
+        - SETUP_CMD='egg_info'
         - NP_VER=1.9 ASTRO_VER=1.0
         - NP_VER=1.10 ASTRO_VER=1.0
 
@@ -22,7 +31,7 @@ before_install:
 
 install:
     # Create a new environment
-    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION pip cython nose
+    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION pip cython pytest
     - source activate test
 
     # Now install dependencies
@@ -36,5 +45,4 @@ install:
     - pip install git+https://github.com/radio-astro-tools/radio_beam.git
 
 script:
-    - python setup.py install
-    - nosetests turbustat/tests/
+    - python setup.py $SETUP_CMD
