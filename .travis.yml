@@ -16,6 +16,8 @@ env:
     global:
         - SETUP_CMD='test'
         - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
+        - NP_VER=1.10
+        - ASTRO_VER=1.0
     matrix:
         - SETUP_CMD='egg_info'
         - NP_VER=1.9 ASTRO_VER=1.0
