@@ -13,6 +13,9 @@ class BaseStatisticMixIn(object):
     # Disable this flag when a statistic does not need a header
     need_header_flag = True
 
+    # Disable this when the data property will not be used.
+    no_data_flag = False
+
     @property
     def header(self):
         return self._header
@@ -36,7 +39,10 @@ class BaseStatisticMixIn(object):
     @data.setter
     def data(self, values):
 
-        if not isinstance(values, np.ndarray):
+        if self.no_data_flag:
+            values = None
+
+        elif not isinstance(values, np.ndarray):
             raise TypeError("Data is not a numpy array.")
 
         self._data = values
