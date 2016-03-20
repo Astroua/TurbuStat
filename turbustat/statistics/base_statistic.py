@@ -10,12 +10,18 @@ class BaseStatisticMixIn(object):
     Common properties to all statistics
     """
 
+    # Disable this flag when a statistic does not need a header
+    need_header_flag = True
+
     @property
     def header(self):
         return self._header
 
     @header.setter
     def header(self, input_hdr):
+
+        if not self.need_header_flag:
+            self._header = None
 
         if not isinstance(input_hdr, fits.header.Header):
             raise TypeError("The header must be a"
