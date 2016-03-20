@@ -6,6 +6,11 @@ from spectral_cube.lower_dimensional_structures import LowerDimensionalObject
 import numpy as np
 
 
+common_types = ["numpy.ndarray", "astropy.io.fits.PrimaryHDU"]
+twod_types = ["spectral_cube.LowerDimensionalObject"]
+threed_types = ["SpectralCube"]
+
+
 def input_data(data, no_header=False):
     '''
     Accept a variety of input data forms and return those expected by the
