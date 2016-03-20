@@ -18,7 +18,7 @@ from ._testing_data import dataset1, sc1, moment0_hdu1
                           (moment0_hdu1, False)])
 def test_input_data(data, no_header):
 
-    output_data = input_data(data)
+    output_data = input_data(data, no_header=no_header)
 
     assert isinstance(output_data[0], np.ndarray)
     if not no_header:
