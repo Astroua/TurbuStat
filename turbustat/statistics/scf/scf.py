@@ -163,7 +163,7 @@ class SCF(object):
         Examples
         --------
         Load saved results.
-        >>> scf = SCF.load_results("scf_saved.pkl")
+        >>> scf = SCF.load_results("scf_saved.pkl") # doctest: +SKIP
 
         '''
 
