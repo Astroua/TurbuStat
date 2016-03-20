@@ -21,9 +21,9 @@ class BaseStatisticMixIn(object):
     def header(self, input_hdr):
 
         if not self.need_header_flag:
-            self._header = None
+            input_hdr = None
 
-        if not isinstance(input_hdr, fits.header.Header):
+        elif not isinstance(input_hdr, fits.header.Header):
             raise TypeError("The header must be a"
                             " astropy.io.fits.header.Header.")
 
