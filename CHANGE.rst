@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #106 - Support for multiple data inputs (FITS HDU, SpectralCube, etc). Switched to pytest.
 * #105 - Bug in wrapper function. Added test for wrapper.
 * #102 - Homogenized the structure of the statistics and distance metrics. Several API changes and two metrics had their names changed: StatMomentDistance -> StatMoment_Distance and MVC_distance -> MVC_Distance.
 * #104 - Common base class for 2D power spectra
