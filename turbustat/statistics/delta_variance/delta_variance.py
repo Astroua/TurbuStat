@@ -20,7 +20,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
     img : %(dtypes)s
         The image calculate the delta-variance of.
-    header : FITS header
+    header : FITS header, optional
         Image header.
     weights : %(dtypes)s
         Weights to be used.
@@ -30,21 +30,18 @@ class DeltaVariance(BaseStatisticMixIn):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
-    ang_units : bool, optional
-        Convert frequencies to angular units using the given header.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img, header=None, weights=None, diam_ratio=1.5,
-                 lags=None, nlags=25, ang_units=False):
+                 lags=None, nlags=25):
         super(DeltaVariance, self).__init__()
 
         # Set the data and perform checks
         self.input_data_header(img, header)
 
         self.diam_ratio = diam_ratio
-        self.ang_units = ang_units
 
         if weights is None:
             self.weights = np.ones(img.shape)
@@ -56,33 +53,25 @@ class DeltaVariance(BaseStatisticMixIn):
             self.nanflag = True
 
         if lags is None:
-            try:
-                self.ang_size = self.header["CDELT2"] * u.deg
-                min_size = (0.1 * u.arcmin) / self.ang_size.to(u.arcmin)
-                # Can't be smaller than one pixel, set to 3 to
-                # avoid noisy pixels. Can't be bigger than half the image
-                #(deals with issue from sim cubes).
-                if min_size < 3.0 or min_size > min(self.data.shape) / 2.:
-                    min_size = 3.0
-            except ValueError:
-                print("No CDELT2 in header. Using pixel scales.")
-                self.ang_size = 1.0 * u.astrophys.pixel
-                min_size = 3.0
-            self.lags = np.logspace(np.log10(min_size),
-                                    np.log10(min(self.data.shape) / 2.), nlags)
+            min_size = 3.0
+            self.lags = \
+                np.logspace(np.log10(min_size),
+                            np.log10(min(self.data.shape) / 2.), nlags) * u.pix
         else:
-            self.lags = lags
-
-        if self.ang_units:
-            self.lags *= self.ang_size
+            # Check if the given lags are a Quantity
+            # Default to pixel scales if it isn't
+            if not hasattr(lags, "value"):
+                self.lags = lags * u.pix
+            else:
+                self.lags = self.to_pixel(lags)
 
         self.convolved_arrays = []
         self.convolved_weights = []
-        self.delta_var = np.empty((len(self.lags, )))
-        self.delta_var_error = np.empty((len(self.lags, )))
+        self.delta_var = np.empty((len(self.lags)))
+        self.delta_var_error = np.empty((len(self.lags)))
 
     def do_convolutions(self):
-        for i, lag in enumerate(self.lags):
+        for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
                 lag, self.diam_ratio, self.data.shape[0], self.data.shape[1])
@@ -115,24 +104,32 @@ class DeltaVariance(BaseStatisticMixIn):
                 (img_core / weights_core) - (img_annulus / weights_annulus))
             self.convolved_weights.append(weights_core * weights_annulus)
 
-        return self
-
     def compute_deltavar(self):
 
         for i, (conv_arr,
                 conv_weight,
                 lag) in enumerate(zip(self.convolved_arrays,
                                       self.convolved_weights,
-                                      self.lags)):
+                                      self.lags.value)):
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
             self.delta_var[i] = val
             self.delta_var_error[i] = err
 
-        return self
+    def run(self, verbose=False, ang_units=False, unit=u.deg):
+        '''
+        Compute the delta-variance.
 
-    def run(self, verbose=False):
+        Parameters
+        ----------
+        verbose : bool, optional
+            Plot delta-variance transform.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        '''
 
         self.do_convolutions()
         self.compute_deltavar()
@@ -142,12 +139,17 @@ class DeltaVariance(BaseStatisticMixIn):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            p.errorbar(self.lags, self.delta_var, yerr=self.delta_var_error,
+            if ang_units:
+                lags = \
+                    self.lags.to(unit, equivalencies=self.angular_equiv).value
+            else:
+                lags = self.lags.value
+            p.errorbar(lags, self.delta_var, yerr=self.delta_var_error,
                        fmt="bD-")
             ax.grid(True)
 
-            if self.ang_units:
-                ax.set_xlabel("Lag (deg)")
+            if ang_units:
+                ax.set_xlabel("Lag ("+unit.to_string()+")")
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
@@ -259,28 +261,24 @@ class DeltaVariance_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
-                 diam_ratio=1.5, lags=None, fiducial_model=None,
-                 ang_units=False):
+                 diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
-
-        self.ang_units = ang_units
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
             self.delvar1 = DeltaVariance(dataset1[0], dataset1[1],
                                          weights=weights1,
-                                         diam_ratio=diam_ratio, lags=lags,
-                                         ang_units=ang_units)
+                                         diam_ratio=diam_ratio, lags=lags)
             self.delvar1.run()
 
         self.delvar2 = DeltaVariance(dataset2[0], dataset2[1],
                                      weights=weights2,
-                                     diam_ratio=diam_ratio, lags=lags,
-                                     ang_units=ang_units)
+                                     diam_ratio=diam_ratio, lags=lags)
         self.delvar2.run()
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -292,6 +290,10 @@ class DeltaVariance_Distance(object):
             Object or region name for dataset1
         label2 : str, optional
             Object or region name for dataset2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         # Check for NaNs and negatives
@@ -312,16 +314,24 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            p.errorbar(self.delvar1.lags, self.delvar1.delta_var,
+            if ang_units:
+                lags1 = \
+                    self.delvar1.lags.to(unit, equivalencies=self.delvar1.angular_equiv).value
+                lags2 = \
+                    self.delvar2.lags.to(unit, equivalencies=self.delvar2.angular_equiv).value
+            else:
+                lags1 = self.delvar1.lags.value
+                lags2 = self.delvar2.lags.value
+            p.errorbar(lags1, self.delvar1.delta_var,
                        yerr=self.delvar1.delta_var_error, fmt="bD-",
                        label=label1)
-            p.errorbar(self.delvar2.lags, self.delvar2.delta_var,
+            p.errorbar(lags2, self.delvar2.delta_var,
                        yerr=self.delvar2.delta_var_error, fmt="go-",
                        label=label2)
             ax.legend(loc='best')
             ax.grid(True)
-            if self.ang_units:
-                ax.set_xlabel("Lag (deg)")
+            if ang_units:
+                ax.set_xlabel("Lag ("+unit.to_string()+")")
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
