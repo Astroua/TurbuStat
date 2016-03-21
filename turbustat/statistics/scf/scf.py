@@ -118,8 +118,7 @@ class SCF(BaseStatisticMixIn):
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
 
-        if self.ang_units:
-            self._lags *= np.abs(self.header["CDELT2"])
+        self._lags = self._lags * u.pix
 
     def save_results(self, output_name=None, keep_data=False):
         '''
