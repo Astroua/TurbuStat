@@ -4,6 +4,7 @@
 import numpy as np
 import statsmodels.api as sm
 import warnings
+import astropy.units as u
 
 from .lm_seg import Lm_Seg
 from .psds import pspec
@@ -59,8 +60,8 @@ class StatisticBase_PSpec2D(object):
                       **kwargs)
             self._stddev_flag = False
 
-        if self.ang_units:
-            self._freqs *= np.abs(self.header["CDELT2"]) ** -1.
+        # Attach units to freqs
+        self._freqs = self.freqs / u.pix
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, verbose=False,
@@ -102,13 +103,13 @@ class StatisticBase_PSpec2D(object):
             self.low_cut = low_cut
 
         if high_cut is None:
-            self.high_cut = self.freqs.max() + 1
+            self.high_cut = self.freqs.max().value + 1
         else:
             self.high_cut = high_cut
 
-        x = np.log10(self.freqs[clip_func(self.freqs, self.low_cut,
-                                          self.high_cut)])
-        y = np.log10(self.ps1D[clip_func(self.freqs, self.low_cut,
+        x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut,
+                                          self.high_cut)].value)
+        y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut,
                                          self.high_cut)])
 
         if brk is not None:
@@ -158,15 +159,15 @@ class StatisticBase_PSpec2D(object):
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D"):
+                 symbol="D", ang_units=False, unit=u.arcsec):
         '''
         Plot the fitted model.
         '''
 
         import matplotlib.pyplot as p
 
-        if self.ang_units:
-            xlab = r"k/deg$^{-1}$"
+        if ang_units:
+            xlab = r"k/"+unit.to_string()+"$^{-1}$"
         else:
             xlab = r"k/pixel$^{-1}$"
 
@@ -181,13 +182,19 @@ class StatisticBase_PSpec2D(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = clip_func(self.freqs, self.low_cut, self.high_cut)
+        good_interval = clip_func(self.freqs.value, self.low_cut,
+                                  self.high_cut)
 
         y_fit = self.fit.fittedvalues
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
+        if ang_units:
+            freqs = 1. / (1. / self.freqs).to(unit, equivalencies=self.angular_equiv).value
+        else:
+            freqs = self.freqs.value
+
         if self._stddev_flag:
-            ax.errorbar(np.log10(self.freqs[good_interval]),
+            ax.errorbar(np.log10(freqs[good_interval]),
                         np.log10(self.ps1D[good_interval]),
                         yerr=0.434*(self.ps1D_stddev[good_interval] /
                                     self.ps1D[good_interval]),
@@ -195,7 +202,7 @@ class StatisticBase_PSpec2D(object):
                         fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
 
-            ax.plot(np.log10(self.freqs[fit_index]), y_fit, color+'-',
+            ax.plot(np.log10(freqs[fit_index]), y_fit, color+'-',
                     label=label, linewidth=2)
             ax.set_xlabel("log "+xlab)
             ax.set_ylabel(r"log P$_2(K)$")
