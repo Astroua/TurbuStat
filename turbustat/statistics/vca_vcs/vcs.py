@@ -8,37 +8,41 @@ from astropy import units as u
 
 from ..lm_seg import Lm_Seg
 from ..rfft_to_fft import rfft_to_fft
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types
 
 
-class VCS(object):
+class VCS(BaseStatisticMixIn):
 
     '''
     The VCS technique (Lazarian & Pogosyan, 2004).
 
     Parameters
     ----------
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
-    header : FITS header
+    header : FITS header, optional
         Corresponding FITS header.
     vel_units : bool, optional
         Convert frequencies to the spectral unit in the header.
     '''
 
-    def __init__(self, cube, header, vel_units=False):
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
+    def __init__(self, cube, header=None, vel_units=False):
         super(VCS, self).__init__()
 
-        self.header = header
-        self.cube = cube
+        self.input_data_header(cube, header)
+
         self.vel_units = vel_units
 
-        if np.isnan(self.cube).any():
-            self.cube[np.isnan(self.cube)] = 0
+        if np.isnan(self.data).any():
+            self.data[np.isnan(self.data)] = 0
             # Feel like this should be more specific
-            self.good_pixel_count = np.sum(self.cube.max(axis=0) != 0)
+            self.good_pixel_count = np.sum(self.data.max(axis=0) != 0)
         else:
             self.good_pixel_count = float(
-                self.cube.shape[1] * self.cube.shape[2])
+                self.data.shape[1] * self.data.shape[2])
 
         if vel_units:
             try:
@@ -53,17 +57,17 @@ class VCS(object):
         else:
             self.vel_to_pix = 1.0
 
-        self.vel_channels = np.arange(1, self.cube.shape[0], 1)
+        self.vel_channels = np.arange(1, self.data.shape[0], 1)
 
         self.vel_freqs = \
-            np.abs(fftfreq(self.cube.shape[0])) / self.vel_to_pix
+            np.abs(fftfreq(self.data.shape[0])) / self.vel_to_pix
 
     def compute_pspec(self):
         '''
         Take the FFT of each spectrum in velocity dimension.
         '''
 
-        ps3D = np.power(rfft_to_fft(self.cube), 2.)
+        ps3D = np.power(rfft_to_fft(self.data), 2.)
         self.ps1D = np.nansum(
             np.nansum(ps3D, axis=2), axis=1) /\
             self.good_pixel_count
@@ -202,9 +206,9 @@ class VCS_Distance(object):
 
     Parameters
     ----------
-    cube1 : FITS hdu
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : FITS hdu
+    cube2 : %(dtypes)s
         Data cube.
     slice_size : float, optional
         Slice to degrade the cube to.
@@ -217,11 +221,11 @@ class VCS_Distance(object):
         Convert frequencies to the spectral unit in the headers.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube1, cube2, breaks=None, fiducial_model=None,
                  vel_units=False):
         super(VCS_Distance, self).__init__()
-        self.cube1, self.header1 = cube1
-        self.cube2, self.header2 = cube2
 
         self.vel_units = vel_units
 
@@ -231,10 +235,10 @@ class VCS_Distance(object):
         if fiducial_model is not None:
             self.vcs1 = fiducial_model
         else:
-            self.vcs1 = VCS(self.cube1, self.header1,
+            self.vcs1 = VCS(cube1,
                             vel_units=vel_units).run(breaks=breaks[0])
 
-        self.vcs2 = VCS(self.cube2, self.header2,
+        self.vcs2 = VCS(cube2,
                         vel_units=vel_units).run(breaks=breaks[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None):
@@ -283,10 +287,10 @@ class VCS_Distance(object):
 
         if verbose:
 
-            print "Fit 1"
-            print self.vcs1.fit.fit.summary()
-            print "Fit 2"
-            print self.vcs2.fit.fit.summary()
+            print("Fit 1")
+            print(self.vcs1.fit.fit.summary())
+            print("Fit 2")
+            print(self.vcs2.fit.fit.summary())
 
             if self.vel_units:
                 xlab = r"log k$_v$/$(km^{-1}s)$"

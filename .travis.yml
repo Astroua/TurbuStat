@@ -5,12 +5,33 @@ sudo : false
 python:
     - 2.7
 
+addons:
+    apt:
+        packages:
+            - graphviz
+            - texlive-latex-extra
+            - dvipng
+
 env:
     global:
+        - SETUP_CMD='test'
         - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
+        - NP_VER=1.10
+        - ASTRO_VER=1.0
     matrix:
-        - NP_VER=1.9 ASTRO_VER=1.0
-        - NP_VER=1.10 ASTRO_VER=1.0
+        - SETUP_CMD='egg_info'
+
+matrix:
+    include:
+        - python: 2.7
+          env: NP_VER=1.9 ASTRO_VER=1.0
+
+        - python: 2.7
+          env: NP_VER=1.10 ASTRO_VER=1.0
+
+        - python: 2.7
+          env: NP_VER=1.10 ASTRO_VER=1.1
+
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -22,7 +43,7 @@ before_install:
 
 install:
     # Create a new environment
-    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION pip cython nose
+    - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION pip cython pytest
     - source activate test
 
     # Now install dependencies
@@ -36,5 +57,4 @@ install:
     - pip install git+https://github.com/radio-astro-tools/radio_beam.git
 
 script:
-    - python setup.py install
-    - nosetests turbustat/tests/
+    - python setup.py $SETUP_CMD

@@ -20,14 +20,14 @@ TurbuStat requires the follow packages:
 
  To install the packages, clone the repository:
  ::
-    >>> git clone https://github.com/Astroua/TurbuStat
+    >>> git clone https://github.com/Astroua/TurbuStat # doctest: +SKIP
 
  Then install the package:
  ::
-    >>> python setup.py install
+    >>> python setup.py install # doctest: +SKIP
 
  The script will install numpy and astropy if your python installation does not have them installed. Due to package conflicts, it will **NOT** install the rest of the dependencies! Until this can be fixed, you can check to see if you have all of the dependencies installed by running:
  ::
-    >>> python setup.py check_deps
+    >>> python setup.py check_deps # doctest: +SKIP
 
 If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!

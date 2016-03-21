@@ -3,40 +3,42 @@
 
 import numpy as np
 import numpy.random as ra
-import statsmodels.formula.api as sm
-from pandas import Series, DataFrame
 from numpy.fft import fftshift
 
-from ..psds import pspec
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
 
-class PowerSpectrum(StatisticBase_PSpec2D):
+class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     """
     Compute the power spectrum of a given image. (e.g., Burkhart et al., 2010)
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         2D image.
-    header : FITS header
+    header : FITS header, optional
         The image header. Needed for the pixel scale.
-    weights : numpy.ndarray
+    weights : %(dtypes)s
         Weights to be applied to the image.
     ang_units : bool, optional
         Convert frequencies into angular units using the given header.
     """
 
-    def __init__(self, img, header, weights=None, ang_units=False):
-        super(PowerSpectrum, self).__init__()
-        self.img = img
-        # Get rid of nans
-        self.img[np.isnan(self.img)] = 0.0
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-        self.header = header
-        self.degperpix = np.abs(header["CDELT2"])
+    def __init__(self, img, header=None, weights=None, ang_units=False):
+        super(PowerSpectrum, self).__init__()
+
+        # Set data and header
+        self.input_data_header(img, header)
+
+        self.data[np.isnan(self.data)] = 0.0
+
+        self.degperpix = np.abs(self.header["CDELT2"])
         self.ang_units = ang_units
 
         if weights is None:
@@ -44,10 +46,10 @@ class PowerSpectrum(StatisticBase_PSpec2D):
         else:
             # Get rid of all NaNs
             weights[np.isnan(weights)] = 0.0
-            weights[np.isnan(self.img)] = 0.0
-            self.img[np.isnan(self.img)] = 0.0
+            weights[np.isnan(self.data)] = 0.0
+            self.data[np.isnan(self.data)] = 0.0
 
-        self.weighted_img = self.img * weights
+        self.weighted_data = self.data * weights
 
         self._ps1D_stddev = None
 
@@ -56,7 +58,7 @@ class PowerSpectrum(StatisticBase_PSpec2D):
         Compute the 2D power spectrum.
         '''
 
-        fft = fftshift(rfft_to_fft(self.weighted_img))
+        fft = fftshift(rfft_to_fft(self.weighted_data))
 
         self._ps2D = np.power(fft, 2.)
 
@@ -102,19 +104,21 @@ class PSpec_Distance(object):
     Parameters
     ----------
 
-    data1 : dict
-        List containing the integrated intensity image and its header.
-    data2 : dict
-        List containing the integrated intensity image and its header.
-    weights1 : numpy.ndarray, optional
+    data1 : %(dtypes)s
+        Data with an associated header.
+    data2 : %(dtypes)s
+        See data1.
+    weights1 : %(dtypes)s, optional
         Weights to apply to data1
-    weights2 : numpy.ndarray, optional
+    weights2 : %(dtypes)s, optional
         Weights to apply to data2
     fiducial_model : PowerSpectrum
         Computed PowerSpectrum object. use to avoid recomputing.
     ang_units : bool, optional
         Convert the frequencies to angular units using the header.
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
                  fiducial_model=None, ang_units=False):
@@ -123,15 +127,13 @@ class PSpec_Distance(object):
         self.ang_units = ang_units
 
         if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1[0],
-                                        data1[1],
+            self.pspec1 = PowerSpectrum(data1,
                                         weights=weights1, ang_units=ang_units)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
-        self.pspec2 = PowerSpectrum(data2[0],
-                                    data2[1],
+        self.pspec2 = PowerSpectrum(data2,
                                     weights=weights2, ang_units=ang_units)
         self.pspec2.run()
 
@@ -184,7 +186,7 @@ class PSpec_Distance(object):
         return self
 
 
-class BiSpectrum(object):
+class BiSpectrum(BaseStatisticMixIn):
 
     """
     Computes the bispectrum (three-point correlation function) of the given
@@ -194,18 +196,23 @@ class BiSpectrum(object):
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         2D image.
-
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img):
         super(BiSpectrum, self).__init__()
-        self.img = img
-        self.shape = img.shape
+
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(img, no_header=True)
+        self.shape = self.data.shape
 
         # Set nans to min
-        self.img[np.isnan(self.img)] = np.nanmin(self.img)
+        self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
     def compute_bispectrum(self, nsamples=100, seed=1000):
         '''
@@ -220,7 +227,7 @@ class BiSpectrum(object):
             Sets the seed for the distribution draws.
         '''
 
-        fftarr = np.fft.fft2(self.img)
+        fftarr = np.fft.fft2(self.data)
         conjfft = np.conj(fftarr)
         ra.seed(seed)
 
@@ -313,16 +320,17 @@ class BiSpectrum_Distance(object):
 
     Parameters
     ----------
-    data1 : FITS hdu
+    data1 : %(dtypes)s
         Contains the data and header of the image.
-    data2 : FITS hdu
+    data2 : %(dtypes)s
         Contains the data and header of the image.
     nsamples : int, optional
         Sets the number of samples to take at each vector magnitude.
     fiducial_model : Bispectrum
         Computed Bispectrum object. use to avoid recomputing.
-
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
         super(BiSpectrum_Distance, self).__init__()

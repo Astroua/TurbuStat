@@ -5,18 +5,20 @@ import numpy as np
 import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import statsmodels.api as sm
-# from pandas import Series, DataFrame
+
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types
 
 
-class Wavelet(object):
+class Wavelet(BaseStatisticMixIn):
     '''
     Compute the wavelet transform of a 2D array.
 
     Parameters
     ----------
-    array : numpy.ndarray
-        2D array.
-    header : FITS header
+    array : %(dtypes)s
+        2D data.
+    header : FITS header, optional
         Header for the array.
     scales : numpy.ndarray or list
         The scales where the transform is calculated.
@@ -28,15 +30,17 @@ class Wavelet(object):
         Compute the transform with the correct scale-invariant normalization.
     '''
 
-    def __init__(self, array, header, scales=None, num=50, ang_units=False,
-                 scale_normalization=True):
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-        self.array = array
+    def __init__(self, data, header=None, scales=None, num=50,
+                 ang_units=False, scale_normalization=True):
+
+        self.input_data_header(data, header)
+
         # NOTE: can't use nan_interpolating from astropy
         # until the normalization for sum to zeros kernels is fixed!!!
-        self.array[np.isnan(self.array)] = np.nanmin(self.array)
+        self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-        self.header = header
         self.ang_units = ang_units
 
         if ang_units:
@@ -51,7 +55,7 @@ class Wavelet(object):
 
         if scales is None:
             a_min = round((5. / 3.), 3)  # Smallest scale given by paper
-            a_max = min(self.array.shape)/2
+            a_max = min(self.data.shape)/2
             # Log spaces scales up to half of the smallest size of the array
             self.scales = np.logspace(np.log10(a_min), np.log10(a_max), num) *\
                 self.imgscale
@@ -70,7 +74,7 @@ class Wavelet(object):
         Compute the wavelet transform at each scale.
         '''
 
-        n0, m0 = self.array.shape
+        n0, m0 = self.data.shape
         A = len(self.scales)
 
         self.Wf = np.zeros((A, n0, m0), dtype=np.float)
@@ -86,7 +90,7 @@ class Wavelet(object):
             psi = MexicanHat2DKernel(an)
 
             self.Wf[i] = \
-                convolve_fft(self.array, psi).real * an**factor
+                convolve_fft(self.data, psi).real * an**factor
 
     def make_1D_transform(self):
         '''
@@ -154,9 +158,9 @@ class Wavelet_Distance(object):
 
     Parameters
     ----------
-    dataset1 : FITS hdu
+    dataset1 : %(dtypes)s
         2D image.
-    dataset2 : FITS hdu
+    dataset2 : %(dtypes)s
         2D image.
     ang_units : bool, optional
         Sets whether to use angular units.
@@ -168,25 +172,22 @@ class Wavelet_Distance(object):
         Computed wt2D object. use to avoid recomputing.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, dataset1, dataset2,
                  ang_units=False, scales=None, num=50, fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
-        array1 = dataset1[0]
-        header1 = dataset1[1]
-        array2 = dataset2[0]
-        header2 = dataset2[1]
-
         self.ang_units = ang_units
 
         if fiducial_model is None:
-            self.wt1 = Wavelet(array1, header1, scales=scales,
+            self.wt1 = Wavelet(dataset1, scales=scales,
                                ang_units=ang_units)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = Wavelet(array2, header2, scales=scales, ang_units=ang_units)
+        self.wt2 = Wavelet(dataset2, scales=scales, ang_units=ang_units)
         self.wt2.run()
 
     def distance_metric(self, verbose=False, label1=None,

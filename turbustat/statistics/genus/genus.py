@@ -14,9 +14,11 @@ except ImportError:
     from numpy.fft import fft2
 
 from ..stats_utils import standardize
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types
 
 
-class Genus(object):
+class Genus(BaseStatisticMixIn):
 
     """
 
@@ -25,35 +27,40 @@ class Genus(object):
     Parameters
     ----------
 
-    img - numpy.ndarray
+    img : %(dtypes)s
         2D image.
-    lowdens_thresh : float, optional
-        Lower threshold of the data to use.
-    highdens_thresh : float, optional
-        Upper threshold of the data to use.
+    lowdens_percent : float, optional
+        Lower percentile of the data to use.
+    highdens_percent : float, optional
+        Upper percentile of the data to use.
     numpts : int, optional
         Number of thresholds to calculate statistic at.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
     """
 
-    def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100,
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
+    def __init__(self, img, lowdens_percent=0, highdens_percent=100, numpts=100,
                  smoothing_radii=None):
         super(Genus, self).__init__()
 
-        self.img = img
+        # A header isn't needed. Disable the check flag
+        self.need_header_flag = False
+        self.header = None
+        self.data = img
 
         self.nanflag = False
-        if np.isnan(self.img).any():
+        if np.isnan(self.data).any():
             self.nanflag = True
 
-        self.lowdens_thresh = scoreatpercentile(img[~np.isnan(img)],
-                                                lowdens_thresh)
-        self.highdens_thresh = scoreatpercentile(img[~np.isnan(img)],
-                                                 highdens_thresh)
+        self.lowdens_percent = scoreatpercentile(img[~np.isnan(img)],
+                                                lowdens_percent)
+        self.highdens_percent = scoreatpercentile(img[~np.isnan(img)],
+                                                 highdens_percent)
 
         self.thresholds = np.linspace(
-            self.lowdens_thresh, self.highdens_thresh, numpts)
+            self.lowdens_percent, self.highdens_percent, numpts)
 
         if smoothing_radii is not None:
             assert isinstance(smoothing_radii, list)
@@ -72,14 +79,14 @@ class Genus(object):
 
         for i, width in enumerate(self.smoothing_radii):
             kernel = Gaussian2DKernel(
-                width, x_size=self.img.shape[0], y_size=self.img.shape[1])
+                width, x_size=self.data.shape[0], y_size=self.data.shape[1])
             if self.nanflag:
                 self.smoothed_images.append(
-                    convolve_fft(self.img, kernel,
+                    convolve_fft(self.data, kernel,
                                  normalize_kernel=True,
                                  interpolate_nan=True))
             else:
-                self.smoothed_images.append(convolve_fft(self.img, kernel))
+                self.smoothed_images.append(convolve_fft(self.data, kernel))
 
     # def clean_fft(self):
 
@@ -217,15 +224,17 @@ class GenusDistance(object):
     Parameters
     ----------
 
-    img1 - numpy.ndarray
+    img1 : %(dtypes)s
         2D image.
-    img2 - numpy.ndarray
+    img2 : %(dtypes)s
         2D image.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
     fiducial_model : Genus
         Computed Genus object. Use to avoid recomputing.
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
         super(GenusDistance, self).__init__()
@@ -239,10 +248,10 @@ class GenusDistance(object):
             self.genus1 = fiducial_model
         else:
             self.genus1 = Genus(
-                img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
+                img1, smoothing_radii=smoothing_radii, lowdens_percent=20).run()
 
         self.genus2 = Genus(
-            img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
+            img2, smoothing_radii=smoothing_radii, lowdens_percent=20).run()
 
         self.distance = None
 
