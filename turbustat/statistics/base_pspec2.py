@@ -159,7 +159,7 @@ class StatisticBase_PSpec2D(object):
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", ang_units=False, unit=u.arcsec):
+                 symbol="D", ang_units=False, unit=u.deg):
         '''
         Plot the fitted model.
         '''
