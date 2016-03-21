@@ -8,18 +8,20 @@ from numpy.fft import fftshift
 from ..rfft_to_fft import rfft_to_fft
 from slice_thickness import change_slice_thickness
 from ..base_pspec2 import StatisticBase_PSpec2D
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types
 
 
-class VCA(StatisticBase_PSpec2D):
+class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     '''
     The VCA technique (Lazarian & Pogosyan, 2004).
 
     Parameters
     ----------
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
-    header : FITS header
+    header : FITS header, optional
         Corresponding FITS header.
     slice_sizes : float or int, optional
         Slices to degrade the cube to.
@@ -27,21 +29,22 @@ class VCA(StatisticBase_PSpec2D):
         Convert frequencies to angular units using the given header.
     '''
 
-    def __init__(self, cube, header, slice_size=None, ang_units=False):
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
+    def __init__(self, cube, header=None, slice_size=None, ang_units=False):
         super(VCA, self).__init__()
 
-        self.cube = cube.astype("float64")
-        if np.isnan(self.cube).any():
-            self.cube[np.isnan(self.cube)] = 0
-        self.header = header
-        self.shape = self.cube.shape
+        self.input_data_header(cube, header)
+
+        if np.isnan(self.data).any():
+            self.data[np.isnan(self.data)] = 0
 
         if slice_size is None:
             self.slice_size = 1.0
 
         if slice_size != 1.0:
-            self.cube = \
-                change_slice_thickness(self.cube,
+            self.data = \
+                change_slice_thickness(self.data,
                                        slice_thickness=self.slice_size)
 
         self.ang_units = ang_units
@@ -53,7 +56,7 @@ class VCA(StatisticBase_PSpec2D):
         Compute the 2D power spectrum.
         '''
 
-        vca_fft = fftshift(rfft_to_fft(self.cube))
+        vca_fft = fftshift(rfft_to_fft(self.data))
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
@@ -96,9 +99,9 @@ class VCA_Distance(object):
 
     Parameters
     ----------
-    cube1 : FITS hdu
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : FITS hdu
+    cube2 : %(dtypes)s
         Data cube.
     slice_size : float, optional
         Slice to degrade the cube to.
@@ -111,11 +114,11 @@ class VCA_Distance(object):
         Convert frequencies to angular units using the given header.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
                  fiducial_model=None, ang_units=False):
         super(VCA_Distance, self).__init__()
-        cube1, header1 = cube1
-        cube2, header2 = cube2
 
         self.ang_units = ang_units
 
@@ -128,11 +131,11 @@ class VCA_Distance(object):
             self.vca1 = fiducial_model
         else:
             self.vca1 = \
-                VCA(cube1, header1, slice_size=slice_size,
+                VCA(cube1, slice_size=slice_size,
                     ang_units=ang_units).run(brk=breaks[0])
 
         self.vca2 = \
-            VCA(cube2, header2, slice_size=slice_size,
+            VCA(cube2, slice_size=slice_size,
                 ang_units=ang_units).run(brk=breaks[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None):

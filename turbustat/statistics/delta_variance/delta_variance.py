@@ -5,8 +5,11 @@ from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
 from astropy import units as u
 
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
-class DeltaVariance(object):
+
+class DeltaVariance(BaseStatisticMixIn):
 
     """
 
@@ -15,11 +18,11 @@ class DeltaVariance(object):
     Parameters
     ----------
 
-    img : numpy.ndarray
+    img : %(dtypes)s
         The image calculate the delta-variance of.
     header : FITS header
         Image header.
-    weights : numpy.ndarray
+    weights : %(dtypes)s
         Weights to be used.
     diam_ratio : float, optional
         The ratio between the kernel sizes.
@@ -31,22 +34,25 @@ class DeltaVariance(object):
         Convert frequencies to angular units using the given header.
     """
 
-    def __init__(self, img, header, weights=None, diam_ratio=1.5, lags=None,
-                 nlags=25, ang_units=False):
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
+    def __init__(self, img, header=None, weights=None, diam_ratio=1.5,
+                 lags=None, nlags=25, ang_units=False):
         super(DeltaVariance, self).__init__()
 
-        self.img = img
-        self.header = header
+        # Set the data and perform checks
+        self.input_data_header(img, header)
+
         self.diam_ratio = diam_ratio
         self.ang_units = ang_units
 
         if weights is None:
             self.weights = np.ones(img.shape)
         else:
-            self.weights = weights
+            self.weights = input_data(weights, no_header=True)
 
         self.nanflag = False
-        if np.isnan(self.img).any() or np.isnan(self.weights).any():
+        if np.isnan(self.data).any() or np.isnan(self.weights).any():
             self.nanflag = True
 
         if lags is None:
@@ -56,14 +62,14 @@ class DeltaVariance(object):
                 # Can't be smaller than one pixel, set to 3 to
                 # avoid noisy pixels. Can't be bigger than half the image
                 #(deals with issue from sim cubes).
-                if min_size < 3.0 or min_size > min(self.img.shape) / 2.:
+                if min_size < 3.0 or min_size > min(self.data.shape) / 2.:
                     min_size = 3.0
             except ValueError:
                 print("No CDELT2 in header. Using pixel scales.")
                 self.ang_size = 1.0 * u.astrophys.pixel
                 min_size = 3.0
             self.lags = np.logspace(np.log10(min_size),
-                                    np.log10(min(self.img.shape) / 2.), nlags)
+                                    np.log10(min(self.data.shape) / 2.), nlags)
         else:
             self.lags = lags
 
@@ -77,13 +83,13 @@ class DeltaVariance(object):
 
     def do_convolutions(self):
         for i, lag in enumerate(self.lags):
-            core = core_kernel(lag, self.img.shape[0], self.img.shape[1])
+            core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
-                lag, self.diam_ratio, self.img.shape[0], self.img.shape[1])
+                lag, self.diam_ratio, self.data.shape[0], self.data.shape[1])
 
             # Extend to avoid boundary effects from non-periodicity
             pad_weights = np.pad(self.weights, int(lag), padwithzeros)
-            pad_img = np.pad(self.img, int(lag), padwithzeros) * pad_weights
+            pad_img = np.pad(self.data, int(lag), padwithzeros) * pad_weights
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
@@ -232,13 +238,13 @@ class DeltaVariance_Distance(object):
     Parameters
     ----------
 
-    dataset1 : tuple
+    dataset1 : %(dtypes)s
         Contains the data and header for one dataset.
-    dataset2 : tuple
+    dataset2 : %(dtypes)s
         See above.
-    weights1 : numpy.ndarray
+    weights1 : %(dtypes)s
         Weights for dataset1.
-    weights2 : numpy.ndarray
+    weights2 : %(dtypes)s
         See above.
     diam_ratio : float, optional
         The ratio between the kernel sizes.
@@ -249,6 +255,8 @@ class DeltaVariance_Distance(object):
     ang_units : bool, optional
         Convert frequencies to angular units using the given header.
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
                  diam_ratio=1.5, lags=None, fiducial_model=None,

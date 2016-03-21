@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 
 from ..threeD_to_twoD import _format_data
-from ...io import input_data
+from ...io import input_data, common_types, threed_types
 
 
 class Cramer_Distance(object):
@@ -23,9 +23,9 @@ class Cramer_Distance(object):
     Parameters
     ----------
 
-    cube1 : numpy.ndarray
+    cube1 : %(dtypes)s
         First cube to compare.
-    cube2 : numpy.ndarray
+    cube2 : %(dtypes)s
         Second cube to compare.
     noise_value1 : float, optional
         Noise level in the first cube.
@@ -35,6 +35,8 @@ class Cramer_Distance(object):
         Method to arange cube into 2D. Only 'intensity' is currently
         implemented.
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, noise_value1=0.1,
                  noise_value2=0.1):

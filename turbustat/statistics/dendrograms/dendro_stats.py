@@ -26,9 +26,11 @@ except ImportError:
     astrodendro_flag = False
 
 from ..stats_utils import hellinger, common_histogram_bins, standardize
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types, twod_types
 
 
-class Dendrogram_Stats(object):
+class Dendrogram_Stats(BaseStatisticMixIn):
 
     """
     Dendrogram statistics as described in Burkhart et al. (2013)
@@ -39,8 +41,8 @@ class Dendrogram_Stats(object):
     Parameters
     ----------
 
-    cube : numpy.ndarray
-        Data cube.
+    data : %(dtypes)s
+        Data to create the dendrogram from.
     min_deltas : numpy.ndarray or list
         Minimum deltas of leaves in the dendrogram.
     dendro_params : dict
@@ -49,14 +51,20 @@ class Dendrogram_Stats(object):
 
     """
 
-    def __init__(self, cube, min_deltas=None, dendro_params=None):
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
+
+    def __init__(self, data, min_deltas=None, dendro_params=None):
         super(Dendrogram_Stats, self).__init__()
 
         if not astrodendro_flag:
             raise ImportError("astrodendro must be installed to use "
                               "Dendrogram_Stats.")
 
-        self.cube = cube
+        # A header isn't needed. Disable the check flag
+        self.need_header_flag = False
+        self.header = None
+        self.data = data
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
@@ -103,7 +111,7 @@ class Dendrogram_Stats(object):
 
         if dendro_obj is None:
             d = \
-                Dendrogram.compute(self.cube, verbose=verbose,
+                Dendrogram.compute(self.data, verbose=verbose,
                                    min_delta=self.min_deltas[0],
                                    min_value=self.dendro_params["min_value"],
                                    min_npix=self.dendro_params["min_npix"])
@@ -285,10 +293,10 @@ class DendroDistance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray or str
+    cube1 : %(dtypes)s or str
         Data cube. If a str, it should be the filename of a pickle file saved
         using Dendrogram_Stats.
-    cube2 : numpy.ndarray or str
+    cube2 : %(dtypes)s or str
         Data cube. If a str, it should be the filename of a pickle file saved
         using Dendrogram_Stats.
     min_deltas : numpy.ndarray or list
@@ -311,6 +319,9 @@ class DendroDistance(object):
         second for cube2.
 
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
                  min_features=100, fiducial_model=None, dendro_params=None):

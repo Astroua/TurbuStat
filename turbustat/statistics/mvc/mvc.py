@@ -5,20 +5,22 @@ import numpy as np
 from numpy.fft import fft2, fftshift
 
 from ..base_pspec2 import StatisticBase_PSpec2D
+from ..base_statistic import BaseStatisticMixIn
+from ...io import input_data, common_types, twod_types
 
 
-class MVC(StatisticBase_PSpec2D):
+class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     """
     Implementation of Modified Velocity Centroids (Lazarian & Esquivel, 03)
 
     Parameters
     ----------
-    centroid : numpy.ndarray
+    centroid : %(dtypes)s
         Normalized first moment array.
-    moment0 : numpy.ndarray
+    moment0 : %(dtypes)s
         Moment 0 array.
-    linewidth : numpy.ndarray
+    linewidth : %(dtypes)s
         Normalized second moment array
     header : FITS header
         Header of any of the arrays. Used only to get the
@@ -28,10 +30,20 @@ class MVC(StatisticBase_PSpec2D):
         given header.
     """
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, centroid, moment0, linewidth, header, ang_units=False):
-        self.centroid = centroid
-        self.moment0 = moment0
-        self.linewidth = linewidth
+
+        # data property not used here
+        self.no_data_flag = True
+        self.data = None
+
+        self.header = header
+
+        self.centroid = input_data(centroid, no_header=True)
+        self.moment0 = input_data(moment0, no_header=True)
+        self.linewidth = input_data(linewidth, no_header=True)
+
         self.ang_units = ang_units
 
         # Get rid of nans.

@@ -5,39 +5,52 @@ from scipy.stats import ks_2samp, anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, threed_types, input_data
 
 
-class PDF(object):
+class PDF(BaseStatisticMixIn):
     '''
     Create the PDF of a given array.
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         A 1-3D array.
     min_val : float, optional
         Minimum value to keep in the given image.
     bins : list or numpy.ndarray or int, optional
         Bins to compute the PDF from.
-    weights : numpy.ndarray, optional
+    weights : %(dtypes)s, optional
         Weights to apply to the image. Must have the same shape as the image.
     use_standardized : bool, optional
         Enable to standardize the data before computing the PDF and ECDF.
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
+
     def __init__(self, img, min_val=0.0, bins=None, weights=None,
                  use_standardized=False):
         super(PDF, self).__init__()
 
-        self.img = img
+        self.need_header_flag = False
+        self.header = None
+
+        output_data = input_data(img, no_header=True)
+
+        self.img = output_data
 
         # We want to remove NaNs and value below the threshold.
-        self.data = img[np.isfinite(img)]
-        self.data = self.data[self.data > min_val]
+        keep_values = np.logical_and(np.isfinite(output_data),
+                                     output_data > min_val)
+        self.data = output_data[keep_values]
 
         # Do the same for the weights, then apply weights to the data.
         if weights is not None:
-            self.weights = weights[np.isfinite(img)]
-            self.weights = self.weights[self.data > min_val]
+            output_weights = input_data(weights, no_header=True)
+
+            self.weights = output_weights[keep_values]
 
             self.data *= self.weights
 
@@ -206,19 +219,23 @@ class PDF_Distance(object):
 
     Parameters
     ----------
-    img1 : numpy.ndarray
+    img1 : %(dtypes)s
         Array (1-3D).
-    img2 : numpy.ndarray
+    img2 : %(dtypes)s
         Array (1-3D).
     min_val1 : float, optional
         Minimum value to keep in img1
     min_val2 : float, optional
         Minimum value to keep in img2
-    weights1 : numpy.ndarray, optional
+    weights1 : %(dtypes)s, optional
         Weights to be used with img1
-    weights2 : numpy.ndarray, optional
+    weights2 : %(dtypes)s, optional
         Weights to be used with img2
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
+
     def __init__(self, img1, img2, min_val1=0.0, min_val2=0.0,
                  weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()

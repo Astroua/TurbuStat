@@ -4,31 +4,39 @@
 import numpy as np
 
 from ..threeD_to_twoD import var_cov_cube
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types, input_data
 
 
-class PCA(object):
+class PCA(BaseStatisticMixIn):
 
     '''
     Implementation of Principal Component Analysis (Heyer & Brunt, 2002)
 
     Parameters
     ----------
-
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
     n_eigs : int
         Number of eigenvalues to compute.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube, n_eigs=50):
         super(PCA, self).__init__()
-        self.cube = cube
+
+        # Header not needed
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(cube, no_header=True)
         self.n_eigs = n_eigs
 
         # Remove NaNs
-        self.cube[np.isnan(self.cube)] = 0
+        self.data[np.isnan(self.data)] = 0
 
-        self.n_velchan = self.cube.shape[0]
+        self.n_velchan = self.data.shape[0]
         self.eigvals = None
 
     def compute_pca(self, mean_sub=False, normalize=True):
@@ -48,7 +56,7 @@ class PCA(object):
             variance that eigenvector describes.
         '''
 
-        self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
+        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
@@ -112,9 +120,9 @@ class PCA_Distance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : numpy.ndarray
+    cube2 : %(dtypes)s
         Data cube.
     n_eigs : int
         Number of eigenvalues to compute.
@@ -127,21 +135,21 @@ class PCA_Distance(object):
         is to not subtract the mean, as is done in the Heyer & Brunt works.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None,
                  normalize=True, mean_sub=False):
         super(PCA_Distance, self).__init__()
-        self.cube1 = cube1
-        self.cube2 = cube2
 
         self.normalize = normalize
 
         if fiducial_model is not None:
             self.pca1 = fiducial_model
         else:
-            self.pca1 = PCA(self.cube1, n_eigs=n_eigs)
+            self.pca1 = PCA(cube1, n_eigs=n_eigs)
             self.pca1.run(normalize=normalize)
 
-        self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
+        self.pca2 = PCA(cube2, n_eigs=n_eigs)
         self.pca2.run(normalize=normalize)
 
     def distance_metric(self, verbose=False, label1=None, label2=None):

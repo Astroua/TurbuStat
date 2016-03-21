@@ -5,18 +5,18 @@ import numpy as np
 from scipy.stats import nanmean, nanstd
 
 from ..stats_utils import hellinger, kl_divergence, common_histogram_bins
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
 
-class StatMoments(object):
-
+class StatMoments(BaseStatisticMixIn):
     """
-
     Statistical Moments of a given image are returned.
     See Burkhart et al. (2010) for methods used.
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         2D Image.
     radius : int, optional
         Radius of circle to use when computing moments.
@@ -24,18 +24,23 @@ class StatMoments(object):
         If the data is periodic (ie. from asimulation), wrap the data.
     bins : array or int, optional
         Number of bins to use in the histogram.
-
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img, radius=5, periodic=True, nbins=None):
         super(StatMoments, self).__init__()
 
-        self.img = img
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(img, no_header=True)
+
         self.radius = radius
         self.periodic_flag = periodic
 
         if nbins is None:
-            self.nbins = np.sqrt(self.img.size)
+            self.nbins = np.sqrt(self.data.size)
         else:
             self.nbins = nbins
 
@@ -59,7 +64,7 @@ class StatMoments(object):
         Moments over the entire image.
         '''
         self.mean, self.variance, self.skewness, self.kurtosis =\
-            compute_moments(self.img)
+            compute_moments(self.data)
 
     def compute_spatial_distrib(self):
         '''
@@ -67,9 +72,9 @@ class StatMoments(object):
         '''
 
         if self.periodic_flag:
-            pad_img = np.pad(self.img, self.radius, mode="wrap")
+            pad_img = np.pad(self.data, self.radius, mode="wrap")
         else:
-            pad_img = np.pad(self.img, self.radius, padwithnans)
+            pad_img = np.pad(self.data, self.radius, padwithnans)
         circle_mask = circular_region(self.radius)
 
         for i in range(self.radius, pad_img.shape[0] - self.radius):
@@ -192,25 +197,25 @@ class StatMoments(object):
                      origin="lower", interpolation="nearest")
             p.title("Mean")
             p.colorbar()
-            p.contour(self.img)
+            p.contour(self.data)
             p.subplot(222)
             p.imshow(self.variance_array, cmap="binary",
                      origin="lower", interpolation="nearest")
             p.title("Variance")
             p.colorbar()
-            p.contour(self.img)
+            p.contour(self.data)
             p.subplot(223)
             p.imshow(self.skewness_array, cmap="binary",
                      origin="lower", interpolation="nearest")
             p.title("Skewness")
             p.colorbar()
-            p.contour(self.img)
+            p.contour(self.data)
             p.subplot(224)
             p.imshow(self.kurtosis_array, cmap="binary",
                      origin="lower", interpolation="nearest")
             p.title("Kurtosis")
             p.colorbar()
-            p.contour(self.img)
+            p.contour(self.data)
             p.show()
         return self
 
@@ -230,9 +235,9 @@ class StatMoments_Distance(object):
 
     Parameters
     ----------
-    image1 : numpy.ndarray
+    image1 : %(dtypes)s
         2D Image.
-    image2 : numpy.ndarray
+    image2 : %(dtypes)s
         2D Image.
     radius : int, optional
         Radius of circle to use when computing moments.
@@ -246,6 +251,8 @@ class StatMoments_Distance(object):
         Computed StatMoments object. use to avoid recomputing.
 
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, image1, image2, radius=5, nbins=None,
                  periodic1=False, periodic2=False, fiducial_model=None):

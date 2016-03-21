@@ -6,17 +6,17 @@ from scipy.stats import chisquare
 from scipy.optimize import curve_fit
 
 from ..stats_utils import standardize
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
 
-class Tsallis(object):
-
+class Tsallis(BaseStatisticMixIn):
     """
-
     The Tsallis Distribution (see Tofflemire et al., 2011)
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         2D image.
     lags : numpy.ndarray or list
         Lags to calculate at.
@@ -26,6 +26,8 @@ class Tsallis(object):
         Sets whether the boundaries are periodic.
     """
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, img, lags=None, num_bins=500, periodic=False):
         '''
         Parameters
@@ -34,7 +36,11 @@ class Tsallis(object):
         periodic : bool, optional
                    Use for simulations with periodic boundaries.
         '''
-        self.img = img
+
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(img, no_header=True)
         self.num_bins = num_bins
         self.periodic = periodic
 
@@ -57,9 +63,9 @@ class Tsallis(object):
 
         for i, lag in enumerate(self.lags):
             if self.periodic:
-                pad_img = self.img
+                pad_img = self.data
             else:
-                pad_img = np.pad(self.img, lag, padwithzeros)
+                pad_img = np.pad(self.data, lag, padwithzeros)
             rolls = np.roll(pad_img, lag, axis=0) +\
                 np.roll(pad_img, (-1) * lag, axis=0) +\
                 np.roll(pad_img, lag, axis=1) +\
@@ -154,10 +160,10 @@ class Tsallis_Distance(object):
 
     Parameters
     ----------
-    array1 : numpy.ndarray
-        2D image.
-    array2 : numpy.ndarray
-        2D image.
+    array1 : %(dtypes)s
+        2D datas.
+    array2 : %(dtypes)s
+        2D datas.
     lags : numpy.ndarray or list
         Lags to calculate at.
     num_bins : int, optional
@@ -168,11 +174,11 @@ class Tsallis_Distance(object):
         Sets whether the boundaries are periodic.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, array1, array2, lags=None, num_bins=500,
                  fiducial_model=None, periodic=False):
         super(Tsallis_Distance, self).__init__()
-        self.array1 = array1
-        self.array2 = array2
 
         if fiducial_model is not None:
             self.tsallis1 = fiducial_model

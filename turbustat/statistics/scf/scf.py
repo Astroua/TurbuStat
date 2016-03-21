@@ -4,20 +4,22 @@
 import numpy as np
 import cPickle as pickle
 from copy import deepcopy
+
 from ..psds import pspec
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types
 
 
-class SCF(object):
-
+class SCF(BaseStatisticMixIn):
     '''
     Computes the Spectral Correlation Function of a data cube
     (Rosolowsky et al, 1999).
 
     Parameters
     ----------
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
-    header : FITS header
+    header : FITS header, optional
         Header for the cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
@@ -25,12 +27,17 @@ class SCF(object):
         Convert the lags to angular units using the given header.
     '''
 
-    def __init__(self, cube, header, size=11, ang_units=False):
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
+    def __init__(self, cube, header=None, size=11, ang_units=False):
         super(SCF, self).__init__()
-        self.cube = cube
-        self.header = header
+
+        # Set data and header
+        self.input_data_header(cube, header)
+
         if size % 2 == 0:
-            print "Size must be odd. Reducing size to next lowest odd number."
+            Warning("Size must be odd. Reducing size to next lowest odd"
+                    " number.")
             self.size = size - 1
         else:
             self.size = size
@@ -71,10 +78,10 @@ class SCF(object):
 
         for i in dx:
             for j in dy:
-                tmp = np.roll(self.cube, i, axis=1)
+                tmp = np.roll(self.data, i, axis=1)
                 tmp = np.roll(tmp, j, axis=2)
-                values = np.nansum(((self.cube - tmp) ** 2), axis=0) / \
-                    (np.nansum(self.cube ** 2, axis=0) +
+                values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
+                    (np.nansum(self.data ** 2, axis=0) +
                      np.nansum(tmp ** 2, axis=0))
 
                 scf_value = 1. - \
@@ -238,9 +245,9 @@ class SCF_Distance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : numpy.ndarray
+    cube2 : %(dtypes)s
         Data cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
@@ -252,22 +259,22 @@ class SCF_Distance(object):
         Convert the lags to angular units using the given header.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube1, cube2, size=21, fiducial_model=None,
                  weighted=True, ang_units=False):
         super(SCF_Distance, self).__init__()
-        cube1, header1 = cube1
-        cube2, header2 = cube2
         self.size = size
         self.weighted = weighted
 
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(cube1, header1, size=self.size,
+            self.scf1 = SCF(cube1, size=self.size,
                             ang_units=ang_units)
             self.scf1.run(return_stddev=True)
 
-        self.scf2 = SCF(cube2, header2, size=self.size,
+        self.scf2 = SCF(cube2, size=self.size,
                         ang_units=ang_units)
         self.scf2.run(return_stddev=True)
 
