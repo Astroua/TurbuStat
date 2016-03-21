@@ -4,6 +4,7 @@
 import numpy as np
 import cPickle as pickle
 from copy import deepcopy
+from astropy import units as u
 
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
@@ -23,13 +24,11 @@ class SCF(BaseStatisticMixIn):
         Header for the cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
-    ang_units : bool, optional
-        Convert the lags to angular units using the given header.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, size=11, ang_units=False):
+    def __init__(self, cube, header=None, size=11):
         super(SCF, self).__init__()
 
         # Set data and header
@@ -44,8 +43,6 @@ class SCF(BaseStatisticMixIn):
 
         self._scf_surface = None
         self._scf_spectrum_stddev = None
-
-        self.ang_units = ang_units
 
     @property
     def scf_surface(self):
@@ -121,8 +118,7 @@ class SCF(BaseStatisticMixIn):
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
 
-        if self.ang_units:
-            self._lags *= np.abs(self.header["CDELT2"])
+        self._lags = self._lags * u.pix
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -180,7 +176,8 @@ class SCF(BaseStatisticMixIn):
         return self
 
     def run(self, logspacing=False, return_stddev=False, verbose=False,
-            save_results=False, output_name=None):
+            save_results=False, output_name=None, ang_units=False,
+            unit=u.deg):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -196,6 +193,10 @@ class SCF(BaseStatisticMixIn):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.compute_surface()
@@ -218,8 +219,14 @@ class SCF(BaseStatisticMixIn):
             p.xlabel("SCF Value")
 
             ax = p.subplot(2, 2, 4)
+            if ang_units:
+                lags = \
+                    self.lags.to(unit, equivalencies=self.angular_equiv).value
+            else:
+                lags = self.lags.value
+
             if self._stddev_flag:
-                ax.errorbar(self.lags, self.scf_spectrum,
+                ax.errorbar(lags, self.scf_spectrum,
                             yerr=self.scf_spectrum_stddev,
                             fmt='D-', color='k', markersize=5)
                 ax.set_xscale("log", nonposy='clip')
@@ -227,10 +234,10 @@ class SCF(BaseStatisticMixIn):
                 p.semilogx(self.lags, self.scf_spectrum, 'kD-',
                            markersize=5)
 
-            if self.ang_units:
-                ax.set_xlabel("Lag (deg)")
+            if ang_units:
+                ax.set_xlabel("Lag ("+unit.to_string()+")")
             else:
-                ax.set_xlabel("Lag (pixel)")
+                ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
             p.show()
@@ -255,14 +262,12 @@ class SCF_Distance(object):
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
         Sets whether to apply the 1/r^2 weighting to the distance.
-    ang_units : bool, optional
-        Convert the lags to angular units using the given header.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=21, fiducial_model=None,
-                 weighted=True, ang_units=False):
+                 weighted=True):
         super(SCF_Distance, self).__init__()
         self.size = size
         self.weighted = weighted
@@ -270,15 +275,14 @@ class SCF_Distance(object):
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(cube1, size=self.size,
-                            ang_units=ang_units)
+            self.scf1 = SCF(cube1, size=self.size)
             self.scf1.run(return_stddev=True)
 
-        self.scf2 = SCF(cube2, size=self.size,
-                        ang_units=ang_units)
+        self.scf2 = SCF(cube2, size=self.size)
         self.scf2.run(return_stddev=True)
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg):
         '''
         Compute the distance between the surfaces.
 
@@ -290,6 +294,10 @@ class SCF_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         dx = np.arange(self.size) - self.size / 2
@@ -329,10 +337,21 @@ class SCF_Distance(object):
             p.title("Weighted Difference")
             p.colorbar()
             ax = p.subplot(2, 2, 4)
-            ax.errorbar(self.scf1.lags, self.scf1.scf_spectrum,
+            if ang_units:
+                lags1 = \
+                    self.scf1.lags.to(unit,
+                                      equivalencies=self.scf1.angular_equiv).value
+                lags2 = \
+                    self.scf2.lags.to(unit,
+                                      equivalencies=self.scf2.angular_equiv).value
+            else:
+                lags1 = self.scf1.lags.value
+                lags2 = self.scf2.lags.value
+
+            ax.errorbar(lags1, self.scf1.scf_spectrum,
                         yerr=self.scf1.scf_spectrum_stddev,
                         fmt='D-', color='b', markersize=5, label=label1)
-            ax.errorbar(self.scf2.lags, self.scf2.scf_spectrum,
+            ax.errorbar(lags2, self.scf2.scf_spectrum,
                         yerr=self.scf2.scf_spectrum_stddev,
                         fmt='o-', color='g', markersize=5, label=label2)
             ax.set_xscale("log", nonposy='clip')

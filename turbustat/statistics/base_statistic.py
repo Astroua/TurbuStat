@@ -1,5 +1,6 @@
 
 from astropy.io import fits
+import astropy.units as u
 import numpy as np
 
 from ..io import input_data
@@ -57,3 +58,12 @@ class BaseStatisticMixIn(object):
             self.header = header
         else:
             self.data, self.header = input_data(data)
+
+    @property
+    def angular_equiv(self):
+        return [(u.pix, u.deg, lambda x: x * float(self.ang_size.value),
+                lambda x: x / float(self.ang_size.value))]
+
+    @property
+    def ang_size(self):
+        return np.abs(self.header["CDELT2"]) * u.deg

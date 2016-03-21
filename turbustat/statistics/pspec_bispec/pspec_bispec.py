@@ -4,6 +4,7 @@
 import numpy as np
 import numpy.random as ra
 from numpy.fft import fftshift
+import astropy.units as u
 
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
@@ -24,22 +25,17 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         The image header. Needed for the pixel scale.
     weights : %(dtypes)s
         Weights to be applied to the image.
-    ang_units : bool, optional
-        Convert frequencies into angular units using the given header.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, header=None, weights=None, ang_units=False):
+    def __init__(self, img, header=None, weights=None):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
         self.input_data_header(img, header)
 
         self.data[np.isnan(self.data)] = 0.0
-
-        self.degperpix = np.abs(self.header["CDELT2"])
-        self.ang_units = ang_units
 
         if weights is None:
             weights = np.ones(img.shape)
@@ -63,7 +59,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.power(fft, 2.)
 
     def run(self, verbose=False, logspacing=True,
-            return_stddev=True, low_cut=None, high_cut=0.5):
+            return_stddev=True, low_cut=None, high_cut=0.5,
+            ang_units=False, unit=u.deg):
         '''
         Full computation of the spatial power spectrum.
 
@@ -79,6 +76,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : float, optional
             High frequency cut off in frequencies used in the fitting.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.compute_pspec()
@@ -127,21 +128,19 @@ class PSpec_Distance(object):
         self.ang_units = ang_units
 
         if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1,
-                                        weights=weights1, ang_units=ang_units)
+            self.pspec1 = PowerSpectrum(data1, weights=weights1)
             self.pspec1.run()
         else:
             self.pspec1 = fiducial_model
 
-        self.pspec2 = PowerSpectrum(data2,
-                                    weights=weights2, ang_units=ang_units)
+        self.pspec2 = PowerSpectrum(data2, weights=weights2)
         self.pspec2.run()
 
         self.results = None
         self.distance = None
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None):
+                        label1=None, label2=None, ang_units=False, unit=u.deg):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -164,6 +163,10 @@ class PSpec_Distance(object):
             Object or region name for data1
         label2 : str, optional
             Object or region name for data2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.distance = \
@@ -177,9 +180,11 @@ class PSpec_Distance(object):
 
             import matplotlib.pyplot as p
             self.pspec1.plot_fit(show=False, color='b',
-                                 label=label1, symbol='D')
+                                 label=label1, symbol='D',
+                                 ang_units=ang_units, unit=unit)
             self.pspec2.plot_fit(show=False, color='g',
-                                 label=label2, symbol='o')
+                                 label=label2, symbol='o',
+                                 ang_units=ang_units, unit=unit)
             p.legend(loc='best')
             p.show()
 

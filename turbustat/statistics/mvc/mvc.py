@@ -3,6 +3,7 @@
 
 import numpy as np
 from numpy.fft import fft2, fftshift
+import astropy.units as u
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -25,14 +26,11 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
     header : FITS header
         Header of any of the arrays. Used only to get the
         spatial scale.
-    ang_units : bool, optional
-        When enabled, the frequencies are converted to 1/deg using the
-        given header.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, centroid, moment0, linewidth, header, ang_units=False):
+    def __init__(self, centroid, moment0, linewidth, header):
 
         # data property not used here
         self.no_data_flag = True
@@ -43,8 +41,6 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.centroid = input_data(centroid, no_header=True)
         self.moment0 = input_data(moment0, no_header=True)
         self.linewidth = input_data(linewidth, no_header=True)
-
-        self.ang_units = ang_units
 
         # Get rid of nans.
         self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
@@ -84,7 +80,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.abs(mvc_fft) ** 2.
 
     def run(self, verbose=False, logspacing=True,
-            return_stddev=True, low_cut=None, high_cut=0.5):
+            return_stddev=True, low_cut=None, high_cut=0.5,
+            ang_units=False, unit=u.deg):
         '''
         Full computation of MVC.
 
@@ -100,6 +97,10 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : float, optional
             High frequency cut off in frequencies used in the fitting.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.compute_pspec()
@@ -113,7 +114,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
             print self.fit.summary()
 
-            self.plot_fit(show=True, show_2D=True)
+            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
+                          unit=unit)
 
         return self
 
@@ -141,7 +143,7 @@ class MVC_Distance(object):
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
-                 weight_by_error=False, ang_units=False):
+                 weight_by_error=False):
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -169,17 +171,15 @@ class MVC_Distance(object):
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
-                            data1["centroid"][1], ang_units=ang_units)
+                            data1["centroid"][1])
             self.mvc1.run()
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
-                        data2["centroid"][1], ang_units=ang_units)
+                        data2["centroid"][1])
         self.mvc2.run()
 
-        self.ang_units = ang_units
-
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None):
+                        label1=None, label2=None, ang_units=False, unit=u.deg):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -201,6 +201,10 @@ class MVC_Distance(object):
             Object or region name for dataset1
         label2 : str, optional
             Object or region name for dataset2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         # Construct t-statistic
@@ -215,8 +219,10 @@ class MVC_Distance(object):
             print self.mvc2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D')
-            self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o')
+            self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
+                               ang_units=ang_units, unit=unit)
+            self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o',
+                               ang_units=ang_units, unit=unit)
             p.legend(loc='best')
             p.show()
 

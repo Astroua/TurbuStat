@@ -4,6 +4,7 @@
 import numpy as np
 import warnings
 from numpy.fft import fftshift
+import astropy.units as u
 
 from ..rfft_to_fft import rfft_to_fft
 from slice_thickness import change_slice_thickness
@@ -25,13 +26,11 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Corresponding FITS header.
     slice_sizes : float or int, optional
         Slices to degrade the cube to.
-    ang_units : bool, optional
-        Convert frequencies to angular units using the given header.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, slice_size=None, ang_units=False):
+    def __init__(self, cube, header=None, slice_size=None):
         super(VCA, self).__init__()
 
         self.input_data_header(cube, header)
@@ -47,8 +46,6 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
                 change_slice_thickness(self.data,
                                        slice_thickness=self.slice_size)
 
-        self.ang_units = ang_units
-
         self._ps1D_stddev = None
 
     def compute_pspec(self):
@@ -61,7 +58,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
     def run(self, verbose=False, brk=None, return_stddev=True,
-            logspacing=True):
+            logspacing=True, ang_units=False, unit=u.deg):
         '''
         Full computation of VCA.
 
@@ -75,6 +72,10 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.compute_pspec()
@@ -85,7 +86,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
             print self.fit.summary()
 
-            self.plot_fit(show=True, show_2D=True)
+            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
+                          unit=unit)
 
         return self
 
@@ -110,17 +112,13 @@ class VCA_Distance(object):
         spline. If not specified, no break point will be used.
     fiducial_model : VCA
         Computed VCA object. use to avoid recomputing.
-    ang_units : bool, optional
-        Convert frequencies to angular units using the given header.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
-                 fiducial_model=None, ang_units=False):
+                 fiducial_model=None):
         super(VCA_Distance, self).__init__()
-
-        self.ang_units = ang_units
 
         assert isinstance(slice_size, float)
 
@@ -131,14 +129,13 @@ class VCA_Distance(object):
             self.vca1 = fiducial_model
         else:
             self.vca1 = \
-                VCA(cube1, slice_size=slice_size,
-                    ang_units=ang_units).run(brk=breaks[0])
+                VCA(cube1, slice_size=slice_size).run(brk=breaks[0])
 
         self.vca2 = \
-            VCA(cube2, slice_size=slice_size,
-                ang_units=ang_units).run(brk=breaks[1])
+            VCA(cube2, slice_size=slice_size).run(brk=breaks[1])
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -153,6 +150,10 @@ class VCA_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         # Construct t-statistic
@@ -169,8 +170,10 @@ class VCA_Distance(object):
             print self.vca2.fit.summary()
 
             import matplotlib.pyplot as p
-            self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D')
-            self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o')
+            self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
+                               ang_units=ang_units, unit=unit)
+            self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
+                               ang_units=ang_units, unit=unit)
             p.legend(loc='upper right')
             p.show()
 
