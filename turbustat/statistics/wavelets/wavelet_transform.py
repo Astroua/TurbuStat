@@ -4,6 +4,7 @@
 import numpy as np
 import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
+import astropy.units as u
 import statsmodels.api as sm
 
 from ..base_statistic import BaseStatisticMixIn
@@ -24,8 +25,6 @@ class Wavelet(BaseStatisticMixIn):
         The scales where the transform is calculated.
     num : int, optional
         Number of scales to compute the transform at.
-    ang_units : bool, optional
-        Convert scales to angular units using the given header.
     scale_normalization: bool, optional
         Compute the transform with the correct scale-invariant normalization.
     '''
@@ -33,7 +32,7 @@ class Wavelet(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data, header=None, scales=None, num=50,
-                 ang_units=False, scale_normalization=True):
+                 scale_normalization=True):
 
         self.input_data_header(data, header)
 
@@ -41,26 +40,14 @@ class Wavelet(BaseStatisticMixIn):
         # until the normalization for sum to zeros kernels is fixed!!!
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-        self.ang_units = ang_units
-
-        if ang_units:
-            try:
-                self.imgscale = np.abs(self.header["CDELT2"])
-            except ValueError:
-                warnings.warn("Header doesn't not contain the\
-                               angular size. Reverting to pixel scales.")
-                ang_units = False
-        if not ang_units:
-            self.imgscale = 1.0
-
         if scales is None:
             a_min = round((5. / 3.), 3)  # Smallest scale given by paper
             a_max = min(self.data.shape)/2
             # Log spaces scales up to half of the smallest size of the array
-            self.scales = np.logspace(np.log10(a_min), np.log10(a_max), num) *\
-                self.imgscale
+            self.scales = \
+                np.logspace(np.log10(a_min), np.log10(a_max), num) * u.pix
         else:
-            self.scales = scales
+            self.scales = self.to_pixel(scales)
 
         self.scale_normalization = scale_normalization
 
@@ -86,7 +73,7 @@ class Wavelet(BaseStatisticMixIn):
                     " normalization. When disabled, the slope of the transform"
                     " CANNOT be used for physical interpretation.")
 
-        for i, an in enumerate(self.scales):
+        for i, an in enumerate(self.scales.value):
             psi = MexicanHat2DKernel(an)
 
             self.Wf[i] = \
@@ -97,7 +84,7 @@ class Wavelet(BaseStatisticMixIn):
         Create the 1D transform.
         '''
 
-        self.values = np.empty_like(self.scales)
+        self.values = np.empty_like(self.scales.value)
         for i, plane in enumerate(self.Wf):
             self.values[i] = (plane[plane > 0]).mean()
 
@@ -106,7 +93,7 @@ class Wavelet(BaseStatisticMixIn):
         Perform a fit to the transform in log-log space.
         '''
 
-        x = np.log10(self.scales)
+        x = np.log10(self.scales.value)
         y = np.log10(self.values)
 
         x = sm.add_constant(x)
@@ -126,9 +113,18 @@ class Wavelet(BaseStatisticMixIn):
     def slope_err(self):
         return self._slope_err
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, ang_units=False, unit=u.deg):
         '''
         Compute the Wavelet transform.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Plot wavelet transform.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
         self.compute_transform()
         self.make_1D_transform()
@@ -137,8 +133,15 @@ class Wavelet(BaseStatisticMixIn):
         if verbose:
             import matplotlib.pyplot as p
 
-            p.loglog(self.scales, self.values, 'bD')
-            p.loglog(self.scales, 10**self.fit.fittedvalues, 'b-')
+            if ang_units:
+                scales = \
+                    self.scales.to(unit,
+                                   equivalencies=self.angular_equiv).value
+            else:
+                scales = self.scales.value
+
+            p.loglog(scales, self.values, 'bD')
+            p.loglog(scales, 10**self.fit.fittedvalues, 'b-')
 
             p.ylabel(r"$T_g$")
             if self.ang_units:
@@ -162,8 +165,6 @@ class Wavelet_Distance(object):
         2D image.
     dataset2 : %(dtypes)s
         2D image.
-    ang_units : bool, optional
-        Sets whether to use angular units.
     scales : numpy.ndarray or list
         The scales where the transform is calculated.
     num : int
@@ -175,23 +176,20 @@ class Wavelet_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2,
-                 ang_units=False, scales=None, num=50, fiducial_model=None):
+                 scales=None, num=50, fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
-        self.ang_units = ang_units
-
         if fiducial_model is None:
-            self.wt1 = Wavelet(dataset1, scales=scales,
-                               ang_units=ang_units)
+            self.wt1 = Wavelet(dataset1, scales=scales)
             self.wt1.run()
         else:
             self.wt1 = fiducial_model
 
-        self.wt2 = Wavelet(dataset2, scales=scales, ang_units=ang_units)
+        self.wt2 = Wavelet(dataset2, scales=scales)
         self.wt2.run()
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None):
+                        label2=None, ang_units=False, unit=u.deg):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -204,6 +202,10 @@ class Wavelet_Distance(object):
             Object or region name for dataset1
         label2 : str, optional
             Object or region name for dataset2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         # Construct t-statistic
@@ -217,9 +219,18 @@ class Wavelet_Distance(object):
             print(self.wt1.fit.summary())
             print(self.wt2.fit.summary())
 
-            scales1 = np.log10(self.wt1.scales)
+            if ang_units:
+                scales1 = \
+                    self.wt1.scales.to(unit, equivalencies=self.wt1.angular_equiv).value
+                scales2 = \
+                    self.wt2.scales.to(unit, equivalencies=self.wt2.angular_equiv).value
+            else:
+                scales1 = self.wt1.scales.value
+                scales2 = self.wt2.scales.value
+
+            scales1 = np.log10(scales1)
             values1 = np.log10(self.wt1.values)
-            scales2 = np.log10(self.wt2.scales)
+            scales2 = np.log10(scales2)
             values2 = np.log10(self.wt2.values)
 
             import matplotlib.pyplot as p
@@ -231,11 +242,11 @@ class Wavelet_Distance(object):
                    self.wt2.fit.fittedvalues[-len(values2):], "g")
             p.grid(True)
 
-            if self.ang_units:
-                xunit = "deg"
+            if ang_units:
+                p.xlabel("log a ("+unit.to_string()+")")
             else:
-                xunit = "pixels"
-            p.xlabel("log a ("+xunit+")")
+                p.xlabel("log a (pixels)")
+
             p.ylabel(r"log $T_g$")
             p.legend(loc='best')
             p.show()
