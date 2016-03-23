@@ -42,6 +42,9 @@ class Lm_Seg(object):
         self.y = y
         self.brk = brk
 
+        if not np.isfinite(self.brk):
+            raise ValueError("brk must be a finite value.")
+
         # Make sure the starting break point is in range of the data
         if not (self.x > self.brk).any():
             raise ValueError("brk is outside the range.")
