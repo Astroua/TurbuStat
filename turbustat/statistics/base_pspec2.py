@@ -63,7 +63,7 @@ class StatisticBase_PSpec2D(object):
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
-    def fit_pspec(self, brk=None, log_break=False, low_cut=None,
+    def fit_pspec(self, brk=None, log_break=True, low_cut=None,
                   high_cut=None, min_fits_pts=10, verbose=False,
                   large_scale=1.):
         '''
