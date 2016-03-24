@@ -144,7 +144,7 @@ class Wavelet(BaseStatisticMixIn):
             p.loglog(scales, 10**self.fit.fittedvalues, 'b-')
 
             p.ylabel(r"$T_g$")
-            if self.ang_units:
+            if ang_units:
                 p.xlabel("Scales (deg)")
             else:
                 p.xlabel("Scales (pixels)")
