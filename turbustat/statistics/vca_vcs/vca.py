@@ -79,7 +79,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         '''
 
         self.compute_pspec()
-        self.compute_radial_pspec(return_stddev=return_stddev)
+        self.compute_radial_pspec(return_stddev=return_stddev, max_bin=0.5)
         self.fit_pspec(brk=brk)
 
         if verbose:
