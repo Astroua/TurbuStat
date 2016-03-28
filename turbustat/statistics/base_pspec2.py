@@ -128,7 +128,7 @@ class StatisticBase_PSpec2D(object):
                     warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max()
+                    self.high_cut = self.freqs.max().value
                 else:
                     good_pts = x.copy() < brk_fit.brk
                     x = x[good_pts]
@@ -137,7 +137,7 @@ class StatisticBase_PSpec2D(object):
                     self.high_cut = 10**brk_fit.brk
 
             else:
-                self.high_cut = self.freqs.max()
+                self.high_cut = self.freqs.max().value
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
