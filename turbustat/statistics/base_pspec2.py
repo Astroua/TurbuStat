@@ -36,7 +36,7 @@ class StatisticBase_PSpec2D(object):
         return self._freqs
 
     def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=True, **kwargs):
+                             logspacing=True, max_bin=None, **kwargs):
         '''
         Computes the radially averaged power spectrum.
 
@@ -52,11 +52,11 @@ class StatisticBase_PSpec2D(object):
         if return_stddev:
             self._freqs, self._ps1D, self._ps1D_stddev = \
                 pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, **kwargs)
+                      logspacing=logspacing, max_bin=max_bin, **kwargs)
             self._stddev_flag = True
         else:
             self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_stddev=return_stddev,
+                pspec(self.ps2D, return_stddev=return_stddev, max_bin=max_bin,
                       **kwargs)
             self._stddev_flag = False
 
@@ -128,15 +128,16 @@ class StatisticBase_PSpec2D(object):
                     warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max()
+                    self.high_cut = self.freqs.max().value
                 else:
-                    x = x[x < brk_fit.brk]
-                    y = y[x < brk_fit.brk]
+                    good_pts = x.copy() < brk_fit.brk
+                    x = x[good_pts]
+                    y = y[good_pts]
 
                     self.high_cut = 10**brk_fit.brk
 
             else:
-                self.high_cut = self.freqs.max()
+                self.high_cut = self.freqs.max().value
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
