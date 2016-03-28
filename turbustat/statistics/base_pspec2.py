@@ -130,8 +130,9 @@ class StatisticBase_PSpec2D(object):
 
                     self.high_cut = self.freqs.max()
                 else:
-                    x = x[x < brk_fit.brk]
-                    y = y[x < brk_fit.brk]
+                    good_pts = x.copy() < brk_fit.brk
+                    x = x[good_pts]
+                    y = y[good_pts]
 
                     self.high_cut = 10**brk_fit.brk
 
