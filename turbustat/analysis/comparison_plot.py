@@ -308,7 +308,8 @@ def _plotter(ax, data, fid_data, num_fids, title, stat, bottom, left,
         prev = 0
         for i, posn in enumerate(np.arange(num_fids - 1, 0, -1)):
             ax.plot(x_fid_vals[:len(x_fid_vals)-i-1],
-                    fid_data[prev:posn+prev], "ko", alpha=0.6)
+                    fid_data[prev:posn+prev], "ko", alpha=0.6,
+                    label="_nolegend_")
             prev += posn
     # Make the legend
     if legend:
