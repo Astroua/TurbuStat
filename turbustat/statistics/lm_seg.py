@@ -169,7 +169,10 @@ class Lm_Seg(object):
         self._params = self.fit.params
         self._errs = self.fit.bse
 
-        self.brk_err = brk_errs(self.params, fit.cov_params())
+        if not self.break_fail_flag:
+            self.brk_err = brk_errs(self.params, fit.cov_params())
+        else:
+            self.brk_err = 0.0
 
         self.get_slopes()
 
