@@ -229,7 +229,7 @@ class VCS_Distance(object):
 
         self.vel_units = vel_units
 
-        if not isinstance(breaks, list) or not isinstance(breaks, np.ndarray):
+        if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
 
         if fiducial_model is not None:
