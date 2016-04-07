@@ -65,3 +65,13 @@ This package was developed by:
 * [Caleb Ward](https://github.com/Astrolebs)
 * [Erik Rosolowsky](https://github.com/low-sky)
 * [Jason Loeppky](https:/github.com/jloeppky)
+
+If you make use of this package in a publication, please cite our accompanying paper:
+```
+   @ARTICLE{Koch2016,
+    author = {{Koch}, Eric~W. and {Ward}, Caleb~G. and {Offner}, Stella and {Loeppky}, Jason~L. and {Rosolowsky}, Erik~W.},
+    title = {Tools for Critically Evaluating Simulations of Star Formation},
+    journal = {MNRAS},
+    year = {submitted}
+    }
+```
