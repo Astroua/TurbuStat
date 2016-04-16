@@ -344,10 +344,10 @@ class BiSpectrum_Distance(object):
             self.bispec1 = fiducial_model
         else:
             self.bispec1 = BiSpectrum(data1)
-            self.bispec1.run()
+            self.bispec1.run(nsamples=nsamples)
 
         self.bispec2 = BiSpectrum(data2)
-        self.bispec2.run()
+        self.bispec2.run(nsamples=nsamples)
 
         self.distance = None
 
