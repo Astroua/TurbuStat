@@ -39,7 +39,8 @@ def check_dependencies():
             "Install or upgrade scipy before installing TurbuStat.")
 
     try:
-        from pandas.version import version as pa_version
+        import pandas
+        pa_version = pandas.__version__
         if parse_version(pa_version) < parse_version('0.13'):
             print("***Before installing, upgrade pandas to 0.13***")
             raise ImportError
@@ -145,6 +146,7 @@ if __name__ == "__main__":
     # invoking any other functionality from distutils since it can potentially
     # modify distutils' behavior.
     cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
+    cmdclassd['check_deps'] = check_deps
 
     # Adjust the compiler in case the default on this platform is to use a
     # broken one.
