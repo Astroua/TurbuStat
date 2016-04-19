@@ -46,7 +46,7 @@ class VCS(BaseStatisticMixIn):
 
         if vel_units:
             try:
-                spec_unit = u.Unit(header["CUNIT3"])
+                spec_unit = u.Unit(self.header["CUNIT3"])
                 self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
                                    spec_unit).to(u.km/u.s).value
             except (KeyError, u.UnitsError) as e:
@@ -293,9 +293,9 @@ class VCS_Distance(object):
             print(self.vcs2.fit.fit.summary())
 
             if self.vel_units:
-                xlab = r"log k$_v$/$(km^{-1}s)$"
+                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
-                xlab = r"log k$_v$/pixel$^{-1}$"
+                xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
             import matplotlib.pyplot as p
             p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
