@@ -180,9 +180,9 @@ class VCS(BaseStatisticMixIn):
             import matplotlib.pyplot as p
 
             if self.vel_units:
-                xlab = r"log k$_v$/$(km^{-1}s)$"
+                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
-                xlab = r"log k$_v$/pixel$^{-1}$)"
+                xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
             p.loglog(self.vel_freqs, self.ps1D, "bD", label='Data')
             p.loglog(10**self.fit.x, 10**self.fit.model(self.fit.x), 'r',
