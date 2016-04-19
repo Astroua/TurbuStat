@@ -46,7 +46,7 @@ class VCS(BaseStatisticMixIn):
 
         if vel_units:
             try:
-                spec_unit = u.Unit(header["CUNIT3"])
+                spec_unit = u.Unit(self.header["CUNIT3"])
                 self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
                                    spec_unit).to(u.km/u.s).value
             except (KeyError, u.UnitsError) as e:
