@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #112 - Stop importing everything at the top level of the module. Also fixes minor input bugs in BiSpectrum_Distance and registers "check_deps" as a command for setup.py.
 * #109 - Limit VCA spectrum frequencies below 0.5.
 * #106 - Support for multiple data inputs (FITS HDU, SpectralCube, etc). Switched to pytest.
 * #105 - Bug in wrapper function. Added test for wrapper.
