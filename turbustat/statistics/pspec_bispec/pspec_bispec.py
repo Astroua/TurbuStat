@@ -219,7 +219,8 @@ class BiSpectrum(BaseStatisticMixIn):
         # Set nans to min
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-    def compute_bispectrum(self, nsamples=100, seed=1000):
+    def compute_bispectrum(self, nsamples=100, seed=1000,
+                           mean_subract=False):
         '''
         Do the computation.
 
@@ -232,7 +233,12 @@ class BiSpectrum(BaseStatisticMixIn):
             Sets the seed for the distribution draws.
         '''
 
-        fftarr = np.fft.fft2(self.data)
+        if mean_subract:
+            norm_data = self.data - self.data.mean()
+        else:
+            norm_data = self.data
+
+        fftarr = np.fft.fft2(norm_data)
         conjfft = np.conj(fftarr)
         ra.seed(seed)
 
