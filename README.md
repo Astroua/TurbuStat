@@ -52,9 +52,16 @@ Requires:
  *   sklearn-0.13.0
  *   pandas-0.13
  *   statsmodels-0.4.0
- *   astrodendro-dev
- *   [signal-id](https://github.com/radio-astro-tools/signal-id)
+
+Recommended:
+
  *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube)
+ *   [radio_beam](https://github.com/radio-astro-tools/radio_beam)
+ *   [astrodendro-development](https://github.com/dendrograms/astrodendro)
+
+Optional:
+ *   [signal-id](https://github.com/radio-astro-tools/signal-id)
+
 
 Credits
 -------
