@@ -55,12 +55,12 @@ Requires:
 
 Recommended:
 
- *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube)
- *   [radio_beam](https://github.com/radio-astro-tools/radio_beam)
- *   [astrodendro-development](https://github.com/dendrograms/astrodendro)
+ *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
+ *   [astrodendro-development](https://github.com/dendrograms/astrodendro) - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
 
 Optional:
- *   [signal-id](https://github.com/radio-astro-tools/signal-id)
+ *   [signal-id](https://github.com/radio-astro-tools/signal-id) - Noise estimation in PPV cubes.
+ *   [radio_beam](https://github.com/radio-astro-tools/radio_beam) - A class for handling radio beams and useful utilities. Used for noise estimation in signal-id
 
 
 Credits
