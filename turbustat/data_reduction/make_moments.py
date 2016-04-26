@@ -1,6 +1,4 @@
 
-from spectral_cube import SpectralCube, LazyMask
-from spectral_cube.wcs_utils import drop_axis
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
@@ -8,6 +6,15 @@ from scipy import ndimage as nd
 import itertools as it
 import operator as op
 import os
+
+try:
+    from spectral_cube import SpectralCube, LazyMask
+    from spectral_cube.wcs_utils import drop_axis
+    spectral_cube_flag = True
+except ImportError:
+    Warning("spectral-cube is not installed. Using Mask_and_Moments requires"
+            " spectral-cube to be installed.")
+    spectral_cube_flag = False
 
 try:
     from signal_id import Noise
@@ -46,6 +53,11 @@ class Mask_and_Moments(object):
                  moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
 
+        if not spectral_cube_flag:
+            raise ImportError("Mask_and_Moments requires the spectral-cube "
+                              " to be installed: https://github.com/"
+                              "radio-astro-tools/spectral-cube")
+
         if isinstance(cube, SpectralCube):
             self.cube = cube
             self.save_name = None
@@ -63,8 +75,9 @@ class Mask_and_Moments(object):
 
         if scale is None:
             if not signal_id_flag:
-                raise ImportError("signal-id is not installed."
-                                  " You must provide the scale.")
+                raise ImportError("signal-id is not installed and error"
+                                  " estimation is not available. You must "
+                                  "provide the noise scale.")
 
             self.scale = Noise(self.cube).scale
         else:
@@ -379,6 +392,11 @@ class Mask_and_Moments(object):
             Filename of the integrated intensity array. Use if naming scheme
             is not valid for automatic loading.
         '''
+
+        if not spectral_cube_flag:
+            raise ImportError("Mask_and_Moments requires the spectral-cube "
+                              " to be installed: https://github.com/"
+                              "radio-astro-tools/spectral-cube")
 
         if moments_path is None:
             moments_path = ""
