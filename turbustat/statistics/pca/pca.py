@@ -33,9 +33,6 @@ class PCA(BaseStatisticMixIn):
         self.data = input_data(cube, no_header=True)
         self.n_eigs = n_eigs
 
-        # Remove NaNs
-        self.data[np.isnan(self.data)] = 0
-
         self.n_velchan = self.data.shape[0]
         self.eigvals = None
 
