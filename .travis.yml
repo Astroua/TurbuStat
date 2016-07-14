@@ -33,7 +33,7 @@ matrix:
           env: NP_VER=1.10 ASTRO_VER=1.1
 
         - python: 2.7
-          env: NP_VER=1.10 ASTRO_VER=1.2
+          env: NP_VER=1.11 ASTRO_VER=1.2
 
 
 before_install:
