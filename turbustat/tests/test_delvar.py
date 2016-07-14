@@ -27,7 +27,7 @@ class testDelVar(TestCase):
                           dataset1["integrated_intensity"][1],
                           dataset1["integrated_intensity_error"][0])
         self.tester.run()
-        assert np.allclose(self.tester.delta_var, computed_data['delvar_val'])
+        npt.assert_allclose(self.tester.delta_var, computed_data['delvar_val'])
 
     def test_DelVar_distance(self):
         self.tester_dist = \
@@ -37,4 +37,5 @@ class testDelVar(TestCase):
                                    weights2=dataset2["integrated_intensity_error"][0])
         self.tester_dist.distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
-                                computed_distances['delvar_distance'])
+                                computed_distances['delvar_distance'],
+                                decimal=3)
