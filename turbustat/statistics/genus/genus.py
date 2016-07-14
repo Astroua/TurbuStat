@@ -2,7 +2,7 @@
 
 import numpy as np
 import scipy.ndimage as nd
-from scipy.stats import scoreatpercentile, nanmean, nanstd
+from scipy.stats import scoreatpercentile
 from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
@@ -41,8 +41,8 @@ class Genus(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, lowdens_percent=0, highdens_percent=100, numpts=100,
-                 smoothing_radii=None):
+    def __init__(self, img, lowdens_percent=0, highdens_percent=100,
+                 numpts=100, smoothing_radii=None):
         super(Genus, self).__init__()
 
         # A header isn't needed. Disable the check flag
@@ -55,9 +55,9 @@ class Genus(BaseStatisticMixIn):
             self.nanflag = True
 
         self.lowdens_percent = scoreatpercentile(img[~np.isnan(img)],
-                                                lowdens_percent)
+                                                 lowdens_percent)
         self.highdens_percent = scoreatpercentile(img[~np.isnan(img)],
-                                                 highdens_percent)
+                                                  highdens_percent)
 
         self.thresholds = np.linspace(
             self.lowdens_percent, self.highdens_percent, numpts)
@@ -247,11 +247,13 @@ class GenusDistance(object):
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
-            self.genus1 = Genus(
-                img1, smoothing_radii=smoothing_radii, lowdens_percent=20).run()
+            self.genus1 = \
+                Genus(img1, smoothing_radii=smoothing_radii,
+                      lowdens_percent=20).run()
 
-        self.genus2 = Genus(
-            img2, smoothing_radii=smoothing_radii, lowdens_percent=20).run()
+        self.genus2 = \
+            Genus(img2, smoothing_radii=smoothing_radii,
+                  lowdens_percent=20).run()
 
         self.distance = None
 
@@ -273,7 +275,8 @@ class GenusDistance(object):
 
         # 2 times the average number between the two
         num_pts = \
-            int((len(self.genus1.thresholds) + len(self.genus2.thresholds))/2)
+            int((len(self.genus1.thresholds) +
+                 len(self.genus2.thresholds)) / 2)
 
         # Get the min and the max of the thresholds
         min_pt = max(np.min(self.genus1.thresholds),
@@ -282,7 +285,7 @@ class GenusDistance(object):
         max_pt = min(np.max(self.genus1.thresholds),
                      np.max(self.genus2.thresholds))
 
-        points = np.linspace(min_pt, max_pt, 2*num_pts)
+        points = np.linspace(min_pt, max_pt, 2 * num_pts)
 
         interp1 = \
             InterpolatedUnivariateSpline(self.genus1.thresholds,
@@ -291,8 +294,8 @@ class GenusDistance(object):
             InterpolatedUnivariateSpline(self.genus2.thresholds,
                                          self.genus2.genus_stats[0, :], k=3)
 
-        self.distance = np.nansum(np.abs(interp1(points) -
-                                         interp2(points))) / len(points)
+        self.distance = np.linalg.norm(interp1(points) -
+                                       interp2(points))
 
         if verbose:
             import matplotlib.pyplot as p
