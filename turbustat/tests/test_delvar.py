@@ -23,18 +23,17 @@ class testDelVar(TestCase):
 
     def test_DelVar_method(self):
         self.tester = \
-            DeltaVariance(dataset1["integrated_intensity"][0],
-                          dataset1["integrated_intensity"][1],
-                          dataset1["integrated_intensity_error"][0])
+            DeltaVariance(dataset1["moment0"],
+                          dataset1["moment0_error"][0])
         self.tester.run()
         npt.assert_allclose(self.tester.delta_var, computed_data['delvar_val'])
 
     def test_DelVar_distance(self):
         self.tester_dist = \
-            DeltaVariance_Distance(dataset1["integrated_intensity"],
-                                   dataset2["integrated_intensity"],
-                                   weights1=dataset1["integrated_intensity_error"][0],
-                                   weights2=dataset2["integrated_intensity_error"][0])
+            DeltaVariance_Distance(dataset1["moment0"],
+                                   dataset2["moment0"],
+                                   weights1=dataset1["moment0_error"][0],
+                                   weights2=dataset2["moment0_error"][0])
         self.tester_dist.distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['delvar_distance'],

@@ -22,7 +22,7 @@ class testSCF(TestCase):
         self.dataset2 = dataset2
 
     def test_SCF_method(self):
-        self.tester = SCF(dataset1["cube"][0], dataset1["cube"][1], size=11)
+        self.tester = SCF(dataset1["cube"], size=11)
         self.tester.run()
 
         assert np.allclose(self.tester.scf_surface, computed_data['scf_val'])
