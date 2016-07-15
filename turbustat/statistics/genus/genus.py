@@ -15,7 +15,7 @@ except ImportError:
 
 from ..stats_utils import standardize
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, twod_types
+from ...io import common_types, twod_types, input_data
 
 
 class Genus(BaseStatisticMixIn):
@@ -48,16 +48,18 @@ class Genus(BaseStatisticMixIn):
         # A header isn't needed. Disable the check flag
         self.need_header_flag = False
         self.header = None
-        self.data = img
+        self.data = input_data(img, no_header=True)
 
         self.nanflag = False
         if np.isnan(self.data).any():
             self.nanflag = True
 
-        self.lowdens_percent = scoreatpercentile(img[~np.isnan(img)],
-                                                 lowdens_percent)
-        self.highdens_percent = scoreatpercentile(img[~np.isnan(img)],
-                                                  highdens_percent)
+        self.lowdens_percent = \
+            scoreatpercentile(self.data[~np.isnan(self.data)],
+                              lowdens_percent)
+        self.highdens_percent = \
+            scoreatpercentile(self.data[~np.isnan(self.data)],
+                              highdens_percent)
 
         self.thresholds = np.linspace(
             self.lowdens_percent, self.highdens_percent, numpts)
@@ -66,7 +68,7 @@ class Genus(BaseStatisticMixIn):
             assert isinstance(smoothing_radii, list)
             self.smoothing_radii = smoothing_radii
         else:
-            self.smoothing_radii = np.linspace(1.0, 0.1 * min(img.shape), 5)
+            self.smoothing_radii = np.linspace(1.0, 0.1 * min(self.data.shape), 5)
 
         self.genus_stats = np.empty([numpts, len(self.smoothing_radii)])
         self.fft_images = []
@@ -240,6 +242,9 @@ class GenusDistance(object):
         super(GenusDistance, self).__init__()
 
         # Standardize the intensity values in the images
+
+        img1 = input_data(img1, no_header=True)
+        img2 = input_data(img2, no_header=True)
 
         img1 = standardize(img1)
         img2 = standardize(img2)
