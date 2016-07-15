@@ -24,7 +24,7 @@ class testDelVar(TestCase):
     def test_DelVar_method(self):
         self.tester = \
             DeltaVariance(dataset1["moment0"],
-                          dataset1["moment0_error"][0])
+                          weights=dataset1["moment0_error"][0])
         self.tester.run()
         npt.assert_allclose(self.tester.delta_var, computed_data['delvar_val'])
 

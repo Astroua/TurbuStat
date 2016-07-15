@@ -24,7 +24,7 @@ class testPSpec(TestCase):
     def test_PSpec_method(self):
         self.tester = \
             PowerSpectrum(dataset1["moment0"],
-                          dataset1["moment0_error"][0] ** 2.)
+                          weights=dataset1["moment0_error"][0] ** 2.)
         self.tester.run()
         npt.assert_allclose(self.tester.ps1D, computed_data['pspec_val'])
 
