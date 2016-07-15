@@ -50,7 +50,7 @@ class Tsallis(BaseStatisticMixIn):
             self.lags = lags
 
         self.tsallis_arrays = np.empty(
-            (len(self.lags), img.shape[0], img.shape[1]))
+            (len(self.lags), self.data.shape[0], self.data.shape[1]))
         self.tsallis_distrib = np.empty((len(self.lags), 2, num_bins))
         self.tsallis_fits = np.empty((len(self.lags), 7))
 
