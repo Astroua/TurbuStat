@@ -92,8 +92,6 @@ class Cramer_Distance(object):
 
                 self.data_matrix1 = new_data
 
-        return self
-
     def cramer_statistic(self, n_jobs=1):
         '''
         Applies the Cramer Statistic to the datasets.
@@ -146,8 +144,6 @@ class Cramer_Distance(object):
         term3 *= (1 / (2 * n ** 2.))
 
         self.distance = (m * n / (m + n)) * (term1 - term2 - term3)
-
-        return self
 
     def distance_metric(self, n_jobs=1):
         '''
