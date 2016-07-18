@@ -7,92 +7,91 @@ Save the key results using the testing datasets.
 
 import numpy as np
 
-keywords = ["centroid", "centroid_error", "integrated_intensity",
-            "integrated_intensity_error", "linewidth", "linewidth_error",
-            "moment0", "moment0_error", "cube"]
-
-
 from turbustat.tests._testing_data import dataset1, dataset2
 
-## Wavelet Transform
+# Wavelet Transform
 
 from turbustat.statistics import Wavelet_Distance
 
-wavelet_distance = Wavelet_Distance(dataset1["integrated_intensity"],
-                                    dataset2["integrated_intensity"]).distance_metric(verbose=False)
+wavelet_distance = \
+    Wavelet_Distance(dataset1["moment0"],
+                     dataset2["moment0"]).distance_metric()
 
 wavelet_val = wavelet_distance.wt1.values
 
-## MVC#
+# MVC
 
 from turbustat.statistics import MVC_Distance
 
-mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric(verbose=False)
+mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric()
 
 mvc_val = mvc_distance.mvc1.ps1D
 
-## Spatial Power Spectrum/ Bispectrum#
+# Spatial Power Spectrum/ Bispectrum
 
 from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-pspec_distance = PSpec_Distance(dataset1["integrated_intensity"],
-                                dataset2["integrated_intensity"],
-                                weights1=dataset1["integrated_intensity_error"][0]**2.,
-                                weights2=dataset2["integrated_intensity_error"][0]**2.).distance_metric(verbose=False)
+pspec_distance = \
+    PSpec_Distance(dataset1["moment0"],
+                   dataset2["moment0"],
+                   weights1=dataset1["moment0_error"][0]**2.,
+                   weights2=dataset2["moment0_error"][0]**2.).distance_metric()
 
 pspec_val = pspec_distance.pspec1.ps1D
 
-bispec_distance = BiSpectrum_Distance(dataset1["integrated_intensity"],
-                                      dataset2["integrated_intensity"]).distance_metric(verbose=False)
+bispec_distance = \
+    BiSpectrum_Distance(dataset1["moment0"],
+                        dataset2["moment0"]).distance_metric()
 
 bispec_val = bispec_distance.bispec1.bicoherence
 
-## Genus
+# Genus
 
 from turbustat.statistics import GenusDistance
 
-genus_distance = GenusDistance(dataset1["integrated_intensity"][0],
-                               dataset2["integrated_intensity"][0]).distance_metric(verbose=False)
+genus_distance = \
+    GenusDistance(dataset1["moment0"],
+                  dataset2["moment0"]).distance_metric()
 
 genus_val = genus_distance.genus1.genus_stats
 
-## Delta-Variance
+# Delta-Variance
 
 from turbustat.statistics import DeltaVariance_Distance
 
 delvar_distance = \
-    DeltaVariance_Distance(dataset1["integrated_intensity"],
-                           dataset2["integrated_intensity"],
-                           weights1=dataset1["integrated_intensity_error"][0],
-                           weights2=dataset2["integrated_intensity_error"][0])
+    DeltaVariance_Distance(dataset1["moment0"],
+                           dataset2["moment0"],
+                           weights1=dataset1["moment0_error"][0],
+                           weights2=dataset2["moment0_error"][0])
 
-delvar_distance.distance_metric(verbose=False)
+delvar_distance.distance_metric()
 
 delvar_val = delvar_distance.delvar1.delta_var
 
-## VCA/VCS
+# VCA/VCS
 
 from turbustat.statistics import VCA_Distance, VCS_Distance
 
 vcs_distance = VCS_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric(verbose=False)
+                            dataset2["cube"]).distance_metric()
 
 vcs_val = vcs_distance.vcs1.ps1D
 
 vca_distance = VCA_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric(verbose=False)
+                            dataset2["cube"]).distance_metric()
 
 vca_val = vca_distance.vca1.ps1D
 
-## Tsallis#
+# Tsallis
 
 from turbustat.statistics import Tsallis_Distance
 
 tsallis_distance = \
-    Tsallis_Distance(dataset1["integrated_intensity"][0],
-                     dataset2["integrated_intensity"][0],
+    Tsallis_Distance(dataset1["moment0"],
+                     dataset2["moment0"],
                      lags=[1, 2, 4, 8, 16],
-                     num_bins=100).distance_metric(verbose=False)
+                     num_bins=100).distance_metric()
 
 tsallis_val = tsallis_distance.tsallis1.tsallis_fits
 
@@ -101,62 +100,62 @@ tsallis_val = tsallis_distance.tsallis1.tsallis_fits
 from turbustat.statistics import StatMoments_Distance
 
 moment_distance = \
-    StatMoments_Distance(dataset1["integrated_intensity"][0],
-                         dataset2["integrated_intensity"][0]).distance_metric(verbose=False)
+    StatMoments_Distance(dataset1["moment0"],
+                         dataset2["moment0"]).distance_metric()
 
 kurtosis_val = moment_distance.moments1.kurtosis_hist[1]
 skewness_val = moment_distance.moments1.skewness_hist[1]
 
-## PCA
+# PCA
 
 from turbustat.statistics import PCA_Distance
 
-pca_distance = PCA_Distance(dataset1["cube"][0],
-                            dataset2["cube"][0]).distance_metric(verbose=False)
+pca_distance = PCA_Distance(dataset1["cube"],
+                            dataset2["cube"]).distance_metric()
 pca_val = pca_distance.pca1.eigvals
 
-## SCF
+# SCF
 
 from turbustat.statistics import SCF_Distance
 
 scf_distance = SCF_Distance(dataset1["cube"],
-                            dataset2["cube"], size=11).distance_metric(verbose=False)
+                            dataset2["cube"], size=11).distance_metric()
 scf_val = scf_distance.scf1.scf_surface
 
-## Cramer Statistic
+# Cramer Statistic
 
 from turbustat.statistics import Cramer_Distance
 
-cramer_distance = Cramer_Distance(dataset1["cube"][0],
-                                  dataset2["cube"][0]).distance_metric()
+cramer_distance = Cramer_Distance(dataset1["cube"],
+                                  dataset2["cube"]).distance_metric()
 
 cramer_val = cramer_distance.data_matrix1
 
-## Dendrograms
+# Dendrograms
 
 from turbustat.statistics import DendroDistance
 
 min_deltas = np.logspace(-1.5, 0.5, 40)
 
-dendro_distance = DendroDistance(dataset1["cube"][0],
-                                 dataset2["cube"][0],
-                                 min_deltas=min_deltas).distance_metric(verbose=False)
+dendro_distance = DendroDistance(dataset1["cube"],
+                                 dataset2["cube"],
+                                 min_deltas=min_deltas).distance_metric()
 
 dendrogram_val = dendro_distance.dendro1.numfeatures
 
-## PDF
+# PDF
 
 from turbustat.statistics import PDF_Distance
 
 pdf_distance = \
-    PDF_Distance(dataset1["integrated_intensity"][0],
-                 dataset2["integrated_intensity"][0],
+    PDF_Distance(dataset1["moment0"],
+                 dataset2["moment0"],
                  min_val1=0.05,
                  min_val2=0.05,
-                 weights1=dataset1["integrated_intensity_error"][0] ** -2.,
-                 weights2=dataset2["integrated_intensity_error"][0] ** -2.)
+                 weights1=dataset1["moment0_error"][0] ** -2.,
+                 weights2=dataset2["moment0_error"][0] ** -2.)
 
-pdf_distance.distance_metric(verbose=False)
+pdf_distance.distance_metric()
 
 pdf_val = pdf_distance.PDF1.pdf
 pdf_ecdf = pdf_distance.PDF1.ecdf

@@ -21,11 +21,9 @@ class testVCS(TestCase):
         self.dataset2 = dataset2
 
     def test_VCS_method(self):
-        self.tester = VCS(dataset1["cube"][0],
-                          dataset1["cube"][1])
-        self.tester = self.tester.run()
+        self.tester = VCS(dataset1["cube"]).run()
 
-        assert np.allclose(self.tester.ps1D, computed_data['vcs_val'])
+        npt.assert_allclose(self.tester.ps1D, computed_data['vcs_val'])
 
     def test_VCS_distance(self):
         self.tester_dist = \

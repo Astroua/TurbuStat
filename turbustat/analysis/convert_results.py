@@ -52,18 +52,19 @@ def convert_format(path, face1, face2=None, design=None, output_type="csv",
         files = [path + f for f in os.listdir(path)
                  if os.path.isfile(path + f)
                  and "_"+str(face1)+"_"+str(face2)+"_" in f
-                 and "comparisons" not in f]
+                 and "fid_comp" not in f]
     else:
         # Observational comparisons explicitly have 'face' in filename
         files = [path + f for f in os.listdir(path)
                  if os.path.isfile(path + f)
                  and "face_"+str(face1) in f
-                 and "comparisons" not in f]
+                 and "fid_comp" not in f]
     files.sort()
     print "Files used: %s" % (files)
 
     if len(files) == 0:
-        raise StandardError("No files found for "+str(face1)+" and "+str(face2))
+        raise StandardError("No files found for "+str(face1)+" and " +
+                            str(face2))
 
     if design is not None:
         if isinstance(design, str):
@@ -155,7 +156,8 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8,
 
     if append_comp:
         fids = []
-        for fid, num in zip(np.arange(0, num_fids-1), np.arange(num_fids-1, 0, -1)):
+        for fid, num in zip(np.arange(0, num_fids-1),
+                            np.arange(num_fids-1, 0, -1)):
             for _ in range(num):
                 fids.append(fid)
 
@@ -166,7 +168,8 @@ def convert_fiducial(filename, output_type="csv", decimal_places=8,
         if comp in filename:
             break
     else:
-        raise StandardError("Could not find a face comparison match for "+filename)
+        raise StandardError("Could not find a face comparison match for " +
+                            filename)
 
     output_name = "fiducials"+comp[:-1]+"."+output_type
 

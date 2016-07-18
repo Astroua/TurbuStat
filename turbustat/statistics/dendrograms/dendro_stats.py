@@ -27,7 +27,7 @@ except ImportError:
 
 from ..stats_utils import hellinger, common_histogram_bins, standardize
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, threed_types, twod_types
+from ...io import common_types, threed_types, twod_types, input_data
 
 
 class Dendrogram_Stats(BaseStatisticMixIn):
@@ -64,7 +64,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         # A header isn't needed. Disable the check flag
         self.need_header_flag = False
         self.header = None
-        self.data = data
+        self.data = input_data(data, no_header=True)
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
@@ -376,16 +376,16 @@ class DendroDistance(object):
         if cutoff1.any():
             cutoff1 = cutoff1[-1]
         else:
-            raise ValueError("The dendrogram from cube1 does not contain the \
-                              necessary number of features, %s. Lower \
-                              min_features or alter min_deltas."
+            raise ValueError("The dendrogram from cube1 does not contain the"
+                             " necessary number of features, %s. Lower"
+                             " min_features or alter min_deltas."
                              % (min_features))
         if cutoff2.any():
             cutoff2 = cutoff2[-1]
         else:
-            raise ValueError("The dendrogram from cube2 does not contain the \
-                              necessary number of features, %s. Lower \
-                              min_features or alter min_deltas."
+            raise ValueError("The dendrogram from cube2 does not contain the"
+                             " necessary number of features, %s. Lower"
+                             " min_features or alter min_deltas."
                              % (min_features))
 
         self.cutoff = np.min([cutoff1, cutoff2])

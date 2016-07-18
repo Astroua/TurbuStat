@@ -21,8 +21,7 @@ class testVCA(TestCase):
         self.dataset2 = dataset2
 
     def test_VCA_method(self):
-        self.tester = VCA(dataset1["cube"][0],
-                          dataset1["cube"][1])
+        self.tester = VCA(dataset1["cube"])
         self.tester.run()
         npt.assert_allclose(self.tester.ps1D, computed_data['vca_val'])
 

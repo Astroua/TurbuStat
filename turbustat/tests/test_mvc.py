@@ -22,9 +22,9 @@ class testMVC(TestCase):
         self.dataset2 = dataset2
 
     def test_MVC_method(self):
-        self.tester = MVC(dataset1["centroid"][0],
-                          dataset1["moment0"][0],
-                          dataset1["linewidth"][0],
+        self.tester = MVC(dataset1["centroid"],
+                          dataset1["moment0"],
+                          dataset1["linewidth"],
                           dataset1["centroid"][1])
         self.tester.run()
 

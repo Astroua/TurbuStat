@@ -18,7 +18,7 @@ from ._testing_data import \
 class TestMoments(TestCase):
 
     def test_moments(self):
-        self.tester = StatMoments(dataset1["integrated_intensity"][0])
+        self.tester = StatMoments(dataset1["moment0"])
         self.tester.run()
 
         # This simply ensures the data set will run.
@@ -27,8 +27,8 @@ class TestMoments(TestCase):
 
     def test_moment_distance(self):
         self.tester_dist = \
-            StatMoments_Distance(dataset1["integrated_intensity"][0],
-                                 dataset2["integrated_intensity"][0])
+            StatMoments_Distance(dataset1["moment0"],
+                                 dataset2["moment0"])
         self.tester_dist.distance_metric()
 
         assert np.allclose(self.tester_dist.moments1.kurtosis_hist[1],

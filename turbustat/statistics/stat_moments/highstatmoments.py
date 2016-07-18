@@ -49,10 +49,10 @@ class StatMoments(BaseStatisticMixIn):
         self.skewness = None
         self.kurtosis = None
 
-        self.mean_array = np.empty(img.shape)
-        self.variance_array = np.empty(img.shape)
-        self.skewness_array = np.empty(img.shape)
-        self.kurtosis_array = np.empty(img.shape)
+        self.mean_array = np.empty(self.data.shape)
+        self.variance_array = np.empty(self.data.shape)
+        self.skewness_array = np.empty(self.data.shape)
+        self.kurtosis_array = np.empty(self.data.shape)
 
         self.mean_hist = None
         self.variance_hist = None
@@ -258,6 +258,9 @@ class StatMoments_Distance(object):
                  periodic1=False, periodic2=False, fiducial_model=None):
         super(StatMoments_Distance, self).__init__()
 
+        image1 = input_data(image1, no_header=True)
+        image2 = input_data(image2, no_header=True)
+
         if nbins is None:
             self.nbins = _auto_nbins(image1.size, image2.size)
         else:
@@ -428,4 +431,4 @@ def padwithnans(vector, pad_width, iaxis, kwargs):
 
 
 def _auto_nbins(size1, size2):
-    return int((size1 + size2)/2.)
+    return int((size1 + size2) / 2.)

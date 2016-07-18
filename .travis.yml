@@ -32,6 +32,9 @@ matrix:
         - python: 2.7
           env: NP_VER=1.10 ASTRO_VER=1.1
 
+        - python: 2.7
+          env: NP_VER=1.11 ASTRO_VER=1.2
+
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh

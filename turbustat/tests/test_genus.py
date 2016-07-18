@@ -21,8 +21,8 @@ class testGenus(TestCase):
         self.dataset2 = dataset2
 
     def test_Genus_method(self):
-        self.tester = GenusDistance(dataset1["integrated_intensity"][0],
-                                    dataset2["integrated_intensity"][0])
+        self.tester = GenusDistance(dataset1["moment0"],
+                                    dataset2["moment0"])
         self.tester.distance_metric()
 
         assert np.allclose(self.tester.genus1.genus_stats,
@@ -30,8 +30,8 @@ class testGenus(TestCase):
 
     def test_Genus_distance(self):
         self.tester_dist = \
-            GenusDistance(dataset1["integrated_intensity"][0],
-                          dataset2["integrated_intensity"][0])
+            GenusDistance(dataset1["moment0"],
+                          dataset2["moment0"])
         self.tester_dist.distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['genus_distance'])

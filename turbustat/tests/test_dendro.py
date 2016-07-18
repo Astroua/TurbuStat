@@ -22,18 +22,18 @@ class testDendrograms(TestCase):
 
     def test_DendroStat(self):
 
-        self.tester = Dendrogram_Stats(dataset1["cube"][0],
+        self.tester = Dendrogram_Stats(dataset1["cube"],
                                        min_deltas=self.min_deltas)
         self.tester.run()
 
-        assert np.allclose(self.tester.numfeatures,
-                           computed_data["dendrogram_val"])
+        npt.assert_allclose(self.tester.numfeatures,
+                            computed_data["dendrogram_val"])
 
     def test_DendroDistance(self):
 
         self.tester_dist = \
-            DendroDistance(dataset1["cube"][0],
-                           dataset2["cube"][0],
+            DendroDistance(dataset1["cube"],
+                           dataset2["cube"],
                            min_deltas=self.min_deltas).distance_metric()
 
         npt.assert_almost_equal(self.tester_dist.histogram_distance,
