@@ -157,4 +157,4 @@ def _iter_2D(arr):
     '''
 
     for chan in arr.reshape((arr.shape[0], -1)):
-        yield chan
+        yield chan.copy()
