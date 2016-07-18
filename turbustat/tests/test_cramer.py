@@ -17,13 +17,10 @@ from ._testing_data import \
 
 class testCramer(TestCase):
 
-    def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-
     def test_cramer(self):
-        self.tester = Cramer_Distance(dataset1["cube"], dataset2["cube"])
-        self.tester.distance_metric()
+        self.tester = Cramer_Distance(dataset1["cube"],
+                                      dataset2["cube"]).distance_metric()
+
         npt.assert_allclose(self.tester.data_matrix1,
                             computed_data["cramer_val"])
         npt.assert_almost_equal(self.tester.distance,
