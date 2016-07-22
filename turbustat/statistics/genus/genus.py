@@ -268,6 +268,9 @@ class GenusDistance(object):
         Data is centered and normalized (via normalize).
         The distance is the difference between cubic splines of the curves.
 
+        All values are normalized by the area of the image they were
+        calculated from.
+
         Parameters
         ----------
         verbose : bool, optional
@@ -292,12 +295,15 @@ class GenusDistance(object):
 
         points = np.linspace(min_pt, max_pt, 2 * num_pts)
 
+        genus1 = self.genus1.genus_stats[0, :] / float(self.genus1.data.size)
+        genus2 = self.genus2.genus_stats[0, :] / float(self.genus2.data.size)
+
         interp1 = \
             InterpolatedUnivariateSpline(self.genus1.thresholds,
-                                         self.genus1.genus_stats[0, :], k=3)
+                                         genus1, k=3)
         interp2 = \
             InterpolatedUnivariateSpline(self.genus2.thresholds,
-                                         self.genus2.genus_stats[0, :], k=3)
+                                         genus2, k=3)
 
         self.distance = np.linalg.norm(interp1(points) -
                                        interp2(points))
@@ -306,10 +312,10 @@ class GenusDistance(object):
             import matplotlib.pyplot as p
 
             p.plot(self.genus1.thresholds,
-                   self.genus1.genus_stats[0, :], "bD",
+                   genus1, "bD",
                    label=label1)
             p.plot(self.genus2.thresholds,
-                   self.genus2.genus_stats[0, :], "go",
+                   genus2, "go",
                    label=label2)
             p.plot(points, interp1(points), "b")
             p.plot(points, interp2(points), "g")

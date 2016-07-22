@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #116 - Normalize Genus distance by the image area for comparing unequally-sized images
 * #115 - Alter the PCA and Genus metrics to more closely follow the rest of the suite.
 * #112 - Stop importing everything at the top level of the module. Also fixes minor input bugs in BiSpectrum_Distance and registers "check_deps" as a command for setup.py.
 * #109 - Limit VCA spectrum frequencies below 0.5.
