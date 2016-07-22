@@ -296,8 +296,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
             pspec_distance = \
               PSpec_Distance(dataset1["moment0"],
                            dataset2["moment0"],
-                           weight1=dataset1["moment0_error"][0]**2.,
-                           weight2=dataset2["moment0_error"][0]**2.,
+                           weights1=dataset1["moment0_error"][0]**2.,
+                           weights2=dataset2["moment0_error"][0]**2.,
                            fiducial_model=fiducial_models["PSpec"]).distance_metric()
             distances["PSpec"] = pspec_distance.distance
 
