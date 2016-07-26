@@ -38,7 +38,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.data[np.isnan(self.data)] = 0.0
 
         if weights is None:
-            weights = np.ones(img.shape)
+            weights = np.ones(self.data.shape)
         else:
             # Get rid of all NaNs
             weights[np.isnan(weights)] = 0.0
