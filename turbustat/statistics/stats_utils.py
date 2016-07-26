@@ -131,11 +131,11 @@ def common_scale(wcs1, wcs2, tol=1e-5):
     scales2 = np.abs(wcs.utils.proj_plane_pixel_scales(wcs2.celestial))
 
     # Forcing near square pixels
-    if scales1[0] - scales1[1] > tol:
+    if np.abs(scales1[0] - scales1[1]) > tol:
         raise ValueError("Pixels in first WCS are not square. Recommend "
                          "reprojecting to the same grid.")
 
-    if scales2[0] - scales2[1] > tol:
+    if np.abs(scales2[0] - scales2[1]) > tol:
         raise ValueError("Pixels in second WCS are not square. Recommend "
                          "reprojecting to the same grid.")
 
