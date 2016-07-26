@@ -2,7 +2,6 @@
 
 
 import numpy as np
-from scipy.stats import nanmean, nanstd
 from astropy.wcs import WCS
 
 from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
@@ -432,8 +431,8 @@ def compute_moments(img):
 
     '''
 
-    mean = nanmean(img, axis=None)
-    variance = nanstd(img, axis=None) ** 2.
+    mean = np.nanmean(img, axis=None)
+    variance = np.nanstd(img, axis=None) ** 2.
     skewness = np.nansum(
         ((img - mean) / np.sqrt(variance)) ** 3.) / np.sum(~np.isnan(img))
     kurtosis = np.nansum(

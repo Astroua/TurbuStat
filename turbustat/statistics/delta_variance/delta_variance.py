@@ -1,7 +1,6 @@
 # Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
-from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy.wcs import WCS
@@ -380,7 +379,7 @@ def _delvar(array, weight, lag):
     '''
     Computes the delta variance of the given array.
     '''
-    arr_cent = array.copy() - nanmean(array, axis=None)
+    arr_cent = array.copy() - np.nanmean(array, axis=None)
 
     val = np.nansum(arr_cent ** 2. * weight) /\
         np.nansum(weight)
