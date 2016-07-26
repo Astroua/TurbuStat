@@ -432,7 +432,7 @@ def compute_moments(img):
     '''
 
     mean = np.nanmean(img, axis=None)
-    variance = np.nanstd(img, axis=None) ** 2.
+    variance = np.nanvar(img, axis=None)
     skewness = np.nansum(
         ((img - mean) / np.sqrt(variance)) ** 3.) / np.sum(~np.isnan(img))
     kurtosis = np.nansum(
