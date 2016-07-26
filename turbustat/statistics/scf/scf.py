@@ -5,10 +5,12 @@ import numpy as np
 import cPickle as pickle
 from copy import deepcopy
 from astropy import units as u
+from astropy.wcs import WCS
 
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, threed_types
+from ...io import common_types, threed_types, input_data
+from ..stats_utils import common_scale, fourier_shift
 
 
 class SCF(BaseStatisticMixIn):
@@ -28,18 +30,27 @@ class SCF(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, size=11):
+    def __init__(self, cube, header=None, size=11, roll_lags=None):
         super(SCF, self).__init__()
 
         # Set data and header
         self.input_data_header(cube, header)
 
-        if size % 2 == 0:
-            Warning("Size must be odd. Reducing size to next lowest odd"
-                    " number.")
-            self.size = size - 1
+        if roll_lags is None:
+            if size % 2 == 0:
+                Warning("Size must be odd. Reducing size to next lowest odd"
+                        " number.")
+                size = size - 1
+            self.roll_lags = np.arange(size) - size / 2
         else:
-            self.size = size
+            if roll_lags.size % 2 == 0:
+                Warning("Size of roll_lags must be odd. Reducing size to next"
+                        "lowest odd number.")
+                roll_lags = roll_lags[: -1]
+
+            self.roll_lags = roll_lags
+
+        self.size = self.roll_lags.size
 
         self._scf_surface = None
         self._scf_spectrum_stddev = None
@@ -70,20 +81,21 @@ class SCF(BaseStatisticMixIn):
 
         self._scf_surface = np.zeros((self.size, self.size))
 
-        dx = np.arange(self.size) - self.size / 2
-        dy = np.arange(self.size) - self.size / 2
+        dx = self.roll_lags.copy()
+        dy = self.roll_lags.copy()
 
         for i in dx:
             for j in dy:
-                tmp = np.roll(self.data, i, axis=1)
-                tmp = np.roll(tmp, j, axis=2)
+                tmp = fourier_shift(self.data, i, axis=1)
+                tmp = fourier_shift(tmp, j, axis=2)
                 values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
                     (np.nansum(self.data ** 2, axis=0) +
                      np.nansum(tmp ** 2, axis=0))
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[i+self.size/2, j+self.size/2] = scf_value
+                self._scf_surface[i + self.size / 2, j + self.size / 2] = \
+                    scf_value
 
     def compute_spectrum(self, logspacing=False, return_stddev=False,
                          **kwargs):
@@ -269,16 +281,41 @@ class SCF_Distance(object):
     def __init__(self, cube1, cube2, size=21, fiducial_model=None,
                  weighted=True):
         super(SCF_Distance, self).__init__()
-        self.size = size
         self.weighted = weighted
+
+        dataset1 = input_data(cube1, no_header=False)
+        dataset2 = input_data(cube2, no_header=False)
+
+        # Create a default set of lags, in pixels
+        if size % 2 == 0:
+            Warning("Size must be odd. Reducing size to next lowest odd"
+                    " number.")
+            size = size - 1
+
+        self.size = size
+        roll_lags = np.arange(size) - size / 2
+
+        # Now adjust the lags such they have a common scaling when the datasets
+        # are not on a common grid.
+        scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+
+        if scale == 1.0:
+            roll_lags1 = roll_lags
+            roll_lags2 = roll_lags
+        elif scale > 1.0:
+            roll_lags1 = scale * roll_lags
+            roll_lags2 = roll_lags
+        else:
+            roll_lags1 = roll_lags
+            roll_lags2 = roll_lags / float(scale)
 
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(cube1, size=self.size)
+            self.scf1 = SCF(cube1, roll_lags=roll_lags1)
             self.scf1.run(return_stddev=True)
 
-        self.scf2 = SCF(cube2, size=self.size)
+        self.scf2 = SCF(cube2, roll_lags=roll_lags2)
         self.scf2.run(return_stddev=True)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
@@ -300,6 +337,9 @@ class SCF_Distance(object):
             Choose the angular unit to convert to when ang_units is enabled.
         '''
 
+        # Since the angular scales are matched, we can assume that they will
+        # have the same weights. So just use the shape of the lags to create
+        # the weight surface.
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2
 
