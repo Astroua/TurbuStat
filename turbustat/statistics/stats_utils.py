@@ -142,3 +142,32 @@ def common_scale(wcs1, wcs2, tol=1e-5):
     scale = scales2[0] / scales1[0]
 
     return scale
+
+
+def fourier_shift(x, shift, axis=0):
+    '''
+    Shift a spectrum by a given number of pixels.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Array to be shifted
+    shift : int or float
+        Number of pixels to shift.
+    axis : int, optional
+        Axis to shift along.
+
+    Returns
+    -------
+    x2 : np.ndarray
+        Shifted array.
+    '''
+
+    ftx = np.fft.fft(x, axis=axis)
+    m = np.fft.fftfreq(x.shape[axis])
+    m_shape = [1] * len(x.shape)
+    m_shape[axis] = m.shape[0]
+    m = m.reshape(m_shape)
+    phase = np.exp(-2 * np.pi * m * 1j * shift)
+    x2 = np.real(np.fft.ifft(ftx * phase, axis=axis))
+    return x2
