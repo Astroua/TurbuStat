@@ -275,8 +275,6 @@ class DeltaVariance_Distance(object):
             nlags = 25
             shape1 = dataset1[0].shape
             shape2 = dataset2[0].shape
-            print(shape1, min(shape1))
-            print(shape2, min(shape2))
             if min(shape1) > min(shape2):
                 lags = \
                     np.logspace(np.log10(min_size),
