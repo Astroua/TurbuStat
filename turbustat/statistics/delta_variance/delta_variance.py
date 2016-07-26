@@ -4,9 +4,11 @@ import numpy as np
 from scipy.stats import nanmean
 from astropy.convolution import convolve_fft
 from astropy import units as u
+from astropy.wcs import WCS
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
+from ..stats_utils import common_scale
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -44,7 +46,7 @@ class DeltaVariance(BaseStatisticMixIn):
         self.diam_ratio = diam_ratio
 
         if weights is None:
-            self.weights = np.ones(img.shape)
+            self.weights = np.ones(self.data.shape)
         else:
             self.weights = input_data(weights, no_header=True)
 
@@ -264,17 +266,53 @@ class DeltaVariance_Distance(object):
                  diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
+        dataset1 = input_data(dataset1, no_header=False)
+        dataset2 = input_data(dataset2, no_header=False)
+
+        # Create a default set of lags, in pixels
+        if lags is None:
+            min_size = 3.0
+            nlags = 25
+            shape1 = dataset1[0].shape
+            shape2 = dataset2[0].shape
+            print(shape1, min(shape1))
+            print(shape2, min(shape2))
+            if min(shape1) > min(shape2):
+                lags = \
+                    np.logspace(np.log10(min_size),
+                                np.log10(min(shape2) / 2.),
+                                nlags) * u.pix
+            else:
+                lags = \
+                    np.logspace(np.log10(min_size),
+                                np.log10(min(shape1) / 2.),
+                                nlags) * u.pix
+
+        # Now adjust the lags such they have a common scaling when the datasets
+        # are not on a common grid.
+        scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+
+        if scale == 1.0:
+            lags1 = lags
+            lags2 = lags
+        elif scale > 1.0:
+            lags1 = scale * lags
+            lags2 = lags
+        else:
+            lags1 = lags
+            lags2 = lags / float(scale)
+
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
         else:
-            self.delvar1 = DeltaVariance(dataset1[0], dataset1[1],
+            self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
-                                         diam_ratio=diam_ratio, lags=lags)
+                                         diam_ratio=diam_ratio, lags=lags1)
             self.delvar1.run()
 
-        self.delvar2 = DeltaVariance(dataset2[0], dataset2[1],
+        self.delvar2 = DeltaVariance(dataset2,
                                      weights=weights2,
-                                     diam_ratio=diam_ratio, lags=lags)
+                                     diam_ratio=diam_ratio, lags=lags2)
         self.delvar2.run()
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
