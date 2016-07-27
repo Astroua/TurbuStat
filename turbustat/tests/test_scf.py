@@ -45,4 +45,4 @@ class testSCF(TestCase):
         # at least less than this.
         fid_dist = 0.02
 
-        assert self.tester_dist_zoom < fid_dist
+        assert self.tester_dist_zoom.distance < fid_dist
