@@ -9,6 +9,7 @@ from unittest import TestCase
 
 import numpy as np
 import numpy.testing as npt
+from scipy.ndimage import zoom
 
 from ..statistics import SCF, SCF_Distance
 from ._testing_data import \
@@ -16,10 +17,6 @@ from ._testing_data import \
 
 
 class testSCF(TestCase):
-
-    def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
 
     def test_SCF_method(self):
         self.tester = SCF(dataset1["cube"], size=11)
@@ -33,3 +30,17 @@ class testSCF(TestCase):
                          dataset2["cube"], size=11).distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['scf_distance'])
+
+    def test_SCF_regrid_distance(self):
+        hdr = dataset1["cube"][1].copy()
+        hdr["CDELT2"] = 0.5 * hdr["CDELT2"]
+        hdr["CDELT1"] = 0.5 * hdr["CDELT1"]
+        cube = zoom(dataset1["cube"][0], (1, 2, 2))
+
+        self.tester_dist_zoom = \
+            SCF_Distance([cube, hdr], dataset1["cube"],
+                         size=11).distance_metric(verbose=True)
+
+        fid_dist = 0.02
+
+        assert self.tester_dist_zoom < fid_dist
