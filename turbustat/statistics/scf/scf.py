@@ -129,7 +129,9 @@ class SCF(BaseStatisticMixIn):
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
 
-        self._lags = self._lags * u.pix
+        roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
+
+        self._lags = self._lags * roll_lag_diff * u.pix
 
     def save_results(self, output_name=None, keep_data=False):
         '''
