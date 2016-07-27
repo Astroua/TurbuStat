@@ -84,18 +84,17 @@ class SCF(BaseStatisticMixIn):
         dx = self.roll_lags.copy()
         dy = self.roll_lags.copy()
 
-        for i in dx:
-            for j in dy:
-                tmp = fourier_shift(self.data, i, axis=1)
-                tmp = fourier_shift(tmp, j, axis=2)
+        for i, x_shift in enumerate(dx):
+            for j, y_shift in enumerate(dy):
+                tmp = fourier_shift(self.data, x_shift, axis=1)
+                tmp = fourier_shift(tmp, y_shift, axis=2)
                 values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
                     (np.nansum(self.data ** 2, axis=0) +
                      np.nansum(tmp ** 2, axis=0))
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[i + self.size / 2, j + self.size / 2] = \
-                    scf_value
+                self._scf_surface[i, j] = scf_value
 
     def compute_spectrum(self, logspacing=False, return_stddev=False,
                          **kwargs):
@@ -130,7 +129,9 @@ class SCF(BaseStatisticMixIn):
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
 
-        self._lags = self._lags * u.pix
+        roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
+
+        self._lags = self._lags * roll_lag_diff * u.pix
 
     def save_results(self, output_name=None, keep_data=False):
         '''
