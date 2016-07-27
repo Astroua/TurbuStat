@@ -39,7 +39,7 @@ class testSCF(TestCase):
 
         self.tester_dist_zoom = \
             SCF_Distance([cube, hdr], dataset1["cube"],
-                         size=11).distance_metric(verbose=True)
+                         size=11).distance_metric()
 
         # Based on the fiducial values, the distance should be
         # at least less than this.
