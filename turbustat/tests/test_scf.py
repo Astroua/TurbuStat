@@ -24,6 +24,13 @@ class testSCF(TestCase):
 
         assert np.allclose(self.tester.scf_surface, computed_data['scf_val'])
 
+    def test_SCF_noninteger_shift(self):
+        # Not testing against anything, just make sure it runs w/o issue.
+        rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5])
+        self.tester_nonint = \
+            SCF(dataset1["cube"], roll_lags=rolls)
+        self.tester_nonint.run()
+
     def test_SCF_distance(self):
         self.tester_dist = \
             SCF_Distance(dataset1["cube"],
