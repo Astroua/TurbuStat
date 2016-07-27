@@ -67,3 +67,13 @@ class BaseStatisticMixIn(object):
     @property
     def ang_size(self):
         return np.abs(self.header["CDELT2"]) * u.deg
+
+    def to_pixel(self, value):
+        '''
+        Convert from angular to pixel scale.
+        '''
+
+        if not isinstance(value, u.Quantity):
+            raise TypeError("value must be an astropy Quantity object.")
+
+        return value.to(u.pix, equivalencies=self.angular_equiv)

@@ -1,5 +1,6 @@
 
 import numpy as np
+import astropy.wcs as wcs
 
 
 def hellinger(data1, data2, bin_width=1.0):
@@ -93,3 +94,80 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
         return bins, center_bins
 
     return bins
+
+
+def common_scale(wcs1, wcs2, tol=1e-5):
+    '''
+    Return the factor to make the pixel scales in the WCS objects the same.
+
+    Assumes pixels a near to being square and distortions between the grids
+    are minimal. If they are distorted an error is raised.
+
+    For laziness, the celestial scales should be the same (so pixels are
+    squares). Otherwise this approach of finding a common scale will not work
+    and a reprojection would be a better approach before running any
+    comparisons.
+
+    Parameters
+    ----------
+    wcs1 : astropy.wcs.WCS
+        WCS Object to match to.
+    wcs2 : astropy.wcs.WCS
+        WCS Object.
+
+    Returns
+    -------
+    scale : float
+        Factor between the pixel scales.
+    '''
+
+    if wcs.utils.is_proj_plane_distorted(wcs1):
+        raise wcs.WcsError("First WCS object is distorted.")
+
+    if wcs.utils.is_proj_plane_distorted(wcs2):
+        raise wcs.WcsError("Second WCS object is distorted.")
+
+    scales1 = np.abs(wcs.utils.proj_plane_pixel_scales(wcs1.celestial))
+    scales2 = np.abs(wcs.utils.proj_plane_pixel_scales(wcs2.celestial))
+
+    # Forcing near square pixels
+    if np.abs(scales1[0] - scales1[1]) > tol:
+        raise ValueError("Pixels in first WCS are not square. Recommend "
+                         "reprojecting to the same grid.")
+
+    if np.abs(scales2[0] - scales2[1]) > tol:
+        raise ValueError("Pixels in second WCS are not square. Recommend "
+                         "reprojecting to the same grid.")
+
+    scale = scales2[0] / scales1[0]
+
+    return scale
+
+
+def fourier_shift(x, shift, axis=0):
+    '''
+    Shift a spectrum by a given number of pixels.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Array to be shifted
+    shift : int or float
+        Number of pixels to shift.
+    axis : int, optional
+        Axis to shift along.
+
+    Returns
+    -------
+    x2 : np.ndarray
+        Shifted array.
+    '''
+
+    ftx = np.fft.fft(x, axis=axis)
+    m = np.fft.fftfreq(x.shape[axis])
+    m_shape = [1] * len(x.shape)
+    m_shape[axis] = m.shape[0]
+    m = m.reshape(m_shape)
+    phase = np.exp(-2 * np.pi * m * 1j * shift)
+    x2 = np.real(np.fft.ifft(ftx * phase, axis=axis))
+    return x2

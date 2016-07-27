@@ -2,9 +2,10 @@
 
 
 import numpy as np
-from scipy.stats import nanmean, nanstd
+from astropy.wcs import WCS
 
-from ..stats_utils import hellinger, kl_divergence, common_histogram_bins
+from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
+                           common_scale)
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 
@@ -240,7 +241,10 @@ class StatMoments_Distance(object):
     image2 : %(dtypes)s
         2D Image.
     radius : int, optional
-        Radius of circle to use when computing moments.
+        Radius of circle to use when computing moments. This is the pixel size
+        applied to the coarsest grid (if the datasets are not on a common
+        grid). The radius for the finer grid is adjusted so the angular scales
+        match.
     nbins : int, optional
         Number of bins to use when constructing histograms.
     periodic1 : bool, optional
@@ -258,22 +262,35 @@ class StatMoments_Distance(object):
                  periodic1=False, periodic2=False, fiducial_model=None):
         super(StatMoments_Distance, self).__init__()
 
-        image1 = input_data(image1, no_header=True)
-        image2 = input_data(image2, no_header=True)
+        image1 = input_data(image1, no_header=False)
+        image2 = input_data(image2, no_header=False)
+
+        # Compute the scale so the radius is common between the two datasets
+        scale = common_scale(WCS(image1[1]), WCS(image2[1]))
+
+        if scale == 1.0:
+            radius1 = radius
+            radius2 = radius
+        elif scale > 1.0:
+            radius1 = int(np.round(scale * radius))
+            radius2 = radius
+        else:
+            radius1 = radius
+            radius2 = int(np.round(radius / float(scale)))
 
         if nbins is None:
-            self.nbins = _auto_nbins(image1.size, image2.size)
+            self.nbins = _auto_nbins(image1[0].size, image2[0].size)
         else:
             self.nbins = nbins
 
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(image1, radius, nbins=self.nbins,
+            self.moments1 = StatMoments(image1, radius1, nbins=self.nbins,
                                         periodic=periodic1)
             self.moments1.compute_spatial_distrib()
 
-        self.moments2 = StatMoments(image2, radius, nbins=self.nbins,
+        self.moments2 = StatMoments(image2, radius2, nbins=self.nbins,
                                     periodic=periodic1)
         self.moments2.compute_spatial_distrib()
 
@@ -414,8 +431,8 @@ def compute_moments(img):
 
     '''
 
-    mean = nanmean(img, axis=None)
-    variance = nanstd(img, axis=None) ** 2.
+    mean = np.nanmean(img, axis=None)
+    variance = np.nanvar(img, axis=None)
     skewness = np.nansum(
         ((img - mean) / np.sqrt(variance)) ** 3.) / np.sum(~np.isnan(img))
     kurtosis = np.nansum(
