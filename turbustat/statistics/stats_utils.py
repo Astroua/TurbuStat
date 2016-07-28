@@ -162,7 +162,19 @@ def fourier_shift(x, shift, axis=0):
     x2 : np.ndarray
         Shifted array.
     '''
+    mask = ~np.isfinite(x)
+    nonan = x.copy()
+    nonan[mask] = 0.0
 
+    nonan_shift = _shifter(nonan, shift, axis)
+    mask_shift = _shifter(mask, shift, axis) > 0.5
+
+    nonan_shift[mask_shift] = np.NaN
+
+    return nonan_shift
+
+
+def _shifter(x, shift, axis):
     ftx = np.fft.fft(x, axis=axis)
     m = np.fft.fftfreq(x.shape[axis])
     m_shape = [1] * len(x.shape)
