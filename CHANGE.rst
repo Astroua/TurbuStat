@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #120 - Minor plotting changes to PDF and bispectrum. Common angular area for Genus normalization. Fix issue with NaNs in the weights for PDFs.
 * #118 - Fix SCF surface indexing with non-integer shifts.
 * #117 - Use common angular scales for SCF, Moments, Delta-Variance comparison. Dropped using nanmean, nanstd from scipy.stats. Added fourier shifting for SCF.
 * #116 - Normalize Genus distance by the image area for comparing unequally-sized images

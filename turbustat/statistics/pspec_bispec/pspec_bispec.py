@@ -380,7 +380,8 @@ class BiSpectrum_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            ax1 = p.subplot(221)
+            fig = p.figure()
+            ax1 = fig.add_subplot(121)
             ax1.set_title(label1)
             ax1.imshow(
                 self.bispec1.bicoherence, origin="lower",
@@ -388,26 +389,20 @@ class BiSpectrum_Distance(object):
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
 
-            ax2 = p.subplot(223)
+            ax2 = fig.add_subplot(122)
             ax2.set_title(label2)
-            ax2.imshow(
+            im = p.imshow(
                 self.bispec2.bicoherence, origin="lower",
                 interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
-            ax2.set_ylabel(r"$k_2$")
+            # ax2.set_ylabel(r"$k_2$")
+            ax2.set_yticklabels([])
 
-            ax3 = p.subplot(122)
-            ax3.set_title("Difference")
-            p.imshow(np.abs(self.bispec1.bicoherence -
-                            self.bispec2.bicoherence),
-                     origin="lower", interpolation="nearest",
-                     vmax=1.0, vmin=0.0)
-            cbar = p.colorbar(ax=ax3)
-            ax3.set_xlabel(r"$k_1$")
-            ax3.set_ylabel(r"$k_2$")
+            fig.subplots_adjust(right=0.8)
+            cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+            fig.colorbar(im, cax=cbar_ax)
 
-            p.tight_layout()
-
+            # p.tight_layout()
             p.show()
 
         return self

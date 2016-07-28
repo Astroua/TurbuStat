@@ -52,7 +52,9 @@ class PDF(BaseStatisticMixIn):
 
             self.weights = output_weights[keep_values]
 
-            self.data *= self.weights
+            isfinite = np.isfinite(self.weights)
+
+            self.data = self.data[isfinite] * self.weights[isfinite]
 
         self._standardize_flag = False
         if use_standardized:
@@ -172,10 +174,10 @@ class PDF(BaseStatisticMixIn):
             if self._standardize_flag:
                 xlabel = r"z-score"
             else:
-                xlabel = r"$\Sigma$"
+                xlabel = r"Intensity"
 
             # PDF
-            p.subplot(131)
+            p.subplot(121)
             if self._standardize_flag:
                 p.plot(self.bins, self.pdf, 'b-')
             else:
@@ -185,27 +187,16 @@ class PDF(BaseStatisticMixIn):
             p.ylabel("PDF")
 
             # ECDF
-            p.subplot(132)
+            ax2 = p.subplot(122)
+            ax2.yaxis.tick_right()
+            ax2.yaxis.set_label_position("right")
             if self._standardize_flag:
-                p.plot(self.bins, self.ecdf, 'b-')
+                ax2.plot(self.bins, self.ecdf, 'b-')
             else:
-                p.semilogx(self.bins, self.ecdf, 'b-')
+                ax2.semilogx(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
-
-            # Array representation.
-            p.subplot(133)
-            if self.img.ndim == 1:
-                p.plot(self.img, 'b-')
-            elif self.img.ndim == 2:
-                p.imshow(self.img, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img.ndim == 3:
-                p.imshow(np.nansum(self.img, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
 
             p.tight_layout()
             p.show()
@@ -240,13 +231,10 @@ class PDF_Distance(object):
                  weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
 
-        self.img1 = img1
-        self.img2 = img2
-
-        self.PDF1 = PDF(self.img1, min_val=min_val1, use_standardized=True,
+        self.PDF1 = PDF(img1, min_val=min_val1, use_standardized=True,
                         weights=weights1)
 
-        self.PDF2 = PDF(self.img2, min_val=min_val2, use_standardized=True,
+        self.PDF2 = PDF(img2, min_val=min_val2, use_standardized=True,
                         weights=weights2)
 
         self.bins, self.bin_centers = \
@@ -330,10 +318,7 @@ class PDF_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
             # PDF
-            if show_data:
-                p.subplot(131)
-            else:
-                p.subplot(121)
+            p.subplot(121)
             p.plot(self.bin_centers,
                    self.PDF1.pdf, 'b-', label=label1)
             p.plot(self.bin_centers,
@@ -344,41 +329,14 @@ class PDF_Distance(object):
             p.ylabel("PDF")
 
             # ECDF
-            if show_data:
-                p.subplot(132)
-            else:
-                p.subplot(122)
-            p.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
-            p.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
+            ax2 = p.subplot(122)
+            ax2.yaxis.tick_right()
+            ax2.yaxis.set_label_position("right")
+            ax2.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
+            ax2.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("ECDF")
-
-            # Array representation.
-            if show_data:
-                p.subplot(233)
-                if self.img1.ndim == 1:
-                    p.plot(self.img1, 'b-')
-                elif self.img1.ndim == 2:
-                    p.imshow(self.img1, origin="lower",
-                             interpolation="nearest", cmap="binary")
-                elif self.img1.ndim == 3:
-                    p.imshow(np.nansum(self.img1, axis=0), origin="lower",
-                             interpolation="nearest", cmap="binary")
-                else:
-                    print("Visual representation works only up to 3D.")
-
-                p.subplot(236)
-                if self.img2.ndim == 1:
-                    p.plot(self.img2, 'b-')
-                elif self.img2.ndim == 2:
-                    p.imshow(self.img2, origin="lower",
-                             interpolation="nearest", cmap="binary")
-                elif self.img2.ndim == 3:
-                    p.imshow(np.nansum(self.img2, axis=0), origin="lower",
-                             interpolation="nearest", cmap="binary")
-                else:
-                    print("Visual representation works only up to 3D.")
 
             p.show()
 
