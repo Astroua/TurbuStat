@@ -52,7 +52,9 @@ class PDF(BaseStatisticMixIn):
 
             self.weights = output_weights[keep_values]
 
-            self.data *= self.weights
+            isfinite = np.isfinite(self.weights)
+
+            self.data = self.data[isfinite] * self.weights[isfinite]
 
         self._standardize_flag = False
         if use_standardized:
