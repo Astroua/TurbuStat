@@ -86,8 +86,18 @@ class SCF(BaseStatisticMixIn):
 
         for i, x_shift in enumerate(dx):
             for j, y_shift in enumerate(dy):
-                tmp = fourier_shift(self.data, x_shift, axis=1)
-                tmp = fourier_shift(tmp, y_shift, axis=2)
+
+                if x_shift == 0 and y_shift == 0:
+                    self._scf_surface[i, j] = 1.
+
+                if x_shift == 0:
+                    tmp = self.data
+                else:
+                    tmp = fourier_shift(self.data, x_shift, axis=1)
+
+                if y_shift != 0:
+                    tmp = fourier_shift(tmp, y_shift, axis=2)
+
                 values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
                     (np.nansum(self.data ** 2, axis=0) +
                      np.nansum(tmp ** 2, axis=0))
