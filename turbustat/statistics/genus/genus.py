@@ -7,13 +7,14 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
 from itertools import groupby
+from astropy.wcs import WCS
 
 try:
     from scipy.fftpack import fft2
 except ImportError:
     from numpy.fft import fft2
 
-from ..stats_utils import standardize
+from ..stats_utils import standardize, common_scale
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 
@@ -243,8 +244,8 @@ class GenusDistance(object):
 
         # Standardize the intensity values in the images
 
-        img1 = input_data(img1, no_header=True)
-        img2 = input_data(img2, no_header=True)
+        img1, hdr1 = input_data(img1)
+        img2, hdr2 = input_data(img2)
 
         img1 = standardize(img1)
         img2 = standardize(img2)
@@ -260,7 +261,9 @@ class GenusDistance(object):
             Genus(img2, smoothing_radii=smoothing_radii,
                   lowdens_percent=20).run()
 
-        self.distance = None
+        # When normalizing the genus curves for the distance metric, find
+        # the scaling between the angular size of the grids.
+        self.scale = common_scale(WCS(hdr1), WCS(hdr2))
 
     def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
@@ -295,7 +298,11 @@ class GenusDistance(object):
 
         points = np.linspace(min_pt, max_pt, 2 * num_pts)
 
-        genus1 = self.genus1.genus_stats[0, :] / float(self.genus1.data.size)
+        # Divide each by the area of the data. genus1 is additionally
+        # adjusted by the scale factor of the angular size between the
+        # datasets.
+        genus1 = self.genus1.genus_stats[0, :] / \
+            float(self.genus1.data.size / self.scale)
         genus2 = self.genus2.genus_stats[0, :] / float(self.genus2.data.size)
 
         interp1 = \
