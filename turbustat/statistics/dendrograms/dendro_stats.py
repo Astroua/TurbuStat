@@ -398,7 +398,8 @@ class DendroDistance(object):
         self.num_distance = None
         self.histogram_distance = None
 
-    def numfeature_stat(self, verbose=False, label1=None, label2=None):
+    def numfeature_stat(self, verbose=False, label1=None, label2=None,
+                        savename=None):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -410,6 +411,8 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        savename : str, optional
+            Saves the plot when a filename is given.
         '''
 
         self.num_distance = \
@@ -433,11 +436,17 @@ class DendroDistance(object):
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
             p.legend(loc='best')
-            p.show()
+
+            if savename is not None:
+                p.savefig(savename)
+                p.clf()
+            else:
+                p.show()
 
         return self
 
-    def histogram_stat(self, verbose=False, label1=None, label2=None):
+    def histogram_stat(self, verbose=False, label1=None, label2=None,
+                       savename=None):
         '''
         Computes the distance using histograms.
 
@@ -449,6 +458,8 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        savename : str, optional
+            Saves the plot when a filename is given.
         '''
 
         if self.nbins == "best":
@@ -533,7 +544,11 @@ class DendroDistance(object):
             ax4.axes.yaxis.set_ticklabels([])
 
             p.tight_layout()
-            p.show()
+            if savename is not None:
+                p.savefig(savename)
+                p.clf()
+            else:
+                p.show()
 
         return self
 
