@@ -75,9 +75,7 @@ print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 from turbustat.statistics import Tsallis_Distance
 
 tsallis_distance= Tsallis_Distance(data1,
-                                   data2).distance_metric(verbose=True,
-                                                          label1=fits1,
-                                                          label2=fits2)
+                                   data2).distance_metric(verbose=True)
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
