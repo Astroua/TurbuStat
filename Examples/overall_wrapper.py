@@ -9,6 +9,7 @@ The two arguments are two folders containing the specific data sets to compare.
 
 import numpy as np
 import sys
+import os
 from spectral_cube import SpectralCube
 from turbustat.data_reduction import Mask_and_Moments
 
@@ -24,6 +25,10 @@ scale = 5e-3
 
 cube1 = SpectralCube.read(fits1)
 cube2 = SpectralCube.read(fits2)
+
+# Shorten the name for the plots
+fits1 = os.path.basename(fits1)
+fits2 = os.path.basename(fits2)
 
 set1 = Mask_and_Moments(cube1, scale=scale)
 # mask = cube1 > sigma * set1.scale
@@ -45,7 +50,9 @@ dataset2 = set2.to_dict()
 from turbustat.statistics import Wavelet_Distance
 
 wavelet_distance = Wavelet_Distance(dataset1["moment0"],
-                                    dataset2["moment0"]).distance_metric(verbose=True)
+                                    dataset2["moment0"]).distance_metric(verbose=True,
+                                                                         label1=fits1,
+                                                                         label2=fits2)
 
 print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
@@ -53,7 +60,9 @@ print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
 from turbustat.statistics import MVC_Distance
 
-mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric(verbose=True)
+mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric(verbose=True,
+                                                                label1=fits1,
+                                                                label2=fits2)
 
 print "MVC Distance: %s" % (mvc_distance.distance)
 
@@ -65,12 +74,16 @@ pspec_distance = \
     PSpec_Distance(dataset1["moment0"],
                    dataset2["moment0"],
                    weights1=dataset1["moment0_error"][0]**2.,
-                   weights2=dataset2["moment0_error"][0]**2.).distance_metric(verbose=True)
+                   weights2=dataset2["moment0_error"][0]**2.).distance_metric(verbose=True,
+                                                                              label1=fits1,
+                                                                              label2=fits2)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
 bispec_distance = BiSpectrum_Distance(dataset1["moment0"],
-                                      dataset2["moment0"]).distance_metric(verbose=True)
+                                      dataset2["moment0"]).distance_metric(verbose=True,
+                                                                           label1=fits1,
+                                                                           label2=fits2)
 
 print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
@@ -79,7 +92,9 @@ print "Bispectrum Distance: %s" % (bispec_distance.distance)
 from turbustat.statistics import GenusDistance
 
 genus_distance = GenusDistance(dataset1["moment0"],
-                               dataset2["moment0"]).distance_metric(verbose=True)
+                               dataset2["moment0"]).distance_metric(verbose=True,
+                                                                    label1=fits1,
+                                                                    label2=fits2)
 
 print "Genus Distance: %s" % (genus_distance.distance)
 
@@ -91,7 +106,9 @@ delvar_distance = \
     DeltaVariance_Distance(dataset1["moment0"],
                            dataset2["moment0"],
                            weights1=dataset1["moment0_error"][0],
-                           weights2=dataset2["moment0_error"][0]).distance_metric(verbose=True)
+                           weights2=dataset2["moment0_error"][0]).distance_metric(verbose=True,
+                                                                                  label1=fits1,
+                                                                                  label2=fits2)
 
 print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
@@ -100,12 +117,16 @@ print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 from turbustat.statistics import VCA_Distance, VCS_Distance
 
 vcs_distance = VCS_Distance(dataset1["cube"],
-                            dataset2["cube"], breaks=-0.5).distance_metric(verbose=True)
+                            dataset2["cube"], breaks=-0.5).distance_metric(verbose=True,
+                                                                           label1=fits1,
+                                                                           label2=fits2)
 
 print "VCS Distance: %s" % (vcs_distance.distance)
 
 vca_distance = VCA_Distance(dataset1["cube"],
-                            dataset2["cube"], breaks=None).distance_metric(verbose=True)
+                            dataset2["cube"], breaks=None).distance_metric(verbose=True,
+                                                                           label1=fits1,
+                                                                           label2=fits2)
 
 print "VCA Distance: %s" % (vca_distance.distance)
 
@@ -114,7 +135,9 @@ print "VCA Distance: %s" % (vca_distance.distance)
 from turbustat.statistics import Tsallis_Distance
 
 tsallis_distance = Tsallis_Distance(dataset1["moment0"][0],
-                                    dataset2["moment0"][0]).distance_metric(verbose=True)
+                                    dataset2["moment0"][0]).distance_metric(verbose=True,
+                                                                            label1=fits1,
+                                                                            label2=fits2)
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
@@ -123,7 +146,9 @@ print "Tsallis Distance: %s" % (tsallis_distance.distance)
 from turbustat.statistics import StatMoments_Distance
 
 moment_distance = StatMoments_Distance(dataset1["moment0"],
-                                       dataset2["moment0"], 5).distance_metric(verbose=True)
+                                       dataset2["moment0"], 5).distance_metric(verbose=True,
+                                                                               label1=fits1,
+                                                                               label2=fits2)
 
 print "Kurtosis Distance: %s" % (moment_distance.kurtosis_distance)
 
@@ -134,7 +159,9 @@ print "Skewness Distance: %s" % (moment_distance.skewness_distance)
 from turbustat.statistics import PCA_Distance
 
 pca_distance = PCA_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric(verbose=True)
+                            dataset2["cube"]).distance_metric(verbose=True,
+                                                              label1=fits1,
+                                                              label2=fits2)
 
 print "PCA Distance: %s" % (pca_distance.distance)
 
@@ -143,7 +170,9 @@ print "PCA Distance: %s" % (pca_distance.distance)
 from turbustat.statistics import SCF_Distance
 
 scf_distance = SCF_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric(verbose=True)
+                            dataset2["cube"]).distance_metric(verbose=True,
+                                                              label1=fits1,
+                                                              label2=fits2)
 
 print "SCF Distance: %s" % (scf_distance.distance)
 
@@ -161,7 +190,9 @@ print "Cramer Distance: %s" % (cramer_distance.distance)
 from turbustat.statistics import DendroDistance
 
 dendro_distance = DendroDistance(dataset1["cube"],
-                                 dataset2["cube"]).distance_metric(verbose=True)
+                                 dataset2["cube"]).distance_metric(verbose=True,
+                                                                   label1=fits1,
+                                                                   label2=fits2)
 
 print "Dendrogram Number Distance: %s " % (dendro_distance.num_distance)
 print "Dendrogram Histogram Distance: %s " % \
@@ -179,7 +210,7 @@ pdf_distance = \
                  weights1=dataset1["moment0_error"][0] ** -2.,
                  weights2=dataset2["moment0_error"][0] ** -2.)
 
-pdf_distance.distance_metric(verbose=True)
+pdf_distance.distance_metric(verbose=True, label1=fits1, label2=fits2)
 
 print "PDF Hellinger Distance: %s " % (pdf_distance.hellinger_distance)
 print "PDF KS-Test Distance: %s " % (pdf_distance.ks_distance)
