@@ -510,11 +510,11 @@ class Mask_and_Moments(object):
 
         good_channels = np.where(channel_max > self.clip*self.scale)[0]
 
-        # Get the longest sequence
-        good_channels = longestSequence(good_channels)
-
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
+
+        # Get the longest sequence
+        good_channels = longestSequence(good_channels)
 
         self.channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 
