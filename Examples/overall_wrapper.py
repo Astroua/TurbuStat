@@ -19,9 +19,6 @@ fits1 = str(sys.argv[1])
 fits2 = str(sys.argv[2])
 
 # scale = float(sys.argv[3])
-# Assuming something small for the case of sims.
-# This should be re-adjusted as needed for various data sets.
-scale = 5e-3
 
 cube1 = SpectralCube.read(fits1)
 cube2 = SpectralCube.read(fits2)
@@ -30,14 +27,18 @@ cube2 = SpectralCube.read(fits2)
 fits1 = os.path.basename(fits1)
 fits2 = os.path.basename(fits2)
 
-set1 = Mask_and_Moments(cube1, scale=scale)
+# Naive error estimation. Useful for only testing out the methods.
+scale1 = cube1.std().value
+scale2 = cube2.std().value
+
+set1 = Mask_and_Moments(cube1, scale=scale1)
 # mask = cube1 > sigma * set1.scale
 # set1.make_mask(mask=mask)
 set1.make_moments()
 set1.make_moment_errors()
 dataset1 = set1.to_dict()
 
-set2 = Mask_and_Moments(cube2, scale=scale)
+set2 = Mask_and_Moments(cube2, scale=scale2)
 # mask = cube2 > sigma * set2.scale
 # set2.make_mask(mask=mask)
 set2.make_moments()
