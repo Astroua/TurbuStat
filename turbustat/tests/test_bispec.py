@@ -22,15 +22,15 @@ class testBispec(TestCase):
         self.dataset2 = dataset2
 
     def test_Bispec_method(self):
-        self.tester = BiSpectrum(dataset1["integrated_intensity"][0])
+        self.tester = BiSpectrum(dataset1["moment0"])
         self.tester.run()
         assert np.allclose(self.tester.bicoherence,
                            computed_data['bispec_val'])
 
     def test_Bispec_distance(self):
         self.tester_dist = \
-            BiSpectrum_Distance(dataset1["integrated_intensity"],
-                                dataset2["integrated_intensity"])
+            BiSpectrum_Distance(dataset1["moment0"],
+                                dataset2["moment0"])
         self.tester_dist.distance_metric()
 
         npt.assert_almost_equal(self.tester_dist.distance,

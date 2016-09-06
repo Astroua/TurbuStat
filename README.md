@@ -26,8 +26,7 @@ The key properties are:
 *   sensitive to differences in physical scale
 *   independent of noise levels in the data
 
-Not all of the metrics satisfy the idealized properties. A full description of all
-statistics in this package will be shown in Koch et al. (in prep).
+Not all of the metrics satisfy the idealized properties. A full description of all statistics in this package will be shown in Koch et al. (submitted). The paper results can be reproduced using the scripts in [AstroStat_Results](https://github.com/Astroua/AstroStat_Results).
 
 Installing
 ----------
@@ -48,14 +47,23 @@ Package Dependencies
 
 Requires:
 
- *   matplotlib-1.2
- *   scipy-0.12
- *   sklearn-0.13.0
- *   pandas-0.13
- *   statsmodels-0.4.0
- *   astrodendro-dev
- *   [signal-id](https://github.com/radio-astro-tools/signal-id)
- *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube)
+ *   astropy>=1.0
+ *   numpy>=1.7
+ *   matplotlib>=1.2
+ *   scipy>=0.12
+ *   sklearn>=0.13.0
+ *   pandas>=0.13
+ *   statsmodels>=0.4.0
+
+Recommended:
+
+ *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
+ *   [astrodendro-development](https://github.com/dendrograms/astrodendro) - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
+
+Optional:
+ *   [signal-id](https://github.com/radio-astro-tools/signal-id) - Noise estimation in PPV cubes.
+ *   [radio_beam](https://github.com/radio-astro-tools/radio_beam) - A class for handling radio beams and useful utilities. Used for noise estimation in signal-id
+
 
 Credits
 -------
@@ -66,3 +74,13 @@ This package was developed by:
 * [Caleb Ward](https://github.com/Astrolebs)
 * [Erik Rosolowsky](https://github.com/low-sky)
 * [Jason Loeppky](https:/github.com/jloeppky)
+
+If you make use of this package in a publication, please cite our accompanying paper:
+```
+   @ARTICLE{Koch2016,
+    author = {{Koch}, Eric~W. and {Ward}, Caleb~G. and {Offner}, Stella and {Loeppky}, Jason~L. and {Rosolowsky}, Erik~W.},
+    title = {Tools for Critically Evaluating Simulations of Star Formation},
+    journal = {MNRAS},
+    year = {submitted}
+    }
+```

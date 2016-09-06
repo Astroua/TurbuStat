@@ -2,19 +2,21 @@
 
 
 import numpy as np
-from scipy.stats import nanmean, nanstd, chisquare
+from scipy.stats import chisquare
 from scipy.optimize import curve_fit
 
+from ..stats_utils import standardize
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
-class Tsallis(object):
 
+class Tsallis(BaseStatisticMixIn):
     """
-
     The Tsallis Distribution (see Tofflemire et al., 2011)
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         2D image.
     lags : numpy.ndarray or list
         Lags to calculate at.
@@ -24,6 +26,8 @@ class Tsallis(object):
         Sets whether the boundaries are periodic.
     """
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, img, lags=None, num_bins=500, periodic=False):
         '''
         Parameters
@@ -32,7 +36,11 @@ class Tsallis(object):
         periodic : bool, optional
                    Use for simulations with periodic boundaries.
         '''
-        self.img = img
+
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(img, no_header=True)
         self.num_bins = num_bins
         self.periodic = periodic
 
@@ -42,7 +50,7 @@ class Tsallis(object):
             self.lags = lags
 
         self.tsallis_arrays = np.empty(
-            (len(self.lags), img.shape[0], img.shape[1]))
+            (len(self.lags), self.data.shape[0], self.data.shape[1]))
         self.tsallis_distrib = np.empty((len(self.lags), 2, num_bins))
         self.tsallis_fits = np.empty((len(self.lags), 7))
 
@@ -55,9 +63,9 @@ class Tsallis(object):
 
         for i, lag in enumerate(self.lags):
             if self.periodic:
-                pad_img = self.img
+                pad_img = self.data
             else:
-                pad_img = np.pad(self.img, lag, padwithzeros)
+                pad_img = np.pad(self.data, lag, padwithzeros)
             rolls = np.roll(pad_img, lag, axis=0) +\
                 np.roll(pad_img, (-1) * lag, axis=0) +\
                 np.roll(pad_img, lag, axis=1) +\
@@ -70,7 +78,7 @@ class Tsallis(object):
                 clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) -\
                     pad_img[lag:-lag, lag:-lag]
             # Normalize the data
-            data = normalize(clip_resulting)
+            data = standardize(clip_resulting)
 
             # Ignore nans for the histogram
             hist, bin_edges = np.histogram(data[~np.isnan(data)],
@@ -82,8 +90,6 @@ class Tsallis(object):
             self.tsallis_arrays[i, :] = data
             self.tsallis_distrib[i, 0, :] = bin_centres
             self.tsallis_distrib[i, 1, :] = normlog_hist
-
-        return self
 
     def fit_tsallis(self, sigma_clip=2):
         '''
@@ -139,7 +145,7 @@ class Tsallis(object):
                 p.plot(dist[0], tsallis_function(dist[0], *params), "r")
                 p.plot(dist[0], dist[1], 'rD', label="".join(
                     ["Tsallis Distribution with Lag ", str(self.lags[i / 2])]))
-                p.legend(loc="upper left", prop={"size": 10})
+                p.legend(loc="best")
 
                 i += 2
             p.show()
@@ -154,10 +160,10 @@ class Tsallis_Distance(object):
 
     Parameters
     ----------
-    array1 : numpy.ndarray
-        2D image.
-    array2 : numpy.ndarray
-        2D image.
+    array1 : %(dtypes)s
+        2D datas.
+    array2 : %(dtypes)s
+        2D datas.
     lags : numpy.ndarray or list
         Lags to calculate at.
     num_bins : int, optional
@@ -168,11 +174,11 @@ class Tsallis_Distance(object):
         Sets whether the boundaries are periodic.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
     def __init__(self, array1, array2, lags=None, num_bins=500,
                  fiducial_model=None, periodic=False):
         super(Tsallis_Distance, self).__init__()
-        self.array1 = array1
-        self.array2 = array2
 
         if fiducial_model is not None:
             self.tsallis1 = fiducial_model
@@ -220,9 +226,11 @@ class Tsallis_Distance(object):
             import matplotlib.pyplot as p
             lags = self.tsallis1.lags
             p.plot(lags, diff_w, "rD", label="Difference of w")
-            p.plot(lags, diff_q, "gD", label="Difference of q")
+            p.plot(lags, diff_q, "go", label="Difference of q")
             p.legend()
             p.xscale('log', basex=2)
+            p.ylabel("Normalized Difference")
+            p.xlabel("Lags (pixels)")
             p.grid(True)
             p.show()
 
@@ -243,7 +251,7 @@ def tsallis_function(x, *p):
     '''
     loga, wsquare, q = p
     return (-1 / (q - 1)) * (np.log10(1 + (q - 1) *
-           (x ** 2. / wsquare)) + loga)
+                                      (x ** 2. / wsquare)) + loga)
 
 
 def clip_to_sigma(x, y, sigma=2):
@@ -265,22 +273,6 @@ def clip_to_sigma(x, y, sigma=2):
     clip_y = y[np.where(clip_mask == 1)]
 
     return clip_x[np.isfinite(clip_y)], clip_y[np.isfinite(clip_y)]
-
-
-def normalize(data):
-    '''
-    Standardize the data.
-
-    Parameters
-    ----------
-    data : numpy.ndarray
-        Data to standardize.
-    '''
-
-    av_val = nanmean(data, axis=None)
-    st_dev = nanstd(data, axis=None)
-
-    return (data - av_val) / st_dev
 
 
 def padwithzeros(vector, pad_width, iaxis, kwargs):

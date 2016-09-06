@@ -4,31 +4,53 @@
 import numpy as np
 import cPickle as pickle
 from copy import deepcopy
+from astropy import units as u
+from astropy.wcs import WCS
+
 from ..psds import pspec
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types, input_data
+from ..stats_utils import common_scale, fourier_shift
 
 
-class SCF(object):
-
+class SCF(BaseStatisticMixIn):
     '''
     Computes the Spectral Correlation Function of a data cube
     (Rosolowsky et al, 1999).
 
     Parameters
     ----------
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
+    header : FITS header, optional
+        Header for the cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
     '''
 
-    def __init__(self, cube, size=11):
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
+    def __init__(self, cube, header=None, size=11, roll_lags=None):
         super(SCF, self).__init__()
-        self.cube = cube
-        if size % 2 == 0:
-            print "Size must be odd. Reducing size to next lowest odd number."
-            self.size = size - 1
+
+        # Set data and header
+        self.input_data_header(cube, header)
+
+        if roll_lags is None:
+            if size % 2 == 0:
+                Warning("Size must be odd. Reducing size to next lowest odd"
+                        " number.")
+                size = size - 1
+            self.roll_lags = np.arange(size) - size / 2
         else:
-            self.size = size
+            if roll_lags.size % 2 == 0:
+                Warning("Size of roll_lags must be odd. Reducing size to next"
+                        "lowest odd number.")
+                roll_lags = roll_lags[: -1]
+
+            self.roll_lags = roll_lags
+
+        self.size = self.roll_lags.size
 
         self._scf_surface = None
         self._scf_spectrum_stddev = None
@@ -59,22 +81,30 @@ class SCF(object):
 
         self._scf_surface = np.zeros((self.size, self.size))
 
-        dx = np.arange(self.size) - self.size / 2
-        dy = np.arange(self.size) - self.size / 2
+        dx = self.roll_lags.copy()
+        dy = self.roll_lags.copy()
 
-        for i in dx:
-            for j in dy:
-                tmp = np.roll(self.cube, i, axis=1)
-                tmp = np.roll(tmp, j, axis=2)
-                values = np.nansum(((self.cube - tmp) ** 2), axis=0) / \
-                    (np.nansum(self.cube ** 2, axis=0) +
+        for i, x_shift in enumerate(dx):
+            for j, y_shift in enumerate(dy):
+
+                if x_shift == 0 and y_shift == 0:
+                    self._scf_surface[i, j] = 1.
+
+                if x_shift == 0:
+                    tmp = self.data
+                else:
+                    tmp = fourier_shift(self.data, x_shift, axis=1)
+
+                if y_shift != 0:
+                    tmp = fourier_shift(tmp, y_shift, axis=2)
+
+                values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
+                    (np.nansum(self.data ** 2, axis=0) +
                      np.nansum(tmp ** 2, axis=0))
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[i+self.size/2, j+self.size/2] = scf_value
-
-        return self
+                self._scf_surface[i, j] = scf_value
 
     def compute_spectrum(self, logspacing=False, return_stddev=False,
                          **kwargs):
@@ -100,13 +130,18 @@ class SCF(object):
         if return_stddev:
             self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
                 pspec(self.scf_surface, logspacing=logspacing,
-                      return_stddev=return_stddev, **kwargs)
+                      return_stddev=return_stddev, return_freqs=False,
+                      **kwargs)
             self._stddev_flag = True
         else:
             self._lags, self._scf_spectrum = \
                 pspec(self.scf_surface, logspacing=logspacing,
-                      **kwargs)
+                      return_freqs=False, **kwargs)
             self._stddev_flag = False
+
+        roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
+
+        self._lags = self._lags * roll_lag_diff * u.pix
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -154,7 +189,7 @@ class SCF(object):
         Examples
         --------
         Load saved results.
-        >>> scf = SCF.load_results("scf_saved.pkl")
+        >>> scf = SCF.load_results("scf_saved.pkl") # doctest: +SKIP
 
         '''
 
@@ -164,7 +199,8 @@ class SCF(object):
         return self
 
     def run(self, logspacing=False, return_stddev=False, verbose=False,
-            save_results=False, output_name=None):
+            save_results=False, output_name=None, ang_units=False,
+            unit=u.deg):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -180,6 +216,10 @@ class SCF(object):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         self.compute_surface()
@@ -202,15 +242,25 @@ class SCF(object):
             p.xlabel("SCF Value")
 
             ax = p.subplot(2, 2, 4)
+            if ang_units:
+                lags = \
+                    self.lags.to(unit, equivalencies=self.angular_equiv).value
+            else:
+                lags = self.lags.value
+
             if self._stddev_flag:
-                ax.errorbar(self.lags, self.scf_spectrum,
+                ax.errorbar(lags, self.scf_spectrum,
                             yerr=self.scf_spectrum_stddev,
                             fmt='D-', color='k', markersize=5)
                 ax.set_xscale("log", nonposy='clip')
             else:
                 p.semilogx(self.lags, self.scf_spectrum, 'kD-',
                            markersize=5)
-            ax.set_xlabel("Lag (pixel)")
+
+            if ang_units:
+                ax.set_xlabel("Lag ("+unit.to_string()+")")
+            else:
+                ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
             p.show()
@@ -225,9 +275,9 @@ class SCF_Distance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : numpy.ndarray
+    cube2 : %(dtypes)s
         Data cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
@@ -235,29 +285,52 @@ class SCF_Distance(object):
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
         Sets whether to apply the 1/r^2 weighting to the distance.
-
     '''
 
-    def __init__(self, cube1, cube2, size=11, fiducial_model=None,
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
+    def __init__(self, cube1, cube2, size=21, fiducial_model=None,
                  weighted=True):
         super(SCF_Distance, self).__init__()
-        self.cube1 = cube1
-        self.cube2 = cube2
-        self.size = size
         self.weighted = weighted
+
+        dataset1 = input_data(cube1, no_header=False)
+        dataset2 = input_data(cube2, no_header=False)
+
+        # Create a default set of lags, in pixels
+        if size % 2 == 0:
+            Warning("Size must be odd. Reducing size to next lowest odd"
+                    " number.")
+            size = size - 1
+
+        self.size = size
+        roll_lags = np.arange(size) - size / 2
+
+        # Now adjust the lags such they have a common scaling when the datasets
+        # are not on a common grid.
+        scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+
+        if scale == 1.0:
+            roll_lags1 = roll_lags
+            roll_lags2 = roll_lags
+        elif scale > 1.0:
+            roll_lags1 = scale * roll_lags
+            roll_lags2 = roll_lags
+        else:
+            roll_lags1 = roll_lags
+            roll_lags2 = roll_lags / float(scale)
 
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(self.cube1, self.size)
-            self.scf1.run()
+            self.scf1 = SCF(cube1, roll_lags=roll_lags1)
+            self.scf1.run(return_stddev=True)
 
-        self.scf2 = SCF(self.cube2, self.size)
-        self.scf2.run()
+        self.scf2 = SCF(cube2, roll_lags=roll_lags2)
+        self.scf2.run(return_stddev=True)
 
-        self.distance = None
-
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg):
         '''
         Compute the distance between the surfaces.
 
@@ -265,9 +338,19 @@ class SCF_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
+        ang_units : bool, optional
+            Convert frequencies to angular units using the given header.
+        unit : u.Unit, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
+        # Since the angular scales are matched, we can assume that they will
+        # have the same weights. So just use the shape of the lags to create
+        # the weight surface.
         dx = np.arange(self.size) - self.size / 2
         dy = np.arange(self.size) - self.size / 2
 
@@ -280,31 +363,51 @@ class SCF_Distance(object):
         else:
             dist_weight = np.ones((self.size, self.size))
 
-        difference = (
-            (self.scf1.scf_surface - self.scf2.scf_surface) * dist_weight) ** 2.
-        self.distance = np.sqrt(
-            np.nansum(difference) / np.sum(np.isfinite(difference)))
+        difference = (self.scf1.scf_surface - self.scf2.scf_surface) ** 2. * \
+            dist_weight
+        self.distance = np.sqrt(np.sum(difference) / np.sum(dist_weight))
 
         if verbose:
             import matplotlib.pyplot as p
 
             # print "Distance: %s" % (self.distance)
 
-            p.subplot(1, 3, 1)
+            p.subplot(2, 2, 1)
             p.imshow(
                 self.scf1.scf_surface, origin="lower", interpolation="nearest")
-            p.title("SCF1")
+            p.title(label1)
             p.colorbar()
-            p.subplot(1, 3, 2)
+            p.subplot(2, 2, 2)
             p.imshow(
-                self.scf2.scf_surface, origin="lower", interpolation="nearest")
-            p.title("SCF2")
+                self.scf2.scf_surface, origin="lower", interpolation="nearest",
+                label=label2)
+            p.title(label2)
             p.colorbar()
-            p.subplot(1, 3, 3)
+            p.subplot(2, 2, 3)
             p.imshow(difference, origin="lower", interpolation="nearest")
-            p.title("Difference")
+            p.title("Weighted Difference")
             p.colorbar()
+            ax = p.subplot(2, 2, 4)
+            if ang_units:
+                lags1 = \
+                    self.scf1.lags.to(unit,
+                                      equivalencies=self.scf1.angular_equiv).value
+                lags2 = \
+                    self.scf2.lags.to(unit,
+                                      equivalencies=self.scf2.angular_equiv).value
+            else:
+                lags1 = self.scf1.lags.value
+                lags2 = self.scf2.lags.value
 
+            ax.errorbar(lags1, self.scf1.scf_spectrum,
+                        yerr=self.scf1.scf_spectrum_stddev,
+                        fmt='D-', color='b', markersize=5, label=label1)
+            ax.errorbar(lags2, self.scf2.scf_spectrum,
+                        yerr=self.scf2.scf_spectrum_stddev,
+                        fmt='o-', color='g', markersize=5, label=label2)
+            ax.set_xscale("log", nonposy='clip')
+            ax.legend(loc='upper right')
+            p.tight_layout()
             p.show()
 
         return self

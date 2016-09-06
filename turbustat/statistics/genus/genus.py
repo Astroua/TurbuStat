@@ -2,19 +2,24 @@
 
 import numpy as np
 import scipy.ndimage as nd
-from scipy.stats import scoreatpercentile, nanmean, nanstd
+from scipy.stats import scoreatpercentile
 from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
 from itertools import groupby
+from astropy.wcs import WCS
 
 try:
     from scipy.fftpack import fft2
 except ImportError:
     from numpy.fft import fft2
 
+from ..stats_utils import standardize, common_scale
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, input_data
 
-class Genus(object):
+
+class Genus(BaseStatisticMixIn):
 
     """
 
@@ -23,48 +28,48 @@ class Genus(object):
     Parameters
     ----------
 
-    img - numpy.ndarray
+    img : %(dtypes)s
         2D image.
-    lowdens_thresh : float, optional
-        Lower threshold of the data to use.
-    highdens_thresh : float, optional
-        Upper threshold of the data to use.
+    lowdens_percent : float, optional
+        Lower percentile of the data to use.
+    highdens_percent : float, optional
+        Upper percentile of the data to use.
     numpts : int, optional
         Number of thresholds to calculate statistic at.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
-    save_name : str, optional
-        Object or region name. Used when plotting.
     """
 
-    def __init__(self, img, lowdens_thresh=0, highdens_thresh=100, numpts=100,
-                 smoothing_radii=None, save_name=None):
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+
+    def __init__(self, img, lowdens_percent=0, highdens_percent=100,
+                 numpts=100, smoothing_radii=None):
         super(Genus, self).__init__()
 
-        self.img = img
-
-        if save_name is None:
-            self.save_name = "Untitled"
-        else:
-            self.save_name = save_name
+        # A header isn't needed. Disable the check flag
+        self.need_header_flag = False
+        self.header = None
+        self.data = input_data(img, no_header=True)
 
         self.nanflag = False
-        if np.isnan(self.img).any():
+        if np.isnan(self.data).any():
             self.nanflag = True
 
-        self.lowdens_thresh = scoreatpercentile(img[~np.isnan(img)],
-                                                lowdens_thresh)
-        self.highdens_thresh = scoreatpercentile(img[~np.isnan(img)],
-                                                 highdens_thresh)
+        self.lowdens_percent = \
+            scoreatpercentile(self.data[~np.isnan(self.data)],
+                              lowdens_percent)
+        self.highdens_percent = \
+            scoreatpercentile(self.data[~np.isnan(self.data)],
+                              highdens_percent)
 
         self.thresholds = np.linspace(
-            self.lowdens_thresh, self.highdens_thresh, numpts)
+            self.lowdens_percent, self.highdens_percent, numpts)
 
         if smoothing_radii is not None:
             assert isinstance(smoothing_radii, list)
             self.smoothing_radii = smoothing_radii
         else:
-            self.smoothing_radii = np.linspace(1.0, 0.1 * min(img.shape), 5)
+            self.smoothing_radii = np.linspace(1.0, 0.1 * min(self.data.shape), 5)
 
         self.genus_stats = np.empty([numpts, len(self.smoothing_radii)])
         self.fft_images = []
@@ -77,15 +82,14 @@ class Genus(object):
 
         for i, width in enumerate(self.smoothing_radii):
             kernel = Gaussian2DKernel(
-                width, x_size=self.img.shape[0], y_size=self.img.shape[1])
+                width, x_size=self.data.shape[0], y_size=self.data.shape[1])
             if self.nanflag:
                 self.smoothed_images.append(
-                    convolve_fft(self.img, kernel,
+                    convolve_fft(self.data, kernel,
                                  normalize_kernel=True,
                                  interpolate_nan=True))
             else:
-                self.smoothed_images.append(convolve_fft(self.img, kernel))
-        return self
+                self.smoothed_images.append(convolve_fft(self.data, kernel))
 
     # def clean_fft(self):
 
@@ -100,8 +104,6 @@ class Genus(object):
         '''
 
         self.genus_stats = compute_genus(self.smoothed_images, self.thresholds)
-
-        return self
 
     def run(self, verbose=False):
         '''
@@ -126,6 +128,7 @@ class Genus(object):
                     "".join(["Smooth Size: ",
                             str(self.smoothing_radii[i - 1])]))
                 p.plot(self.thresholds, self.genus_stats[i - 1], "bD")
+                p.xlabel("Intensity")
                 p.grid(True)
             p.show()
 
@@ -224,52 +227,67 @@ class GenusDistance(object):
     Parameters
     ----------
 
-    img1 - numpy.ndarray
+    img1 : %(dtypes)s
         2D image.
-    img2 - numpy.ndarray
+    img2 : %(dtypes)s
         2D image.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
     fiducial_model : Genus
         Computed Genus object. Use to avoid recomputing.
-
     """
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
         super(GenusDistance, self).__init__()
 
         # Standardize the intensity values in the images
 
-        img1 = normalize(img1)
-        img2 = normalize(img2)
+        img1, hdr1 = input_data(img1)
+        img2, hdr2 = input_data(img2)
+
+        img1 = standardize(img1)
+        img2 = standardize(img2)
 
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
-            self.genus1 = Genus(
-                img1, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
+            self.genus1 = \
+                Genus(img1, smoothing_radii=smoothing_radii,
+                      lowdens_percent=20).run()
 
-        self.genus2 = Genus(
-            img2, smoothing_radii=smoothing_radii, lowdens_thresh=20).run()
+        self.genus2 = \
+            Genus(img2, smoothing_radii=smoothing_radii,
+                  lowdens_percent=20).run()
 
-        self.distance = None
+        # When normalizing the genus curves for the distance metric, find
+        # the scaling between the angular size of the grids.
+        self.scale = common_scale(WCS(hdr1), WCS(hdr2))
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1=None, label2=None):
         '''
 
         Data is centered and normalized (via normalize).
         The distance is the difference between cubic splines of the curves.
 
+        All values are normalized by the area of the image they were
+        calculated from.
+
         Parameters
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        label1 : str, optional
+            Object or region name for img1
+        label2 : str, optional
+            Object or region name for img2
         '''
 
         # 2 times the average number between the two
         num_pts = \
-            int((len(self.genus1.thresholds) + len(self.genus2.thresholds))/2)
+            int((len(self.genus1.thresholds) +
+                 len(self.genus2.thresholds)) / 2)
 
         # Get the min and the max of the thresholds
         min_pt = max(np.min(self.genus1.thresholds),
@@ -278,42 +296,43 @@ class GenusDistance(object):
         max_pt = min(np.max(self.genus1.thresholds),
                      np.max(self.genus2.thresholds))
 
-        points = np.linspace(min_pt, max_pt, 2*num_pts)
+        points = np.linspace(min_pt, max_pt, 2 * num_pts)
+
+        # Divide each by the area of the data. genus1 is additionally
+        # adjusted by the scale factor of the angular size between the
+        # datasets.
+        genus1 = self.genus1.genus_stats[0, :] / \
+            float(self.genus1.data.size / self.scale)
+        genus2 = self.genus2.genus_stats[0, :] / float(self.genus2.data.size)
 
         interp1 = \
             InterpolatedUnivariateSpline(self.genus1.thresholds,
-                                         self.genus1.genus_stats[0, :], k=3)
+                                         genus1, k=3)
         interp2 = \
             InterpolatedUnivariateSpline(self.genus2.thresholds,
-                                         self.genus2.genus_stats[0, :], k=3)
+                                         genus2, k=3)
 
-        self.distance = np.nansum(np.abs(interp1(points) -
-                                         interp2(points))) / len(points)
+        self.distance = np.linalg.norm(interp1(points) -
+                                       interp2(points))
 
         if verbose:
             import matplotlib.pyplot as p
 
             p.plot(self.genus1.thresholds,
-                   self.genus1.genus_stats[0, :], "bD",
-                   label=self.genus1.save_name)
+                   genus1, "bD",
+                   label=label1)
             p.plot(self.genus2.thresholds,
-                   self.genus2.genus_stats[0, :], "gD",
-                   label=self.genus2.save_name)
+                   genus2, "go",
+                   label=label2)
             p.plot(points, interp1(points), "b")
             p.plot(points, interp2(points), "g")
+            p.xlabel("z-score")
+            p.ylabel("Genus Score")
             p.grid(True)
-            p.legend(loc="upper right")
+            p.legend(loc="best")
             p.show()
 
         return self
-
-
-def normalize(data):
-
-    av_val = nanmean(data, axis=None)
-    st_dev = nanstd(data, axis=None)
-
-    return (data - av_val) / st_dev
 
 
 def remove_small_objects(arr, min_size, connectivity=8):

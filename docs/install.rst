@@ -5,29 +5,34 @@ Installing TurbuStat
 TurbuStat is currently only available from the `github repo <https://github.com/Astroua/TurbuStat>`_.
 
 TurbuStat requires the follow packages:
- * numpy-1.6
- * matplotlib
- * astropy-1.0
- * scipy-0.12.0
- * sklearn-0.13.0
- * pandas-0.13
- * statsmodels-0.4.0
- * astrodendro-`dev <https://github.com/dendrograms/astrodendro>`_
- * `spectral-cube-v0.2.2 <https://github.com/radio-astro-tools/spectral-cube>`_
- * `signal-id <https://github.com/radio-astro-tools/signal-id>`_
 
- We recommend installing the `radio_beam <https://github.com/radio-astro-tools/radio_beam>`_ package to aid in the noise estimation in `signal-id <https://github.com/radio-astro-tools/signal-id>`_.
+ *   astropy>=1.0
+ *   numpy>=1.7
+ *   matplotlib>=1.2
+ *   scipy>=0.12
+ *   sklearn>=0.13.0
+ *   pandas>=0.13
+ *   statsmodels>=0.4.0
+
+The following packages are optional, but required for specific functions in TurbuStat:
+
+ *   `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`_ - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
+ *   `astrodendro-development <https://github.com/dendrograms/astrodendro>`_ - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
+
+When using `turbustat.data_reduction.Mask_and_Moments`, the noise can be automatically estimated by installing two additional packages (**IN DEVELOPMENT**):
+ *   `signal-id <https://github.com/radio-astro-tools/signal-id>`_ - Noise estimation in PPV cubes.
+ *   `radio_beam <https://github.com/radio-astro-tools/radio_beam>`_ - A class for handling radio beams and useful utilities. Used for noise estimation in signal-id
 
  To install the packages, clone the repository:
  ::
-    >>> git clone https://github.com/Astroua/TurbuStat
+    >>> git clone https://github.com/Astroua/TurbuStat # doctest: +SKIP
 
  Then install the package:
  ::
-    >>> python setup.py install
+    >>> python setup.py install # doctest: +SKIP
 
  The script will install numpy and astropy if your python installation does not have them installed. Due to package conflicts, it will **NOT** install the rest of the dependencies! Until this can be fixed, you can check to see if you have all of the dependencies installed by running:
  ::
-    >>> python setup.py check_deps
+    >>> python setup.py check_deps # doctest: +SKIP
 
 If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!

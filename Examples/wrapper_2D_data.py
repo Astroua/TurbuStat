@@ -6,92 +6,113 @@ column density, etc...). The terminal arguments are the file names
 '''
 
 import sys
-from astropy.io.fits import getdata
+import os
+from astropy.io import fits
 
-# Format is [0] - data, [1] - header
-data1 = getdata(sys.argv[1], header=True)
-data2 = getdata(sys.argv[2], header=True)
+fits1 = sys.argv[1]
+fits2 = sys.argv[2]
+
+data1 = fits.open(fits1)[0]
+data2 = fits.open(fits2)[0]
 
 
-## Wavelet Transform
+# Shorten the name for the plots
+fits1 = os.path.basename(fits1)
+fits2 = os.path.basename(fits2)
+
+# Wavelet Transform
 
 from turbustat.statistics import Wavelet_Distance
 
 wavelet_distance = Wavelet_Distance(data1,
-                                    data2).distance_metric(verbose=True)
+                                    data2).distance_metric(verbose=True,
+                                                           label1=fits1,
+                                                           label2=fits2)
 
 print "Wavelet Distance: %s" % (wavelet_distance.distance)
 
-## Spatial Power Spectrum/ Bispectrum#
+# Spatial Power Spectrum/ Bispectrum
 
 from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
-pspec_distance = PSpec_Distance(data1, data2).distance_metric(verbose=True)
+pspec_distance = PSpec_Distance(data1, data2).distance_metric(verbose=True,
+                                                              label1=fits1,
+                                                              label2=fits2)
 
 print "Spatial Power Spectrum Distance: %s" % (pspec_distance.distance)
 
 bispec_distance = BiSpectrum_Distance(data1,
-                                      data2).distance_metric(verbose=True)
+                                      data2).distance_metric(verbose=True,
+                                                             label1=fits1,
+                                                             label2=fits2)
 
 print "Bispectrum Distance: %s" % (bispec_distance.distance)
 
-## Genus#
+# Genus
 
 from turbustat.statistics import GenusDistance
 
-genus_distance = GenusDistance(data1[0],
-                               data2[0]).distance_metric(verbose=True)
+genus_distance = GenusDistance(data1,
+                               data2).distance_metric(verbose=True,
+                                                      label1=fits1,
+                                                      label2=fits2)
 
 print "Genus Distance: %s" % (genus_distance.distance)
 
-## Delta-Variance
+# Delta-Variance
 
 from turbustat.statistics import DeltaVariance_Distance
 
 delvar_distance = DeltaVariance_Distance(data1,
-                                         data2).distance_metric(verbose=True)
+                                         data2).distance_metric(verbose=True,
+                                                                label1=fits1,
+                                                                label2=fits2)
 
 print "Delta-Variance Distance: %s" % (delvar_distance.distance)
 
-## Tsallis#
+# Tsallis#
 
 from turbustat.statistics import Tsallis_Distance
 
-tsallis_distance= Tsallis_Distance(data1[0],
-                                   data2[0]).distance_metric(verbose=True)
+tsallis_distance= Tsallis_Distance(data1,
+                                   data2).distance_metric(verbose=True)
 
 print "Tsallis Distance: %s" % (tsallis_distance.distance)
 
 # High-order stats
 
-from turbustat.statistics import StatMomentsDistance
+from turbustat.statistics import StatMoments_Distance
 
-moment_distance = StatMomentsDistance(data1[0],
-                                      data2[0]).distance_metric(verbose=True)
+moment_distance = StatMoments_Distance(data1,
+                                       data2).distance_metric(verbose=True,
+                                                              label1=fits1,
+                                                              label2=fits2)
 
 print "Kurtosis Distance: %s" % (moment_distance.kurtosis_distance)
 
 print "Skewness Distance: %s" % (moment_distance.skewness_distance)
 
-# ## Dendrogram Stats
+# # Dendrogram Stats
 
 from turbustat.statistics import DendroDistance
 
-dendro_distance = DendroDistance(data1[0],
-                                 data2[0]).distance_metric(verbose=True)
+dendro_distance = DendroDistance(data1,
+                                 data2).distance_metric(verbose=True,
+                                                        label1=fits1,
+                                                        label2=fits2)
 
-print dendro_distance.num_distance
-print dendro_distance.histogram_distance
+print "Dendrogram Number Distance: %s " % (dendro_distance.num_distance)
+print "Dendrogram Histogram Distance: %s " % \
+    (dendro_distance.histogram_distance)
 
 # PDF
 
 from turbustat.statistics import PDF_Distance
 
 pdf_distance = \
-    PDF_Distance(data1[0],
-                 data2[0])
+    PDF_Distance(data1,
+                 data2).distance_metric(verbose=True, label1=fits1,
+                                        label2=fits2)
 
-pdf_distance.distance_metric(verbose=False)
-
-print pdf_distance.distance
-
+print "PDF Hellinger Distance: %s " % (pdf_distance.hellinger_distance)
+print "PDF KS-Test Distance: %s " % (pdf_distance.ks_distance)

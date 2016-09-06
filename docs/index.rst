@@ -10,6 +10,15 @@ TurbuStat provides a set of analysis tools for comparing astronomical radio data
 
 The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contributions to the code base are very much welcome! If you find any issues in the package, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
 
+If you make use of this package in a publication, please cite our accompanying paper:
+::
+   @ARTICLE{Koch2016,
+    author = {{Koch}, Eric~W. and {Ward}, Caleb~G. and {Offner}, Stella and {Loeppky}, Jason~L. and {Rosolowsky}, Erik~W.},
+    title = {Tools for Critically Evaluating Simulations of Star Formation},
+    journal = {MNRAS},
+    year = {submitted}
+    }
+
 This package was developed by:
 
 * `Eric Koch <https://github.com/e-koch>`_
@@ -27,7 +36,6 @@ Contents:
    moments.rst
    cube_tools.rst
    statistics.rst
-   analysis.rst
    helper_scripts.rst
 
 

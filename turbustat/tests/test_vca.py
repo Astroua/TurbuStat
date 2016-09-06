@@ -21,10 +21,9 @@ class testVCA(TestCase):
         self.dataset2 = dataset2
 
     def test_VCA_method(self):
-        self.tester = VCA(dataset1["cube"][0],
-                          dataset1["cube"][1])
+        self.tester = VCA(dataset1["cube"])
         self.tester.run()
-        assert np.allclose(self.tester.ps1D, computed_data['vca_val'])
+        npt.assert_allclose(self.tester.ps1D, computed_data['vca_val'])
 
     def test_VCA_distance(self):
         self.tester_dist = \

@@ -3,50 +3,48 @@
 
 import numpy as np
 
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, threed_types, input_data
+
+# PCA utilities
 from ..threeD_to_twoD import var_cov_cube
 from .width_estimate import WidthEstimate1D, WidthEstimate2D
 
 
-class PCA(object):
+class PCA(BaseStatisticMixIn):
 
     '''
     Implementation of Principal Component Analysis (Heyer & Brunt, 2002)
 
     Parameters
     ----------
-
-    cube : numpy.ndarray
+    cube : %(dtypes)s
         Data cube.
     n_eigs : int
-        Number of eigenvalues to compute.
+        Number of eigenvalues to compute. Defaults to using all eigenvalues.
     '''
 
-    def __init__(self, cube, n_eigs=None):
-        super(PCA, self).__init__()
-        self.cube = cube
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-        if n_eigs is None:
-            self.n_eigs = self.cube.shape[0]
+    def __init__(self, cube, n_eigs=-1):
+        super(PCA, self).__init__()
+
+        # Header not needed
+        self.need_header_flag = False
+        self.header = None
+
+        self.data = input_data(cube, no_header=True)
+
+        self.spectral_shape = self.data.shape[0]
+
+        if n_eigs == -1:
+            self.n_eigs = self.spectral_shape
+        elif n_eigs < -1 or n_eigs > self.spectral_shape or n_eigs == 0:
+            raise Warning("n_eigs must be less than the number of velocity"
+                          " channels ({}) or -1 for"
+                          " all".format(self.spectral_shape))
         else:
             self.n_eigs = n_eigs
-
-        self.n_velchan = self.cube.shape[0]
-
-    @property
-    def cube(self):
-        return self._cube
-
-    @cube.setter
-    def cube(self, input_cube):
-
-        if len(input_cube.shape) > 3:
-            input_cube = input_cube.squeeze()
-
-        if len(input_cube.shape) != 3:
-            raise ValueError("Must input a 3D cube "
-                             "(velocity, position, position).")
-
-        self._cube = input_cube
 
     @property
     def n_eigs(self):
@@ -59,37 +57,45 @@ class PCA(object):
 
         self._n_eigs = value
 
-    def compute_pca(self, mean_sub=False, normalize=True):
+    def compute_pca(self, mean_sub=False):
         '''
         Create the covariance matrix and its eigenvalues.
 
+        If `mean_sub` is disabled, the first eigenvalue is dominated by the
+        mean of the data, not the variance.
+
         Parameters
         ----------
-        normalize : bool, optional
-            Normalize the set of eigenvalues by the 0th component.
+        mean_sub : bool, optional
+            When enabled, subtracts the means of the channels before
+            calculating the covariance. By default, this is disabled to
+            match the Heyer & Brunt method.
         '''
 
-        self.cov_matrix = var_cov_cube(self.cube, mean_sub=mean_sub)
+        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
         eigvecs = eigvecs[np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
-        self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
-            np.sum(all_eigsvals)
-
-        self._eigvecs = eigvecs[:, :self.n_eigs]
-
-        if normalize:
-            self._eigvals = all_eigsvals[:self.n_eigs] / all_eigsvals[0]
+        if mean_sub:
+            self._total_variance = np.sum(all_eigsvals)
+            self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
+                self.total_variance
         else:
-            self._eigvals = all_eigsvals[:self.n_eigs]
+            self._total_variance = np.sum(all_eigsvals[1:])
+            self._var_prop = np.sum(all_eigsvals[1:self.n_eigs]) / \
+                self.total_variance
 
-        return self
+        self._eigvals = all_eigsvals[:self.n_eigs]
 
     @property
     def var_proportion(self):
         return self._var_prop
+
+    @property
+    def total_variance(self):
+        return self._total_variance
 
     @property
     def eigvals(self):
@@ -110,9 +116,9 @@ class PCA(object):
             iterat = xrange(n_eigs, 0, 1)
 
         for ct, idx in enumerate(iterat):
-            eigimg = np.zeros(self.cube.shape[1:], dtype=float)
-            for channel in range(self.cube.shape[0]):
-                eigimg += np.nan_to_num(self.cube[channel] *
+            eigimg = np.zeros(self.data.shape[1:], dtype=float)
+            for channel in range(self.data.shape[0]):
+                eigimg += np.nan_to_num(self.data[channel] *
                                         self.eigvecs[channel, idx])
             if ct == 0:
                 eigimgs = eigimg
@@ -199,7 +205,7 @@ class PCA(object):
     def spectral_width(self):
         return self._spectral_width
 
-    def run(self, verbose=False, normalize=True):
+    def run(self, verbose=False, mean_sub=False):
         '''
         Run method. Needed to maintain package standards.
 
@@ -207,11 +213,9 @@ class PCA(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        normalize : bool, optional
-            See ```compute_pca```.
         '''
 
-        self.compute_pca(normalize=normalize)
+        self.compute_pca(mean_sub=mean_sub)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -228,6 +232,8 @@ class PCA(object):
             p.ylabel('Variance')
             p.show()
 
+        return self
+
 
 class PCA_Distance(object):
 
@@ -237,37 +243,37 @@ class PCA_Distance(object):
 
     Parameters
     ----------
-    cube1 : numpy.ndarray
+    cube1 : %(dtypes)s
         Data cube.
-    cube2 : numpy.ndarray
+    cube2 : %(dtypes)s
         Data cube.
     n_eigs : int
         Number of eigenvalues to compute.
     fiducial_model : PCA
         Computed PCA object. Use to avoid recomputing.
-    normalize : bool, optional
-        Sets whether to normalize the eigenvalues by the 0th eigenvalue.
-
+    mean_sub : bool, optional
+        Subtracts the mean before computing the covariance matrix. Not
+        subtracting the mean is done in the original Heyer & Brunt works.
     '''
 
+    __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
+
     def __init__(self, cube1, cube2, n_eigs=50, fiducial_model=None,
-                 normalize=True):
+                 mean_sub=True):
         super(PCA_Distance, self).__init__()
-        self.cube1 = cube1
-        self.cube2 = cube2
 
         if fiducial_model is not None:
             self.pca1 = fiducial_model
         else:
-            self.pca1 = PCA(self.cube1, n_eigs=n_eigs)
-            self.pca1.run(normalize=normalize)
+            self.pca1 = PCA(cube1, n_eigs=n_eigs)
+            self.pca1.run(mean_sub=mean_sub)
 
-        self.pca2 = PCA(self.cube2, n_eigs=n_eigs)
-        self.pca2.run(normalize=normalize)
+        self.pca2 = PCA(cube2, n_eigs=n_eigs)
+        self.pca2.run(mean_sub=mean_sub)
 
-        self.distance = None
+        self._mean_sub = mean_sub
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, label1="Cube 1", label2="Cube 2"):
         '''
         Computes the distance between the cubes.
 
@@ -275,10 +281,22 @@ class PCA_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for cube1
+        label2 : str, optional
+            Object or region name for cube2
         '''
 
-        difference = np.abs((self.pca1.eigvals - self.pca2.eigvals) ** 2.)
-        self.distance = np.sqrt(np.sum(difference))
+        # The eigenvalues need to be normalized before being compared. If
+        # mean_sub is False, the first eigenvalue is not used.
+        if self._mean_sub:
+            eigvals1 = self.pca1.eigvals / np.sum(self.pca1.eigvals)
+            eigvals2 = self.pca2.eigvals / np.sum(self.pca2.eigvals)
+        else:
+            eigvals1 = self.pca1.eigvals[1:] / np.sum(self.pca1.eigvals[1:])
+            eigvals2 = self.pca2.eigvals[1:] / np.sum(self.pca2.eigvals[1:])
+
+        self.distance = np.linalg.norm(eigvals1 - eigvals2)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -288,21 +306,25 @@ class PCA_Distance(object):
 
             p.subplot(2, 2, 1)
             p.imshow(
-                self.pca1.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca1.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca1.cov_matrix))
             p.colorbar()
-            p.title("PCA1")
+            p.title(label1)
             p.subplot(2, 2, 3)
-            p.bar(np.arange(1, self.pca1.n_eigs + 1), self.pca1.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, len(eigvals1) + 1), eigvals1, 0.5,
+                  color='r')
             p.xlim([0, self.pca1.n_eigs + 1])
             p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+            p.ylabel("Proportion of Variance")
             p.subplot(2, 2, 2)
             p.imshow(
-                self.pca2.cov_matrix, origin="lower", interpolation="nearest")
+                self.pca2.cov_matrix, origin="lower", interpolation="nearest",
+                vmin=np.median(self.pca2.cov_matrix))
             p.colorbar()
-            p.title("PCA2")
+            p.title(label2)
             p.subplot(2, 2, 4)
-            p.bar(np.arange(1, self.pca2.n_eigs + 1), self.pca2.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, len(eigvals2) + 1), eigvals2, 0.5,
+                  color='r')
             p.xlim([0, self.pca2.n_eigs + 1])
             p.xlabel('Eigenvalues')
 

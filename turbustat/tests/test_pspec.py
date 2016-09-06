@@ -23,18 +23,17 @@ class testPSpec(TestCase):
 
     def test_PSpec_method(self):
         self.tester = \
-            PowerSpectrum(dataset1["integrated_intensity"][0],
-                          dataset1["integrated_intensity"][1],
-                          dataset1["integrated_intensity_error"][0] ** 2.)
+            PowerSpectrum(dataset1["moment0"],
+                          weights=dataset1["moment0_error"][0] ** 2.)
         self.tester.run()
-        assert np.allclose(self.tester.ps1D, computed_data['pspec_val'])
+        npt.assert_allclose(self.tester.ps1D, computed_data['pspec_val'])
 
     def test_PSpec_distance(self):
         self.tester_dist = \
-            PSpec_Distance(dataset1["integrated_intensity"],
-                           dataset2["integrated_intensity"],
-                           weights1=dataset1["integrated_intensity_error"][0] ** 2.,
-                           weights2=dataset2["integrated_intensity_error"][0] ** 2.)
+            PSpec_Distance(dataset1["moment0"],
+                           dataset2["moment0"],
+                           weights1=dataset1["moment0_error"][0] ** 2.,
+                           weights2=dataset2["moment0_error"][0] ** 2.)
         self.tester_dist.distance_metric()
 
         npt.assert_almost_equal(self.tester_dist.distance,

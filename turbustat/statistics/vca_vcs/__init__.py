@@ -1,1 +1,2 @@
-from vca_vcs import VCA, VCS, VCA_Distance, VCS_Distance
+from vca import VCA, VCA_Distance
+from vcs import VCS, VCS_Distance

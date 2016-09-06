@@ -1,52 +1,60 @@
 # Licensed under an MIT open source license - see LICENSE
 
-'''
-
-The density PDF as described by Kowal et al. (2007)
-
-'''
-
 import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
-import warnings
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, standardize, common_histogram_bins
+from ..base_statistic import BaseStatisticMixIn
+from ...io import common_types, twod_types, threed_types, input_data
 
 
-class PDF(object):
+class PDF(BaseStatisticMixIn):
     '''
     Create the PDF of a given array.
 
     Parameters
     ----------
-    img : numpy.ndarray
+    img : %(dtypes)s
         A 1-3D array.
     min_val : float, optional
         Minimum value to keep in the given image.
     bins : list or numpy.ndarray or int, optional
         Bins to compute the PDF from.
-    weights : numpy.ndarray, optional
+    weights : %(dtypes)s, optional
         Weights to apply to the image. Must have the same shape as the image.
     use_standardized : bool, optional
         Enable to standardize the data before computing the PDF and ECDF.
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
+
     def __init__(self, img, min_val=0.0, bins=None, weights=None,
                  use_standardized=False):
         super(PDF, self).__init__()
 
-        self.img = img
+        self.need_header_flag = False
+        self.header = None
+
+        output_data = input_data(img, no_header=True)
+
+        self.img = output_data
 
         # We want to remove NaNs and value below the threshold.
-        self.data = img[np.isfinite(img)]
-        self.data = self.data[self.data > min_val]
+        keep_values = np.logical_and(np.isfinite(output_data),
+                                     output_data > min_val)
+        self.data = output_data[keep_values]
 
         # Do the same for the weights, then apply weights to the data.
         if weights is not None:
-            self.weights = weights[np.isfinite(img)]
-            self.weights = self.weights[self.data > min_val]
+            output_weights = input_data(weights, no_header=True)
 
-            self.data *= self.weights
+            self.weights = output_weights[keep_values]
+
+            isfinite = np.isfinite(self.weights)
+
+            self.data = self.data[isfinite] * self.weights[isfinite]
 
         self._standardize_flag = False
         if use_standardized:
@@ -84,8 +92,6 @@ class PDF(object):
 
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-        return self
-
     @property
     def is_standardized(self):
         return self._standardize_flag
@@ -109,8 +115,6 @@ class PDF(object):
         self._ecdf_function = ECDF(self.data)
 
         self._ecdf = self._ecdf_function(self.bins)
-
-        return self
 
     @property
     def ecdf(self):
@@ -170,10 +174,10 @@ class PDF(object):
             if self._standardize_flag:
                 xlabel = r"z-score"
             else:
-                xlabel = r"$\Sigma$"
+                xlabel = r"Intensity"
 
             # PDF
-            p.subplot(131)
+            p.subplot(121)
             if self._standardize_flag:
                 p.plot(self.bins, self.pdf, 'b-')
             else:
@@ -183,27 +187,16 @@ class PDF(object):
             p.ylabel("PDF")
 
             # ECDF
-            p.subplot(132)
+            ax2 = p.subplot(122)
+            ax2.yaxis.tick_right()
+            ax2.yaxis.set_label_position("right")
             if self._standardize_flag:
-                p.plot(self.bins, self.ecdf, 'b-')
+                ax2.plot(self.bins, self.ecdf, 'b-')
             else:
-                p.semilogx(self.bins, self.ecdf, 'b-')
+                ax2.semilogx(self.bins, self.ecdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
-
-            # Array representation.
-            p.subplot(133)
-            if self.img.ndim == 1:
-                p.plot(self.img, 'b-')
-            elif self.img.ndim == 2:
-                p.imshow(self.img, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img.ndim == 3:
-                p.imshow(np.nansum(self.img, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
 
             p.tight_layout()
             p.show()
@@ -217,30 +210,31 @@ class PDF_Distance(object):
 
     Parameters
     ----------
-    img1 : numpy.ndarray
+    img1 : %(dtypes)s
         Array (1-3D).
-    img2 : numpy.ndarray
+    img2 : %(dtypes)s
         Array (1-3D).
     min_val1 : float, optional
         Minimum value to keep in img1
     min_val2 : float, optional
         Minimum value to keep in img2
-    weights1 : numpy.ndarray, optional
+    weights1 : %(dtypes)s, optional
         Weights to be used with img1
-    weights2 : numpy.ndarray, optional
+    weights2 : %(dtypes)s, optional
         Weights to be used with img2
     '''
+
+    __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
+                                      threed_types)}
+
     def __init__(self, img1, img2, min_val1=0.0, min_val2=0.0,
                  weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
 
-        self.img1 = img1
-        self.img2 = img2
-
-        self.PDF1 = PDF(self.img1, min_val=min_val1, use_standardized=True,
+        self.PDF1 = PDF(img1, min_val=min_val1, use_standardized=True,
                         weights=weights1)
 
-        self.PDF2 = PDF(self.img2, min_val=min_val2, use_standardized=True,
+        self.PDF2 = PDF(img2, min_val=min_val2, use_standardized=True,
                         weights=weights2)
 
         self.bins, self.bin_centers = \
@@ -258,8 +252,6 @@ class PDF_Distance(object):
 
         self.hellinger_distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
 
-        return self
-
     def compute_ks_distance(self):
         '''
         Compute the distance using the KS Test.
@@ -269,8 +261,6 @@ class PDF_Distance(object):
 
         self.ks_distance = D
         self.ks_pval = p
-
-        return self
 
     def compute_ad_distance(self):
         '''
@@ -286,7 +276,9 @@ class PDF_Distance(object):
         # self.ad_distance = D
         # self.ad_pval = p
 
-    def distance_metric(self, statistic='all', labels=None, verbose=False):
+    def distance_metric(self, statistic='all', verbose=False,
+                        label1=None, label2=None,
+                        show_data=True):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -300,6 +292,12 @@ class PDF_Distance(object):
             Sets the labels in the output plot.
         verbose : bool, optional
             Enables plotting.
+        label1 : str, optional
+            Object or region name for img1
+        label2 : str, optional
+            Object or region name for img2
+        show_data : bool, optional
+            Plot the moment0, image, or 1D data.
         '''
 
         if statistic is 'all':
@@ -320,54 +318,25 @@ class PDF_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
             # PDF
-            if labels is None:
-                label1 = "Input 1"
-                label2 = "Input 2"
-            else:
-                label1 = labels[0]
-                label2 = labels[1]
-            p.subplot(131)
-            p.loglog(self.bin_centers[self.PDF1.pdf > 0],
-                     self.PDF1.pdf[self.PDF1.pdf > 0], 'b-', label=label1)
-            p.loglog(self.bin_centers[self.PDF2.pdf > 0],
-                     self.PDF2.pdf[self.PDF2.pdf > 0], 'g-', label=label2)
+            p.subplot(121)
+            p.plot(self.bin_centers,
+                   self.PDF1.pdf, 'b-', label=label1)
+            p.plot(self.bin_centers,
+                   self.PDF2.pdf, 'g-', label=label2)
             p.legend(loc="best")
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("PDF")
 
             # ECDF
-            p.subplot(132)
-            p.semilogx(np.sort(self.PDF1.data.ravel()), self.PDF1.ecdf, 'b-')
-            p.semilogx(np.sort(self.PDF2.data.ravel()), self.PDF2.ecdf, 'g-')
+            ax2 = p.subplot(122)
+            ax2.yaxis.tick_right()
+            ax2.yaxis.set_label_position("right")
+            ax2.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
+            ax2.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
             p.grid(True)
             p.xlabel(r"z-score")
             p.ylabel("ECDF")
-
-            # Array representation.
-            p.subplot(233)
-            if self.img1.ndim == 1:
-                p.plot(self.img1, 'b-')
-            elif self.img1.ndim == 2:
-                p.imshow(self.img1, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img1.ndim == 3:
-                p.imshow(np.nansum(self.img1, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
-
-            p.subplot(236)
-            if self.img2.ndim == 1:
-                p.plot(self.img2, 'b-')
-            elif self.img2.ndim == 2:
-                p.imshow(self.img2, origin="lower", interpolation="nearest",
-                         cmap="binary")
-            elif self.img2.ndim == 3:
-                p.imshow(np.nansum(self.img2, axis=0), origin="lower",
-                         interpolation="nearest", cmap="binary")
-            else:
-                print("Visual representation works only up to 3D.")
 
             p.show()
 

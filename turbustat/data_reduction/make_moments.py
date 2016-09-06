@@ -1,6 +1,4 @@
 
-from spectral_cube import SpectralCube, LazyMask
-from spectral_cube.wcs_utils import drop_axis
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
@@ -8,6 +6,15 @@ from scipy import ndimage as nd
 import itertools as it
 import operator as op
 import os
+
+try:
+    from spectral_cube import SpectralCube, LazyMask
+    from spectral_cube.wcs_utils import drop_axis
+    spectral_cube_flag = True
+except ImportError:
+    Warning("spectral-cube is not installed. Using Mask_and_Moments requires"
+            " spectral-cube to be installed.")
+    spectral_cube_flag = False
 
 try:
     from signal_id import Noise
@@ -46,6 +53,11 @@ class Mask_and_Moments(object):
                  moment_method='slice'):
         super(Mask_and_Moments, self).__init__()
 
+        if not spectral_cube_flag:
+            raise ImportError("Mask_and_Moments requires the spectral-cube "
+                              " to be installed: https://github.com/"
+                              "radio-astro-tools/spectral-cube")
+
         if isinstance(cube, SpectralCube):
             self.cube = cube
             self.save_name = None
@@ -63,8 +75,9 @@ class Mask_and_Moments(object):
 
         if scale is None:
             if not signal_id_flag:
-                raise ImportError("signal-id is not installed."
-                                  " You must provide the scale.")
+                raise ImportError("signal-id is not installed and error"
+                                  " estimation is not available. You must "
+                                  "provide the noise scale.")
 
             self.scale = Noise(self.cube).scale
         else:
@@ -380,11 +393,16 @@ class Mask_and_Moments(object):
             is not valid for automatic loading.
         '''
 
+        if not spectral_cube_flag:
+            raise ImportError("Mask_and_Moments requires the spectral-cube "
+                              " to be installed: https://github.com/"
+                              "radio-astro-tools/spectral-cube")
+
         if moments_path is None:
             moments_path = ""
 
         if not isinstance(fits_name, SpectralCube):
-            root_name = fits_name[:-4]
+            root_name = os.path.basename(fits_name[:-4])
         else:
             root_name = moments_prefix
 
@@ -492,11 +510,11 @@ class Mask_and_Moments(object):
 
         good_channels = np.where(channel_max > self.clip*self.scale)[0]
 
-        # Get the longest sequence
-        good_channels = longestSequence(good_channels)
-
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
+
+        # Get the longest sequence
+        good_channels = longestSequence(good_channels)
 
         self.channel_range = self.cube.spectral_axis[good_channels][[0, -1]]
 

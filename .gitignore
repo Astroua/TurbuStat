@@ -53,9 +53,13 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+docs/api
 
 *project
 *workspace
 *.pyc
 
 *.DS_Store
+
+turbustat/version.py
+turbustat/cython_version.py
