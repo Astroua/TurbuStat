@@ -56,8 +56,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                                                  'x_mean':True, 'y_mean':True})
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx]=np.sqrt(0.5*output.x_stddev.value[0]**2+
-                                0.5*output.y_stddev.value[0]**2)
+            scales[idx]=2**-0.5*np.sqrt(output.x_stddev.value[0]**2+
+                                        output.y_stddev.value[0]**2)
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3,3,idx+1)
                 ax.imshow(z, cmap='afmhot')
@@ -107,6 +107,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         if method == 'contour':
             znorm = z
             znorm /= znorm.max()
+            plt.ioff()
             try:
                 cs = plt.contour(xmat, ymat, znorm, levels=[np.exp(-1)])
             except ValueError as e:
