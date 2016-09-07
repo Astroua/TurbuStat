@@ -88,6 +88,7 @@ class PCA(BaseStatisticMixIn):
                 self.total_variance
 
         self._eigvals = all_eigsvals[:self.n_eigs]
+        self._eigvecs = eigvecs[:, :self.n_eigs]
 
     @property
     def var_proportion(self):
@@ -137,7 +138,7 @@ class PCA(BaseStatisticMixIn):
         for idx, image in enumerate(eigimgs):
             fftx = np.fft.fft2(image)
             fftxs = np.conjugate(fftx)
-            acor = np.fft.ifft2((fftx-fftx.mean())*(fftxs-fftxs.mean()))
+            acor = np.fft.ifft2((fftx - fftx.mean()) * (fftxs - fftxs.mean()))
             acor = np.fft.fftshift(acor)
 
             if idx == 0:
@@ -155,7 +156,7 @@ class PCA(BaseStatisticMixIn):
         for idx in range(n_eigs):
             fftx = np.fft.fft(self.eigvecs[:, idx])
             fftxs = np.conjugate(fftx)
-            acor = np.fft.ifft((fftx-fftx.mean())*(fftxs-fftxs.mean()))
+            acor = np.fft.ifft((fftx - fftx.mean()) * (fftxs - fftxs.mean()))
             if idx == 0:
                 acors = acor.real
             else:
@@ -183,7 +184,7 @@ class PCA(BaseStatisticMixIn):
         noise_ACF = self.noise_ACF()
 
         self._spatial_width, self._models = \
-            WidthEstimate2D(acors, NoiseACF=noise_ACF, method=method)
+            WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method)
 
     @property
     def spatial_width(self):
