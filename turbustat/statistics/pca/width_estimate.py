@@ -5,7 +5,8 @@ from scipy.interpolate import LSQUnivariateSpline, interp1d
 from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
-from ..stats_utils import EllipseModel
+# from ..stats_utils import EllipseModel
+from turbustat.statistics.stats_utils import EllipseModel
 import matplotlib.pyplot as plt
 
 
@@ -38,34 +39,36 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
     # set up the x/y grid just once
     z = inList[0]
-    x = fft.fftfreq(z.shape[0])*z.shape[0]/2.0
-    y = fft.fftfreq(z.shape[1])*z.shape[1]/2.0
-    xmat,ymat = np.meshgrid(x,y,indexing='ij')
+    x = fft.fftfreq(z.shape[0]) * z.shape[0] / 2.0
+    y = fft.fftfreq(z.shape[1]) * z.shape[1] / 2.0
+    xmat, ymat = np.meshgrid(x, y, indexing='ij')
     xmat = np.fft.fftshift(xmat)
     ymat = np.fft.fftshift(ymat)
-    rmat = (xmat**2+ymat**2)**0.5
+    rmat = (xmat**2 + ymat**2)**0.5
 
     for idx, zraw in enumerate(inList):
         z = zraw - noise_ACF
 
         if method == 'fit':
-            g = astropy_models.Gaussian2D(x_mean=[0],y_mean=[0],
-                                          x_stddev=[1],y_stddev=[1],
+            g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0],
+                                          x_stddev=[1], y_stddev=[1],
                                           amplitude=z.max(), theta=[0],
-                                          fixed={'amplitude':True,
-                                                 'x_mean':True, 'y_mean':True})
+                                          fixed={'amplitude': True,
+                                                 'x_mean': True,
+                                                 'y_mean': True})
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx]=2**-0.5*np.sqrt(output.x_stddev.value[0]**2+
-                                        output.y_stddev.value[0]**2)
+            scales[idx] = 2**-0.5 * np.sqrt(output.x_stddev.value[0]**2 +
+                                            output.y_stddev.value[0]**2)
             if diagnosticplots and idx < 9:
-                ax = plt.subplot(3,3,idx+1)
+                ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
-                ax.contour(output(xmat,ymat), levels=[z.max(),
-                                                      z.max()*0.75,
-                                                      z.max()*0.5,
-                                                      z.max()*0.25,],
-                           colors=['c']*3)
+                ax.contour(output(xmat, ymat), levels=[z.max(),
+                                                       z.max() * 0.75,
+                                                       z.max() * 0.5,
+                                                       z.max() * 0.25, ],
+                           colors=['c'] * 3)
+                ax.show()
             models.append(output)
         elif method == 'interpolate':
             rvec = rmat.ravel()
@@ -140,17 +143,12 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
 def WidthEstimate1D(inList, method='interpolate'):
     scales = np.zeros(len(inList))
-    for idx, y in enumerate(inList):
+    for idx, y in enumerate(inList.T):
         x = fft.fftfreq(len(y)) * len(y) / 2.0
         if method == 'interpolate':
             minima = argrelmin(y)[0]
             if minima[0] > 1:
-                interpolator = interp1d(y[0:minima[0]], x[0:minima[0]])
-                print minima
-                print np.max(y[0:minima[0]])
-                print np.min(y[0:minima[0]])
-                plt.plot(y, 'r-')
-                plt.plot(y[0:minima[0]], 'bD')
+                interpolator = interp1d(y[0:minima[0] + 1], x[0:minima[0] + 1])
                 scales[idx] = interpolator(np.exp(-1))
         elif method == 'fit':
             g = models.Gaussian1D(amplitude=y[0], mean=[0], stddev=[10],
@@ -164,7 +162,9 @@ def WidthEstimate1D(inList, method='interpolate'):
                 xtrans = np.abs(x)**0.5
                 yfit = y
             output = fit_g(g, xtrans, yfit)
-            scales[idx] = np.abs(output.stddev.value[0]) * (2**0.5)
+            scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+        else:
+            raise ValueError("method must be 'interpolate' or 'fit'.")
     return scales
 
 
