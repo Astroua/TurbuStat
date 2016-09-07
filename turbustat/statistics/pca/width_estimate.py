@@ -35,7 +35,6 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
     """
     scales = np.zeros(len(inList))
-    models = []
 
     # set up the x/y grid just once
     z = inList[0]
@@ -55,10 +54,12 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                                           amplitude=z.max(), theta=[0],
                                           fixed={'amplitude': True,
                                                  'x_mean': True,
-                                                 'y_mean': True})
+                                                 'y_mean': True}) + \
+                astropy_models.Const2D(amplitude=[z.mean()])
+
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx] = 2**-0.5 * np.sqrt(output.x_stddev.value[0]**2 +
+            scales[idx] = np.sqrt(2) * np.sqrt(output.x_stddev.value[0]**2 +
                                             output.y_stddev.value[0]**2)
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
@@ -106,7 +107,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             plt.plot(rmat.ravel(), z.ravel(), 'r,')
             plt.vlines(scales[idx], zvec.min(), zvec.max())
             plt.show()
-            pdb.set_trace()
+            # pdb.set_trace()
         if method == 'contour':
             znorm = z
             znorm /= znorm.max()
