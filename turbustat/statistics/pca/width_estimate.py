@@ -69,7 +69,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                                                        z.max() * 0.25, ],
                            colors=['c'] * 3)
                 ax.show()
-            models.append(output)
+
         elif method == 'interpolate':
             rvec = rmat.ravel()
             zvec = z.ravel()
@@ -134,11 +134,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 scales[idx], model = fit_2D_ellipse(good_path.vertices)
             else:
                 scales[idx] = np.nan
-                model = np.nan
 
-            models.append(model)
-
-    return scales, models
+    return scales
 
 
 def WidthEstimate1D(inList, method='interpolate'):

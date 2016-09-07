@@ -183,8 +183,8 @@ class PCA(BaseStatisticMixIn):
         acors = self.autocorr_images(n_eigs=n_eigs)
         noise_ACF = self.noise_ACF()
 
-        self._spatial_width, self._models = \
-            WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method)
+        self._spatial_width = WidthEstimate2D(acors, noise_ACF=noise_ACF,
+                                              method=method)
 
     @property
     def spatial_width(self):
