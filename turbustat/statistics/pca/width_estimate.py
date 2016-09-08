@@ -104,9 +104,11 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz::dz])
             scales[idx] = spl(np.exp(-1))
-            # plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), z.ravel(), 'b,')
-            # plt.plot(rmat.ravel(), z.ravel(), 'r,')
+            # plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), zvec, 'b,')
+            # plt.plot(rmat.ravel(), zvec, 'r,')
             # plt.vlines(scales[idx], zvec.min(), zvec.max())
+            # plt.draw()
+            # raw_input("Continue??")
             # plt.show()
             # pdb.set_trace()
         if method == 'contour':
@@ -164,7 +166,7 @@ def WidthEstimate1D(inList, method='interpolate'):
                 xtrans = np.abs(x)**0.5
                 yfit = y
             output = fit_g(g, xtrans, yfit)
-            scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            scales[idx] = np.abs(output.stddev.value[0])
         else:
             raise ValueError("method must be 'interpolate' or 'fit'.")
     return scales
