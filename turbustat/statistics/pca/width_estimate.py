@@ -59,8 +59,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx] = np.sqrt(2) * np.sqrt(output.x_stddev_0.value[0]**2 +
-                                               output.y_stddev_0.value[0]**2)
+            scales[idx] = np.sqrt(output.x_stddev_0.value[0]**2 +
+                                  output.y_stddev_0.value[0]**2)
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
@@ -182,7 +182,7 @@ def fit_2D_ellipse(pts):
     ellip = EllipseModel()
     ellip.estimate(pts)
 
-    return np.sqrt(ellip.params[2]**2 + ellip.params[3]**2) / 2., ellip
+    return np.sqrt(ellip.params[2]**2 + ellip.params[3]**2), ellip
 
 
 def plot_stuff(raw, fit, residual, n_eigs):
