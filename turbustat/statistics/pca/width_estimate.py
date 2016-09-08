@@ -112,7 +112,11 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         if method == 'contour':
             znorm = z
             znorm /= znorm.max()
-            plt.ioff()
+            return_interactive = False
+            if plt.isinteractive():
+                plt.ioff()
+                return_interactive = True
+
             try:
                 cs = plt.contour(xmat, ymat, znorm, levels=[np.exp(-1)])
             except ValueError as e:
@@ -120,6 +124,9 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                         str(idx))
             paths = cs.collections[0].get_paths()
             plt.close()
+
+            if return_interactive:
+                plt.ion()
 
             # Only points that contain the origin
 
