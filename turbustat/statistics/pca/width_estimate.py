@@ -130,17 +130,13 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
             # Only points that contain the origin
 
-            if len(paths) > 1:
+            if len(paths) > 0:
                 pidx = np.where([p.contains_point((0, 0)) for p in paths])[0]
                 if pidx.shape[0] > 0:
                     good_path = paths[pidx[0]]
                     scales[idx], model = fit_2D_ellipse(good_path.vertices)
                 else:
                     scales[idx] = np.nan
-                    model = np.nan
-            elif len(paths) == 1:
-                good_path = paths[0]
-                scales[idx], model = fit_2D_ellipse(good_path.vertices)
             else:
                 scales[idx] = np.nan
 
