@@ -59,17 +59,15 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx] = np.sqrt(2) * np.sqrt(output.x_stddev.value[0]**2 +
-                                            output.y_stddev.value[0]**2)
+            scales[idx] = np.sqrt(2) * np.sqrt(output.x_stddev_0.value[0]**2 +
+                                               output.y_stddev_0.value[0]**2)
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
-                ax.contour(output(xmat, ymat), levels=[z.max(),
-                                                       z.max() * 0.75,
-                                                       z.max() * 0.5,
-                                                       z.max() * 0.25, ],
+                ax.contour(output(xmat, ymat),
+                           levels=np.array([0.25, 0.5, 0.75, 1.0]) * z.max(),
                            colors=['c'] * 3)
-                ax.show()
+                # ax.show()
 
         elif method == 'interpolate':
             rvec = rmat.ravel()
@@ -83,14 +81,17 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             scales[idx] = spl(np.exp(-1))
         elif method == 'xinterpolate':
             g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0], x_stddev=[1],
-                                          y_stddev=[1], amplitude=z[0, 0],
-                                          theta=[0], fixed={'amplitude': True,
-                                                            'x_mean': True,
-                                                            'y_mean': True})
+                                          y_stddev=[1], amplitude=z.max(),
+                                          theta=[0],
+                                          fixed={'amplitude': True,
+                                                 'x_mean': True,
+                                                 'y_mean': True}) + \
+                astropy_models.Const2D(amplitude=[z.mean()])
+
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            aspect = 1 / (output.x_stddev.value[0] / output.y_stddev.value[0])
-            theta = output.theta.value[0]
+            aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
+            theta = output.theta_0.value[0]
             rmat = ((xmat * np.cos(theta) + ymat * np.sin(theta))**2 +
                     (-xmat * np.sin(theta) + ymat * np.cos(theta))**2 *
                     aspect**2)**0.5
@@ -103,10 +104,10 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz::dz])
             scales[idx] = spl(np.exp(-1))
-            plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), z.ravel(), 'b,')
-            plt.plot(rmat.ravel(), z.ravel(), 'r,')
-            plt.vlines(scales[idx], zvec.min(), zvec.max())
-            plt.show()
+            # plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), z.ravel(), 'b,')
+            # plt.plot(rmat.ravel(), z.ravel(), 'r,')
+            # plt.vlines(scales[idx], zvec.min(), zvec.max())
+            # plt.show()
             # pdb.set_trace()
         if method == 'contour':
             znorm = z
