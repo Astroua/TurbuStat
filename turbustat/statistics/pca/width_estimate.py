@@ -6,13 +6,14 @@ from scipy.interpolate import LSQUnivariateSpline, interp1d
 from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
-# from ..stats_utils import EllipseModel
-from turbustat.statistics.stats_utils import EllipseModel
+from ..stats_utils import EllipseModel
+import astropy.units as u
 import matplotlib.pyplot as plt
 
 
 def WidthEstimate2D(inList, method='contour', noise_ACF=0,
-                    diagnosticplots=False):
+                    diagnosticplots=False, brunt_beamcorrect=True,
+                    beam_fwhm=None, spatial_cdelt=None):
     """
     Parameters
     ----------
@@ -27,12 +28,21 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         Show diagnostic plots for the first 9 autocorrelation images showing
         the goodness of fit (for the gaussian estimator) or ??? (presently
         nothing) for the others
-
+    brunt_beamcorrect : bool, optional
+        Apply the beam correction. When enabled, the beam size must be given.
+    beam_fwhm : None or astropy.units.Quantity
+        The FWHM beam width in angular units. Must be given when using
+        brunt_beamcorrect.
+    spatial_cdelt : None or astropy.units.Quantity
+        The angular scale of a pixel in the given data. Must be given when
+        using brunt_beamcorrect.
 
     Returns
     -------
     scales : array
         The array of estimated scales with length len(inList)
+    scale_errors : array
+        Uncertainty estimations on the scales.
 
     """
     scales = np.zeros(len(inList))
@@ -138,10 +148,65 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             else:
                 scales[idx] = np.nan
 
+            if brunt_beamcorrect:
+                if beam_fwhm is None or spatial_cdelt is None:
+                    raise ValueError("beam_fwhm and spatial_cdelt must be"
+                                     " given when 'brunt_beamcorrect' is "
+                                     "enabled.")
+
+                # Quantities must be in angular units
+                try:
+                    beam_fwhm = beam_fwhm.to(u.deg)
+                except u.UnitConversionError:
+                    raise u.UnitConversionError("beam_fwhm must be in angular"
+                                                " units.")
+                try:
+                    spatial_cdelt = spatial_cdelt.to(u.deg)
+                except u.UnitConversionError:
+                    raise u.UnitConversionError("spatial_cdelt must be in "
+                                                "angular units.")
+
+                # We need the number of pixels across 1 FWHM
+                # Since it's just being used in the formula below, I don't
+                # think rounding to the nearest int is needed.
+                pix_per_beam = beam_fwhm.value / spatial_cdelt.value
+
+                # Using the definition from Chris Brunt's thesis for a gaussian
+                # beam. Note that the IDL code has:
+                # e=(3./((kappa+2)*(kappa+3.)))^(1./kappa)
+                # deltay[i]=(p[i,0]^kappa-(e*1.0)^kappa)^(1./kappa)
+                # deltaz[i]=(p[i,1]^kappa-(e*1.0)^kappa)^(1./kappa)
+                # I think the (e * 1.0) term is where the beam size should be
+                # used, which is what is used here.
+                kappa = 0.8
+                e = np.pow(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
+                scales = np.pow(np.pow(scales, kappa) -
+                                np.pow(e * pix_per_beam, kappa), 1 / kappa)
+
     return scales, scale_errors
 
 
 def WidthEstimate1D(inList, method='interpolate'):
+    '''
+    Find widths from spectral eigenvectors. These eigenvectors should already
+    be normalized.
+
+    Parameters
+    ----------
+    inList : list of arrays or array
+        List of normalized eigenvectors, or a 2D array with eigenvectors
+        along the 2nd axis.
+    method : str, optional
+        The width estimation method to use.
+
+    Returns
+    -------
+    scales : array
+        The array of estimated scales with length len(inList)
+    scale_errors : array
+        Uncertainty estimations on the scales.
+
+    '''
     scales = np.zeros((inList.shape[1],))
     scale_errors = np.zeros((inList.shape[1],))
     for idx, y in enumerate(inList.T):
