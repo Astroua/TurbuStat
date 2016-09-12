@@ -42,15 +42,21 @@ def test_spatial_width_methods(method):
     '''
     Generate a 2D gaussian and test whether each method returns the expected
     size.
+
+    Note that, as defined by Heyer & Brunt, the shape will be sigma / sqrt(2),
+    NOT just the Gaussian width equivalent!
     '''
 
     model_gauss = generate_2D_array(x_std=10, y_std=10)
 
     model_gauss = model_gauss[np.newaxis, :]
 
-    widths = WidthEstimate2D(model_gauss, method=method)
+    widths, errors = WidthEstimate2D(model_gauss, method=method)
 
-    npt.assert_approx_equal(widths[0], 10.0, significant=3)
+    npt.assert_approx_equal(widths[0], 10.0 / np.sqrt(2), significant=3)
+    # I get 0.000449 for the error, but we're in a noiseless case so just
+    # ensure that is very small.
+    assert errors[0] < 0.1
 
 
 @pytest.mark.parameterize(('method'), ('fit', 'interpolate'))
@@ -65,6 +71,6 @@ def test_spectral_width_methods(method):
 
     model_gauss = model_gauss[:, np.newaxis]
 
-    widths = WidthEstimate1D(model_gauss, method=method)
+    widths, errors = WidthEstimate1D(model_gauss, method=method)
 
     npt.assert_approx_equal(10.0, widths[0], significant=3)

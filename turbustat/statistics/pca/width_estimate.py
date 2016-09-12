@@ -50,18 +50,17 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         z = zraw - noise_ACF
 
         if method == 'fit':
-            g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0],
-                                          x_stddev=[1], y_stddev=[1],
-                                          amplitude=z.max(), theta=[0],
-                                          fixed={'amplitude': True,
-                                                 'x_mean': True,
-                                                 'y_mean': True}) + \
-                astropy_models.Const2D(amplitude=[z.mean()])
+            output, cov = fit_2D_gaussian(xmat, ymat, z)
+            scales[idx] = np.sqrt(output.x_stddev_0.value[0]**2 +
+                                  output.y_stddev_0.value[0]**2)
+            errs = np.sqrt(np.abs(cov.diagonal()))
+            # Order in the cov matrix is given by the order of parameters in
+            # model.param_names. But amplitude and the means are fixed, so in
+            # this case they are the first 2.
+            scale_errors[idx] = (np.abs(output.x_stddev_0 * errs[0]) +
+                                 np.abs(output.y_stddev_0 * errs[1])) / \
+                scales[idx]
 
-            fit_g = fitting.LevMarLSQFitter()
-            output = fit_g(g, xmat, ymat, z)
-            scales[idx] = np.sqrt(2 * (output.x_stddev_0.value[0]**2 +
-                                       output.y_stddev_0.value[0]**2))
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
@@ -79,18 +78,13 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
-            scales[idx] = spl(np.exp(-1)) * np.sqrt(2)
-        elif method == 'xinterpolate':
-            g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0], x_stddev=[1],
-                                          y_stddev=[1], amplitude=z.max(),
-                                          theta=[0],
-                                          fixed={'amplitude': True,
-                                                 'x_mean': True,
-                                                 'y_mean': True}) + \
-                astropy_models.Const2D(amplitude=[z.mean()])
+            scales[idx] = spl(np.exp(-1))
 
-            fit_g = fitting.LevMarLSQFitter()
-            output = fit_g(g, xmat, ymat, z)
+            # Need to implement some error estimation
+            scale_errors[idx] = 0.0
+
+        elif method == 'xinterpolate':
+            output, cov = fit_2D_gaussian(xmat, ymat, z)
             aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
             theta = output.theta_0.value[0]
             rmat = ((xmat * np.cos(theta) + ymat * np.sin(theta))**2 +
@@ -104,14 +98,11 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
-            scales[idx] = spl(np.exp(-1)) * np.sqrt(2)
-            # plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), zvec, 'b,')
-            # plt.plot(rmat.ravel(), zvec, 'r,')
-            # plt.vlines(scales[idx], zvec.min(), zvec.max())
-            # plt.draw()
-            # raw_input("Continue??")
-            # plt.show()
-            # pdb.set_trace()
+            scales[idx] = spl(np.exp(-1))
+
+            # Need to implement some error estimation
+            scale_errors[idx] = 0.0
+
         if method == 'contour':
             znorm = z
             znorm /= znorm.max()
@@ -144,7 +135,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             else:
                 scales[idx] = np.nan
 
-    return scales
+    return scales, scale_errors
 
 
 def WidthEstimate1D(inList, method='interpolate'):
@@ -182,11 +173,31 @@ def fit_2D_ellipse(pts):
     ellip = EllipseModel()
     ellip.estimate(pts)
 
-    width = np.sqrt(ellip.params[2]**2 + ellip.params[3]**2)
+    width = np.sqrt((ellip.params[2]**2 + ellip.params[3]**2) / 2.)
     width_err = (np.abs(ellip.params[2] * ellip.param_errs[2]) +
-                 np.abs(ellip.params[3] * ellip.param_errs[3])) / width
+                 np.abs(ellip.params[3] * ellip.param_errs[3])) / (2 * width)
 
     return width, width_err, ellip
+
+
+def fit_2D_gaussian(xmat, ymat, z):
+    '''
+    Return fitted model parameters
+    '''
+
+    g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0], x_stddev=[1],
+                                  y_stddev=[1], amplitude=z.max(),
+                                  theta=[0],
+                                  fixed={'amplitude': True,
+                                         'x_mean': True,
+                                         'y_mean': True}) + \
+        astropy_models.Const2D(amplitude=[z.mean()])
+
+    fit_g = fitting.LevMarLSQFitter()
+    output = fit_g(g, xmat, ymat, z)
+    cov = fit_g.fit_info['param_cov']
+
+    return output, cov
 
 
 def plot_stuff(raw, fit, residual, n_eigs):
