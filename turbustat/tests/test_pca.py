@@ -5,13 +5,16 @@ Test functions for PCA
 '''
 
 from unittest import TestCase
+import pytest
 
 import numpy as np
 import numpy.testing as npt
 
 from ..statistics import PCA, PCA_Distance
-from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances
+from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
+from ._testing_data import (dataset1, dataset2, computed_data,
+                            computed_distances, generate_2D_array,
+                            generate_1D_array)
 
 
 class testPCA(TestCase):
@@ -31,3 +34,37 @@ class testPCA(TestCase):
                          dataset2["cube"]).distance_metric()
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['pca_distance'])
+
+
+@pytest.mark.parameterize(('method'), ('fit', 'contour', 'interpolate',
+                                       'xinterpolate'))
+def test_spatial_width_methods(method):
+    '''
+    Generate a 2D gaussian and test whether each method returns the expected
+    size.
+    '''
+
+    model_gauss = generate_2D_array(x_std=10, y_std=10)
+
+    model_gauss = model_gauss[np.newaxis, :]
+
+    widths = WidthEstimate2D(model_gauss, method=method)
+
+    npt.assert_approx_equal(widths[0], 10.0, significant=3)
+
+
+@pytest.mark.parameterize(('method'), ('fit', 'interpolate'))
+def test_spectral_width_methods(method):
+    '''
+    Generate a 1D gaussian and test whether each method returns the expected
+    size.
+    '''
+
+    model_gauss = generate_1D_array(std=10)
+    model_gauss = model_gauss[model_gauss != 0.0]
+
+    model_gauss = model_gauss[:, np.newaxis]
+
+    widths = WidthEstimate1D(model_gauss, method=method)
+
+    npt.assert_approx_equal(10.0, widths[0], significant=3)
