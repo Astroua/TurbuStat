@@ -59,8 +59,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx] = np.sqrt(output.x_stddev_0.value[0]**2 +
-                                  output.y_stddev_0.value[0]**2)
+            scales[idx] = np.sqrt(4 * (output.x_stddev_0.value[0]**2 +
+                                       output.y_stddev_0.value[0]**2))
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
@@ -146,7 +146,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
 
 def WidthEstimate1D(inList, method='interpolate'):
-    scales = np.zeros(len(inList))
+    scales = np.zeros((inList.shape[1], ))
     for idx, y in enumerate(inList.T):
         x = fft.fftfreq(len(y)) * len(y) / 2.0
         if method == 'interpolate':
