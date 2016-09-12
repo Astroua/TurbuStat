@@ -90,6 +90,8 @@ class PCA(BaseStatisticMixIn):
         self._eigvals = all_eigsvals[:self.n_eigs]
         self._eigvecs = eigvecs[:, :self.n_eigs]
 
+        self._mean_sub = mean_sub
+
     @property
     def var_proportion(self):
         return self._var_prop
@@ -119,8 +121,13 @@ class PCA(BaseStatisticMixIn):
         for ct, idx in enumerate(iterat):
             eigimg = np.zeros(self.data.shape[1:], dtype=float)
             for channel in range(self.data.shape[0]):
-                eigimg += np.nan_to_num(self.data[channel] *
-                                        self.eigvecs[channel, idx])
+                if self._mean_sub:
+                    mean_value = np.nanmean(self.data[channel])
+                    eigimg += np.nan_to_num((self.data[channel] - mean_value) *
+                                            self.eigvecs[channel, idx])
+                else:
+                    eigimg += np.nan_to_num(self.data[channel] *
+                                            self.eigvecs[channel, idx])
             if ct == 0:
                 eigimgs = eigimg
             else:
