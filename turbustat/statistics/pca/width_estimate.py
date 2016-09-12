@@ -77,7 +77,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             rvec = rvec[sortidx]
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
-            spl = LSQUnivariateSpline(zvec, rvec, zvec[dz::dz])
+            spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
             scales[idx] = spl(np.exp(-1))
         elif method == 'xinterpolate':
             g = astropy_models.Gaussian2D(x_mean=[0], y_mean=[0], x_stddev=[1],
@@ -102,7 +102,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             rvec = rvec[sortidx]
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
-            spl = LSQUnivariateSpline(zvec, rvec, zvec[dz::dz])
+            spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
             scales[idx] = spl(np.exp(-1))
             # plt.plot((((xmat**2) + (ymat**2))**0.5).ravel(), zvec, 'b,')
             # plt.plot(rmat.ravel(), zvec, 'r,')
