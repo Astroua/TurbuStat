@@ -1,4 +1,5 @@
 
+from warnings import warn
 import numpy as np
 import numpy.fft as fft
 from scipy.interpolate import LSQUnivariateSpline, interp1d
@@ -70,6 +71,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 # ax.show()
 
         elif method == 'interpolate':
+            warn("Error estimation not implemented for interpolation!")
             rvec = rmat.ravel()
             zvec = z.ravel()
             zvec /= zvec.max()
@@ -84,6 +86,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             scale_errors[idx] = 0.0
 
         elif method == 'xinterpolate':
+            warn("Error estimation not implemented for interpolation!")
             output, cov = fit_2D_gaussian(xmat, ymat, z)
             aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
             theta = output.theta_0.value[0]
@@ -139,7 +142,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
 
 def WidthEstimate1D(inList, method='interpolate'):
-    scales = np.zeros((inList.shape[1], ))
+    scales = np.zeros((inList.shape[1],))
+    scale_errors = np.zeros((inList.shape[1],))
     for idx, y in enumerate(inList.T):
         x = fft.fftfreq(len(y)) * len(y) / 2.0
         if method == 'interpolate':
@@ -160,9 +164,26 @@ def WidthEstimate1D(inList, method='interpolate'):
                 yfit = y
             output = fit_g(g, xtrans, yfit)
             scales[idx] = np.abs(output.stddev.value[0])
+        elif method == "walk-down":
+            y /= y.max()
+            # Starting from the first point, start walking down the curve until
+            # 1/e is reached
+            for i, val in enumerate(y):
+                if val < np.exp(-1):
+                    diff = val - y[i - 1]
+                    deltav = (i - 1) + ((np.exp(-1) - y[i - 1]) / diff)
+                    break
+
+            scales[idx] = deltav
+
+            # Following Heyer & Brunt
+            scale_errors[idx] = 0.5
+
         else:
-            raise ValueError("method must be 'interpolate' or 'fit'.")
-    return scales
+            raise ValueError("method must be 'walk-down', 'interpolate' or"
+                             " 'fit'.")
+
+    return scales, scale_errors
 
 
 def fit_2D_ellipse(pts):
