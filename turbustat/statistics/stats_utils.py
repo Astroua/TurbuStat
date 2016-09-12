@@ -226,21 +226,23 @@ class EllipseModel():
         params0[:5] = (xc0, yc0, r0, 0, 0)
         params0[5:] = np.arctan2(y - yc0, x - xc0)
 
-        params, pcov, _ = leastsq(fun, params0, Dfun=Dfun, col_deriv=True)
+        params, pcov = leastsq(fun, params0, Dfun=Dfun, col_deriv=True,
+                               full_output=True)[:2]
+
+        self.params = params[:5]
 
         resids = self.residuals(data)
 
-        dof = N - params0.size
+        dof = N - 5
 
         if dof > 0 and pcov is not None:
             s_sq = (resids**2).sum() / dof
             pcov = pcov * s_sq
         else:
-            pcov = np.zeros((params0.size, params0.size)) * np.NaN
+            pcov = np.zeros((5, 5)) * np.NaN
 
-        errors = np.sqrt(pcov.diagonal().abs())
+        errors = np.sqrt(np.abs(pcov.diagonal()))
 
-        self.params = params[:5]
         self.param_errs = errors
 
         return True
