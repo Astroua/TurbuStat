@@ -149,21 +149,27 @@ def WidthEstimate1D(inList, method='interpolate'):
         if method == 'interpolate':
             minima = argrelmin(y)[0]
             if minima[0] > 1:
+                warn("Error estimation not implemented for interpolation!")
                 interpolator = interp1d(y[0:minima[0] + 1], x[0:minima[0] + 1])
                 scales[idx] = interpolator(np.exp(-1))
+                # scale_errors[idx] = ??
         elif method == 'fit':
             g = models.Gaussian1D(amplitude=y[0], mean=[0], stddev=[10],
                                   fixed={'amplitude': True, 'mean': True})
             fit_g = fitting.LevMarLSQFitter()
             minima = argrelmin(y)[0]
             if minima[0] > 1:
-                xtrans = (np.abs(x)**0.5)[0:minima[0]]
+                xtrans = np.abs(x)[0:minima[0]]
                 yfit = y[0:minima[0]]
             else:
-                xtrans = np.abs(x)**0.5
+                xtrans = np.abs(x)
                 yfit = y
             output = fit_g(g, xtrans, yfit)
-            scales[idx] = np.abs(output.stddev.value[0])
+            # Pull out errors from cov matrix. Stddev is the last parameter in
+            # the list
+            errors = np.sqrt(np.abs(fit_g.fit_info['param_cov'].diagonal()))
+            scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            scale_errors[idx] = errors[-1] * np.sqrt(2)
         elif method == "walk-down":
             y /= y.max()
             # Starting from the first point, start walking down the curve until
@@ -171,13 +177,15 @@ def WidthEstimate1D(inList, method='interpolate'):
             for i, val in enumerate(y):
                 if val < np.exp(-1):
                     diff = val - y[i - 1]
-                    deltav = (i - 1) + ((np.exp(-1) - y[i - 1]) / diff)
+                    scales[idx] = x[i - 1] + ((np.exp(-1) - y[i - 1]) / diff)
+                    # Following Heyer & Brunt
+                    scale_errors[idx] = 0.5
                     break
 
-            scales[idx] = deltav
-
-            # Following Heyer & Brunt
-            scale_errors[idx] = 0.5
+                if i == y.size - 1:
+                    raise Warning("Cannot find width where the 1/e level is"
+                                  " reached. Ensure the eigenspectra are "
+                                  "normalized!")
 
         else:
             raise ValueError("method must be 'walk-down', 'interpolate' or"

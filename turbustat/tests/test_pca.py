@@ -59,18 +59,23 @@ def test_spatial_width_methods(method):
     assert errors[0] < 0.1
 
 
-@pytest.mark.parameterize(('method'), ('fit', 'interpolate'))
+@pytest.mark.parameterize(('method'), ('fit', 'interpolate', 'walk-down'))
 def test_spectral_width_methods(method):
     '''
     Generate a 1D gaussian and test whether each method returns the expected
     size.
     '''
 
-    model_gauss = generate_1D_array(std=10)
-    model_gauss = model_gauss[model_gauss != 0.0]
+    model_gauss = generate_1D_array(std=10, mean=100.)
 
-    model_gauss = model_gauss[:, np.newaxis]
+    fftx = np.fft.fft(model_gauss)
+    fftxs = np.conjugate(fftx)
+    acor = np.fft.ifft((fftx - fftx.mean()) * (fftxs - fftxs.mean())).real
 
-    widths, errors = WidthEstimate1D(model_gauss, method=method)
+    # Should always be normalized such that the max is 1.
+    acor = acor[:, np.newaxis] / acor.max()
 
-    npt.assert_approx_equal(10.0, widths[0], significant=3)
+    widths, errors = WidthEstimate1D(acor, method=method)
+
+    # Error is at most 1/2 a spectral channel, or just 0.5 in this case
+    npt.assert_allclose(widths[0], 10.0, atol=errors[0])

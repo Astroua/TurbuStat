@@ -143,7 +143,7 @@ def oneD_gaussian(shape=200, mean=0., std=10., amp=1., bkg=0.):
     from astropy.modeling.models import Gaussian1D, Const1D
 
     mod = Gaussian1D(mean=mean, stddev=std, amplitude=amp) + \
-        Const1D(amplitude=amp)
+        Const1D(amplitude=bkg)
 
     return mod
 
