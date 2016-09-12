@@ -59,7 +59,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
             fit_g = fitting.LevMarLSQFitter()
             output = fit_g(g, xmat, ymat, z)
-            scales[idx] = np.sqrt(4 * (output.x_stddev_0.value[0]**2 +
+            scales[idx] = np.sqrt(2 * (output.x_stddev_0.value[0]**2 +
                                        output.y_stddev_0.value[0]**2))
             if diagnosticplots and idx < 9:
                 ax = plt.subplot(3, 3, idx + 1)
