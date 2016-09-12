@@ -35,6 +35,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
     """
     scales = np.zeros(len(inList))
+    scale_errors = np.zeros(len(inList))
 
     # set up the x/y grid just once
     z = inList[0]
@@ -136,7 +137,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 pidx = np.where([p.contains_point((0, 0)) for p in paths])[0]
                 if pidx.shape[0] > 0:
                     good_path = paths[pidx[0]]
-                    scales[idx], model = fit_2D_ellipse(good_path.vertices)
+                    scales[idx], scale_errors[idx], model = \
+                        fit_2D_ellipse(good_path.vertices)
                 else:
                     scales[idx] = np.nan
             else:
@@ -180,7 +182,11 @@ def fit_2D_ellipse(pts):
     ellip = EllipseModel()
     ellip.estimate(pts)
 
-    return np.sqrt(ellip.params[2]**2 + ellip.params[3]**2), ellip
+    width = np.sqrt(ellip.params[2]**2 + ellip.params[3]**2)
+    width_err = (np.abs(ellip.params[2] * ellip.param_errs[2]) +
+                 np.abs(ellip.params[3] * ellip.param_errs[3])) / width
+
+    return width, width_err, ellip
 
 
 def plot_stuff(raw, fit, residual, n_eigs):
