@@ -2,9 +2,10 @@
 
 
 import numpy as np
+import astropy.units as u
 
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, threed_types, input_data
+from ...io import common_types, threed_types, input_data, find_beam_width
 
 # PCA utilities
 from ..threeD_to_twoD import var_cov_cube
@@ -29,11 +30,7 @@ class PCA(BaseStatisticMixIn):
     def __init__(self, cube, n_eigs=-1):
         super(PCA, self).__init__()
 
-        # Header not needed
-        self.need_header_flag = False
-        self.header = None
-
-        self.data = input_data(cube, no_header=True)
+        self.data, self.header = input_data(cube)
 
         self.spectral_shape = self.data.shape[0]
 
@@ -182,7 +179,20 @@ class PCA(BaseStatisticMixIn):
 
         return noise_ACF
 
-    def find_spatial_widths(self, n_eigs=None, method='contour'):
+    def find_spatial_widths(self, n_eigs=None, method='contour',
+                            brunt_beamcorrect=True, beam_fwhm=None):
+        '''
+        Derive the spatial widths using the autocorrelation of the
+        eigenimages.
+
+        Parameters
+        ----------
+
+        '''
+        # Try reading beam width from the header is it is not given.
+        if brunt_beamcorrect:
+            if beam_fwhm is None:
+                beam_fwhm = find_beam_width(self.header)
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -190,14 +200,21 @@ class PCA(BaseStatisticMixIn):
         acors = self.autocorr_images(n_eigs=n_eigs)
         noise_ACF = self.noise_ACF()
 
-        self._spatial_width = WidthEstimate2D(acors, noise_ACF=noise_ACF,
-                                              method=method)
+        self._spatial_width, self._spatial_width_error = \
+            WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method,
+                            brunt_beamcorrect=brunt_beamcorrect,
+                            beam_fwhm=beam_fwhm,
+                            spatial_cdelt=self.header['CDELT2'] * u.deg)
 
     @property
     def spatial_width(self):
         return self._spatial_width
 
-    def find_spectral_widths(self, n_eigs=None, method='interpolate'):
+    @property
+    def spatial_width_error(self):
+        return self._spatial_width_error
+
+    def find_spectral_widths(self, n_eigs=None, method='walk-down'):
         '''
         Calculate the spectral scales for the structure functions.
         '''
@@ -207,11 +224,16 @@ class PCA(BaseStatisticMixIn):
 
         acorr_spec = self.autocorr_spec(n_eigs=n_eigs)
 
-        self._spectral_width = WidthEstimate1D(acorr_spec, method=method)
+        self._spectral_width, self._spectral_width_error = \
+            WidthEstimate1D(acorr_spec, method=method)
 
     @property
     def spectral_width(self):
         return self._spectral_width
+
+    @property
+    def spectral_width_error(self):
+        return self._spectral_width_error
 
     def run(self, verbose=False, mean_sub=False):
         '''
