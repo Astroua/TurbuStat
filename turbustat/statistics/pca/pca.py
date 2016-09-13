@@ -11,6 +11,9 @@ from ...io import common_types, threed_types, input_data, find_beam_width
 from ..threeD_to_twoD import var_cov_cube
 from .width_estimate import WidthEstimate1D, WidthEstimate2D
 
+# Fitting utilities
+from ..fitting_utils import bayes_linear, leastsq_linear
+
 
 class PCA(BaseStatisticMixIn):
 
@@ -234,6 +237,75 @@ class PCA(BaseStatisticMixIn):
     @property
     def spectral_width_error(self):
         return self._spectral_width_error
+
+    def fit_plaw(self, fit_method='odr', verbose=False, **kwargs):
+        '''
+        Fit the size-linewidth relation.
+
+        Parameters
+        ----------
+        fit_method : str, optional
+            Set the type of fitting to perform. Options are 'odr'
+            (orthogonal distance regression) or 'bayes' (MCMC). Note that
+            'bayes' requires the emcee package to be installed.
+        verbose : bool, optional
+            Prints out additional information about the fitting.
+        kwargs : Passed to bayes_linear when fit_method is bayes.
+        '''
+
+        if fit_method != 'odr' and fit_method != 'bayes':
+            raise TypeError("fit_method must be 'odr' or 'bayes'.")
+
+        # Only keep the width estimations that worked
+        are_finite = np.isfinite(self.spectral_width) * \
+            np.isfinite(self.spatial_width) * \
+            np.isfinite(self.spatial_width_error) * \
+            np.isfinite(self.spectral_width_error)
+
+        x = np.log10(self.spectral_width[are_finite])
+        y = np.log10(self.spatial_width[are_finite])
+
+        x_err = 0.434 * self.spectral_width_error[are_finite] / \
+            self.spectral_width[are_finite]
+        y_err = 0.434 * self.spatial_width_error[are_finite] / \
+            self.spatial_width[are_finite]
+
+        if fit_method == 'odr':
+            params, errors = leastsq_linear(x, y, x_err, y_err,
+                                            verbose=verbose)
+            # Turn into +/- range values, as would be returned by the MCMC fit
+            errors = np.vstack([params - errors, params + errors]).T
+        else:
+            params, errors = bayes_linear(x, y, x_err, y_err, verbose=verbose,
+                                          **kwargs)
+
+        self._slope = params[0]
+        self._slope_error_range = errors[0]
+
+        self._intercept = params[1]
+        self._intercept_error_range = errors[1]
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_error_range(self):
+        return self._slope_error_range
+
+    @property
+    def intercept(self):
+        return self._intercept
+
+    @property
+    def intercept_error_range(self):
+        return self._intercept_error_range
+
+    def model(self, x):
+        '''
+        Model from the fitting procedure
+        '''
+        return self.slope * x + self.intercept
 
     def run(self, verbose=False, mean_sub=False):
         '''
