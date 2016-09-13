@@ -225,7 +225,11 @@ def WidthEstimate1D(inList, method='interpolate'):
             if minima[0] > 1:
                 warn("Error estimation not implemented for interpolation!")
                 interpolator = interp1d(y[0:minima[0] + 1], x[0:minima[0] + 1])
-                scales[idx] = interpolator(np.exp(-1))
+                try:
+                    scales[idx] = interpolator(np.exp(-1))
+                except ValueError:
+                    warn("Interpolation failed.")
+                    scales[idx] = np.NaN
                 # scale_errors[idx] = ??
         elif method == 'fit':
             g = models.Gaussian1D(amplitude=y[0], mean=[0], stddev=[10],
@@ -241,6 +245,14 @@ def WidthEstimate1D(inList, method='interpolate'):
             output = fit_g(g, xtrans, yfit)
             # Pull out errors from cov matrix. Stddev is the last parameter in
             # the list
+            # If the fit failed, param_cov will be None. If this occurs, fill
+            # in NaNs.
+            if fit_g.fit_info['param_cov'] is None:
+                warn("Fitting failed.")
+                scales[idx] = np.NaN
+                scale_errors[idx] = np.NaN
+                continue
+
             errors = np.sqrt(np.abs(fit_g.fit_info['param_cov'].diagonal()))
             scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
             scale_errors[idx] = errors[-1] * np.sqrt(2)
