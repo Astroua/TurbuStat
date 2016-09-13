@@ -148,47 +148,49 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             else:
                 scales[idx] = np.nan
 
-            if brunt_beamcorrect:
-                if beam_fwhm is None or spatial_cdelt is None:
-                    raise ValueError("beam_fwhm and spatial_cdelt must be"
-                                     " given when 'brunt_beamcorrect' is "
-                                     "enabled.")
+    if brunt_beamcorrect:
+        if beam_fwhm is None or spatial_cdelt is None:
+            raise ValueError("beam_fwhm and spatial_cdelt must be"
+                             " given when 'brunt_beamcorrect' is "
+                             "enabled.")
 
-                # Quantities must be in angular units
-                try:
-                    beam_fwhm = beam_fwhm.to(u.deg)
-                except u.UnitConversionError:
-                    raise u.UnitConversionError("beam_fwhm must be in angular"
-                                                " units.")
-                try:
-                    spatial_cdelt = np.abs(spatial_cdelt.to(u.deg))
-                except u.UnitConversionError:
-                    raise u.UnitConversionError("spatial_cdelt must be in "
-                                                "angular units.")
+        # Quantities must be in angular units
+        try:
+            beam_fwhm = beam_fwhm.to(u.deg)
+        except u.UnitConversionError:
+            raise u.UnitConversionError("beam_fwhm must be in angular"
+                                        " units.")
+        try:
+            spatial_cdelt = np.abs(spatial_cdelt.to(u.deg))
+        except u.UnitConversionError:
+            raise u.UnitConversionError("spatial_cdelt must be in "
+                                        "angular units.")
 
-                # We need the number of pixels across 1 FWHM
-                # Since it's just being used in the formula below, I don't
-                # think rounding to the nearest int is needed.
-                pix_per_beam = beam_fwhm.value / spatial_cdelt.value
+        # We need the number of pixels across 1 FWHM
+        # Since it's just being used in the formula below, I don't
+        # think rounding to the nearest int is needed.
+        pix_per_beam = beam_fwhm.value / spatial_cdelt.value
 
-                # Using the definition from Chris Brunt's thesis for a gaussian
-                # beam. Note that the IDL code has:
-                # e=(3./((kappa+2)*(kappa+3.)))^(1./kappa)
-                # deltay[i]=(p[i,0]^kappa-(e*1.0)^kappa)^(1./kappa)
-                # deltaz[i]=(p[i,1]^kappa-(e*1.0)^kappa)^(1./kappa)
-                # I think the (e * 1.0) term is where the beam size should be
-                # used, which is what is used here.
-                kappa = 0.8
-                e = np.power(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
+        # Using the definition from Chris Brunt's thesis for a gaussian
+        # beam. Note that the IDL code has:
+        # e=(3./((kappa+2)*(kappa+3.)))^(1./kappa)
+        # deltay[i]=(p[i,0]^kappa-(e*1.0)^kappa)^(1./kappa)
+        # deltaz[i]=(p[i,1]^kappa-(e*1.0)^kappa)^(1./kappa)
+        # I think the (e * 1.0) term is where the beam size should be
+        # used, which is what is used here.
+        kappa = 0.8
+        e = np.power(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
+        # This is the other form that appears in the thesis.
+        # e = 0.65 + 0.1 * kappa
 
-                term1 = np.power(scales, kappa)
-                term2 = np.power(e * pix_per_beam, kappa)
+        term1 = np.power(scales, kappa)
+        term2 = np.power(e * pix_per_beam, kappa)
 
-                scale_errors = \
-                    np.abs(np.power(term1 - term2, (1 / kappa) - 1) *
-                           np.power(scales, kappa - 1)) * scale_errors
+        scale_errors = \
+            np.abs(np.power(term1 - term2, (1 / kappa) - 1) *
+                   np.power(scales, kappa - 1)) * scale_errors
 
-                scales = np.power(term1 - term2, 1 / kappa)
+        scales = np.power(term1 - term2, 1 / kappa)
 
     return scales, scale_errors
 
