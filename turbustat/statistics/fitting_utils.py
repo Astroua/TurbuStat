@@ -111,4 +111,48 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
     error_intervals[0] = np.percentile(slopes, conf_interval)
     error_intervals[1] = np.percentile(intercepts, conf_interval)
 
+    if verbose:
+        # Make some trace plots, PDFs and a plot of the range of solutions
+
+        import matplotlib.pyplot as p
+        from astropy.visualization import hist
+
+        p.subplot(2, 3, 1)
+        p.plot(slopes, 'b')
+        p.title("Slope Values")
+        p.xlabel("Iteration")\
+
+        p.subplot(2, 3, 2)
+        p.plot(intercepts, 'b')
+        p.title("Intercept Values")
+        p.xlabel("Iteration")
+
+        ax3 = p.subplot(2, 3, 4)
+        hist(slopes, bins='knuth', color='b')
+        ylow, yhigh = ax3.get_ylim()
+        p.vlines(slope, ylow, yhigh, colors='r', linestyles='-')
+        p.vlines(error_intervals[0], ylow, yhigh, colors='r', linestyles='--')
+        p.xlabel("Slope")
+
+        ax4 = p.subplot(2, 3, 5)
+        hist(slopes, bins='knuth', color='b')
+        ylow, yhigh = ax4.get_ylim()
+        p.vlines(slope, ylow, yhigh, colors='r', linestyles='-')
+        p.vlines(error_intervals[0], ylow, yhigh, colors='r', linestyles='--')
+        p.ylabel("Intercept")
+
+        p.subplot(1, 3, 3)
+        p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='b')
+        p.ylabel("log Spatial Length")
+        p.xlabel("log Spectral Length")
+        xvals = np.arange(x.min(), x.max(), x.size * 10)
+        p.plot(xvals, slope * xvals + intercept, 'r-')
+        p.fill_between(xvals,
+                       error_intervals[0, 0] * xvals + error_intervals[1, 0],
+                       error_intervals[0, 1] * xvals + error_intervals[1, 1],
+                       facecolor='red', interpolate=True, alpha=0.4)
+
+        p.tight_layout()
+        p.show()
+
     return params, error_intervals
