@@ -161,7 +161,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                     raise u.UnitConversionError("beam_fwhm must be in angular"
                                                 " units.")
                 try:
-                    spatial_cdelt = spatial_cdelt.to(u.deg)
+                    spatial_cdelt = np.abs(spatial_cdelt.to(u.deg))
                 except u.UnitConversionError:
                     raise u.UnitConversionError("spatial_cdelt must be in "
                                                 "angular units.")
@@ -180,8 +180,14 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 # used, which is what is used here.
                 kappa = 0.8
                 e = np.pow(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
-                scales = np.pow(np.pow(scales, kappa) -
-                                np.pow(e * pix_per_beam, kappa), 1 / kappa)
+
+                term1 = np.pow(scales, kappa)
+                term2 = np.pow(e * pix_per_beam, kappa)
+
+                scale_errors = np.abs(np.pow(term1 - term2, (1 / kappa) - 1) *
+                                      np.pow(scales, kappa - 1)) * scale_errors
+
+                scales = np.pow(term1 - term2, 1 / kappa)
 
     return scales, scale_errors
 
