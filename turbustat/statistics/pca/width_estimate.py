@@ -179,15 +179,16 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 # I think the (e * 1.0) term is where the beam size should be
                 # used, which is what is used here.
                 kappa = 0.8
-                e = np.pow(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
+                e = np.power(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
 
-                term1 = np.pow(scales, kappa)
-                term2 = np.pow(e * pix_per_beam, kappa)
+                term1 = np.power(scales, kappa)
+                term2 = np.power(e * pix_per_beam, kappa)
 
-                scale_errors = np.abs(np.pow(term1 - term2, (1 / kappa) - 1) *
-                                      np.pow(scales, kappa - 1)) * scale_errors
+                scale_errors = \
+                    np.abs(np.power(term1 - term2, (1 / kappa) - 1) *
+                           np.power(scales, kappa - 1)) * scale_errors
 
-                scales = np.pow(term1 - term2, 1 / kappa)
+                scales = np.power(term1 - term2, 1 / kappa)
 
     return scales, scale_errors
 
