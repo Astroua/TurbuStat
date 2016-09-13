@@ -51,7 +51,8 @@ def test_spatial_width_methods(method):
 
     model_gauss = model_gauss[np.newaxis, :]
 
-    widths, errors = WidthEstimate2D(model_gauss, method=method)
+    widths, errors = WidthEstimate2D(model_gauss, method=method,
+                                     brunt_beamcorrect=False)
 
     npt.assert_approx_equal(widths[0], 10.0 / np.sqrt(2), significant=3)
     # I get 0.000449 for the error, but we're in a noiseless case so just
@@ -70,7 +71,7 @@ def test_spatial_with_beam():
     model_gauss = model_gauss[np.newaxis, :]
 
     widths, errors = WidthEstimate2D(model_gauss, method='contour',
-                                     brunt_beamcorrect=True,
+                                     brunt_beamcorrect=False,
                                      beam_fwhm=2.0 * u.deg,
                                      spatial_cdelt=0.5 * u.deg)
 
