@@ -36,8 +36,8 @@ class testPCA(TestCase):
                                 computed_distances['pca_distance'])
 
 
-@pytest.mark.parameterize(('method'), ('fit', 'contour', 'interpolate',
-                                       'xinterpolate'))
+@pytest.mark.parametrize(('method'), ('fit', 'contour', 'interpolate',
+                                      'xinterpolate'))
 def test_spatial_width_methods(method):
     '''
     Generate a 2D gaussian and test whether each method returns the expected
@@ -59,7 +59,26 @@ def test_spatial_width_methods(method):
     assert errors[0] < 0.1
 
 
-@pytest.mark.parameterize(('method'), ('fit', 'interpolate', 'walk-down'))
+def test_spatial_with_beam():
+    '''
+    Test running the spatial width find with beam corrections enabled.
+    '''
+    import astropy.units as u
+
+    model_gauss = generate_2D_array(x_std=10, y_std=10)
+
+    model_gauss = model_gauss[np.newaxis, :]
+
+    widths, errors = WidthEstimate2D(model_gauss, method='contour',
+                                     brunt_beamcorrect=True,
+                                     beam_fwhm=2.0 * u.deg,
+                                     spatial_cdelt=0.5 * u.deg)
+
+    # Using value based on run with given settings.
+    npt.assert_approx_equal(widths[0], 5.5289, significant=5)
+
+
+@pytest.mark.parametrize(('method'), ('fit', 'interpolate', 'walk-down'))
 def test_spectral_width_methods(method):
     '''
     Generate a 1D gaussian and test whether each method returns the expected
