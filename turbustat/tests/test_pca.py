@@ -76,7 +76,7 @@ def test_spatial_with_beam():
                                      spatial_cdelt=0.5 * u.deg)
 
     # Using value based on run with given settings.
-    npt.assert_approx_equal(widths[0], 5.5289, significant=5)
+    npt.assert_approx_equal(widths[0], 7.071, significant=4)
 
 
 @pytest.mark.parametrize(('method'), ('fit', 'interpolate', 'walk-down'))
