@@ -164,7 +164,7 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
         p.xlabel("Intercept")
 
         p.subplot(1, 3, 3)
-        p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='b')
+        p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='k')
         p.ylabel("log Spatial Length")
         p.xlabel("log Spectral Length")
         xvals = np.linspace(x.min(), x.max(), x.size * 10)

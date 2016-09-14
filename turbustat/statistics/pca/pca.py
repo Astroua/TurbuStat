@@ -262,12 +262,12 @@ class PCA(BaseStatisticMixIn):
             np.isfinite(self.spatial_width_error) * \
             np.isfinite(self.spectral_width_error)
 
-        x = np.log10(self.spectral_width[are_finite])
-        y = np.log10(self.spatial_width[are_finite])
+        y = np.log10(self.spectral_width[are_finite])
+        x = np.log10(self.spatial_width[are_finite])
 
-        x_err = 0.434 * self.spectral_width_error[are_finite] / \
+        y_err = 0.434 * self.spectral_width_error[are_finite] / \
             self.spectral_width[are_finite]
-        y_err = 0.434 * self.spatial_width_error[are_finite] / \
+        x_err = 0.434 * self.spatial_width_error[are_finite] / \
             self.spatial_width[are_finite]
 
         if fit_method == 'odr':
