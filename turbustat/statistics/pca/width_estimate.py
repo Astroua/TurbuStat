@@ -8,7 +8,6 @@ from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
 from ..stats_utils import EllipseModel
 import astropy.units as u
-import matplotlib.pyplot as plt
 
 
 def WidthEstimate2D(inList, method='contour', noise_ACF=0,
@@ -73,6 +72,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 scales[idx]
 
             if diagnosticplots and idx < 9:
+                import matplotlib.pyplot as plt
                 ax = plt.subplot(3, 3, idx + 1)
                 ax.imshow(z, cmap='afmhot')
                 ax.contour(output(xmat, ymat),
@@ -119,21 +119,23 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         if method == 'contour':
             znorm = z
             znorm /= znorm.max()
-            return_interactive = False
-            if plt.isinteractive():
-                plt.ioff()
-                return_interactive = True
+
+            # Import contour tools and paths that don't require making a
+            # plotting window
+            # http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+            import matplotlib._cntr as cntr
+            from matplotlib.path import Path
 
             try:
-                cs = plt.contour(xmat, ymat, znorm, levels=[np.exp(-1)])
+                level = np.exp(-1)
+                contours = cntr.Cntr(xmat, ymat, znorm)
+
             except ValueError as e:
                 raise e("Contour level not found in autocorrelation image " +
                         str(idx))
-            paths = cs.collections[0].get_paths()
-            plt.close()
 
-            if return_interactive:
-                plt.ion()
+            nlist = contours.trace(level, level, 0)
+            paths = [Path(verts) for verts in nlist[:len(nlist) // 2]]
 
             # Only points that contain the origin
 
