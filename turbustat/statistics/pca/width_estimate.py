@@ -44,8 +44,10 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         Uncertainty estimations on the scales.
 
     """
-    scales = np.zeros(len(inList))
-    scale_errors = np.zeros(len(inList))
+    y_scales = np.zeros(len(inList))
+    x_scales = np.zeros(len(inList))
+    y_scale_errors = np.zeros(len(inList))
+    x_scale_errors = np.zeros(len(inList))
 
     # set up the x/y grid just once
     z = inList[0]
@@ -61,15 +63,15 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
         if method == 'fit':
             output, cov = fit_2D_gaussian(xmat, ymat, z)
-            scales[idx] = np.sqrt(output.x_stddev_0.value[0]**2 +
-                                  output.y_stddev_0.value[0]**2)
+            y_scales[idx] = output.y_stddev_0.value
+            x_scales[idx] = output.x_stddev_0.value
+
             errs = np.sqrt(np.abs(cov.diagonal()))
             # Order in the cov matrix is given by the order of parameters in
             # model.param_names. But amplitude and the means are fixed, so in
             # this case they are the first 2.
-            scale_errors[idx] = (np.abs(output.x_stddev_0 * errs[0]) +
-                                 np.abs(output.y_stddev_0 * errs[1])) / \
-                scales[idx]
+            y_scale_errors[idx] = errs[1]
+            x_scale_errors[idx] = errs[0]
 
             if diagnosticplots and idx < 9:
                 import matplotlib.pyplot as plt
@@ -90,10 +92,13 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
-            scales[idx] = spl(np.exp(-1))
+
+            x_scales[idx] = spl(np.exp(-1))
+            y_scales[idx] = spl(np.exp(-1))
 
             # Need to implement some error estimation
-            scale_errors[idx] = 0.0
+            x_scale_errors[idx] = 0.0
+            y_scale_errors[idx] = 0.0
 
         elif method == 'xinterpolate':
             warn("Error estimation not implemented for interpolation!")
@@ -111,10 +116,13 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             zvec = zvec[sortidx]
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
-            scales[idx] = spl(np.exp(-1))
+
+            x_scales[idx] = spl(np.exp(-1))
+            y_scales[idx] = spl(np.exp(-1))
 
             # Need to implement some error estimation
-            scale_errors[idx] = 0.0
+            x_scale_errors[idx] = 0.0
+            y_scale_errors[idx] = 0.0
 
         if method == 'contour':
             znorm = z
@@ -143,12 +151,21 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 pidx = np.where([p.contains_point((0, 0)) for p in paths])[0]
                 if pidx.shape[0] > 0:
                     good_path = paths[pidx[0]]
-                    scales[idx], scale_errors[idx], model = \
-                        fit_2D_ellipse(good_path.vertices)
+
+                    output = fit_2D_ellipse(good_path.vertices)[:-1]
+                    (y_scales[idx], x_scales[idx], y_scale_errors[idx],
+                     x_scale_errors[idx]) = output
+
                 else:
-                    scales[idx] = np.nan
+                    y_scales[idx] = np.nan
+                    x_scales[idx] = np.nan
+                    y_scale_errors[idx] = np.nan
+                    x_scale_errors[idx] = np.nan
             else:
-                scales[idx] = np.nan
+                y_scales[idx] = np.nan
+                x_scales[idx] = np.nan
+                y_scale_errors[idx] = np.nan
+                x_scale_errors[idx] = np.nan
 
     if brunt_beamcorrect:
         if beam_fwhm is None or spatial_cdelt is None:
@@ -185,14 +202,26 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         # This is the other form that appears in the thesis.
         # e = 0.65 + 0.1 * kappa
 
-        term1 = np.power(scales, kappa)
+        y_term1 = np.power(y_scales, kappa)
+        x_term1 = np.power(x_scales, kappa)
         term2 = np.power(e * pix_per_beam, kappa)
 
-        scale_errors = \
-            np.abs(np.power(term1 - term2, (1 / kappa) - 1) *
-                   np.power(scales, kappa - 1)) * scale_errors
+        y_scale_errors = \
+            np.abs(np.power(y_term1 - term2, (1 / kappa) - 1) *
+                   np.power(y_scales, kappa - 1)) * y_scale_errors
+        x_scale_errors = \
+            np.abs(np.power(x_term1 - term2, (1 / kappa) - 1) *
+                   np.power(x_scales, kappa - 1)) * x_scale_errors
 
-        scales = np.power(term1 - term2, 1 / kappa)
+        y_scales = np.power(y_term1 - term2, 1 / kappa)
+        x_scales = np.power(x_term1 - term2, 1 / kappa)
+
+    scales = np.sqrt(y_scales**2 +
+                     x_scales**2)
+
+    scale_errors = \
+        np.sqrt((x_scales * x_scale_errors)**2 +
+                (y_scales * y_scale_errors)**2) / scales
 
     return scales, scale_errors
 
@@ -290,11 +319,13 @@ def fit_2D_ellipse(pts):
     ellip = EllipseModel()
     ellip.estimate(pts)
 
-    width = np.sqrt((ellip.params[2]**2 + ellip.params[3]**2) / 2.)
-    width_err = (np.abs(ellip.params[2] * ellip.param_errs[2]) +
-                 np.abs(ellip.params[3] * ellip.param_errs[3])) / (2 * width)
+    xwidth = ellip.params[2] / np.sqrt(2)
+    ywidth = ellip.parans[3] / np.sqrt(2)
 
-    return width, width_err, ellip
+    xwidth_err = ellip.param_errs[2] / np.sqrt(2)
+    ywidth_err = ellip.param_errs[3] / np.sqrt(2)
+
+    return ywidth, xwidth, ywidth_err, xwidth_err, ellip
 
 
 def fit_2D_gaussian(xmat, ymat, z):
