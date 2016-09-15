@@ -3,6 +3,7 @@
 
 import numpy as np
 import astropy.units as u
+from warnings import warn
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data, find_beam_width
@@ -30,7 +31,7 @@ class PCA(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, n_eigs=-1):
+    def __init__(self, cube, n_eigs=-1, distance=None):
         super(PCA, self).__init__()
 
         self.data, self.header = input_data(cube)
@@ -45,6 +46,9 @@ class PCA(BaseStatisticMixIn):
                           " all".format(self.spectral_shape))
         else:
             self.n_eigs = n_eigs
+
+        if distance is not None:
+            self.distance = distance
 
     @property
     def n_eigs(self):
@@ -183,7 +187,8 @@ class PCA(BaseStatisticMixIn):
         return noise_ACF
 
     def find_spatial_widths(self, n_eigs=None, method='contour',
-                            brunt_beamcorrect=True, beam_fwhm=None):
+                            brunt_beamcorrect=True, beam_fwhm=None,
+                            physical_scales=True, distance=None):
         '''
         Derive the spatial widths using the autocorrelation of the
         eigenimages.
@@ -209,6 +214,21 @@ class PCA(BaseStatisticMixIn):
                             beam_fwhm=beam_fwhm,
                             spatial_cdelt=self.header['CDELT2'] * u.deg)
 
+        self._spatial_width = self._spatial_width * u.pix
+        self._spatial_width_error = self._spatial_width_error * u.pix
+
+        # If distance is given, convert to physical scale
+        if distance is not None:
+            self.distance = distance
+
+        if physical_scales:
+            if not hasattr(self, "_distance"):
+                warn("Distance must be given to use physical units")
+            else:
+                self._spatial_width = self.to_physical(self._spatial_width)
+                self._spatial_width_error = \
+                    self.to_physical(self._spatial_width_error)
+
     @property
     def spatial_width(self):
         return self._spatial_width
@@ -217,7 +237,8 @@ class PCA(BaseStatisticMixIn):
     def spatial_width_error(self):
         return self._spatial_width_error
 
-    def find_spectral_widths(self, n_eigs=None, method='walk-down'):
+    def find_spectral_widths(self, n_eigs=None, method='walk-down',
+                             physical_units=True):
         '''
         Calculate the spectral scales for the structure functions.
         '''
@@ -229,6 +250,17 @@ class PCA(BaseStatisticMixIn):
 
         self._spectral_width, self._spectral_width_error = \
             WidthEstimate1D(acorr_spec, method=method)
+
+        self._spectral_width = self._spectral_width * u.pix
+        self._spectral_width_error = self._spectral_width_error * u.pix
+
+        if physical_units:
+            spec = self._wcs.wcs.spec
+            spec_cdelt = np.abs(self._wcs.wcs.cdelt[spec]) * \
+                u.Unit(self._wcs.wcs.cunit[spec])
+            self._spectral_width = self._spectral_width.value * spec_cdelt
+            self._spectral_width_error = self._spectral_width_error.value * \
+                spec_cdelt
 
     @property
     def spectral_width(self):
@@ -279,19 +311,43 @@ class PCA(BaseStatisticMixIn):
             params, errors = bayes_linear(x, y, x_err, y_err, verbose=verbose,
                                           **kwargs)
 
-        self._slope = params[0]
-        self._slope_error_range = errors[0]
+        self._index = params[0]
+        self._index_error_range = errors[0]
 
-        self._intercept = params[1]
-        self._intercept_error_range = errors[1]
-
-    @property
-    def slope(self):
-        return self._slope
+        # Take the intercept out of log scale
+        self._intercept = 10 ** params[1]
+        self._intercept_error_range = np.log(10) * (10 ** params[1]) * \
+            errors[1]
 
     @property
-    def slope_error_range(self):
-        return self._slope_error_range
+    def index(self):
+        return self._index
+
+    @property
+    def index_error_range(self):
+        return self._index_error_range
+
+    @property
+    def gamma(self):
+        '''
+        These values are based off a broken linear fit in Section 3.3.1 from
+        Chris Brunt's thesis. These are based off calibrating against uniform
+        density field's with different indices.
+        '''
+        if self.index < 0.67:
+            return (self.index - 0.32) / 0.59
+        else:
+            return (self.index - 0.03) / 1.07
+
+    @property
+    def gamma_error_range(self):
+        '''
+        See description in self.gamma
+        '''
+        if self.index < 0.67:
+            return self.index_error_range / 0.59
+        else:
+            return self.index_error_range / 1.07
 
     @property
     def intercept(self):
@@ -305,7 +361,44 @@ class PCA(BaseStatisticMixIn):
         '''
         Model from the fitting procedure
         '''
-        return self.slope * x + self.intercept
+        return self.index * x + np.log10(self.intercept)
+
+    def sonic_length(self, T_k=10 * u.K, mu=1.36, use_gamma=True):
+        '''
+        Estimate of the sonic length based on a given temperature. Uses the
+        intercept from the fit.
+
+        Based on sonic.pro used in the Heyer & Brunt PCA implementation.
+
+        Parameters
+        ----------
+        T_k : astropy.units.Quantity, optional
+            Temperature given in units convertible to Kelvin.
+        mu : float, optional
+            Factor to multiply by m_H to account for He and metals.
+        use_gamma : bool, optional
+            Toggle whether to use gamma or the fit index.
+        '''
+
+        import astropy.constants as const
+
+        try:
+            T_k = T_k.to(u.K).value
+        except u.UnitConversionError:
+            raise u.UnitConversionError("Cannot convert T_k to Kelvin.")
+
+        # Sound speed in m/s
+        c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p)).value
+
+        lambd = np.power(c_s / self.intercept, 1. / self.index)
+
+        # Added in quadrature and simplified
+        term1 = np.log(c_s / self.intercept) * \
+            (self.index / self.index_error_range)
+        term2 = self.intercept / self.intercept_error_range
+        lambd_error_range = (lambd / self.index) * np.sqrt(term1**2 + term2**2)
+
+        return lambd, lambd_error_range
 
     def run(self, verbose=False, mean_sub=False):
         '''
