@@ -255,12 +255,10 @@ class PCA(BaseStatisticMixIn):
         self._spectral_width_error = self._spectral_width_error * u.pix
 
         if physical_units:
-            spec = self._wcs.wcs.spec
-            spec_cdelt = np.abs(self._wcs.wcs.cdelt[spec]) * \
-                u.Unit(self._wcs.wcs.cunit[spec])
-            self._spectral_width = self._spectral_width.value * spec_cdelt
+            self._spectral_width = self._spectral_width.value * \
+                self.spectral_size
             self._spectral_width_error = self._spectral_width_error.value * \
-                spec_cdelt
+                self.spectral_size
 
     @property
     def spectral_width(self):
@@ -288,6 +286,11 @@ class PCA(BaseStatisticMixIn):
         if fit_method != 'odr' and fit_method != 'bayes':
             raise TypeError("fit_method must be 'odr' or 'bayes'.")
 
+        # Hang on to this. We can't propagate the asymmetric errors when using
+        # MCMC in sonic_length, and the laziest way is just to keep the samples
+        # around, and estimate CIs directly.
+        self._fit_method = fit_method
+
         # Only keep the width estimations that worked
         are_finite = np.isfinite(self.spectral_width) * \
             np.isfinite(self.spatial_width) * \
@@ -308,16 +311,18 @@ class PCA(BaseStatisticMixIn):
             # Turn into +/- range values, as would be returned by the MCMC fit
             errors = np.vstack([params - errors, params + errors]).T
         else:
-            params, errors = bayes_linear(x, y, x_err, y_err, verbose=verbose,
-                                          **kwargs)
+            params, errors, samps = bayes_linear(x, y, x_err, y_err,
+                                                 verbose=verbose,
+                                                 return_samples=True, **kwargs)
+            self._samps = samps
 
         self._index = params[0]
         self._index_error_range = errors[0]
 
         # Take the intercept out of log scale
         self._intercept = 10 ** params[1] * self._spectral_width.unit
-        self._intercept_error_range = np.log(10) * (10 ** params[1]) * \
-            errors[1] * self._spectral_width.unit
+        self._intercept_error_range = 10 ** errors[1] * \
+            self._spectral_width.unit
 
     @property
     def index(self):
@@ -330,24 +335,16 @@ class PCA(BaseStatisticMixIn):
     @property
     def gamma(self):
         '''
-        These values are based off a broken linear fit in Section 3.3.1 from
-        Chris Brunt's thesis. These are based off calibrating against uniform
-        density field's with different indices.
+        See description in brunt_index_correct
         '''
-        if self.index < 0.67:
-            return (self.index - 0.32) / 0.59
-        else:
-            return (self.index - 0.03) / 1.07
+        return brunt_index_correct(self.index)
 
     @property
     def gamma_error_range(self):
         '''
-        See description in self.gamma
+        See description in brunt_index_correct
         '''
-        if self.index < 0.67:
-            return (self.index_error_range - 0.32) / 0.59
-        else:
-            return (self.index_error_range - 0.03) / 1.07
+        return brunt_index_correct(self.index_error_range)
 
     @property
     def intercept(self):
@@ -370,6 +367,9 @@ class PCA(BaseStatisticMixIn):
 
         Based on sonic.pro used in the Heyer & Brunt PCA implementation.
 
+        Because error from the MCMC fit need not be symmetric, the MCMC
+        samples are needed to provide the correct CIs for the sonic length.
+
         Parameters
         ----------
         T_k : astropy.units.Quantity, optional
@@ -383,20 +383,52 @@ class PCA(BaseStatisticMixIn):
         import astropy.constants as const
 
         try:
-            T_k = T_k.to(u.K).value
+            T_k = T_k.to(u.K)
         except u.UnitConversionError:
             raise u.UnitConversionError("Cannot convert T_k to Kelvin.")
 
         # Sound speed in m/s
-        c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p)).value
+        c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
+        # Convert to pixel units, if spectral_width not in physical units
+        c_s = c_s.to(self.spectral_width.unit,
+                     equivalencies=self.spectral_equiv)
 
-        lambd = np.power(c_s / self.intercept, 1. / self.index)
+        if use_gamma:
+            index = self.gamma
+            index_error_range = self.gamma_error_range
+        else:
+            index = self.index
+            index_error_range = self.index_error_range
 
-        # Added in quadrature and simplified
-        term1 = np.log(c_s / self.intercept) * \
-            (self.index / self.index_error_range)
-        term2 = self.intercept / self.intercept_error_range
-        lambd_error_range = (lambd / self.index) * np.sqrt(term1**2 + term2**2)
+        lambd = np.power(c_s / self.intercept, 1. / index)
+
+        if self._fit_method == 'odr':
+            # Added in quadrature and simplified
+            index_err = np.abs(index - index_error_range[0])
+            intercept_err = np.abs(self.intercept -
+                                   self.intercept_error_range[0])
+            term1 = np.log(c_s / self.intercept) * \
+                (index / index_err)
+            term2 = self.intercept / intercept_err
+            lambd_error = (lambd / index) * np.sqrt(term1**2 + term2**2)
+            lambd_error_range = np.array([lambd - lambd_error,
+                                          lambd + lambd_error])
+        else:
+            # Don't propagate asymmetric errors in quadrature! Instead,
+            # calculate CI directly from the samples.
+            percentiles = [15, 85]
+            slopes = self._samps[0]
+            intercepts = self._samps[1]
+
+            if use_gamma:
+                slopes = brunt_index_correct(slopes)
+
+            all_lambds = np.power(c_s / 10 ** intercepts, 1. / index)
+
+            lambd_error_range = np.percentile(all_lambds, percentiles)
+
+        lambd = lambd * self.spatial_width.unit
+        lambd_error_range = lambd_error_range * self.spatial_width.unit
 
         return lambd, lambd_error_range
 
@@ -527,3 +559,19 @@ class PCA_Distance(object):
             p.show()
 
         return self
+
+
+@np.vectorize
+def brunt_index_correct(value):
+    '''
+    Apply empirical corrections from Heyer & Brunt
+
+    These values are based off a broken linear fit in Section 3.3.1 from
+    Chris Brunt's thesis. These are based off calibrating against uniform
+    density field's with different indices.
+    '''
+
+    if value < 0.67:
+        return (value - 0.32) / 0.59
+    else:
+        return (value - 0.03) / 1.07

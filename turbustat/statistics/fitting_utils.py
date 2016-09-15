@@ -45,7 +45,7 @@ def leastsq_linear(x, y, x_err, y_err, verbose=False):
 
         import matplotlib.pyplot as p
 
-        p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='b')
+        p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='k')
         p.ylabel("log Spectral Length")
         p.xlabel("log Spatial Length")
         xvals = np.linspace(x.min(), x.max(), x.size * 10)
@@ -69,7 +69,7 @@ def leastsq_linear(x, y, x_err, y_err, verbose=False):
 
 
 def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
-                 conf_interval=[15, 85], verbose=False):
+                 conf_interval=[15, 85], verbose=False, return_samples=False):
     '''
     Fit a line with errors in both variables using MCMC.
 
@@ -187,5 +187,8 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
 
         p.tight_layout()
         p.show()
+
+    if return_samples:
+        return params, error_intervals, np.vstack([slopes, intercepts])
 
     return params, error_intervals
