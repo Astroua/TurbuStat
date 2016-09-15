@@ -2,6 +2,7 @@
 from astropy.io import fits
 import astropy.units as u
 import numpy as np
+from astropy.wcs import WCS
 
 from ..io import input_data
 
@@ -32,6 +33,10 @@ class BaseStatisticMixIn(object):
                             " astropy.io.fits.header.Header.")
 
         self._header = input_hdr
+
+    @property
+    def _wcs(self):
+        return WCS(self.header)
 
     @property
     def data(self):
@@ -72,7 +77,7 @@ class BaseStatisticMixIn(object):
         if not hasattr(self, "_header"):
             raise AttributeError("No header has not been given.")
 
-        return np.abs(self.header["CDELT2"]) * u.deg
+        return np.abs(self.header["CDELT2"]) * u.Unit(self._wcs.wcs.cunit[1])
 
     def to_pixel(self, value):
         '''
@@ -131,3 +136,9 @@ class BaseStatisticMixIn(object):
         return [(u.pix, self.distance.unit,
                 lambda x: x * float(self.distance_size.value),
                 lambda x: x / float(self.distance_size.value))]
+
+    def to_physical(self, value):
+        if not hasattr(self, "_distance"):
+            raise AttributeError("No distance has not been given.")
+
+        return value.to(self.distance.unit, equivalencies=self.distance_equiv)
