@@ -432,7 +432,9 @@ class PCA(BaseStatisticMixIn):
 
         return lambd, lambd_error_range
 
-    def run(self, verbose=False, mean_sub=False):
+    def run(self, verbose=False, mean_sub=False, decomp_only=False,
+            spatial_method='contour', spectral_method='walk-down',
+            fit_method='odr', beam_fwhm=None):
         '''
         Run method. Needed to maintain package standards.
 
@@ -440,23 +442,87 @@ class PCA(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
+        mean_sub : bool, optional
+            Perform mean subtraction during decomposition.
+        decomp_only : bool, optional
+            Only run the PCA decomposition, not the entire procedure to derive
+            the size-linewidth relation. This should be enabled when using
+            PCA_Distance.
+        spatial_method : str, optional
+            See fit_spatial_widths.
+        spectral_method : str, optional
+            See fit_spectral_widths.
+        fit_method : str, optional
+            See fit_plaw.
         '''
 
         self.compute_pca(mean_sub=mean_sub)
 
+        # Run rest of the analysis
+        if not decomp_only:
+            self.find_spatial_widths(method=spatial_method,
+                                     beam_fwhm=beam_fwhm)
+            self.find_spectral_widths(method=spectral_method)
+            self.fit_plaw(fit_method=fit_method)
+
         if verbose:
             import matplotlib.pyplot as p
 
-            print 'Proportion of Variance kept: %s' % (self.var_proportion)
+            print('Proportion of Variance kept: %s' % (self.var_proportion))
+            print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
+                  .format(self.index, *self.index_error_range))
+            print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
+                  .format(self.gamma, *self.gamma_error_range))
 
-            p.subplot(121)
+            # Compute sonic length assuming 10 K
+            T_k = 10. * u.K
+            sl, sl_range = self.sonic_length(T_k=T_k)
+            print("Sonic length: {0:.2f} ({4:.2f}, {5:.2f}) {1} at {2} {3}"
+                  .format(sl.value, sl.unit.to_string(), T_k.value,
+                          T_k.unit.to_string(), *sl_range.value))
+
+            p.subplot(221)
             p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
-            p.subplot(122)
+            p.subplot(223)
             p.bar(np.arange(1, self.n_eigs + 1), self.eigvals, 0.5, color='r')
             p.xlim([0, self.n_eigs + 1])
             p.xlabel('Eigenvalues')
             p.ylabel('Variance')
+
+            p.subplot(122)
+            p.errorbar(np.log10(self.spatial_width.value),
+                       np.log10(self.spectral_width.value),
+                       xerr=0.434 * self.spatial_width_error /
+                       self.spatial_width,
+                       yerr=0.434 * self.spectral_width_error /
+                       self.spectral_width, fmt='o', color='k')
+            p.ylabel("log Linewidth / "
+                     "{}".format(self.spectral_width.unit.to_string()))
+            p.xlabel("log Spatial Length / "
+                     "{}".format(self.spatial_width.unit.to_string()))
+            xvals = np.linspace(np.log10(np.nanmin(self.spatial_width).value),
+                                np.log10(np.nanmax(self.spatial_width).value),
+                                self.spatial_width.size * 10)
+            p.plot(xvals, self.index * xvals + np.log10(self.intercept.value),
+                   'r-')
+            # Some very large error bars makes it difficult to see the model
+            x_range = \
+                np.ptp(np.log10(self.spatial_width.value)
+                       [np.isfinite(self.spatial_width)])
+            y_range = \
+                np.ptp(np.log10(self.spectral_width.value)
+                       [np.isfinite(self.spectral_width)])
+            p.xlim([np.log10(np.nanmin(self.spatial_width.value)) -
+                    y_range / 4,
+                    np.log10(np.nanmax(self.spatial_width.value)) +
+                    y_range / 4])
+            p.ylim([np.log10(np.nanmin(self.spectral_width.value)) -
+                    x_range / 4,
+                    np.log10(np.nanmax(self.spectral_width.value)) +
+                    x_range / 4])
+
+            p.tight_layout()
             p.show()
 
         return self
@@ -493,9 +559,9 @@ class PCA_Distance(object):
             self.pca1 = fiducial_model
         else:
             self.pca1 = PCA(cube1, n_eigs=n_eigs)
-            self.pca1.run(mean_sub=mean_sub)
+            self.pca1.run(mean_sub=mean_sub, decomp_only=True)
 
-        self.pca2 = PCA(cube2, n_eigs=n_eigs)
+        self.pca2 = PCA(cube2, n_eigs=n_eigs, decomp_only=True)
         self.pca2.run(mean_sub=mean_sub)
 
         self._mean_sub = mean_sub
