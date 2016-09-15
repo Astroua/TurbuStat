@@ -44,6 +44,12 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         Uncertainty estimations on the scales.
 
     """
+
+    allowed_methods = ['fit', 'interpolate', 'xinterpolate', 'contour']
+    if method not in allowed_methods:
+        raise ValueError("Method must be 'fit', 'interpolate', 'xinterpolate'"
+                         " or 'contour'.")
+
     y_scales = np.zeros(len(inList))
     x_scales = np.zeros(len(inList))
     y_scale_errors = np.zeros(len(inList))
@@ -93,8 +99,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
 
-            x_scales[idx] = spl(np.exp(-1))
-            y_scales[idx] = spl(np.exp(-1))
+            x_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)
+            y_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)
 
             # Need to implement some error estimation
             x_scale_errors[idx] = 0.0
@@ -117,14 +123,14 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             dz = len(zvec) / 100.
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
 
-            x_scales[idx] = spl(np.exp(-1))
-            y_scales[idx] = spl(np.exp(-1))
+            x_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)
+            y_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)
 
             # Need to implement some error estimation
             x_scale_errors[idx] = 0.0
             y_scale_errors[idx] = 0.0
 
-        if method == 'contour':
+        elif method == 'contour':
             znorm = z
             znorm /= znorm.max()
 
@@ -320,7 +326,7 @@ def fit_2D_ellipse(pts):
     ellip.estimate(pts)
 
     xwidth = ellip.params[2] / np.sqrt(2)
-    ywidth = ellip.parans[3] / np.sqrt(2)
+    ywidth = ellip.params[3] / np.sqrt(2)
 
     xwidth_err = ellip.param_errs[2] / np.sqrt(2)
     ywidth_err = ellip.param_errs[3] / np.sqrt(2)
