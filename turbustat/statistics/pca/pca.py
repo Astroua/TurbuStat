@@ -315,9 +315,9 @@ class PCA(BaseStatisticMixIn):
         self._index_error_range = errors[0]
 
         # Take the intercept out of log scale
-        self._intercept = 10 ** params[1]
+        self._intercept = 10 ** params[1] * self._spectral_width.unit
         self._intercept_error_range = np.log(10) * (10 ** params[1]) * \
-            errors[1]
+            errors[1] * self._spectral_width.unit
 
     @property
     def index(self):
@@ -345,9 +345,9 @@ class PCA(BaseStatisticMixIn):
         See description in self.gamma
         '''
         if self.index < 0.67:
-            return self.index_error_range / 0.59
+            return (self.index_error_range - 0.32) / 0.59
         else:
-            return self.index_error_range / 1.07
+            return (self.index_error_range - 0.03) / 1.07
 
     @property
     def intercept(self):
