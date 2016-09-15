@@ -36,6 +36,9 @@ class BaseStatisticMixIn(object):
 
     @property
     def _wcs(self):
+        if not hasattr(self, "_header"):
+            raise AttributeError("No header was found.")
+
         return WCS(self.header)
 
     @property
@@ -142,3 +145,33 @@ class BaseStatisticMixIn(object):
             raise AttributeError("No distance has not been given.")
 
         return value.to(self.distance.unit, equivalencies=self.distance_equiv)
+
+    def has_spectral(self, raise_error=False):
+        '''
+        Test whether there is a spectral axis.
+        '''
+        axtypes = self._wcs.get_axis_types()
+
+        types = [a['coordinate_type'] for a in axtypes]
+
+        if 'spectral' not in types:
+            if raise_error:
+                raise ValueError("Header does not have spectral axis.")
+            return False
+
+        return True
+
+    @property
+    def spectral_size(self):
+
+        self.has_spectral(raise_error=True)
+
+        spec = self._wcs.wcs.spec
+        return np.abs(self._wcs.wcs.cdelt[spec]) * \
+            u.Unit(self._wcs.wcs.cunit[spec])
+
+    @property
+    def spectral_equiv(self):
+        return [(u.pix, self.spectral_size.unit,
+                lambda x: x * float(self.spectral_size.value),
+                lambda x: x / float(self.spectral_size.value))]

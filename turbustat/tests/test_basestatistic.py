@@ -72,3 +72,25 @@ def test_bad_distance_unit():
 
     obj.header = header
     obj.distance = 1 * u.K
+
+
+def test_spectral():
+    obj = BaseStatisticMixIn()
+
+    obj.header = header
+
+    obj.spectral_size
+    obj.spectral_equiv
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_no_spectral():
+    obj = BaseStatisticMixIn()
+
+    from astropy.wcs import WCS
+
+    celestial_header = WCS(header).celestial.to_header()
+
+    obj.header = celestial_header
+
+    obj.spectral_size
