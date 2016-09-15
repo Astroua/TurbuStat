@@ -61,11 +61,17 @@ class BaseStatisticMixIn(object):
 
     @property
     def angular_equiv(self):
+        if not hasattr(self, "_header"):
+            raise AttributeError("No header has not been given.")
+
         return [(u.pix, u.deg, lambda x: x * float(self.ang_size.value),
                 lambda x: x / float(self.ang_size.value))]
 
     @property
     def ang_size(self):
+        if not hasattr(self, "_header"):
+            raise AttributeError("No header has not been given.")
+
         return np.abs(self.header["CDELT2"]) * u.deg
 
     def to_pixel(self, value):
@@ -80,6 +86,13 @@ class BaseStatisticMixIn(object):
 
     @property
     def distance(self):
+        if not hasattr(self, "_header"):
+            raise AttributeError("No header has not been given. Cannot make"
+                                 " use of distance.")
+
+        if not hasattr(self, "_distance"):
+            raise AttributeError("No distance has not been given.")
+
         return self._distance
 
     @distance.setter
@@ -103,12 +116,18 @@ class BaseStatisticMixIn(object):
 
     @property
     def distance_size(self):
+        if not hasattr(self, "_distance"):
+            raise AttributeError("No distance has not been given.")
+
         return (self.ang_size *
                 self.distance).to(self.distance.unit,
                                   equivalencies=u.dimensionless_angles())
 
     @property
     def distance_equiv(self):
+        if not hasattr(self, "_distance"):
+            raise AttributeError("No distance has not been given.")
+
         return [(u.pix, self.distance.unit,
                 lambda x: x * float(self.distance_size.value),
                 lambda x: x / float(self.distance_size.value))]
