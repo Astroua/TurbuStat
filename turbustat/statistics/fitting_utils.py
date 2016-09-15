@@ -46,8 +46,8 @@ def leastsq_linear(x, y, x_err, y_err, verbose=False):
         import matplotlib.pyplot as p
 
         p.errorbar(x, y, xerr=x_err, yerr=y_err, fmt='o', color='b')
-        p.ylabel("log Spatial Length")
-        p.xlabel("log Spectral Length")
+        p.ylabel("log Spectral Length")
+        p.xlabel("log Spatial Length")
         xvals = np.linspace(x.min(), x.max(), x.size * 10)
         p.plot(xvals, params[0] * xvals + params[1], 'r-')
         p.fill_between(xvals,
