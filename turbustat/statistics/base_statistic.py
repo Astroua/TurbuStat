@@ -77,3 +77,38 @@ class BaseStatisticMixIn(object):
             raise TypeError("value must be an astropy Quantity object.")
 
         return value.to(u.pix, equivalencies=self.angular_equiv)
+
+    @property
+    def distance(self):
+        return self._distance
+
+    @distance.setter
+    def distance(self, value):
+        '''
+        Value must be a quantity with a valid distance unit. Will keep the
+        units given.
+        '''
+
+        if not isinstance(value, u.Quantity):
+            raise TypeError("Value for distance must an astropy Quantity.")
+
+        if not value.unit.is_equivalent(u.pc):
+            raise u.UnitConversionError("Given unit ({}) is not a valid unit"
+                                        " of distance.")
+
+        if not value.isscalar:
+            raise TypeError("Distance must be a scalar quantity.")
+
+        self._distance = value
+
+    @property
+    def distance_size(self):
+        return (self.ang_size *
+                self.distance).to(self.distance.unit,
+                                  equivalencies=u.dimensionless_angles())
+
+    @property
+    def distance_equiv(self):
+        return [(u.pix, self.distance.unit,
+                lambda x: x * float(self.distance_size.value),
+                lambda x: x / float(self.distance_size.value))]
