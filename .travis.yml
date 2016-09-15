@@ -18,7 +18,7 @@ env:
         - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
         - NP_VER=1.10
         - ASTRO_VER=1.0
-        - PIP_INSTALL='git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git git+https://github.com/radio-astro-tools/signal-id.git '
+        - PIP_INSTALL='git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
     matrix:
         - SETUP_CMD='egg_info'
 
@@ -59,7 +59,7 @@ install:
     - conda install --yes numpy=$NP_VER astropy=$ASTRO_VER
 
     # Use pip to install development versions
-    - pip install $PIP_INSTALL
+    - pip install git+https://github.com/radio-astro-tools/signal-id.git $PIP_INSTALL
 
 script:
     - python setup.py $SETUP_CMD
