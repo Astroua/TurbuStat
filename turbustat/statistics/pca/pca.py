@@ -337,7 +337,7 @@ class PCA(BaseStatisticMixIn):
         '''
         See description in brunt_index_correct
         '''
-        return brunt_index_correct(self.index)
+        return float(brunt_index_correct(self.index))
 
     @property
     def gamma_error_range(self):
@@ -405,12 +405,16 @@ class PCA(BaseStatisticMixIn):
         if self._fit_method == 'odr':
             # Added in quadrature and simplified
             index_err = np.abs(index - index_error_range[0])
-            intercept_err = np.abs(self.intercept -
-                                   self.intercept_error_range[0])
-            term1 = np.log(c_s / self.intercept) * \
-                (index / index_err)
-            term2 = self.intercept / intercept_err
-            lambd_error = (lambd / index) * np.sqrt(term1**2 + term2**2)
+            intercept_err = 0.434 * np.abs(self.intercept -
+                                           self.intercept_error_range[0]) / \
+                self.intercept
+
+            term1 = np.log10(c_s / self.intercept) * \
+                (index_err / index)
+            term2 = intercept_err / self.intercept
+            lambd_error = (lambd / index) * \
+                np.sqrt(term1.value**2 + term2.value**2)
+            print(lambd, lambd_error)
             lambd_error_range = np.array([lambd - lambd_error,
                                           lambd + lambd_error])
         else:
@@ -477,7 +481,7 @@ class PCA(BaseStatisticMixIn):
             # Compute sonic length assuming 10 K
             T_k = 10. * u.K
             sl, sl_range = self.sonic_length(T_k=T_k)
-            print("Sonic length: {0:.2f} ({4:.2f}, {5:.2f}) {1} at {2} {3}"
+            print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
                   .format(sl.value, sl.unit.to_string(), T_k.value,
                           T_k.unit.to_string(), *sl_range.value))
 
@@ -561,8 +565,8 @@ class PCA_Distance(object):
             self.pca1 = PCA(cube1, n_eigs=n_eigs)
             self.pca1.run(mean_sub=mean_sub, decomp_only=True)
 
-        self.pca2 = PCA(cube2, n_eigs=n_eigs, decomp_only=True)
-        self.pca2.run(mean_sub=mean_sub)
+        self.pca2 = PCA(cube2, n_eigs=n_eigs)
+        self.pca2.run(mean_sub=mean_sub, decomp_only=True)
 
         self._mean_sub = mean_sub
 
