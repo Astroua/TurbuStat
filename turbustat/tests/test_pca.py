@@ -9,6 +9,14 @@ import pytest
 
 import numpy as np
 import numpy.testing as npt
+import astropy.units as u
+
+
+try:
+    import emcee
+    EMCEE_INSTALLED = True
+except ImportError:
+    EMCEE_INSTALLED = False
 
 from ..statistics import PCA, PCA_Distance
 from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
@@ -25,8 +33,38 @@ class testPCA(TestCase):
 
     def test_PCA_method(self):
         self.tester = PCA(dataset1["cube"], n_eigs=50)
-        self.tester.run(mean_sub=True)
+        self.tester.run(mean_sub=True, spatial_method='contour',
+                        spectral_method='walk-down',
+                        fit_method='odr', beam_fwhm=0.01 * u.arcsec)
         npt.assert_allclose(self.tester.eigvals, computed_data['pca_val'])
+
+        fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+        npt.assert_equal(self.tester.index, fit_values["index"])
+        npt.assert_equal(self.tester.gamma, fit_values["gamma"])
+        npt.assert_equal(self.tester.intercept, fit_values["intercept"])
+        npt.assert_equal(self.tester.sonic_length()[0],
+                         fit_values["sonic_length"])
+
+    @pytest.mark.skipif("not EMCEE_INSTALLED")
+    def test_PCA_method_w_bayes(self):
+        self.tester = PCA(dataset1["cube"], n_eigs=50)
+        self.tester.run(mean_sub=True, spatial_method='contour',
+                        spectral_method='walk-down',
+                        fit_method='bayes', beam_fwhm=0.01 * u.arcsec)
+        npt.assert_allclose(self.tester.eigvals, computed_data['pca_val'])
+
+        fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+        npt.assert_allclose(self.tester.index,
+                            fit_values["index_bayes"],
+                            atol=0.01)
+        npt.assert_allclose(self.tester.gamma,
+                            fit_values["gamma_bayes"],
+                            atol=0.01)
+        npt.assert_allclose(self.tester.intercept.value,
+                            fit_values["intercept_bayes"].value,
+                            atol=0.5)
+        npt.assert_allclose(self.tester.sonic_length()[0].value,
+                            fit_values["sonic_length_bayes"].value, atol=0.5)
 
     def test_PCA_distance(self):
         self.tester_dist = \

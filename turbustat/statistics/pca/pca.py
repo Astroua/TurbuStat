@@ -414,7 +414,6 @@ class PCA(BaseStatisticMixIn):
             term2 = intercept_err / self.intercept
             lambd_error = (lambd / index) * \
                 np.sqrt(term1.value**2 + term2.value**2)
-            print(lambd, lambd_error)
             lambd_error_range = np.array([lambd - lambd_error,
                                           lambd + lambd_error])
         else:

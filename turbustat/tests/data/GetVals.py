@@ -6,6 +6,13 @@ Save the key results using the testing datasets.
 '''
 
 import numpy as np
+import astropy.units as u
+
+# The machine producing these values should have emcee installed!
+try:
+    import emcee
+except ImportError:
+    raise ImportError("Install emcee to generate unit test data.")
 
 from turbustat.tests._testing_data import dataset1, dataset2
 
@@ -108,11 +115,27 @@ skewness_val = moment_distance.moments1.skewness_hist[1]
 
 # PCA
 
-from turbustat.statistics import PCA_Distance
+from turbustat.statistics import PCA_Distance, PCA
 
 pca_distance = PCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
 pca_val = pca_distance.pca1.eigvals
+
+pca = PCA(dataset1["cube"], n_eigs=50)
+pca.run(mean_sub=True, spatial_method='contour', spectral_method='walk-down',
+        fit_method='odr', beam_fwhm=0.01 * u.arcsec)
+
+pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
+                "intercept": pca.intercept,
+                "sonic_length": pca.sonic_length()[0]}
+
+# Now get those values using mcmc
+pca.run(mean_sub=True, spatial_method='contour', spectral_method='walk-down',
+        fit_method='bayes', beam_fwhm=0.01 * u.arcsec)
+pca_fit_vals["index_bayes"] = pca.index
+pca_fit_vals["gamma_bayes"] = pca.gamma
+pca_fit_vals["intercept_bayes"] = pca.intercept
+pca_fit_vals["sonic_length_bayes"] = pca.sonic_length()[0]
 
 # SCF
 
@@ -173,6 +196,7 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     kurtosis_val=kurtosis_val,
                     skewness_val=skewness_val,
                     pca_val=pca_val,
+                    pca_fit_vals=pca_fit_vals,
                     scf_val=scf_val,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
