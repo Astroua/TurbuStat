@@ -18,6 +18,7 @@ env:
         - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
         - NP_VER=1.10
         - ASTRO_VER=1.0
+        - PIP_INSTALL='git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git git+https://github.com/radio-astro-tools/signal-id.git '
     matrix:
         - SETUP_CMD='egg_info'
 
@@ -35,6 +36,10 @@ matrix:
         - python: 2.7
           env: NP_VER=1.11 ASTRO_VER=1.2
 
+        - python: 2.7
+          env: NP_VER=1.11 ASTRO_VER=1.2 PIP_INSTALL="$PIP_INSTALL git+https://github.com/radio-astro-tools/radio_beam.git"
+        - python: 2.7
+          env: NP_VER=1.11 ASTRO_VER=1.2 PIP_INSTALL="$PIP_INSTALL emcee"
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -54,10 +59,7 @@ install:
     - conda install --yes numpy=$NP_VER astropy=$ASTRO_VER
 
     # Use pip to install development versions
-    - pip install git+https://github.com/dendrograms/astrodendro.git
-    - pip install git+https://github.com/radio-astro-tools/spectral-cube.git
-    - pip install git+https://github.com/radio-astro-tools/signal-id.git
-    - pip install git+https://github.com/radio-astro-tools/radio_beam.git
+    - pip install $PIP_INSTALL
 
 script:
     - python setup.py $SETUP_CMD
