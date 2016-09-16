@@ -568,14 +568,19 @@ class PCA_Distance(object):
                  mean_sub=True):
         super(PCA_Distance, self).__init__()
 
+        if n_eigs == 'auto':
+            raise ValueError("'auto' n_eigs mode is disabled for distance "
+                             "computation. The metric requires having the same"
+                             " number of eigenvalues to compare.")
+
         if fiducial_model is not None:
             self.pca1 = fiducial_model
         else:
-            self.pca1 = PCA(cube1, n_eigs=n_eigs)
-            self.pca1.run(mean_sub=mean_sub, decomp_only=True)
+            self.pca1 = PCA(cube1)
+            self.pca1.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
 
-        self.pca2 = PCA(cube2, n_eigs=n_eigs)
-        self.pca2.run(mean_sub=mean_sub, decomp_only=True)
+        self.pca2 = PCA(cube2)
+        self.pca2.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
 
         self._mean_sub = mean_sub
 
