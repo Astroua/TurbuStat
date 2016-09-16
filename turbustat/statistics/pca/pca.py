@@ -583,6 +583,7 @@ class PCA_Distance(object):
         self.pca2.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
 
         self._mean_sub = mean_sub
+        self._n_eigs = n_eigs
 
     def distance_metric(self, verbose=False, label1="Cube 1", label2="Cube 2"):
         '''
@@ -601,11 +602,14 @@ class PCA_Distance(object):
         # The eigenvalues need to be normalized before being compared. If
         # mean_sub is False, the first eigenvalue is not used.
         if self._mean_sub:
-            eigvals1 = self.pca1.eigvals / np.sum(self.pca1.eigvals)
-            eigvals2 = self.pca2.eigvals / np.sum(self.pca2.eigvals)
+            slicer = slice(0, self._n_eigs)
         else:
-            eigvals1 = self.pca1.eigvals[1:] / np.sum(self.pca1.eigvals[1:])
-            eigvals2 = self.pca2.eigvals[1:] / np.sum(self.pca2.eigvals[1:])
+            slicer = slice(1, self._n_eigs)
+
+        eigvals1 = self.pca1.eigvals[slicer] / \
+            np.sum(self.pca1.eigvals[slicer])
+        eigvals2 = self.pca2.eigvals[slicer] / \
+            np.sum(self.pca2.eigvals[slicer])
 
         self.distance = np.linalg.norm(eigvals1 - eigvals2)
 
