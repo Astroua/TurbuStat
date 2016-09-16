@@ -31,21 +31,16 @@ class PCA(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, n_eigs=-1, distance=None):
+    def __init__(self, cube, n_eigs=None, distance=None):
         super(PCA, self).__init__()
 
         self.data, self.header = input_data(cube)
 
         self.spectral_shape = self.data.shape[0]
 
-        if n_eigs == -1:
-            self.n_eigs = self.spectral_shape
-        elif n_eigs < -1 or n_eigs > self.spectral_shape or n_eigs == 0:
-            raise Warning("n_eigs must be less than the number of velocity"
-                          " channels ({}) or -1 for"
-                          " all".format(self.spectral_shape))
-        else:
-            self.n_eigs = n_eigs
+        if n_eigs is not None:
+            raise DeprecationWarning("Input of n_eigs is deprecated. Use "
+                                     "inputs in `compute_pca` or `run`.")
 
         if distance is not None:
             self.distance = distance
@@ -61,7 +56,8 @@ class PCA(BaseStatisticMixIn):
 
         self._n_eigs = value
 
-    def compute_pca(self, mean_sub=False):
+    def compute_pca(self, mean_sub=False, n_eigs=-1, min_eigval=None,
+                    eigen_cut_method='proportion'):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -82,6 +78,21 @@ class PCA(BaseStatisticMixIn):
         eigvecs = eigvecs[np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
+        if n_eigs == 'auto':
+            if min_eigval is None:
+                raise ValueError("min_eigval must be given when using "
+                                 "n_eigs='auto'.")
+            self.n_eigs = set_n_eigs(all_eigsvals, min_eigval,
+                                     method=eigen_cut_method)
+        elif n_eigs == -1:
+            self.n_eigs = self.spectral_shape
+        elif n_eigs < -1 or n_eigs > self.spectral_shape or n_eigs == 0:
+            raise Warning("n_eigs must be less than the number of velocity"
+                          " channels ({}) or -1 for"
+                          " all".format(self.spectral_shape))
+        else:
+            self.n_eigs = n_eigs
+
         if mean_sub:
             self._total_variance = np.sum(all_eigsvals)
             self._var_prop = np.sum(all_eigsvals[:self.n_eigs]) / \
@@ -91,8 +102,8 @@ class PCA(BaseStatisticMixIn):
             self._var_prop = np.sum(all_eigsvals[1:self.n_eigs]) / \
                 self.total_variance
 
-        self._eigvals = all_eigsvals[:self.n_eigs]
-        self._eigvecs = eigvecs[:, :self.n_eigs]
+        self._eigvals = all_eigsvals
+        self._eigvecs = eigvecs
 
         self._mean_sub = mean_sub
 
@@ -186,7 +197,7 @@ class PCA(BaseStatisticMixIn):
 
         return noise_ACF
 
-    def find_spatial_widths(self, n_eigs=None, method='contour',
+    def find_spatial_widths(self, method='contour',
                             brunt_beamcorrect=True, beam_fwhm=None,
                             physical_scales=True, distance=None):
         '''
@@ -202,10 +213,7 @@ class PCA(BaseStatisticMixIn):
             if beam_fwhm is None:
                 beam_fwhm = find_beam_width(self.header)
 
-        if n_eigs is None:
-            n_eigs = self.n_eigs
-
-        acors = self.autocorr_images(n_eigs=n_eigs)
+        acors = self.autocorr_images(n_eigs=self.n_eigs)
         noise_ACF = self.noise_ACF()
 
         self._spatial_width, self._spatial_width_error = \
@@ -237,16 +245,13 @@ class PCA(BaseStatisticMixIn):
     def spatial_width_error(self):
         return self._spatial_width_error
 
-    def find_spectral_widths(self, n_eigs=None, method='walk-down',
+    def find_spectral_widths(self, method='walk-down',
                              physical_units=True):
         '''
         Calculate the spectral scales for the structure functions.
         '''
 
-        if n_eigs is None:
-            n_eigs = self.n_eigs
-
-        acorr_spec = self.autocorr_spec(n_eigs=n_eigs)
+        acorr_spec = self.autocorr_spec(n_eigs=self.n_eigs)
 
         self._spectral_width, self._spectral_width_error = \
             WidthEstimate1D(acorr_spec, method=method)
@@ -436,8 +441,9 @@ class PCA(BaseStatisticMixIn):
         return lambd, lambd_error_range
 
     def run(self, verbose=False, mean_sub=False, decomp_only=False,
+            n_eigs='auto', min_eigval=None, eigen_cut_method='value',
             spatial_method='contour', spectral_method='walk-down',
-            fit_method='odr', beam_fwhm=None):
+            fit_method='odr', beam_fwhm=None, brunt_beamcorrect=True):
         '''
         Run method. Needed to maintain package standards.
 
@@ -459,12 +465,15 @@ class PCA(BaseStatisticMixIn):
             See fit_plaw.
         '''
 
-        self.compute_pca(mean_sub=mean_sub)
+        self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
+                         min_eigval=min_eigval,
+                         eigen_cut_method=eigen_cut_method)
 
         # Run rest of the analysis
         if not decomp_only:
             self.find_spatial_widths(method=spatial_method,
-                                     beam_fwhm=beam_fwhm)
+                                     beam_fwhm=beam_fwhm,
+                                     brunt_beamcorrect=brunt_beamcorrect)
             self.find_spectral_widths(method=spectral_method)
             self.fit_plaw(fit_method=fit_method)
 
@@ -488,7 +497,8 @@ class PCA(BaseStatisticMixIn):
             p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
             p.colorbar()
             p.subplot(223)
-            p.bar(np.arange(1, self.n_eigs + 1), self.eigvals, 0.5, color='r')
+            p.bar(np.arange(1, self.n_eigs + 1), self.eigvals[:self.n_eigs],
+                  0.5, color='r')
             p.xlim([0, self.n_eigs + 1])
             p.xlabel('Eigenvalues')
             p.ylabel('Variance')
@@ -644,3 +654,27 @@ def brunt_index_correct(value):
         return (value - 0.32) / 0.59
     else:
         return (value - 0.03) / 1.07
+
+
+def set_n_eigs(eigenvalues, min_eigval, method='value'):
+    '''
+    Based on a minimum eigenvalue, find the number of components to consider.
+    The cut-off may be the proportion of variance (method='proportion') or a
+    minimum value for the variance (method='value')
+    '''
+
+    if method == "value":
+        above = np.where(eigenvalues >= min_eigval)[0]
+
+        return above.size
+
+    elif method == "proportion":
+
+        cumulative = np.cumsum(eigenvalues / eigenvalues.sum())
+
+        above = np.where(cumulative <= min_eigval)[0]
+
+        return above.size
+
+    else:
+        raise ValueError("method must be 'value' or 'proportion'.")
