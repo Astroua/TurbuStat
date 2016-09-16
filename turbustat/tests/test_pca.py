@@ -62,9 +62,9 @@ class testPCA(TestCase):
                             atol=0.01)
         npt.assert_allclose(self.tester.intercept.value,
                             fit_values["intercept_bayes"].value,
-                            atol=0.5)
+                            atol=1.0)
         npt.assert_allclose(self.tester.sonic_length()[0].value,
-                            fit_values["sonic_length_bayes"].value, atol=0.5)
+                            fit_values["sonic_length_bayes"].value, atol=2.0)
 
     def test_PCA_distance(self):
         self.tester_dist = \
