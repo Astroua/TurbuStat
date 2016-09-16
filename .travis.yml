@@ -59,7 +59,8 @@ install:
     - conda install --yes numpy=$NP_VER astropy=$ASTRO_VER
 
     # Use pip to install development versions
-    - pip install git+https://github.com/radio-astro-tools/signal-id.git $PIP_INSTALL
+    - pip install $PIP_INSTALL
+    - pip install git+https://github.com/radio-astro-tools/signal-id.git
 
 script:
     - python setup.py $SETUP_CMD
