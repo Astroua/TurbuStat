@@ -31,7 +31,9 @@ def test_PCA_method():
                spatial_method='contour',
                spectral_method='walk-down',
                fit_method='odr', beam_fwhm=0.01 * u.arcsec)
-    npt.assert_allclose(tester.eigvals, computed_data['pca_val'])
+    slice_used = slice(0, tester.n_eigs)
+    npt.assert_allclose(tester.eigvals[slice_used],
+                        computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
     # npt.assert_equal(tester.index, fit_values["index"])
@@ -48,7 +50,9 @@ def test_PCA_method_w_bayes():
                spatial_method='contour',
                spectral_method='walk-down',
                fit_method='bayes', beam_fwhm=0.01 * u.arcsec)
-    npt.assert_allclose(tester.eigvals, computed_data['pca_val'])
+    slice_used = slice(0, tester.n_eigs)
+    npt.assert_allclose(tester.eigvals[slice_used],
+                        computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
     # npt.assert_allclose(tester.index,
