@@ -36,8 +36,8 @@ def test_PCA_method():
                         computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    # npt.assert_equal(tester.index, fit_values["index"])
-    # npt.assert_equal(tester.gamma, fit_values["gamma"])
+    npt.assert_equal(tester.index, fit_values["index"])
+    npt.assert_equal(tester.gamma, fit_values["gamma"])
     npt.assert_equal(tester.intercept.value, fit_values["intercept"].value)
     npt.assert_equal(tester.sonic_length()[0].value,
                      fit_values["sonic_length"].value)
@@ -55,12 +55,12 @@ def test_PCA_method_w_bayes():
                         computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    # npt.assert_allclose(tester.index,
-    #                     fit_values["index_bayes"],
-    #                     atol=0.01)
-    # npt.assert_allclose(tester.gamma,
-    #                     fit_values["gamma_bayes"],
-    #                     atol=0.01)
+    npt.assert_allclose(tester.index,
+                        fit_values["index_bayes"],
+                        atol=0.01)
+    npt.assert_allclose(tester.gamma,
+                        fit_values["gamma_bayes"],
+                        atol=0.01)
     npt.assert_allclose(tester.intercept.value,
                         fit_values["intercept_bayes"].value,
                         atol=2.0)
