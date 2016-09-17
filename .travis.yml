@@ -15,7 +15,7 @@ addons:
 env:
     global:
         - SETUP_CMD='test'
-        - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
+        - CONDA_ADDITIONAL='scipy matplotlib pyqt=4.11.4 pandas statsmodels scikit-learn'
         - NP_VER=1.10
         - ASTRO_VER=1.0
     matrix:
