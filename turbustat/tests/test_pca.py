@@ -22,7 +22,7 @@ from ..statistics import PCA, PCA_Distance
 from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
 from ._testing_data import (dataset1, dataset2, computed_data,
                             computed_distances, generate_2D_array,
-                            generate_1D_array)
+                            generate_1D_array, assert_between)
 
 
 def test_PCA_method():
@@ -30,17 +30,22 @@ def test_PCA_method():
     tester.run(mean_sub=True, n_eigs=50,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='odr', beam_fwhm=0.01 * u.arcsec)
+               fit_method='odr', brunt_beamcorrect=False)
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    npt.assert_equal(tester.index, fit_values["index"])
-    npt.assert_equal(tester.gamma, fit_values["gamma"])
-    npt.assert_equal(tester.intercept.value, fit_values["intercept"].value)
-    npt.assert_equal(tester.sonic_length()[0].value,
-                     fit_values["sonic_length"].value)
+    assert_between(fit_values["index"], tester.index_error_range[0],
+                   tester.index_error_range[1])
+    assert_between(fit_values["gamma"], tester.gamma_error_range[0],
+                   tester.gamma_error_range[1])
+    assert_between(fit_values["intercept"].value,
+                   tester.intercept_error_range[0].value,
+                   tester.intercept_error_range[1].value)
+    assert_between(fit_values["sonic_length"].value,
+                   tester.sonic_length()[1][0].value,
+                   tester.sonic_length()[1][1].value)
 
 
 @pytest.mark.skipif("not EMCEE_INSTALLED")
@@ -49,23 +54,22 @@ def test_PCA_method_w_bayes():
     tester.run(mean_sub=True, n_eigs=50,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='bayes', beam_fwhm=0.01 * u.arcsec)
+               fit_method='bayes', brunt_beamcorrect=False)
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    npt.assert_allclose(tester.index,
-                        fit_values["index_bayes"],
-                        atol=0.01)
-    npt.assert_allclose(tester.gamma,
-                        fit_values["gamma_bayes"],
-                        atol=0.01)
-    npt.assert_allclose(tester.intercept.value,
-                        fit_values["intercept_bayes"].value,
-                        atol=2.0)
-    npt.assert_allclose(tester.sonic_length()[0].value,
-                        fit_values["sonic_length_bayes"].value, atol=2.0)
+    assert_between(fit_values["index_bayes"], tester.index_error_range[0],
+                   tester.index_error_range[1])
+    assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
+                   tester.gamma_error_range[1])
+    assert_between(fit_values["intercept_bayes"].value,
+                   tester.intercept_error_range[0].value,
+                   tester.intercept_error_range[1].value)
+    assert_between(fit_values["sonic_length_bayes"].value,
+                   tester.sonic_length()[1][0].value,
+                   tester.sonic_length()[1][1].value)
 
 
 @pytest.mark.parametrize(("method", "min_eigval"),
@@ -100,6 +104,9 @@ def test_spatial_width_methods(method):
 
     model_gauss = generate_2D_array(x_std=10, y_std=10)
 
+    model_gauss += np.random.normal(loc=0.0, scale=0.001,
+                                    size=model_gauss.shape)
+
     model_gauss = model_gauss[np.newaxis, :]
 
     widths, errors = WidthEstimate2D(model_gauss, method=method,
@@ -115,7 +122,6 @@ def test_spatial_with_beam():
     '''
     Test running the spatial width find with beam corrections enabled.
     '''
-    import astropy.units as u
 
     model_gauss = generate_2D_array(x_std=10, y_std=10)
 
