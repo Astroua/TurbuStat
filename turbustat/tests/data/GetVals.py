@@ -124,7 +124,7 @@ pca = PCA(dataset1["cube"])
 pca.run(mean_sub=True, n_eigs=50,
         spatial_method='contour',
         spectral_method='walk-down',
-        fit_method='odr', beam_fwhm=0.01 * u.arcsec)
+        fit_method='odr', brunt_beamcorrect=False)
 
 pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
                 "intercept": pca.intercept,
@@ -134,7 +134,7 @@ pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
 pca.run(mean_sub=True, n_eigs=50,
         spatial_method='contour',
         spectral_method='walk-down',
-        fit_method='bayes', beam_fwhm=0.01 * u.arcsec)
+        fit_method='bayes', brunt_beamcorrect=False)
 pca_fit_vals["index_bayes"] = pca.index
 pca_fit_vals["gamma_bayes"] = pca.gamma
 pca_fit_vals["intercept_bayes"] = pca.intercept
