@@ -345,11 +345,15 @@ def fit_2D_gaussian(xmat, ymat, z):
                                   fixed={'amplitude': True,
                                          'x_mean': True,
                                          'y_mean': True}) + \
-        astropy_models.Const2D(amplitude=[z.mean()])
+        astropy_models.Const2D(amplitude=[np.percentile(z, 10)])
 
     fit_g = fitting.LevMarLSQFitter()
     output = fit_g(g, xmat, ymat, z)
     cov = fit_g.fit_info['param_cov']
+
+    if cov is None:
+        warn("Fitting failed.")
+        cov = np.zeros((4, 4)) * np.NaN
 
     return output, cov
 
