@@ -112,7 +112,8 @@ def test_spatial_width_methods(method):
     widths, errors = WidthEstimate2D(model_gauss, method=method,
                                      brunt_beamcorrect=False)
 
-    npt.assert_approx_equal(widths[0], 10.0 / np.sqrt(2), significant=3)
+    npt.assert_allclose(widths[0], 10.0 / np.sqrt(2), atol=0.02)
+    # npt.assert_approx_equal(widths[0], 10.0 / np.sqrt(2), significant=3)
     # I get 0.000449 for the error, but we're in a noiseless case so just
     # ensure that is very small.
     assert errors[0] < 0.1
