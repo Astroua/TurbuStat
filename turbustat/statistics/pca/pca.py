@@ -75,7 +75,7 @@ class PCA(BaseStatisticMixIn):
         self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
-        eigvecs = eigvecs[np.argsort(all_eigsvals)[::-1]]
+        eigvecs = eigvecs[:, np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
         if n_eigs == 'auto':
