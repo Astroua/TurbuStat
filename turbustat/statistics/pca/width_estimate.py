@@ -306,9 +306,11 @@ def WidthEstimate1D(inList, method='interpolate'):
                     break
 
                 if i == y.size - 1:
-                    raise Warning("Cannot find width where the 1/e level is"
-                                  " reached. Ensure the eigenspectra are "
-                                  "normalized!")
+                    warn("Cannot find width where the 1/e level is"
+                         " reached. Ensure the eigenspectra are "
+                         "normalized!")
+                    scale_errors[idx] = np.NaN
+                    scales[idx] = np.NaN
 
         else:
             raise ValueError("method must be 'walk-down', 'interpolate' or"
