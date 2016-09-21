@@ -14,32 +14,44 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                     diagnosticplots=False, brunt_beamcorrect=True,
                     beam_fwhm=None, spatial_cdelt=None):
     """
+    Estimate spatial widths from a set of autocorrelation images.
+
+    .. warning:: Error estimation is not implemented for `interpolate` or
+    `xinterpolate`.
+
     Parameters
     ----------
-    inList: list of 2d arrays
-        The list of autocorrelation images from which widths will be estimated
-    method: 'contour', 'fit', 'interpolate', or 'xinterpolate'
-        The width estimation method to use
-    noise_ACF: float or 2darray
+    inList: {list of 2D `~numpy.ndarray`s, 3D `~numpy.ndarray}
+        The list of autocorrelation images.
+    method: {'contour', 'fit', 'interpolate', 'xinterpolate'}, optional
+        The width estimation method to use. `contour` fits an ellipse to the
+        1/e contour about the peak. `fit` fits a 2D Gaussian to the peak.
+        `interpolate` and `xinterpolate` both estimate the 1/e level from
+        interpolating the data onto a finer grid near the center.
+        `xinterpolate` first fits a 2D Gaussian to estimate the radial
+        distances about the peak.
+    noise_ACF: {float, 2D `~numpy.ndarray`}, optional
         The noise autocorrelation function to subtract from the autocorrelation
-        images
-    diagnosticsplots: bool
+        images. This is typically produced by the last few eigenimages, whose
+        structure should consistent of irreducible noise.
+    diagnosticsplots: bool, optional
         Show diagnostic plots for the first 9 autocorrelation images showing
         the goodness of fit (for the gaussian estimator) or ??? (presently
-        nothing) for the others
+        nothing) for the others.
     brunt_beamcorrect : bool, optional
         Apply the beam correction. When enabled, the beam size must be given.
     beam_fwhm : None or astropy.units.Quantity
         The FWHM beam width in angular units. Must be given when using
-        brunt_beamcorrect.
-    spatial_cdelt : None or astropy.units.Quantity
+        `brunt_beamcorrect`.
+    spatial_cdelt : {None, astropy.units.Quantity}, optional
         The angular scale of a pixel in the given data. Must be given when
         using brunt_beamcorrect.
 
     Returns
     -------
     scales : array
-        The array of estimated scales with length len(inList)
+        The array of estimated scales with length len(inList) or the 0th
+        dimension size if `inList` is a 3D array.
     scale_errors : array
         Uncertainty estimations on the scales.
 
@@ -232,18 +244,33 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
     return scales, scale_errors
 
 
-def WidthEstimate1D(inList, method='interpolate'):
+def WidthEstimate1D(inList, method='walk-down'):
     '''
     Find widths from spectral eigenvectors. These eigenvectors should already
-    be normalized.
+    be normalized. Widths are defined by the location where 1/e of the maximum
+    occurs.
+
+    .. note:: If the spectral dimension is small in the given eigenvectors
+    (i.e., their length), the 1/e level might not be reached. If this is the
+    case, try padding the initial data cube with zeros in the spectral
+    dimension. The effect on the results should be minimal, as the additional
+    eigenvalues from the padding will be zero. This is especially important
+    when using `walk-down`.
+
+    .. warning:: Error estimation is not implemented for `interpolate`.
 
     Parameters
     ----------
-    inList : list of arrays or array
+    inList: {list of 1D `~numpy.ndarray`s, 2D `~numpy.ndarray}
         List of normalized eigenvectors, or a 2D array with eigenvectors
         along the 2nd axis.
-    method : str, optional
-        The width estimation method to use.
+    method : {'walk-down', 'fit', 'interpolate'}, optional
+        The width estimation method to use. The options are 'fit',
+        'interpolate', or 'walk-down'.  `walk-down` starts at the peak, and
+        uses a bisector to estimate where the 1/e level lies between the two
+        nearest points. `fit` fits a Gaussian to data before the first local
+        minimum. `interpolate` estimates the 1/e level before the first local
+        minimum.
 
     Returns
     -------
@@ -358,7 +385,3 @@ def fit_2D_gaussian(xmat, ymat, z):
         cov = np.zeros((4, 4)) * np.NaN
 
     return output, cov
-
-
-def plot_stuff(raw, fit, residual, n_eigs):
-    pass

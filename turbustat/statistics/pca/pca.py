@@ -26,7 +26,10 @@ class PCA(BaseStatisticMixIn):
     cube : %(dtypes)s
         Data cube.
     n_eigs : int
-        Number of eigenvalues to compute. Defaults to using all eigenvalues.
+        Deprecated. Input using `~PCA.compute_pca` or `~PCA.run`.
+    distance : `~astropy.units.Quantity`, optional
+        Distance to object in physical units. The output spatial widths will
+        be converted to the units given here.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -56,7 +59,7 @@ class PCA(BaseStatisticMixIn):
 
         self._n_eigs = value
 
-    def compute_pca(self, mean_sub=False, n_eigs=-1, min_eigval=None,
+    def compute_pca(self, mean_sub=False, n_eigs='auto', min_eigval=None,
                     eigen_cut_method='proportion'):
         '''
         Create the covariance matrix and its eigenvalues.
@@ -70,6 +73,22 @@ class PCA(BaseStatisticMixIn):
             When enabled, subtracts the means of the channels before
             calculating the covariance. By default, this is disabled to
             match the Heyer & Brunt method.
+        n_eigs : {int, 'auto'}, optional
+            Number of eigenvalues to compute. The default setting is 'auto',
+            which requires `min_eigval` to be set. Otherwise, the number of
+            eigenvalues used can be set using an int. Setting to -1 will use
+            all of the eigenvalues.
+        min_eigval : float, optional
+            The cut-off value to determine the number of important eigenvalues.
+            When `eigen_cut_method` is `proportional`, min_eigval is the
+            total proportion of variance described up to the Nth eigenvalue.
+            When `eigen_cut_method` is `value`, min_eigval is the minimum
+            variance described by that eigenvalue.
+        eigen_cut_method : {'proportion', 'value'}, optional
+            Set whether `min_eigval` is the proportion of variance determined
+            up to the Nth eigenvalue (`proportion`) or the minimum value of
+            variance (`value`).
+
         '''
 
         self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
@@ -109,21 +128,49 @@ class PCA(BaseStatisticMixIn):
 
     @property
     def var_proportion(self):
+        '''
+        Proportion of variance described by the first `~PCA.n_eigs`
+        eigenvalues.
+        '''
         return self._var_prop
 
     @property
     def total_variance(self):
+        '''
+        Total variance of all eigenvalues.
+        '''
         return self._total_variance
 
     @property
     def eigvals(self):
+        '''
+        All eigenvalues.
+        '''
         return self._eigvals
 
     @property
     def eigvecs(self):
+        '''
+        All eigenvectors.
+        '''
         return self._eigvecs
 
     def eigimages(self, n_eigs=None):
+        '''
+        Create eigenimages up to the n_eigs.
+
+        Parameters
+        ----------
+        n_eigs : None or int
+            The number of eigenimages to create. When n_eigs is negative, the
+            last -n_eig eigenimages are created. If None is given, the number
+            in `~PCA.n_eigs` will be returned.
+
+        Returns
+        -------
+        eigimgs : `~numpy.ndarray`
+            3D array, where the first dimension if the number of eigenvalues.
+        '''
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -150,6 +197,21 @@ class PCA(BaseStatisticMixIn):
         return eigimgs.swapaxes(0, 2)
 
     def autocorr_images(self, n_eigs=None):
+        '''
+        Create the autocorrelation of the eigenimages.
+
+        Parameters
+        ----------
+        n_eigs : None or int
+            The number of autocorrelation images to create. When n_eigs is
+            negative, the last -n_eig autocorrelation images are created.
+            If None is given, the number in `~PCA.n_eigs` will be returned.
+
+        Returns
+        -------
+        acors : np.ndarray
+            3D array, where the first dimension if the number of eigenvalues.
+        '''
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -171,7 +233,21 @@ class PCA(BaseStatisticMixIn):
         return acors.swapaxes(0, 2)
 
     def autocorr_spec(self, n_eigs=None):
+        '''
+        Create the autocorrelation spectra of the eigenvectors.
 
+        Parameters
+        ----------
+        n_eigs : None or int
+            The number of autocorrelation vectors to create. When n_eigs is
+            negative, the last -n_eig autocorrelation vectors are created.
+            If None is given, the number in `~PCA.n_eigs` will be returned.
+
+        Returns
+        -------
+        acors : np.ndarray
+            2D array, where the first dimension if the number of eigenvalues.
+        '''
         if n_eigs is None:
             n_eigs = self.n_eigs
 
@@ -187,6 +263,10 @@ class PCA(BaseStatisticMixIn):
         return acors.swapaxes(0, 1).squeeze()
 
     def noise_ACF(self, n_eigs=-10):
+        '''
+        Create the noise autocorrelation function based off of the eigenvalues
+        beyond `PCA.n_eigs`.
+        '''
 
         if n_eigs is None:
             n_eigs = self.n_eigs
@@ -206,6 +286,27 @@ class PCA(BaseStatisticMixIn):
 
         Parameters
         ----------
+        methods : {'contour', 'fit', 'interpolate', 'xinterpolate'}, optional
+            Spatial fitting method to use. The default method is 'contour'
+            (fits an ellipse to the 1/e contour about the peak; this is the
+            method used by the Heyer & Brunt works).
+            See `~turbustat.statistics.pca.WidthEstimate2D` for a description
+            of all methods.
+        brunt_beamcorrect : bool, optional
+            Apply the beam correction described in Chris Brunt's
+            `thesis <http://search.proquest.com/docview/304529913>`_. A beam
+            will be searched for in the given header (looking for "BMAJ"). If
+            this fails, the value must be given in `beam_fwhm` with angular
+            units.
+        beam_fwhm : None of `~astropy.units.Quantity`, optional
+            When beam correction is enabled, the FWHM beam size can be given
+            here.
+        physical_scales : bool, optional
+            Attempts to convert spatial pixel scales into physical sizes. A
+            warning is raised if no distance is provided.
+        distance : `~astropy.units.Quantity`, optional
+            Distance to object in physical units. The output spatial widths
+            will be converted to the units given here.
 
         '''
         # Try reading beam width from the header is it is not given.
@@ -239,16 +340,37 @@ class PCA(BaseStatisticMixIn):
 
     @property
     def spatial_width(self):
+        '''
+        Spatial widths for the first `~PCA.n_eigs` components.
+        '''
         return self._spatial_width
 
     @property
     def spatial_width_error(self):
+        '''
+        The 1-sigma error bounds on the spatial widths for the first
+        `~PCA.n_eigs` components.
+        '''
         return self._spatial_width_error
 
     def find_spectral_widths(self, method='walk-down',
                              physical_units=True):
         '''
-        Calculate the spectral scales for the structure functions.
+        Derive the spectral widths using the autocorrelation of the
+        eigenvectors.
+
+        Parameters
+        ----------
+        method : {"walk-down", "fit", "interpolate"}, optional
+            Spectral fitting method to use. The default method is 'walk-down'
+            (starting at the peak, continue until reaching 1/e of the peak;
+            this is the method used by the Heyer & Brunt works). See
+            `~turbustat.statistics.pca.WidthEstimate1D` for a description
+            of all methods.
+        physical_units : bool, optional
+            Enable conversion into spectral units, as defined within the
+            header.
+
         '''
 
         acorr_spec = self.autocorr_spec(n_eigs=self.n_eigs)
@@ -267,25 +389,37 @@ class PCA(BaseStatisticMixIn):
 
     @property
     def spectral_width(self):
+        '''
+        Spectral widths for the first `~PCA.n_eigs` components.
+        '''
         return self._spectral_width
 
     @property
     def spectral_width_error(self):
+        '''
+        The error bounds on the spectral widths for the first
+        `~PCA.n_eigs` components.
+        '''
         return self._spectral_width_error
 
     def fit_plaw(self, fit_method='odr', verbose=False, **kwargs):
         '''
-        Fit the size-linewidth relation.
+        Fit the size-linewidth relation. This is done through Orthogonal
+        Distance Regression (via scipy), or through MCMC (requires
+        installing `emcee <http://dan.iel.fm/emcee/current/>`_).
 
         Parameters
         ----------
-        fit_method : str, optional
+        fit_method : {'odr', 'bayes'}, optional
             Set the type of fitting to perform. Options are 'odr'
             (orthogonal distance regression) or 'bayes' (MCMC). Note that
             'bayes' requires the emcee package to be installed.
         verbose : bool, optional
-            Prints out additional information about the fitting.
-        kwargs : Passed to bayes_linear when fit_method is bayes.
+            Prints out additional information about the fitting and plots the
+            solution.
+        **kwargs
+            Passed to `~turbustat.statistics.fitting_utils.bayes_linear`
+            when fit_method is bayes.
         '''
 
         if fit_method != 'odr' and fit_method != 'bayes':
@@ -331,37 +465,50 @@ class PCA(BaseStatisticMixIn):
 
     @property
     def index(self):
+        '''
+        Power-law index.
+        '''
         return self._index
 
     @property
     def index_error_range(self):
+        '''
+        One-sigma error bounds on the index.
+        '''
         return self._index_error_range
 
     @property
     def gamma(self):
         '''
-        See description in brunt_index_correct
+        Slope of the size-linewidth relation with correction from Chris Brunt's
+        `thesis <http://search.proquest.com/docview/304529913>`_.
         '''
         return float(brunt_index_correct(self.index))
 
     @property
     def gamma_error_range(self):
         '''
-        See description in brunt_index_correct
+        One-sigma error bounds on gamma.
         '''
         return brunt_index_correct(self.index_error_range)
 
     @property
     def intercept(self):
+        '''
+        Intercept from the fits, converted out of the log value.
+        '''
         return self._intercept
 
     @property
     def intercept_error_range(self):
+        '''
+        One-sigma error bounds on the intercept.
+        '''
         return self._intercept_error_range
 
     def model(self, x):
         '''
-        Model from the fitting procedure
+        Model with the fit parameters from `~PCA.fit_plaw`
         '''
         return self.index * x + np.log10(self.intercept)
 
@@ -377,12 +524,21 @@ class PCA(BaseStatisticMixIn):
 
         Parameters
         ----------
-        T_k : astropy.units.Quantity, optional
+        T_k : `~astropy.units.Quantity`, optional
             Temperature given in units convertible to Kelvin.
         mu : float, optional
             Factor to multiply by m_H to account for He and metals.
         use_gamma : bool, optional
-            Toggle whether to use gamma or the fit index.
+            Toggle whether to use `~PCA.gamma` or `~PCA.index`.
+
+        Returns
+        -------
+        lambd : `~astropy.units.Quantity`
+            Value of the sonic length. If distance was provided, this will
+            be in the units given in the distance. Otherwise, the result will
+            be in pixel units.
+        lambd_error_range : `~astropy.units.Quantity`
+            The 1-sigma bounds on the sonic length. The units will match lambd.
         '''
 
         import astropy.constants as const
@@ -445,24 +601,35 @@ class PCA(BaseStatisticMixIn):
             spatial_method='contour', spectral_method='walk-down',
             fit_method='odr', beam_fwhm=None, brunt_beamcorrect=True):
         '''
-        Run method. Needed to maintain package standards.
+        Run the decomposition and fitting in one step.
 
         Parameters
         ----------
         verbose : bool, optional
-            Enables plotting.
+            Enables plotting of the results.
         mean_sub : bool, optional
-            Perform mean subtraction during decomposition.
+            See `~PCA.compute_pca`
         decomp_only : bool, optional
             Only run the PCA decomposition, not the entire procedure to derive
             the size-linewidth relation. This should be enabled when using
             PCA_Distance.
+        n_eigs : {"auto", int}, optional
+            See `~PCA.compute_pca`
+        min_eigval : float, optional
+            See `~PCA.compute_pca`
+        eigen_cut_method : {'proportion', 'value'}, optional
+            See `~PCA.compute_pca`
         spatial_method : str, optional
-            See fit_spatial_widths.
+            See `~PCA.fit_spatial_widths`.
         spectral_method : str, optional
-            See fit_spectral_widths.
+            See `~PCA.fit_spectral_widths`.
         fit_method : str, optional
-            See fit_plaw.
+            See `~PCA.fit_plaw`.
+        beam_fwhm : None of `~astropy.units.Quantity`, optional
+            See `~PCA.fit_spatial_widths`.
+        brunt_beamcorrect : bool, optional
+            See `~PCA.fit_spatial_widths`.
+
         '''
 
         self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
@@ -670,6 +837,22 @@ def set_n_eigs(eigenvalues, min_eigval, method='value'):
     Based on a minimum eigenvalue, find the number of components to consider.
     The cut-off may be the proportion of variance (method='proportion') or a
     minimum value for the variance (method='value')
+
+    Parameters
+    ----------
+    eigenvalues : `~numpy.ndarray`
+        Array of eigenvalues.
+    min_eigval : float
+        Value to determine the cut-off for important eigenvalues.
+    method : {"value", "proportion"}, optional
+        If `value`, `min_eigval` is the smallest eigenvalue to consider
+        important. If `proportion`, `min_eigval` is the proportion of
+        variance at which to cut at (i.e., 0.99 for 99%).
+
+    Returns
+    -------
+    above.size : int
+        The number of eigenvalues satisfying the given criteria.
     '''
 
     if method == "value":
