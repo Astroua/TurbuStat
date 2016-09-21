@@ -2,7 +2,7 @@
 import numpy as np
 
 '''
-Routines for fitting linear models with errors in both variables.
+Routines for fitting a line with errors in both variables.
 '''
 
 
@@ -13,6 +13,25 @@ def leastsq_linear(x, y, x_err, y_err, verbose=False):
     there is no clear "independent" variable here and the covariance is
     unknown (or at least difficult to estimate).
 
+    Parameters
+    ----------
+    x : `~numpy.ndarray`
+        x data.
+    y : `~numpy.ndarray`
+        y data.
+    x_err : `~numpy.ndarray`
+        x errors.
+    y_err : `~numpy.ndarray`
+        y errors.
+    verbose : bool, optional
+        Plot the resulting fit.
+
+    Returns
+    -------
+    params : `~numpy.ndarray`
+        Fit parameters (slope, intercept)
+    errors : `~numpy.ndarray`
+        1-sigma errors from the covariance matrix (slope, intercept).
     '''
 
     import scipy.odr as odr
@@ -69,7 +88,8 @@ def leastsq_linear(x, y, x_err, y_err, verbose=False):
 
 
 def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
-                 conf_interval=[15, 85], verbose=False, return_samples=False):
+                 conf_interval=[15.9, 84.1], verbose=False,
+                 return_samples=False):
     '''
     Fit a line with errors in both variables using MCMC.
 
@@ -78,19 +98,37 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
 
     Parameters
     ----------
-    X,Y -- Data vectors (same length, can be length 1)
-    Xerror, Yerror -- 1 sigma errors for X,Y
-    nWakers = 10 (default), number of walkers in the sampler (>2 required)
-    nBurn = 100 (default), number of steps to burn in chain for
-    nSample = 1000 (default), number of steps to sample chain with
+    x : `~numpy.ndarray`
+        x data.
+    y : `~numpy.ndarray`
+        y data.
+    x_err : `~numpy.ndarray`
+        x errors.
+    y_err : `~numpy.ndarray`
+        y errors.
+    nWalkers : int, optional
+        Number of walkers in the sampler (>2 required). Defaults to 10.
+    nBurn : int, optional
+        Number of steps to burn chain in for. Default is 100.
+    nSample : int, optional
+        Number of steps to sample chain with. Default is 1000.
+    conf_interval : list, optional
+        Upper and lower percentiles to estimate the bounds on the parameters.
+        Defaults to the 1-sigma intervals (34.1% about the median).
+    verbose : bool, optional
+        Plot the resulting fit.
+    return_samples : bool, optional
+        Returns the entire chain of samples, when enabled.
 
-    Returns:
-    samples = a numpy array of samples of the ratio of the data
-
-    Examples
-    --------
-    samples = BayesRatio(X, Y, Xerror, Yerror, nWalkers=100,
-                         nBurn=100,nSample=1000)
+    Returns
+    -------
+    params : `~numpy.ndarray`
+        Fit parameters (slope, intercept)
+    errors : `~numpy.ndarray`
+        Confidence interval defined by values given in `conf_interval`
+        (slope, intercept).
+    samples : `~numpy.ndarray`
+        Samples from the chain. Returned only when `return_samples` is enabled.
 
     '''
 
