@@ -30,6 +30,16 @@ class PCA(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Distance to object in physical units. The output spatial widths will
         be converted to the units given here.
+
+    Examples
+    --------
+    >>> from turbustat.statistics import PCA
+    >>> from spectral_cube import SpectralCube
+    >>> import astropy.units as u
+    >>> cube = SpectralCube.read("adv.fits") # doctest: +SKIP
+    >>> pca = PCA(cube, distance=250 * u.pc) # doctest: +SKIP
+    >>> pca.run(verbose=True) # doctest: +SKIP
+
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
