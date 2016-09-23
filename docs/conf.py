@@ -53,9 +53,9 @@ import mock
 MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
                 'scipy', 'scipy.stats', 'scipy.ndimage',
                 'scipy.interpolate', 'scipy.fftpack', 'scipy.spatial',
-                'scipy.spatial.distance', 'scipy.optimize',
+                'scipy.spatial.distance', 'scipy.optimize', 'scipy.signal',
                 'matplotlib', 'matplotlib.pyplot',
-                'astropy', 'astropy.io', 'astropy.io.fits',
+                'astropy', 'astropy.io', 'astropy.io.fits', 'astropy.modeling',
                 'astropy.convolution', 'astropy.units', 'astropy.wcs',
                 'sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
@@ -64,7 +64,8 @@ MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
                 'astrodendro', 'signal_id', 'pandas',
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils',
-                'spectral_cube.lower_dimensional_structures']
+                'spectral_cube.lower_dimensional_structures',
+                'emcee']
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
