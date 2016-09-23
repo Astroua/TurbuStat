@@ -15,7 +15,7 @@ The use of PCA on spectral-line data cubes was introduced by :ref:`Heyer & Schlo
 Using
 -----
 
-**The data in this tutorial are available `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.**
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
 
 We need to import the PCA code, along with a few other common packages:
 
@@ -41,7 +41,6 @@ If the distance is given, spatial widths are converted to the physical unit give
 The simplest way to run the entire process is through the `~turbustat.statistics.PCA.run` command:
 
     >>> pca.run(verbose=True, min_eigval=0.005)
-
     Proportion of Variance kept: 0.973266632968
     Index: 0.50 (0.48, 0.53)
     Gamma: 0.31 (0.27, 0.36)
@@ -79,9 +78,9 @@ Third, we find the spectral widths:
 
 There are three methods available to estimate spectral widths of the autocorrelation spectra. `walk-down` starts from the peak and continues until the 1/e level is reached. The width is estimated by averaging the points before and after this level is reached. This is the method used by Brunt & Heyer. Otherwise, `method` may be set to `fit`, which fits a Gaussian to the data before the fits local minima occurs, and `interpolate`, which does the same, but through interpolating onto a finer grid.
 
-**Note: If your input data has few spectral channels, it may be necessary to pad additional channels of zero onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
+**Note: If your input data has few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
 
-Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in `Hogg, D, Bovy, J, & Lang D. <ref-hogg_fitting>`. The Brunt & Heyer works have used the bisector method, which has several drawbacks. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
+Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in :ref:`Hogg, D, Bovy, J, & Lang D. <ref-hogg_fitting>`. The Brunt & Heyer works have used the bisector method, which has several drawbacks. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
 
 To run ODR:
 
