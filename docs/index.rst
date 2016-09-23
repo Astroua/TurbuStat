@@ -32,7 +32,7 @@ Contents:
    :maxdepth: 2
 
    install.rst
-   tutorial.rst
+   tutorials/index
    moments.rst
    cube_tools.rst
    statistics.rst
