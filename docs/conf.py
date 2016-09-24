@@ -50,13 +50,9 @@ setup_cfg = dict(conf.items('metadata'))
 # Mock out the imports
 import mock
 
-MOCK_MODULES = ['numpy', 'numpy.fft', 'numpy.random',
-                'scipy', 'scipy.stats', 'scipy.ndimage',
+MOCK_MODULES = ['scipy', 'scipy.stats', 'scipy.ndimage',
                 'scipy.interpolate', 'scipy.fftpack', 'scipy.spatial',
                 'scipy.spatial.distance', 'scipy.optimize', 'scipy.signal',
-                'matplotlib', 'matplotlib.pyplot',
-                'astropy', 'astropy.io', 'astropy.io.fits', 'astropy.modeling',
-                'astropy.convolution', 'astropy.units', 'astropy.wcs',
                 'sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
                 'statsmodels.formula', 'statsmodels.distributions',
