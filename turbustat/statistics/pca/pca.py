@@ -447,7 +447,7 @@ class PCA(BaseStatisticMixIn):
             np.isfinite(self.spectral_width_error)
 
         # Check to make sure there are enough points to fit to (minimum 2).
-        num_pts = self.spectral_width.size - are_finite.sum()
+        num_pts = self.spectral_width.size - (~are_finite).sum()
         if num_pts < 2:
             raise Warning("Less then 2 valid points. Cannot fit model.")
         elif num_pts < 5:
