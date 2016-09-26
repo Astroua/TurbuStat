@@ -61,5 +61,4 @@ install:
     - pip install emcee
 
 script:
-    - wget --no-check-certificate -O Design4_21_0_0_flatrho_0021_13co.fits https://girder.hub.yt/api/v1/file/57e58753a909a80001d301ee/download
     - python setup.py $SETUP_CMD
