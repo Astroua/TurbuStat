@@ -49,6 +49,8 @@ class PCA(BaseStatisticMixIn):
 
         self.data, self.header = input_data(cube)
 
+        _enforce_velocity_axis(self)
+
         self.spectral_shape = self.data.shape[0]
 
         if n_eigs is not None:
@@ -888,3 +890,16 @@ def set_n_eigs(eigenvalues, min_eigval, method='value'):
 
     else:
         raise ValueError("method must be 'value' or 'proportion'.")
+
+
+def _enforce_velocity_axis(pca_obj):
+    '''
+    Enforce spectral_size be in velocity units.
+    '''
+
+    if not pca_obj.spectral_size.unit.is_equivalent(u.m / u.s):
+        raise Warning("PCA requires the spectral axis to be in velocity units."
+                      " If using a spectral cube, perform this conversion with"
+                      " 'cube_vel = cube.with_spectral_unit(u.m / u.s, "
+                      "rest_value=113 * u.GHz)', changing to the appropriate"
+                      " rest frequency and desired velocity unit.")

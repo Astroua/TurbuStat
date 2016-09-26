@@ -157,3 +157,17 @@ def test_spectral_width_methods(method):
 
     # Error is at most 1/2 a spectral channel, or just 0.5 in this case
     npt.assert_allclose(widths[0], 10.0, atol=errors[0])
+
+
+@pytest.mark.xfail(raises=Warning)
+def test_PCA_velocity_axis():
+    '''
+    PCA requires a velocity spectral axis.
+    '''
+
+    new_hdr = dataset1["cube"][1].copy()
+
+    new_hdr["CTYPE3"] = "FREQ    "
+    new_hdr["CUNIT3"] = "Hz      "
+
+    PCA([dataset1["cube"][0], new_hdr])
