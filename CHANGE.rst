@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #85 - Added full PCA treatment from the Heyer & Brunt papers. Also implements general handling of physical (given distance) and spectral scale conversions (only working on PCA, needs to be added on to the rest).
 * #120 - Minor plotting changes to PDF and bispectrum. Common angular area for Genus normalization. Fix issue with NaNs in the weights for PDFs.
 * #118 - Fix SCF surface indexing with non-integer shifts.
 * #117 - Use common angular scales for SCF, Moments, Delta-Variance comparison. Dropped using nanmean, nanstd from scipy.stats. Added fourier shifting for SCF.
