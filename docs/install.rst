@@ -18,6 +18,7 @@ The following packages are optional, but required for specific functions in Turb
 
  *   `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`_ - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
  *   `astrodendro-development <https://github.com/dendrograms/astrodendro>`_ - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
+ *   `emcee <http://dan.iel.fm/emcee/current/>`_ - MCMC fitting in `~turbustat.statistics.PCA`.
 
 When using `turbustat.data_reduction.Mask_and_Moments`, the noise can be automatically estimated by installing two additional packages (**IN DEVELOPMENT**):
  *   `signal-id <https://github.com/radio-astro-tools/signal-id>`_ - Noise estimation in PPV cubes.

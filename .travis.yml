@@ -15,7 +15,7 @@ addons:
 env:
     global:
         - SETUP_CMD='test'
-        - CONDA_ADDITIONAL='scipy matplotlib pandas statsmodels scikit-learn'
+        - CONDA_ADDITIONAL='scipy matplotlib pyqt=4.11.4 pandas statsmodels scikit-learn'
         - NP_VER=1.10
         - ASTRO_VER=1.0
     matrix:
@@ -58,6 +58,7 @@ install:
     - pip install git+https://github.com/radio-astro-tools/spectral-cube.git
     - pip install git+https://github.com/radio-astro-tools/signal-id.git
     - pip install git+https://github.com/radio-astro-tools/radio_beam.git
+    - pip install emcee
 
 script:
     - python setup.py $SETUP_CMD
