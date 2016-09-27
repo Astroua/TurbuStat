@@ -511,7 +511,7 @@ class PCA(BaseStatisticMixIn):
         One-sigma error bounds on gamma.
         '''
         return np.array([brunt_index_correct(val) for val in
-                         self.intercept_error_range])
+                         self.index_error_range])
 
     @property
     def intercept(self):
