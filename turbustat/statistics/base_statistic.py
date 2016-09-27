@@ -115,7 +115,7 @@ class BaseStatisticMixIn(object):
 
         if not value.unit.is_equivalent(u.pc):
             raise u.UnitConversionError("Given unit ({}) is not a valid unit"
-                                        " of distance.")
+                                        " of distance.".format(value.unit))
 
         if not value.isscalar:
             raise TypeError("Distance must be a scalar quantity.")

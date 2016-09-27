@@ -72,7 +72,7 @@ class PCA(BaseStatisticMixIn):
         self._n_eigs = value
 
     def compute_pca(self, mean_sub=False, n_eigs='auto', min_eigval=None,
-                    eigen_cut_method='proportion'):
+                    eigen_cut_method='value'):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -510,7 +510,8 @@ class PCA(BaseStatisticMixIn):
         '''
         One-sigma error bounds on gamma.
         '''
-        return brunt_index_correct(self.index_error_range)
+        return np.array([brunt_index_correct(val) for val in
+                         self.intercept_error_range])
 
     @property
     def intercept(self):
@@ -605,7 +606,8 @@ class PCA(BaseStatisticMixIn):
             intercepts = self._samps[1]
 
             if use_gamma:
-                slopes = brunt_index_correct(slopes)
+                slopes = np.array([brunt_index_correct(slope)
+                                   for slope in slopes])
 
             all_lambds = np.power(c_s / 10 ** intercepts, 1. / index)
 
@@ -836,7 +838,6 @@ class PCA_Distance(object):
         return self
 
 
-@np.vectorize
 def brunt_index_correct(value):
     '''
     Apply empirical corrections from Heyer & Brunt
