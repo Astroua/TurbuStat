@@ -6,7 +6,8 @@ from scipy.interpolate import LSQUnivariateSpline, interp1d
 from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
-from ..stats_utils import EllipseModel
+# from ..stats_utils import EllipseModel
+from turbustat.statistics.stats_utils import EllipseModel
 import astropy.units as u
 
 
@@ -34,7 +35,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         The noise autocorrelation function to subtract from the autocorrelation
         images. This is typically produced by the last few eigenimages, whose
         structure should consistent of irreducible noise.
-    diagnosticsplots: bool, optional
+    diagnosticplots: bool, optional
         Show diagnostic plots for the first 9 autocorrelation images showing
         the goodness of fit (for the gaussian estimator) or ??? (presently
         nothing) for the others.
@@ -170,20 +171,43 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 if pidx.shape[0] > 0:
                     good_path = paths[pidx[0]]
 
-                    output = fit_2D_ellipse(good_path.vertices)[:-1]
+                    output = fit_2D_ellipse(good_path.vertices)
                     (y_scales[idx], x_scales[idx], y_scale_errors[idx],
-                     x_scale_errors[idx]) = output
+                     x_scale_errors[idx], ellip) = output
 
                 else:
                     y_scales[idx] = np.nan
                     x_scales[idx] = np.nan
                     y_scale_errors[idx] = np.nan
                     x_scale_errors[idx] = np.nan
+                    ellip = None
             else:
                 y_scales[idx] = np.nan
                 x_scales[idx] = np.nan
                 y_scale_errors[idx] = np.nan
                 x_scale_errors[idx] = np.nan
+                ellip = None
+
+            if diagnosticplots and idx < 9 and ellip is not None:
+                import matplotlib.pyplot as plt
+                ax = plt.subplot(3, 3, idx + 1)
+                ax.imshow(z, cmap='afmhot')
+                ax.contour(z, levels=np.array([np.exp(-1)]) * z.max(),
+                           colors='c')
+                full_params = np.array([0, 0,
+                                        ellip.params[2] * 2,
+                                        ellip.params[3] * 2,
+                                        ellip.params[-1]])
+                pts = ellip.predict_xy(np.linspace(0, 2 * np.pi),
+                                       params=full_params)
+                ax.plot(pts[:, 1] + z.shape[0] // 2,
+                        pts[:, 0] + z.shape[1] // 2, "g--")
+                ax.set_yticks([])
+                ax.set_xticks([])
+                ax.set_title("{}".format(idx + 1))
+
+    if diagnosticplots:
+        plt.tight_layout()
 
     if brunt_beamcorrect:
         if beam_fwhm is None or spatial_cdelt is None:
