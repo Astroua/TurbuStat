@@ -6,6 +6,7 @@ import cPickle as pickle
 from copy import deepcopy
 from astropy import units as u
 from astropy.wcs import WCS
+import statsmodels.api as sm
 
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
@@ -106,7 +107,7 @@ class SCF(BaseStatisticMixIn):
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
                 self._scf_surface[i, j] = scf_value
 
-    def compute_spectrum(self, logspacing=False, return_stddev=False,
+    def compute_spectrum(self, logspacing=False, return_stddev=True,
                          **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
@@ -142,6 +143,91 @@ class SCF(BaseStatisticMixIn):
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
         self._lags = self._lags * roll_lag_diff * u.pix
+
+    def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
+        '''
+        Fit a power-law to the SCF spectrum.
+
+        Parameters
+        ----------
+        xlow : float, optional
+            Lower lag value limit in log-scale to consider in the fit.
+        xhigh : float, optional
+            Upper lag value limit in log-scale to consider in the fit.
+        verbose : bool, optional
+            Show fit summary when enabled.
+        '''
+
+        x = np.log10(self.lags.value)
+        y = np.log10(self.scf_spectrum)
+
+        if xlow is not None:
+            lower_limit = x >= xlow
+        else:
+            lower_limit = \
+                np.ones_like(self.scf_spectrum, dtype=bool)
+
+        if xhigh is not None:
+            upper_limit = x <= xhigh
+        else:
+            upper_limit = \
+                np.ones_like(self.scf_spectrum, dtype=bool)
+
+        within_limits = np.logical_and(lower_limit, upper_limit)
+
+        y = y[within_limits]
+        x = x[within_limits]
+
+        x = sm.add_constant(x)
+
+        # If the std were computed, use them as weights
+        if self._stddev_flag:
+
+            # Converting to the log stds doesn't matter since the weights
+            # remain proportional to 1/sigma^2, and an overal normalization is
+            # applied in the fitting routine.
+            weights = self.scf_spectrum_stddev[within_limits] ** -2
+
+            model = sm.WLS(y, x, missing='drop', weights=weights)
+        else:
+            model = sm.OLS(y, x, missing='drop')
+
+        self.fit = model.fit()
+
+        if verbose:
+            print(self.fit.summary())
+
+        self._slope = self.fit.params[1]
+        self._slope_err = self.fit.bse[1]
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
+    def fitted_model(self, xvals):
+        '''
+        Computes the fitted power-law in log-log space using the
+        given x values.
+
+        Parameters
+        ----------
+        xvals : `~numpy.ndarray`
+            Values of log(lags) to compute the model at (base 10 log).
+
+        Returns
+        -------
+        model_values : `~numpy.ndarray`
+            Values of the model at the given values. Equivalent to log values
+            of the SCF spectrum.
+        '''
+
+        model_values = self.fit.params[0] + self.fit.params[1] * xvals
+
+        return model_values
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -198,9 +284,9 @@ class SCF(BaseStatisticMixIn):
 
         return self
 
-    def run(self, logspacing=False, return_stddev=False, verbose=False,
-            save_results=False, output_name=None, ang_units=False,
-            unit=u.deg):
+    def run(self, logspacing=False, return_stddev=True, verbose=False,
+            xlow=None, xhigh=None, save_results=False, output_name=None,
+            ang_units=False, unit=u.deg):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -212,6 +298,10 @@ class SCF(BaseStatisticMixIn):
             Return the standard deviation in the 1D bins.
         verbose : bool, optional
             Enables plotting.
+        xlow : float, optional
+            See `~SCF.fit_plaw`.
+        xhigh : float, optional
+            See `~SCF.fit_plaw`.
         save_results : bool, optional
             Pickle the results.
         output_name : str, optional
@@ -225,6 +315,7 @@ class SCF(BaseStatisticMixIn):
         self.compute_surface()
         self.compute_spectrum(logspacing=logspacing,
                               return_stddev=return_stddev)
+        self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if save_results:
             self.save_results(output_name=output_name)
@@ -251,19 +342,34 @@ class SCF(BaseStatisticMixIn):
             if self._stddev_flag:
                 ax.errorbar(lags, self.scf_spectrum,
                             yerr=self.scf_spectrum_stddev,
-                            fmt='D-', color='k', markersize=5)
+                            fmt='D', color='k', markersize=5, label="Data")
                 ax.set_xscale("log", nonposy='clip')
+                ax.set_yscale("log", nonposy='clip')
             else:
-                p.semilogx(self.lags, self.scf_spectrum, 'kD-',
-                           markersize=5)
+                p.loglog(self.lags, self.scf_spectrum, 'kD',
+                         markersize=5, label="Data")
+
+            ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
+            ax.set_ylim(self.scf_spectrum.min() * 0.75,
+                        self.scf_spectrum.max() * 1.25)
+
+            # Overlay the fit. Use points 5% lower than the min and max.
+            xvals = np.linspace(np.log10(lags.min() * 0.95),
+                                np.log10(lags.max() * 1.05), 50)
+            p.plot(10**xvals, 10**self.fitted_model(xvals), 'r--', linewidth=2,
+                   label='Fit')
+
+            p.legend()
 
             if ang_units:
-                ax.set_xlabel("Lag ("+unit.to_string()+")")
+                ax.set_xlabel("Lag ({})".format(unit))
             else:
                 ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
             p.show()
+
+        return self
 
 
 class SCF_Distance(object):
@@ -401,11 +507,29 @@ class SCF_Distance(object):
 
             ax.errorbar(lags1, self.scf1.scf_spectrum,
                         yerr=self.scf1.scf_spectrum_stddev,
-                        fmt='D-', color='b', markersize=5, label=label1)
+                        fmt='D', color='b', markersize=5, label=label1)
             ax.errorbar(lags2, self.scf2.scf_spectrum,
                         yerr=self.scf2.scf_spectrum_stddev,
-                        fmt='o-', color='g', markersize=5, label=label2)
+                        fmt='o', color='g', markersize=5, label=label2)
             ax.set_xscale("log", nonposy='clip')
+            ax.set_yscale("log", nonposy='clip')
+
+            ax.set_xlim(min(lags1.min(), lags2.min()) * 0.75,
+                        max(lags1.max(), lags2.max()) * 1.25)
+            ax.set_ylim(min(self.scf1.scf_spectrum.min(),
+                            self.scf2.scf_spectrum.min()) * 0.75,
+                        max(self.scf1.scf_spectrum.max(),
+                            self.scf2.scf_spectrum.max()) * 1.25)
+
+            # Overlay the fit. Use points 5% lower than the min and max.
+            xvals = np.linspace(np.log10(min(lags1.min(),
+                                             lags2.min()) * 0.95),
+                                np.log10(max(lags1.max(),
+                                             lags2.max()) * 1.05), 50)
+            p.plot(10**xvals, 10**self.scf1.fitted_model(xvals), 'b--',
+                   linewidth=2)
+            p.plot(10**xvals, 10**self.scf2.fitted_model(xvals), 'g--',
+                   linewidth=2)
             ax.legend(loc='upper right')
             p.tight_layout()
             p.show()

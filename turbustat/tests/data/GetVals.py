@@ -162,6 +162,8 @@ from turbustat.statistics import SCF_Distance
 scf_distance = SCF_Distance(dataset1["cube"],
                             dataset2["cube"], size=11).distance_metric()
 scf_val = scf_distance.scf1.scf_surface
+scf_spectrum = scf_distance.scf1.scf_spectrum
+scf_slope = scf_distance.scf1.slope
 
 # Cramer Statistic
 
@@ -216,6 +218,8 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     pca_val=pca_val,
                     pca_fit_vals=pca_fit_vals,
                     scf_val=scf_val,
+                    scf_spectrum=scf_spectrum,
+                    scf_slope=scf_slope,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
                     pdf_val=pdf_val,

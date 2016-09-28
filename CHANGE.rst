@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #128 - log-log plotting for SCF spectrum. Fitting for SCF spectrum.
 * #127 - Standardize all data used for calculating the delta-variance distance. Also allows the `allow_huge` flag to be set in `DeltaVariance` when working on large images (>1 Gb).
 * #85 - Added full PCA treatment from the Heyer & Brunt papers. Also implements general handling of physical (given distance) and spectral scale conversions (only working on PCA, needs to be added on to the rest).
 * #120 - Minor plotting changes to PDF and bispectrum. Common angular area for Genus normalization. Fix issue with NaNs in the weights for PDFs.

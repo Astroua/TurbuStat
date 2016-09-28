@@ -23,6 +23,9 @@ class testSCF(TestCase):
         self.tester.run()
 
         assert np.allclose(self.tester.scf_surface, computed_data['scf_val'])
+        npt.assert_array_almost_equal(self.tester.scf_spectrum,
+                                      computed_data["scf_spectrum"])
+        npt.assert_almost_equal(self.tester.slope, computed_data["scf_slope"])
 
     def test_SCF_noninteger_shift(self):
         # Not testing against anything, just make sure it runs w/o issue.
