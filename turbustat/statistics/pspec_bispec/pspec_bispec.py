@@ -257,9 +257,9 @@ class BiSpectrum(BaseStatisticMixIn):
 
         bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
 
-        self.bispectrum = np.zeros(bispec_shape, dtype=np.complex)
-        self.bicoherence = np.zeros(bispec_shape, dtype=np.float)
-        self.tracker = np.zeros(self.shape, dtype=np.int16)
+        self._bispectrum = np.zeros(bispec_shape, dtype=np.complex)
+        self._bicoherence = np.zeros(bispec_shape, dtype=np.float)
+        self._tracker = np.zeros(self.shape, dtype=np.int16)
 
         biconorm = np.ones_like(self.bispectrum, dtype=float)
 
@@ -286,17 +286,45 @@ class BiSpectrum(BaseStatisticMixIn):
 
                 samps = fftarr[k1x, k1y] * fftarr[k2x, k2y] * conjfft[k3x, k3y]
 
-                self.bispectrum[k1mag, k2mag] = np.sum(samps)
+                self._bispectrum[k1mag, k2mag] = np.sum(samps)
 
                 biconorm[k1mag, k2mag] = np.sum(np.abs(samps))
 
                 # Track where we're sampling from in fourier space
-                self.tracker[k1x, k1y] += 1
-                self.tracker[k2x, k2y] += 1
-                self.tracker[k3x, k3y] += 1
+                self._tracker[k1x, k1y] += 1
+                self._tracker[k2x, k2y] += 1
+                self._tracker[k3x, k3y] += 1
 
-        self.bicoherence = (np.abs(self.bispectrum) / biconorm)
-        self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
+        self._bicoherence = (np.abs(self.bispectrum) / biconorm)
+        self._bispectrum_amp = np.log10(np.abs(self.bispectrum))
+
+    @property
+    def bispectrum(self):
+        '''
+        Bispectrum array.
+        '''
+        return self._bispectrum
+
+    @property
+    def bispectrum_amp(self):
+        '''
+        log amplitudes of the bispectrum.
+        '''
+        return self._bispectrum_amp
+
+    @property
+    def bicoherence(self):
+        '''
+        Bicoherence array.
+        '''
+        return self._bispectrum
+
+    @property
+    def tracker(self):
+        '''
+        Array showing the number of samples in each k_1 k_2 bin.
+        '''
+        return self._bispectrum
 
     def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False):
         '''
