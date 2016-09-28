@@ -4,6 +4,7 @@ import numpy as np
 from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy.wcs import WCS
+from copy import copy
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -266,8 +267,8 @@ class DeltaVariance_Distance(object):
                  diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
-        dataset1 = input_data(dataset1, no_header=False)
-        dataset2 = input_data(dataset2, no_header=False)
+        dataset1 = copy(input_data(dataset1, no_header=False))
+        dataset2 = copy(input_data(dataset2, no_header=False))
 
         # Enforce standardization on both datasets. Values for the
         # delta-variance then represents a relative fraction of structure on
