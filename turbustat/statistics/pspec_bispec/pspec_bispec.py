@@ -203,6 +203,15 @@ class BiSpectrum(BaseStatisticMixIn):
     ----------
     img : %(dtypes)s
         2D image.
+
+
+    Example
+    -------
+    >>> from turbustat.statistics import BiSpectrum
+    >>> from astropy.io import fits
+    >>> bispec = BiSpectrum(moment0)  # doctest: +SKIP
+    >>> bispec.run(verbose=True, nsamples=1.e3)  # doctest: +SKIP
+
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -220,7 +229,7 @@ class BiSpectrum(BaseStatisticMixIn):
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
     def compute_bispectrum(self, nsamples=100, seed=1000,
-                           mean_subract=False):
+                           mean_subtract=False):
         '''
         Do the computation.
 
@@ -231,9 +240,13 @@ class BiSpectrum(BaseStatisticMixIn):
             magnitude.
         seed : int, optional
             Sets the seed for the distribution draws.
+        mean_subtract : bool, optional
+            Subtract the mean from the data before computing. This removes the
+            "zero frequency" (i.e., constant) portion of the power, resulting
+            in a loss of phase coherence along the k_1=k_2 line.
         '''
 
-        if mean_subract:
+        if mean_subtract:
             norm_data = self.data - self.data.mean()
         else:
             norm_data = self.data
@@ -285,14 +298,18 @@ class BiSpectrum(BaseStatisticMixIn):
         self.bicoherence = (np.abs(self.bispectrum) / biconorm)
         self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
 
-    def run(self, nsamples=100, verbose=False):
+    def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False):
         '''
-        Compute the bispectrum. Necessary to maintiain package standards.
+        Compute the bispectrum. Necessary to maintain package standards.
 
         Parameters
         ----------
         nsamples : int, optional
-            Sets the number of samples to take at each vector magnitude.
+            See `~BiSpectrum.compute_bispectrum`.
+        seed : int, optional
+            See `~BiSpectrum.compute_bispectrum`.
+        mean_subtract : bool, optional
+            See `~BiSpectrum.compute_bispectrum`.
         verbose : bool, optional
             Enables plotting.
         '''
@@ -308,16 +325,17 @@ class BiSpectrum(BaseStatisticMixIn):
                 self.bispectrum_amp, origin="lower", interpolation="nearest")
             p.colorbar()
             p.contour(self.bispectrum_amp, colors="k")
-            p.xlabel("k1")
-            p.ylabel("k2")
+            p.xlabel(r"$k_1$")
+            p.ylabel(r"$k_2$")
 
             p.subplot(1, 2, 2)
             p.title("Bicoherence")
             p.imshow(self.bicoherence, origin="lower", interpolation="nearest")
             p.colorbar()
-            p.xlabel("k1")
-            p.ylabel("k2")
+            p.xlabel(r"$k_1$")
+            p.ylabel(r"$k_2$")
 
+            p.tight_layout()
             p.show()
 
         return self
