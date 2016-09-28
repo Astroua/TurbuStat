@@ -107,7 +107,7 @@ class SCF(BaseStatisticMixIn):
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
                 self._scf_surface[i, j] = scf_value
 
-    def compute_spectrum(self, logspacing=False, return_stddev=False,
+    def compute_spectrum(self, logspacing=False, return_stddev=True,
                          **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
@@ -180,7 +180,17 @@ class SCF(BaseStatisticMixIn):
 
         x = sm.add_constant(x)
 
-        model = sm.OLS(y, x, missing='drop')
+        # If the std were computed, use them as weights
+        if self._stddev_flag:
+
+            # Converting to the log stds doesn't matter since the weights
+            # remain proportional to 1/sigma^2, and an overal normalization is
+            # applied in the fitting routine.
+            weights = self.scf_spectrum_stddev[within_limits] ** -2
+
+            model = sm.WLS(y, x, missing='drop', weights=weights)
+        else:
+            model = sm.OLS(y, x, missing='drop')
 
         self.fit = model.fit()
 
@@ -274,7 +284,7 @@ class SCF(BaseStatisticMixIn):
 
         return self
 
-    def run(self, logspacing=False, return_stddev=False, verbose=False,
+    def run(self, logspacing=False, return_stddev=True, verbose=False,
             xlow=None, xhigh=None, save_results=False, output_name=None,
             ang_units=False, unit=u.deg):
         '''
@@ -332,18 +342,24 @@ class SCF(BaseStatisticMixIn):
             if self._stddev_flag:
                 ax.errorbar(lags, self.scf_spectrum,
                             yerr=self.scf_spectrum_stddev,
-                            fmt='D-', color='k', markersize=5)
+                            fmt='D', color='k', markersize=5, label="Data")
                 ax.set_xscale("log", nonposy='clip')
                 ax.set_yscale("log", nonposy='clip')
             else:
-                p.loglog(self.lags, self.scf_spectrum, 'kD-',
-                         markersize=5)
+                p.loglog(self.lags, self.scf_spectrum, 'kD',
+                         markersize=5, label="Data")
+
+            ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
+            ax.set_ylim(self.scf_spectrum.min() * 0.75,
+                        self.scf_spectrum.max() * 1.25)
 
             # Overlay the fit. Use points 5% lower than the min and max.
-            xvals = np.logspace(np.log10(lags.min() * 0.95),
+            xvals = np.linspace(np.log10(lags.min() * 0.95),
                                 np.log10(lags.max() * 1.05), 50)
-            p.plot(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
-                   alpha=0.7)
+            p.plot(10**xvals, 10**self.fitted_model(xvals), 'r--', linewidth=2,
+                   label='Fit')
+
+            p.legend()
 
             if ang_units:
                 ax.set_xlabel("Lag ({})".format(unit))
@@ -497,6 +513,13 @@ class SCF_Distance(object):
                         fmt='o-', color='g', markersize=5, label=label2)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
+            # Overlay the fit. Use points 5% lower than the min and max.
+            xvals1 = np.linspace(np.log10(lags1.min() * 0.95),
+                                 np.log10(lags1.max() * 1.05), 50)
+            p.plot(10**xvals1, 10**self.scf1.fitted_model(xvals1), 'r--',
+                   linewidth=2)
+            p.plot(10**xvals1, 10**self.scf2.fitted_model(xvals1), 'r--',
+                   linewidth=2)
             ax.legend(loc='upper right')
             p.tight_layout()
             p.show()
