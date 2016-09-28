@@ -34,11 +34,11 @@ def input_data(data, no_header=False):
     '''
 
     if isinstance(data, PrimaryHDU):
-        output_data = (data.data, data.header)
+        output_data = [data.data, data.header]
     elif isinstance(data, SpectralCube):
-        output_data = (data.filled_data[:].value, data.header)
+        output_data = [data.filled_data[:].value, data.header]
     elif isinstance(data, LowerDimensionalObject):
-        output_data = (data.value, data.header)
+        output_data = [data.value, data.header]
     elif isinstance(data, tuple) or isinstance(data, list):
         if len(data) != 2:
             raise TypeError("Must have two items: data and the header.")
@@ -47,7 +47,7 @@ def input_data(data, no_header=False):
         if not no_header:
             raise TypeError("no_header must be enabled when giving data"
                             " without a header.")
-        output_data = (data, )
+        output_data = [data]
     else:
         raise TypeError("Input data is not of an accepted form:"
                         " astropy.io.fits.PrimaryHDU, SpectralCube,"

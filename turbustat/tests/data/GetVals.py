@@ -64,7 +64,7 @@ genus_val = genus_distance.genus1.genus_stats
 
 # Delta-Variance
 
-from turbustat.statistics import DeltaVariance_Distance
+from turbustat.statistics import DeltaVariance_Distance, DeltaVariance
 
 delvar_distance = \
     DeltaVariance_Distance(dataset1["moment0"],
@@ -74,7 +74,10 @@ delvar_distance = \
 
 delvar_distance.distance_metric()
 
-delvar_val = delvar_distance.delvar1.delta_var
+delvar = DeltaVariance(dataset1["moment0"],
+                       weights=dataset1['moment0_error'][0]).run()
+
+delvar_val = delvar.delta_var
 
 # VCA/VCS
 

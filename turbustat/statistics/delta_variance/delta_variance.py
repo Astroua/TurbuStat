@@ -4,10 +4,11 @@ import numpy as np
 from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy.wcs import WCS
+from copy import copy
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..stats_utils import common_scale
+from ..stats_utils import common_scale, standardize
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -71,7 +72,7 @@ class DeltaVariance(BaseStatisticMixIn):
         self.delta_var = np.empty((len(self.lags)))
         self.delta_var_error = np.empty((len(self.lags)))
 
-    def do_convolutions(self):
+    def do_convolutions(self, allow_huge=False):
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
@@ -84,19 +85,19 @@ class DeltaVariance(BaseStatisticMixIn):
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True)
+                ignore_edge_zeros=True, allow_huge=allow_huge)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True)
+                ignore_edge_zeros=True, allow_huge=allow_huge)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True)
+                ignore_edge_zeros=True, allow_huge=allow_huge)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True)
+                ignore_edge_zeros=True, allow_huge=allow_huge)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
             weights_annulus[np.where(weights_annulus == 0)] = np.NaN
@@ -118,7 +119,8 @@ class DeltaVariance(BaseStatisticMixIn):
             self.delta_var[i] = val
             self.delta_var_error[i] = err
 
-    def run(self, verbose=False, ang_units=False, unit=u.deg):
+    def run(self, verbose=False, ang_units=False, unit=u.deg,
+            allow_huge=False):
         '''
         Compute the delta-variance.
 
@@ -132,7 +134,7 @@ class DeltaVariance(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         '''
 
-        self.do_convolutions()
+        self.do_convolutions(allow_huge=allow_huge)
         self.compute_deltavar()
 
         if verbose:
@@ -150,7 +152,7 @@ class DeltaVariance(BaseStatisticMixIn):
             ax.grid(True)
 
             if ang_units:
-                ax.set_xlabel("Lag ("+unit.to_string()+")")
+                ax.set_xlabel("Lag ({})".format(unit))
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
@@ -265,8 +267,14 @@ class DeltaVariance_Distance(object):
                  diam_ratio=1.5, lags=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
-        dataset1 = input_data(dataset1, no_header=False)
-        dataset2 = input_data(dataset2, no_header=False)
+        dataset1 = copy(input_data(dataset1, no_header=False))
+        dataset2 = copy(input_data(dataset2, no_header=False))
+
+        # Enforce standardization on both datasets. Values for the
+        # delta-variance then represents a relative fraction of structure on
+        # different scales.
+        dataset1[0] = standardize(dataset1[0])
+        dataset2[0] = standardize(dataset2[0])
 
         # Create a default set of lags, in pixels
         if lags is None:
@@ -366,7 +374,7 @@ class DeltaVariance_Distance(object):
             ax.legend(loc='best')
             ax.grid(True)
             if ang_units:
-                ax.set_xlabel("Lag ("+unit.to_string()+")")
+                ax.set_xlabel("Lag ({})".format(unit))
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
@@ -388,7 +396,7 @@ def _delvar(array, weight, lag):
     # pixels in the array.
     # Take width to be 1/2 FWHM. Note that lag is defined as 2*sigma.
     # So 2ln(2) sigma^2 = ln(2)/2 * lag^2
-    kern_area = np.ceil(0.5*np.pi*np.log(2)*lag**2).astype(int)
+    kern_area = np.ceil(0.5 * np.pi * np.log(2) * lag**2).astype(int)
     nindep = np.sqrt(np.isfinite(arr_cent).sum() / kern_area)
 
     val_err = np.sqrt((np.nansum(arr_cent ** 4. * weight) /
