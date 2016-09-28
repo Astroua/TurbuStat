@@ -6,6 +6,7 @@ import cPickle as pickle
 from copy import deepcopy
 from astropy import units as u
 from astropy.wcs import WCS
+import statsmodels.api as sm
 
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
@@ -143,6 +144,81 @@ class SCF(BaseStatisticMixIn):
 
         self._lags = self._lags * roll_lag_diff * u.pix
 
+    def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
+        '''
+        Fit a power-law to the SCF spectrum.
+
+        Parameters
+        ----------
+        xlow : float, optional
+            Lower lag value limit in log-scale to consider in the fit.
+        xhigh : float, optional
+            Upper lag value limit in log-scale to consider in the fit.
+        verbose : bool, optional
+            Show fit summary when enabled.
+        '''
+
+        x = np.log10(self.lags.value)
+        y = np.log10(self.scf_spectrum)
+
+        if xlow is not None:
+            lower_limit = x >= xlow
+        else:
+            lower_limit = \
+                np.ones_like(self.scf_spectrum, dtype=bool)
+
+        if xhigh is not None:
+            upper_limit = x <= xhigh
+        else:
+            upper_limit = \
+                np.ones_like(self.scf_spectrum, dtype=bool)
+
+        within_limits = np.logical_and(lower_limit, upper_limit)
+
+        y = y[within_limits]
+        x = x[within_limits]
+
+        x = sm.add_constant(x)
+
+        model = sm.OLS(y, x, missing='drop')
+
+        self.fit = model.fit()
+
+        if verbose:
+            print(self.fit.summary())
+
+        self._slope = self.fit.params[1]
+        self._slope_err = self.fit.bse[1]
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
+    def fitted_model(self, xvals):
+        '''
+        Computes the fitted power-law in log-log space using the
+        given x values.
+
+        Parameters
+        ----------
+        xvals : `~numpy.ndarray`
+            Values of log(lags) to compute the model at (base 10 log).
+
+        Returns
+        -------
+        model_values : `~numpy.ndarray`
+            Values of the model at the given values. Equivalent to log values
+            of the SCF spectrum.
+        '''
+
+        model_values = self.fit.params[0] + self.fit.params[1] * xvals
+
+        return model_values
+
     def save_results(self, output_name=None, keep_data=False):
         '''
         Save the results of the dendrogram statistics to avoid re-computing.
@@ -199,8 +275,8 @@ class SCF(BaseStatisticMixIn):
         return self
 
     def run(self, logspacing=False, return_stddev=False, verbose=False,
-            save_results=False, output_name=None, ang_units=False,
-            unit=u.deg):
+            xlow=None, xhigh=None, save_results=False, output_name=None,
+            ang_units=False, unit=u.deg):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -212,6 +288,10 @@ class SCF(BaseStatisticMixIn):
             Return the standard deviation in the 1D bins.
         verbose : bool, optional
             Enables plotting.
+        xlow : float, optional
+            See `~SCF.fit_plaw`.
+        xhigh : float, optional
+            See `~SCF.fit_plaw`.
         save_results : bool, optional
             Pickle the results.
         output_name : str, optional
@@ -225,6 +305,7 @@ class SCF(BaseStatisticMixIn):
         self.compute_surface()
         self.compute_spectrum(logspacing=logspacing,
                               return_stddev=return_stddev)
+        self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if save_results:
             self.save_results(output_name=output_name)
@@ -257,6 +338,12 @@ class SCF(BaseStatisticMixIn):
             else:
                 p.loglog(self.lags, self.scf_spectrum, 'kD-',
                          markersize=5)
+
+            # Overlay the fit. Use points 5% lower than the min and max.
+            xvals = np.logspace(np.log10(lags.min() * 0.95),
+                                np.log10(lags.max() * 1.05), 50)
+            p.plot(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
+                   alpha=0.7)
 
             if ang_units:
                 ax.set_xlabel("Lag ({})".format(unit))
