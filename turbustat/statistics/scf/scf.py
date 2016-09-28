@@ -507,18 +507,28 @@ class SCF_Distance(object):
 
             ax.errorbar(lags1, self.scf1.scf_spectrum,
                         yerr=self.scf1.scf_spectrum_stddev,
-                        fmt='D-', color='b', markersize=5, label=label1)
+                        fmt='D', color='b', markersize=5, label=label1)
             ax.errorbar(lags2, self.scf2.scf_spectrum,
                         yerr=self.scf2.scf_spectrum_stddev,
-                        fmt='o-', color='g', markersize=5, label=label2)
+                        fmt='o', color='g', markersize=5, label=label2)
             ax.set_xscale("log", nonposy='clip')
             ax.set_yscale("log", nonposy='clip')
+
+            ax.set_xlim(min(lags1.min(), lags2.min()) * 0.75,
+                        max(lags1.max(), lags2.max()) * 1.25)
+            ax.set_ylim(min(self.scf1.scf_spectrum.min(),
+                            self.scf2.scf_spectrum.min()) * 0.75,
+                        max(self.scf1.scf_spectrum.max(),
+                            self.scf2.scf_spectrum.max()) * 1.25)
+
             # Overlay the fit. Use points 5% lower than the min and max.
-            xvals1 = np.linspace(np.log10(lags1.min() * 0.95),
-                                 np.log10(lags1.max() * 1.05), 50)
-            p.plot(10**xvals1, 10**self.scf1.fitted_model(xvals1), 'r--',
+            xvals = np.linspace(np.log10(min(lags1.min(),
+                                             lags2.min()) * 0.95),
+                                np.log10(max(lags1.max(),
+                                             lags2.max()) * 1.05), 50)
+            p.plot(10**xvals, 10**self.scf1.fitted_model(xvals), 'b--',
                    linewidth=2)
-            p.plot(10**xvals1, 10**self.scf2.fitted_model(xvals1), 'r--',
+            p.plot(10**xvals, 10**self.scf2.fitted_model(xvals), 'g--',
                    linewidth=2)
             ax.legend(loc='upper right')
             p.tight_layout()
