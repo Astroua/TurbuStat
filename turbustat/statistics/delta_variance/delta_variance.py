@@ -7,7 +7,7 @@ from astropy.wcs import WCS
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..stats_utils import common_scale
+from ..stats_utils import common_scale, standardize
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -267,6 +267,12 @@ class DeltaVariance_Distance(object):
 
         dataset1 = input_data(dataset1, no_header=False)
         dataset2 = input_data(dataset2, no_header=False)
+
+        # Enforce standardization on both datasets. Values for the
+        # delta-variance then represents a relative fraction of structure on
+        # different scales.
+        dataset1[0] = standardize(dataset1[0])
+        dataset2[0] = standardize(dataset2[0])
 
         # Create a default set of lags, in pixels
         if lags is None:
