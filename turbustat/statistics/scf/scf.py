@@ -253,17 +253,20 @@ class SCF(BaseStatisticMixIn):
                             yerr=self.scf_spectrum_stddev,
                             fmt='D-', color='k', markersize=5)
                 ax.set_xscale("log", nonposy='clip')
+                ax.set_yscale("log", nonposy='clip')
             else:
-                p.semilogx(self.lags, self.scf_spectrum, 'kD-',
-                           markersize=5)
+                p.loglog(self.lags, self.scf_spectrum, 'kD-',
+                         markersize=5)
 
             if ang_units:
-                ax.set_xlabel("Lag ("+unit.to_string()+")")
+                ax.set_xlabel("Lag ({})".format(unit))
             else:
                 ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
             p.show()
+
+        return self
 
 
 class SCF_Distance(object):
@@ -406,6 +409,7 @@ class SCF_Distance(object):
                         yerr=self.scf2.scf_spectrum_stddev,
                         fmt='o-', color='g', markersize=5, label=label2)
             ax.set_xscale("log", nonposy='clip')
+            ax.set_yscale("log", nonposy='clip')
             ax.legend(loc='upper right')
             p.tight_layout()
             p.show()
