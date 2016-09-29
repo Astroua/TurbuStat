@@ -317,14 +317,14 @@ class BiSpectrum(BaseStatisticMixIn):
         '''
         Bicoherence array.
         '''
-        return self._bispectrum
+        return self._bicoherence
 
     @property
     def tracker(self):
         '''
         Array showing the number of samples in each k_1 k_2 bin.
         '''
-        return self._bispectrum
+        return self._tracker
 
     def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False):
         '''
