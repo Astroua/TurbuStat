@@ -23,7 +23,7 @@ class DeltaVariance(BaseStatisticMixIn):
     img : %(dtypes)s
         The image calculate the delta-variance of.
     header : FITS header, optional
-        Image header.
+        Image header. Required when img is a `~numpy.ndarray`.
     weights : %(dtypes)s
         Weights to be used.
     diam_ratio : float, optional
@@ -32,6 +32,14 @@ class DeltaVariance(BaseStatisticMixIn):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
+
+    Example
+    -------
+    >>> from turbustat.statistics import DeltaVariance
+    >>> from astropy.io import fits
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
+    >>> delvar = DeltaVariance(moment0) # doctest: +SKIP
+    >>> delvar.run(verbose=True) # doctest: +SKIP
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -69,10 +77,33 @@ class DeltaVariance(BaseStatisticMixIn):
 
         self.convolved_arrays = []
         self.convolved_weights = []
-        self.delta_var = np.empty((len(self.lags)))
-        self.delta_var_error = np.empty((len(self.lags)))
+
+    @property
+    def weights(self):
+        '''
+        Array of weights.
+        '''
+        return self._weights
+
+    @weights.setter
+    def weights(self, arr):
+
+        if arr.shape != self.data.shape:
+            raise ValueError("Given weight array does not match the shape of "
+                             "the given image.")
+
+        self._weights = arr
 
     def do_convolutions(self, allow_huge=False):
+        '''
+        Perform the convolutions at all lags.
+
+        Parameters
+        ----------
+        allow_huge : bool, optional
+            Passed to `~astropy.convolve.convolve_fft`. Allows operations on
+            images larger than 1 Gb.
+        '''
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
@@ -107,6 +138,12 @@ class DeltaVariance(BaseStatisticMixIn):
             self.convolved_weights.append(weights_core * weights_annulus)
 
     def compute_deltavar(self):
+        '''
+        Computes the delta-variance values and errors.
+        '''
+
+        self._delta_var = np.empty((len(self.lags)))
+        self._delta_var_error = np.empty((len(self.lags)))
 
         for i, (conv_arr,
                 conv_weight,
@@ -116,8 +153,22 @@ class DeltaVariance(BaseStatisticMixIn):
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
-            self.delta_var[i] = val
-            self.delta_var_error[i] = err
+            self._delta_var[i] = val
+            self._delta_var_error[i] = err
+
+    @property
+    def delta_var(self):
+        '''
+        Delta Variance values.
+        '''
+        return self._delta_var
+
+    @property
+    def delta_var_error(self):
+        '''
+        1-sigma errors on the Delta variance values.
+        '''
+        return self._delta_var_error
 
     def run(self, verbose=False, ang_units=False, unit=u.deg,
             allow_huge=False):
@@ -132,6 +183,8 @@ class DeltaVariance(BaseStatisticMixIn):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        allow_huge : bool, optional
+            See `~DeltaVariance.do_convolutions`.
         '''
 
         self.do_convolutions(allow_huge=allow_huge)
