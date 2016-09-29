@@ -209,6 +209,7 @@ class BiSpectrum(BaseStatisticMixIn):
     -------
     >>> from turbustat.statistics import BiSpectrum
     >>> from astropy.io import fits
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
     >>> bispec = BiSpectrum(moment0) # doctest: +SKIP
     >>> bispec.run(verbose=True, nsamples=1.e3) # doctest: +SKIP
 
