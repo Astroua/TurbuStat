@@ -9,6 +9,7 @@ Statistics
 .. toctree::
     :maxdepth: 2
 
+    statistics/bispectrum_example
     statistics/pca_example
 
 Distance Metrics
