@@ -11,7 +11,7 @@ The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier tran
 .. math::
     B(k_1, k_2) = F^{\ast}(k_1 + k_2)\,F(k_1)\,F(k_2)
 
-where :math::`^{\ast}` denotes the complex conjugate, :math::`F` is the Fourier transform of some signal, and ::math:`k_1,\,k_2` are wavenumbers.
+where :math:`\ast` denotes the complex conjugate, :math:`F` is the Fourier transform of some signal, and :math:`k_1,\,k_2` are wavenumbers.
 
 The bispectrum retains phase information which is lost in the power spectrum, and is therefore useful for investigating phase coherence and coupling.
 
@@ -22,14 +22,14 @@ The phase information retained by the bispectrum requires it to be a complex qua
 .. math::
     b(k_1, k_2) = \frac{|B(k_1, k_2)|}{\sum_{k_1, k_2} |F(k_1)F(k_2)F^{\ast}(k_1 + k_2)|}
 
-The denominator normalizes out the "power" at the modes ::math:`k_1,\,k_2`; this is effectively dividing out the value of the power spectrum, leaving a fractional difference that is entirely the result of the phase coupling. Alternatively, the denominator can be thought of as the value attained if the modes ::math:`k_1\,k_2` are completely phase coupled, and therefore is the maximal value attainable.
+The denominator normalizes out the "power" at the modes :math:`k_1,\,k_2`; this is effectively dividing out the value of the power spectrum, leaving a fractional difference that is entirely the result of the phase coupling. Alternatively, the denominator can be thought of as the value attained if the modes :math:`k_1\,k_2` are completely phase coupled, and therefore is the maximal value attainable.
 
 In the recent work of :ref:`Burkhart et al. 2016 <ref-burkhart2016>`, they used a *phase coherence technique* (PCI), alternative to the bispectrum, to measure phase coherence as a function of radial and azimuthal changes (so called *lags* averaged over radius or angle in the bispectrum plane). This is defined as
 
 .. math::
     C(R) = \frac{L_{\rm PRS}(R) - L_{\rm ORG}(R)}{L_{\rm PRS}(R) - L_{\rm PCS}(R)}
 
-where ::math:`L(R)` is the relevant averaged quantity calculated at different lags (denoted generally by ::math:`R`). ORG is the original signal, PRS is the signal with randomized phases, and PCS is the signal with phases set to be correlated. For each value of R, this yields a normalized value (::math:`C(R)`) between 0 and 1, similar to the bispectrum. **Note: PCI will be added to the existing TurbuStat code, but is not yet complete.**.
+where :math:`L(R)` is the relevant averaged quantity calculated at different lags (denoted generally by :math:`R`). ORG is the original signal, PRS is the signal with randomized phases, and PCS is the signal with phases set to be correlated. For each value of R, this yields a normalized value (:math:`C(R)`) between 0 and 1, similar to the bispectrum. **Note: PCI will be added to the existing TurbuStat code, but is not yet complete.**.
 
 Using
 -----
@@ -59,13 +59,13 @@ The entire computation is performed through `~turbustat.statistics.BiSpectrum.ru
 
 .. image:: images/bispectrum_design4.png
 
-Even in small 2D image (128x128 here), the number of possible combinations for :math::`k_1,\,k_2` is already massive (the maximum value of :math::`k_1,\,k_2` is half of the largest dimension size in the image). To minimize the computational time, we can randomly sample some number of *phases* for each value of :math::`k_1,\,k_2` (so :math::`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and so different `nsamples` should be tested. In this, structure begins to become more apparent with around 1000, and improves beyond this (at the expense of time).
+Even in small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is already massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To minimize the computational time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and so different `nsamples` should be tested. In this, structure begins to become more apparent with around 1000, and improves beyond this (at the expense of time).
 
 `~turbustat.statistics.BiSpectrum.run` is really only hiding a single step: `~turbustat.statistics.BiSpectrum.compute_bispectrum`. There are two additional inputs which may be set:
 
     >>> bispec.run(nsamples=1.e3, mean_subtract=True, seed=4242424)  # doctest: +SKIP
 
-The two additional arguments here are `seed`, to set the random seed for sampling, and `mean_subtract`, which first removes the mean from the data before computing the bispectrum. The removes the "zero frequency" power defined based on the largest scale in the image and removes much the phase coupling along the :math::`k_1 = k_2` line, highlighting the non-linear mode interactions:
+The two additional arguments here are `seed`, to set the random seed for sampling, and `mean_subtract`, which first removes the mean from the data before computing the bispectrum. The removes the "zero frequency" power defined based on the largest scale in the image and removes much the phase coupling along the :math:`k_1 = k_2` line, highlighting the non-linear mode interactions:
 
 .. image:: images/bispectrum_w_and_wo_meansub_coherence.png
 
@@ -77,6 +77,10 @@ References
 .. _ref-burkhart2009:
 
 `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_
+
+.. _ref-burkhart2016:
+
+`Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_
 
 .. _ref-hagihira2001:
 
