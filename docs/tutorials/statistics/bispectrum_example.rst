@@ -49,7 +49,7 @@ While the bispectrum can be extended to sample in N-dimensions, the current impl
 
 First, the `~turbustat.statistics.BiSpectrum` class is initialized:
 
-    >>> bispec = BiSpectrum(moment0)
+    >>> bispec = BiSpectrum(moment0)  # doctest: +SKIP
 
 The bispectrum requires only the image, not a header, so passing any arbitrary 2D array will work.
 
