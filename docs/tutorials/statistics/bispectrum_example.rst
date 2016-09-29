@@ -80,7 +80,7 @@ References
 
 .. _ref-burkhart2016:
 
-`Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_
+`Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_
 
 .. _ref-hagihira2001:
 
