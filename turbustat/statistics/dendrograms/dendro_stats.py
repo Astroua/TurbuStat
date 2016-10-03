@@ -313,7 +313,6 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Name of saved file.
         min_deltas : numpy.ndarray or list
             Minimum deltas of leaves in the dendrogram.
-
         '''
 
         dendro = Dendrogram.load_from(hdf5_file)
@@ -325,7 +324,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
-    def run(self, verbose=False, dendro_verbose=False,
+    def run(self, verbose=False, dendro_verbose=False, dendro_obj=None,
             save_results=False, output_name=None, make_hists=True,
             **kwargs):
         '''
@@ -338,8 +337,20 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable plotting of results.
         dendro_verbose : optional, bool
             Prints out updates while making the dendrogram.
+        dendro_obj : Dendrogram, optional
+            Pass a pre-computed dendrogram object. **MUST have min_delta set
+            at or below the smallest value in`~Dendro_Statistics.min_deltas`.**
+        save_results : bool, optional
+            Save the statistic results as a pickle file. See
+            `~Dendro_Statistics.save_results`.
+        output_name : str, optional
+            Filename used when `save_results` is enabled. Must be given when
+            saving.
+        make_hists : bool, optional
+            Enable computing histograms.
+        kwargs : Passed to `~Dendro_Statistics.make_hists`.
         '''
-        self.compute_dendro(verbose=dendro_verbose)
+        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj)
         self.fit_numfeat(verbose=verbose)
 
         if make_hists:
@@ -355,8 +366,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
             ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
             ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
-            ax1.set_xlabel(r"log $\delta$")
-            ax1.set_ylabel(r"log Number of Features")
+            p.xlabel(r"log $\delta$")
+            p.ylabel(r"log Number of Features")
 
             if make_hists:
                 ax2 = p.subplot(122)
@@ -367,6 +378,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                     bin_width = np.abs(bins[1] - bins[0])
                     ax2.bar(bins, vals, align="center",
                             width=bin_width, alpha=0.25)
+                    p.xlabel("Data Values")
 
             p.show()
 
@@ -453,7 +465,7 @@ class DendroDistance(object):
         else:
             self.dendro1 = Dendrogram_Stats(
                 cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
-            self.dendro1.run(verbose=False)
+            self.dendro1.run(verbose=False, make_hists=False)
 
         if isinstance(cube2, str):
             self.dendro2 = Dendrogram_Stats.load_results(cube2)
@@ -461,7 +473,7 @@ class DendroDistance(object):
             self.dendro2 = \
                 Dendrogram_Stats(cube2, min_deltas=min_deltas,
                                  dendro_params=dendro_params2)
-            self.dendro2.run(verbose=False)
+            self.dendro2.run(verbose=False, make_hists=False)
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
