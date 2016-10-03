@@ -15,6 +15,7 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 import numpy as np
 from copy import deepcopy
 import cPickle as pickle
+from warnings import warn
 import statsmodels.api as sm
 from mecdf import mecdf
 
@@ -68,25 +69,29 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
-                                  "min_value": 0.001}
+                                  "min_value": 0.001,
+                                  "min_delta": 0.1}
         else:
-            # poss_keys = dir(pruning)
-            # for key in dendro_params.keys():
-            #     if key not in poss_keys:
-            #         raise KeyError(key + " is not a valid pruning parameter.")
             self.dendro_params = dendro_params
 
-        # In the case where only one min_delta is given
-        if "min_delta" in self.dendro_params and min_deltas is None:
-            self.min_deltas = np.array([self.dendro_params["min_delta"]])
-        elif not isinstance(min_deltas, np.ndarray):
-            self.min_deltas = np.array([min_deltas])
-        else:
-            self.min_deltas = min_deltas
+        self.min_deltas = min_deltas
 
-        self.numfeatures = np.empty(self.min_deltas.shape)
-        self.values = []
-        self.histograms = []
+    @property
+    def min_deltas(self):
+        '''
+        Array of min_delta values to compute the dendrogram.
+        '''
+        return self._min_deltas
+
+    @min_deltas.setter
+    def min_deltas(self, value):
+        # In the case where only one min_delta is given
+        if "min_delta" in self.dendro_params and value is None:
+            self._min_deltas = np.array([self.dendro_params["min_delta"]])
+        elif not isinstance(value, np.ndarray):
+            self._min_deltas = np.array([value])
+        else:
+            self._min_deltas = value
 
     def compute_dendro(self, verbose=False, save_dendro=False,
                        dendro_name=None, dendro_obj=None):
@@ -109,6 +114,9 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         '''
 
+        self._numfeatures = np.empty(self.min_deltas.shape)
+        self._values = []
+
         if dendro_obj is None:
             d = \
                 Dendrogram.compute(self.data, verbose=verbose,
@@ -117,18 +125,33 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                                    min_npix=self.dendro_params["min_npix"])
         else:
             d = dendro_obj
-        self.numfeatures[0] = len(d)
-        self.values.append(
-            np.asarray([struct.vmax for struct in d.all_structures]))
+        self._numfeatures[0] = len(d)
+        self._values.append(np.array([struct.vmax for struct in
+                                      d.all_structures]))
 
         if len(self.min_deltas) > 1:
             for i, delta in enumerate(self.min_deltas[1:]):
                 if verbose:
                     print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
                 d.prune(min_delta=delta)
-                self.numfeatures[i + 1] = len(d)
-                self.values.append([struct.vmax for struct in
-                                    d.all_structures])
+                self._numfeatures[i + 1] = len(d)
+                self._values.append([struct.vmax for struct in
+                                     d.all_structures])
+
+    @property
+    def numfeatures(self):
+        '''
+        Number of branches and leaves at each value of min_delta
+        '''
+        return self._numfeatures
+
+    @property
+    def values(self):
+        '''
+        Array of peak intensity values of leaves and branches at all values of
+        min_delta.
+        '''
+        return self._values
 
     def make_hists(self, **kwargs):
         '''
@@ -175,14 +198,15 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         Parameters
         ----------
         size : int. optional
-            Size of window. Passed to std_window.
+            Size of std. window. Passed to std_window.
         verbose : bool, optional
             Shows the model summary.
         '''
 
         if len(self.numfeatures) == 1:
-            raise Exception("Must provide multiple min_delta values to perform"
-                            " fitting. Only one value was given.")
+            warn("Multiple min_delta values must be provided to perform"
+                 " fitting. Only one value was given.")
+            return
 
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
