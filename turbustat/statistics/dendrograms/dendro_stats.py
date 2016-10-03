@@ -130,9 +130,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                 self.values.append([struct.vmax for struct in
                                     d.all_structures])
 
-        return self
-
-    def make_hist(self):
+    def make_hists(self, **kwargs):
         '''
         Creates histograms based on values from the tree.
         *Note:* These histograms are remade when calculating the distance to
@@ -148,10 +146,25 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         hists = []
 
         for value in self.values:
-            hist, bins = np.histogram(value, bins=int(np.sqrt(len(value))))
+            if 'bins' not in kwargs:
+                bins = int(np.sqrt(len(value)))
+            else:
+                bins = kwargs['bins']
+                kwargs.pop('bins')
+
+            hist, bins = np.histogram(value, bins=bins, **kwargs)
             hists.append([hist, bins])
 
-        return hists
+        self._hists = hists
+
+    @property
+    def hists(self):
+        '''
+        Histogram values and bins computed from the peak intensity in all
+        structures. One set of values and bins are returned for each value
+        of `~Dendro_Statistics.min_deltas`
+        '''
+        return self._hists
 
     def fit_numfeat(self, size=5, verbose=False):
         '''
@@ -179,20 +192,49 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         self.break_pos = deltas[break_pos]
 
         # Remove points where there is only 1 feature or less.
-        self.x = np.log10(deltas[break_pos:])
-        self.y = np.log10(nums[break_pos:])
+        self._fitvals = [np.log10(deltas[break_pos:]),
+                         np.log10(nums[break_pos:])]
 
-        x = sm.add_constant(self.x)
+        x = sm.add_constant(self.fitvals[0])
 
-        self.model = sm.OLS(self.y, x).fit()
+        self._model = sm.OLS(self.fitvals[1], x).fit()
 
         if verbose:
             print self.model.summary()
 
         errors = self.model.bse
 
-        self.tail_slope = self.model.params[-1]
-        self.tail_slope_err = errors[-1]
+        self._tail_slope = self.model.params[-1]
+        self._tail_slope_err = errors[-1]
+
+    @property
+    def model(self):
+        '''
+        Power-law tail fit model.
+        '''
+        return self._model
+
+    @property
+    def fitvals(self):
+        '''
+        Log values of delta and number of structures used for the power-law
+        tail fit.
+        '''
+        return self._fitvals
+
+    @property
+    def tail_slope(self):
+        '''
+        Slope of power-law tail.
+        '''
+        return self._tail_slope
+
+    @property
+    def tail_slope_err(self):
+        '''
+        1-sigma error on slope of power-law tail.
+        '''
+        return self._tail_slope_err
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -213,7 +255,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             self_copy.cube = None
 
         with open(output_name, 'wb') as output:
-                pickle.dump(self_copy, output, -1)
+            pickle.dump(self_copy, output, -1)
 
     @staticmethod
     def load_results(pickle_file):
@@ -227,7 +269,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
 
         with open(pickle_file, 'rb') as input:
-                self = pickle.load(input)
+            self = pickle.load(input)
 
         return self
 
@@ -255,7 +297,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         return self
 
     def run(self, verbose=False, dendro_verbose=False,
-            save_results=False, output_name=None):
+            save_results=False, output_name=None, make_hists=True,
+            **kwargs):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -270,11 +313,19 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         self.compute_dendro(verbose=dendro_verbose)
         self.fit_numfeat(verbose=verbose)
 
+        if make_hists:
+            self.make_hists(**kwargs)
+
         if verbose:
             import matplotlib.pyplot as p
 
-            p.plot(self.x, self.y, 'bD')
-            p.plot(self.x, self.model.fittedvalues, 'g')
+            if make_hists:
+                ax1 = p.subplot(111)
+            else:
+                ax1 = p.subplot(121)
+
+            ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
+            ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
             p.show()
 
         if save_results:
@@ -346,7 +397,7 @@ class DendroDistance(object):
                 dendro_params1 = dendro_params
                 dendro_params2 = dendro_params
             else:
-                raise TypeError("dendro_params is a "+str(type(dendro_params)) +
+                raise TypeError("dendro_params is a " + str(type(dendro_params)) +
                                 "It must be a dictionary, or a list containing" +
                                 " a dictionary entries.")
         else:
@@ -425,12 +476,16 @@ class DendroDistance(object):
             import matplotlib.pyplot as p
 
             # Dendrogram 1
-            p.plot(self.dendro1.x, self.dendro1.y, 'bD', label=label1)
-            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'b')
+            p.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1], 'bD',
+                   label=label1)
+            p.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
+                   'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.x, self.dendro2.y, 'go', label=label2)
-            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'g')
+            p.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1], 'go',
+                   label=label2)
+            p.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
+                   'g')
 
             p.grid(True)
             p.xlabel(r"log $\delta$")
@@ -463,7 +518,7 @@ class DendroDistance(object):
         '''
 
         if self.nbins == "best":
-            self.nbins = [np.floor(np.sqrt((n1 + n2)/2.)) for n1, n2 in
+            self.nbins = [np.floor(np.sqrt((n1 + n2) / 2.)) for n1, n2 in
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
@@ -472,10 +527,10 @@ class DendroDistance(object):
 
         self.histograms1 = \
             np.empty((len(self.dendro1.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                      np.max(self.nbins)))
         self.histograms2 = \
             np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                      np.max(self.nbins)))
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -485,19 +540,21 @@ class DendroDistance(object):
             stand_data2 = standardize(data2)
 
             bins = common_histogram_bins(stand_data1, stand_data2,
-                                         nbins=nbin+1)
+                                         nbins=nbin + 1)
 
             self.bins.append(bins)
 
             hist1 = np.histogram(stand_data1, bins=bins,
                                  density=True)[0]
             self.histograms1[n, :] = \
-                np.append(hist1, (np.max(self.nbins)-bins.size+1) * [np.NaN])
+                np.append(hist1, (np.max(self.nbins) -
+                                  bins.size + 1) * [np.NaN])
 
             hist2 = np.histogram(stand_data2, bins=bins,
                                  density=True)[0]
             self.histograms2[n, :] = \
-                np.append(hist2, (np.max(self.nbins)-bins.size+1) * [np.NaN])
+                np.append(hist2, (np.max(self.nbins) -
+                                  bins.size + 1) * [np.NaN])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])
@@ -604,7 +661,7 @@ def std_window(y, size=5, return_results=False):
         position of the break is returned.
     '''
 
-    half_size = (size - 1)/2
+    half_size = (size - 1) / 2
 
     shape = max(y.shape)
 
