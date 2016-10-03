@@ -153,22 +153,26 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
         return self._values
 
-    def make_hists(self, **kwargs):
+    def make_hists(self, min_number=10, **kwargs):
         '''
         Creates histograms based on values from the tree.
         *Note:* These histograms are remade when calculating the distance to
         ensure the proper form for the Hellinger distance.
 
-        Returns
-        -------
-        hists : list
-            Each list entry contains the histogram values and bins for a
-            value of delta.
+        Parameters
+        ----------
+        min_number : int, optional
+            Minimum number of structures needed to create a histogram.
         '''
 
         hists = []
 
         for value in self.values:
+
+            if len(value) < min_number:
+                hists.append([np.zeros((0, ))] * 2)
+                continue
+
             if 'bins' not in kwargs:
                 bins = int(np.sqrt(len(value)))
             else:
@@ -176,7 +180,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                 kwargs.pop('bins')
 
             hist, bins = np.histogram(value, bins=bins, **kwargs)
-            hists.append([hist, bins])
+            bin_cents = (bins[:-1] + bins[1:]) / 2
+            hists.append([bin_cents, hist])
 
         self._hists = hists
 
@@ -330,7 +335,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         Parameters
         ----------
         verbose : optional, bool
-
+            Enable plotting of results.
         dendro_verbose : optional, bool
             Prints out updates while making the dendrogram.
         '''
@@ -343,13 +348,26 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         if verbose:
             import matplotlib.pyplot as p
 
-            if make_hists:
+            if not make_hists:
                 ax1 = p.subplot(111)
             else:
                 ax1 = p.subplot(121)
 
             ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
             ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
+            ax1.set_xlabel(r"log $\delta$")
+            ax1.set_ylabel(r"log Number of Features")
+
+            if make_hists:
+                ax2 = p.subplot(122)
+
+                for bins, vals in self.hists:
+                    if bins.size < 1:
+                        continue
+                    bin_width = np.abs(bins[1] - bins[0])
+                    ax2.bar(bins, vals, align="center",
+                            width=bin_width, alpha=0.25)
+
             p.show()
 
         if save_results:
@@ -421,9 +439,9 @@ class DendroDistance(object):
                 dendro_params1 = dendro_params
                 dendro_params2 = dendro_params
             else:
-                raise TypeError("dendro_params is a " + str(type(dendro_params)) +
-                                "It must be a dictionary, or a list containing" +
-                                " a dictionary entries.")
+                raise TypeError("dendro_params is a {}. It must be a dictionary"
+                                ", or a list containing a dictionary entries."
+                                .format(type(dendro_params)))
         else:
             dendro_params1 = None
             dendro_params2 = None
