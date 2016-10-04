@@ -3,7 +3,7 @@ import pytest
 import astropy.units as u
 
 from ._testing_data import header
-from ..io import find_beam_width
+from ..io import find_beam_width, find_beam_properties
 
 
 def test_load_beam():
@@ -14,6 +14,33 @@ def test_load_beam():
     beamwidth = find_beam_width(beam_header)
 
     assert beamwidth == 1.0 * u.deg
+
+
+@pytest.mark.parametrize(('major', 'minor', 'pa'), [(1.0, 0.5, 10),
+                                                    (1.0, 'skip', 10),
+                                                    (1.0, 0.5, 'skip')])
+def test_load_beam_props(major, minor, pa):
+
+    beam_header = header.copy()
+    beam_header["BMAJ"] = major
+    if minor != 'skip':
+        beam_header["BMIN"] = minor
+    if pa != 'skip':
+        beam_header["BPA"] = pa
+
+    bmaj, bmin, bpa = find_beam_properties(beam_header)
+
+    assert bmaj == major * u.deg
+
+    if minor == 'skip':
+        assert bmin == major * u.deg
+    else:
+        assert bmin == minor * u.deg
+
+    if pa == "skip":
+        assert bpa == 0 * u.deg
+    else:
+        assert bpa == pa * u.deg
 
 
 @pytest.mark.xfail(raises=ValueError)
