@@ -62,36 +62,68 @@ class Genus(BaseStatisticMixIn):
             scoreatpercentile(self.data[~np.isnan(self.data)],
                               highdens_percent)
 
-        self.thresholds = np.linspace(
+        self._thresholds = np.linspace(
             self.lowdens_percent, self.highdens_percent, numpts)
 
         if smoothing_radii is not None:
-            assert isinstance(smoothing_radii, list)
-            self.smoothing_radii = smoothing_radii
+            try:
+                self._smoothing_radii = np.asarray(smoothing_radii)
+            except Exception:
+                raise TypeError("smoothing_radii must be convertible to a "
+                                "numpy array.")
         else:
-            self.smoothing_radii = np.linspace(1.0, 0.1 * min(self.data.shape), 5)
+            self._smoothing_radii = \
+                np.linspace(1.0, 0.1 * min(self.data.shape), 5)
 
-        self.genus_stats = np.empty([numpts, len(self.smoothing_radii)])
-        self.fft_images = []
-        self.smoothed_images = []
+    @property
+    def thresholds(self):
+        '''
+        Values of the data to compute the Genus statistics at.
+        '''
+        return self._thresholds
 
-    def make_smooth_arrays(self):
+    @property
+    def smoothing_radii(self):
         '''
-        Smooth data using a Gaussian kernel.
+        Pixel radii used to smooth the data.
         '''
+        return self._smoothing_radii
+
+    def make_smooth_arrays(self, **kwargs):
+        '''
+        Smooth data using a Gaussian kernel. NaN interpolation during
+        convolution is automatically used when the data contains any NaNs.
+
+        Parameters
+        ----------
+        kwargs: Passed to `~astropy.convolve.convolve_fft`.
+        '''
+
+        self._smoothed_images = []
 
         for i, width in enumerate(self.smoothing_radii):
             kernel = Gaussian2DKernel(
                 width, x_size=self.data.shape[0], y_size=self.data.shape[1])
             if self.nanflag:
-                self.smoothed_images.append(
+                self._smoothed_images.append(
                     convolve_fft(self.data, kernel,
                                  normalize_kernel=True,
-                                 interpolate_nan=True))
+                                 interpolate_nan=True,
+                                 **kwargs))
             else:
-                self.smoothed_images.append(convolve_fft(self.data, kernel))
+                self._smoothed_images.append(
+                    convolve_fft(self.data, kernel, **kwargs))
+
+    @property
+    def smoothed_images(self):
+        '''
+        List of smoothed versions of the image, using the radii in
+        `~Genus.smoothing_radii`.
+        '''
+        return self._smoothed_images
 
     # def clean_fft(self):
+    #     self.fft_images = []
 
     #     for j, image in enumerate(self.smoothed_images):
     #         self.fft_images.append(fft2(image))
@@ -100,12 +132,22 @@ class Genus(BaseStatisticMixIn):
 
     def make_genus_curve(self):
         '''
-        Create the genus curve.
+        Create the genus curve from the smoothed_images at the specified\
+        thresholds.
         '''
 
-        self.genus_stats = compute_genus(self.smoothed_images, self.thresholds)
+        self._genus_stats = compute_genus(self.smoothed_images,
+                                          self.thresholds)
 
-    def run(self, verbose=False):
+    @property
+    def genus_stats(self):
+        '''
+        Array of genus statistic values for all smoothed images (0th axis) and
+        all threshold values (1st axis).
+        '''
+        return self._genus_stats
+
+    def run(self, verbose=False, **kwargs):
         '''
         Run the whole statistic.
 
@@ -113,11 +155,12 @@ class Genus(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
+        kwargs : See `~Genus.make_smooth_arrays`.
         '''
 
         self.make_smooth_arrays()
         # self.clean_fft()
-        self.make_genus_curve()
+        self.make_genus_curve(**kwargs)
 
         if verbose:
             import matplotlib.pyplot as p
