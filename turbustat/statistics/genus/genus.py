@@ -39,6 +39,17 @@ class Genus(BaseStatisticMixIn):
         Number of thresholds to calculate statistic at.
     smoothing_radii : list, optional
         Kernel radii to smooth data to.
+
+    Example
+    -------
+    >>> from turbustat.statistics import Genus
+    >>> from astropy.io import fits
+    >>> import astropy.units as u
+    >>> import numpy as np
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits")[0]  # doctest: +SKIP
+    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85)  # doctest: +SKIP
+    >>> genus.run()  # doctest: +SKIP
+
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
