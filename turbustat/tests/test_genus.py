@@ -4,34 +4,54 @@
 Test functions for Genus
 '''
 
-from unittest import TestCase
-
 import numpy as np
 import numpy.testing as npt
+import astropy.units as u
 
-from ..statistics import GenusDistance
+from ..statistics import GenusDistance, Genus
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
 
-class testGenus(TestCase):
+def test_Genus_method():
 
-    def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
+    # The test values were normalized for generating the unit test data
+    from ..statistics.stats_utils import standardize
+    from copy import copy
 
-    def test_Genus_method(self):
-        self.tester = GenusDistance(dataset1["moment0"],
-                                    dataset2["moment0"])
-        self.tester.distance_metric()
+    mom0 = copy(dataset1["moment0"])
+    mom0[0] = standardize(mom0[0])
 
-        assert np.allclose(self.tester.genus1.genus_stats,
-                           computed_data['genus_val'])
+    tester = Genus(mom0, lowdens_percent=20)
+    tester.run()
 
-    def test_Genus_distance(self):
-        self.tester_dist = \
-            GenusDistance(dataset1["moment0"],
-                          dataset2["moment0"])
-        self.tester_dist.distance_metric()
-        npt.assert_almost_equal(self.tester_dist.distance,
-                                computed_distances['genus_distance'])
+    assert np.allclose(tester.genus_stats,
+                       computed_data['genus_val'])
+
+
+def test_Genus_method_headerbeam():
+
+    # The test values were normalized for generating the unit test data
+    from ..statistics.stats_utils import standardize
+    from copy import copy
+
+    mom0 = copy(dataset1["moment0"])
+    mom0[0] = standardize(mom0[0])
+    mom0[1]["BMAJ"] = 1.0
+
+    # Just ensuring these run without issue.
+
+    tester = Genus(mom0)
+    tester.run(use_beam=True)
+
+    tester = Genus(mom0)
+    tester.run(use_beam=True, beam_area=1.0 * u.sr)
+
+
+def test_Genus_distance():
+    tester_dist = \
+        GenusDistance(dataset1["moment0"],
+                      dataset2["moment0"])
+    tester_dist.distance_metric()
+    npt.assert_almost_equal(tester_dist.distance,
+                            computed_distances['genus_distance'])
