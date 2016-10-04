@@ -22,7 +22,7 @@ Importing the dendrograms code, along with a few other common packages:
     >>> from turbustat.statistics import Dendrogram_Stats
     >>> from astropy.io import fits
     >>> import astropy.units as u
-    >>> from astrodendro import Dendrogram
+    >>> from astrodendro import Dendrogram  # doctest: +SKIP
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
 
@@ -32,10 +32,10 @@ And we load in the data:
 
 Before running the statistics side, we can first compute the dendrogram itself to see what we're dealing with:
 
-    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)
-    >>> ax = plt.subplot(111)
-    >>> d.plotter().plot_tree(ax)
-    >>> plt.ylabel("Intensity (K)")
+    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)  # doctest: +SKIP
+    >>> ax = plt.subplot(111)  # doctest: +SKIP
+    >>> d.plotter().plot_tree(ax)  # doctest: +SKIP
+    >>> plt.ylabel("Intensity (K)")  # doctest: +SKIP
 
 .. image:: images/design4_dendrogram.png
 
@@ -45,14 +45,13 @@ We see a number of leaves of varying height throughout the tree. Their minimum h
 
 The statistics are computed through `~turbustat.statistics.Dendrogram_Stats`:
 
-    >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50),
-                                      dendro_params={"min_value": 0.005, "min_npix": 50})
+    >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50), dendro_params={"min_value": 0.005, "min_npix": 50})  # doctest: +SKIP
 
 I've specified the values that `min_delta` should take. These are completely dependent on the range of intensities within your data cube. I've also specified the minimum number of pixels are region must have (`min_npix`) and the minimum intensity of the data to consider (`min_value`).
 
 To run the statistics, we use `~turbustat.statistics.Dendrogram_Stats.run`:
 
-    >>> dend_stat.run(verbose=True)
+    >>> dend_stat.run(verbose=True)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.973
@@ -82,25 +81,25 @@ On the left is the relationship between the value of `min_delta` and the number 
 
 Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file:
 
-    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5", min_deltas=np.logspace(-2, 0, 50))
+    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5", min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
 
 Saving the dendrogram structure is explained in the `astrodendro documentation <http://dendrograms.org/>`_. **The saved dendrogram must have `min_delta` set to the minimum of the given `min_deltas`. Otherwise pruning is ineffective.**
 
 If the dendrogram isn't saved (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`:
-    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.01, min_npix=50, verbose=True)
-    >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50))
-    >>> dend_stat.run(verbose=True, dendro_obj=d)
+    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.01, min_npix=50, verbose=True)  # doctest: +SKIP
+    >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
+    >>> dend_stat.run(verbose=True, dendro_obj=d)  # doctest: +SKIP
 
 Once the statistics have been run, the results can be saved as a pickle file:
-    >>> dend_stat.save_results(output_name="Design4_Dendrogram_Stats.pkl", keep_data=False)
+    >>> dend_stat.save_results(output_name="Design4_Dendrogram_Stats.pkl", keep_data=False)  # doctest: +SKIP
 
 `keep_data=False` will avoid saving the entire cube, and is the default setting.
 
 Saving can also be enabled with `~turbustat.statistics.Dendrogram_Stats.run`:
-    >>> dend_stat.run(save_results=True, output_name="Design4_Dendrogram_Stats.pkl")
+    >>> dend_stat.run(save_results=True, output_name="Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
 The results may then be reloaded:
-    >>> dend_stat = Dendrogram_Stats.load_results("Design4_Dendrogram_Stats.pkl")
+    >>> dend_stat = Dendrogram_Stats.load_results("Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
 Note that the dendrogram and data are **NOT** saved, and only the statistic outputs will be accessible.
 
