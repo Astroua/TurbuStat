@@ -8,6 +8,7 @@ from astropy.convolution import Gaussian2DKernel, convolve_fft
 from operator import itemgetter
 from itertools import groupby
 from astropy.wcs import WCS
+import astropy.units as u
 
 try:
     from scipy.fftpack import fft2
@@ -16,7 +17,7 @@ except ImportError:
 
 from ..stats_utils import standardize, common_scale
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, twod_types, input_data
+from ...io import common_types, twod_types, input_data, find_beam_properties
 
 
 class Genus(BaseStatisticMixIn):
@@ -46,10 +47,13 @@ class Genus(BaseStatisticMixIn):
                  numpts=100, smoothing_radii=None):
         super(Genus, self).__init__()
 
-        # A header isn't needed. Disable the check flag
-        self.need_header_flag = False
-        self.header = None
-        self.data = input_data(img, no_header=True)
+        if isinstance(img, np.ndarray):
+            self.need_header_flag = False
+            self.data = input_data(img, no_header=True)
+            self.header = None
+        else:
+            self.need_header_flag = True
+            self.data, self.header = input_data(img, no_header=False)
 
         self.nanflag = False
         if np.isnan(self.data).any():
@@ -102,8 +106,8 @@ class Genus(BaseStatisticMixIn):
         self._smoothed_images = []
 
         for i, width in enumerate(self.smoothing_radii):
-            kernel = Gaussian2DKernel(
-                width, x_size=self.data.shape[0], y_size=self.data.shape[1])
+            kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
+                                      y_size=self.data.shape[1])
             if self.nanflag:
                 self._smoothed_images.append(
                     convolve_fft(self.data, kernel,
@@ -130,14 +134,67 @@ class Genus(BaseStatisticMixIn):
 
     #     return self
 
-    def make_genus_curve(self):
+    def make_genus_curve(self, use_beam=False, beam_area=None, min_size=4,
+                         connectivity=1):
         '''
         Create the genus curve from the smoothed_images at the specified\
         thresholds.
+
+        Parameters
+        ----------
+        use_beam : bool, optional
+            When enabled, will use the given `beam_fwhm` or try to load it from
+            the header. When disabled, the minimum size is set by `min_size`.
+        beam_area : `~astropy.units.Quantity`, optional
+            The angular area of the beam size. Requires a header to be given.
+        min_size : int, optional
+            Directly specify the number of pixels to be used as the minimum
+            area a region must have to be counted.
+        connectivity : {1, 2}, optional
+            Connectivity used when removing regions below min_size.
         '''
 
-        self._genus_stats = compute_genus(self.smoothed_images,
-                                          self.thresholds)
+        if use_beam:
+            if self.header is None:
+                raise TypeError("A header must be provided with the data to "
+                                "use the beam area.")
+
+            if beam_area is None:
+                major, minor = find_beam_properties(self.header)[:2]
+                major = major.to(u.pixel, equivalencies=self.angular_equiv)
+                minor = minor.to(u.pixel, equivalencies=self.angular_equiv)
+                pix_area = np.pi * major * minor
+            else:
+                if not beam_area.unit.is_equivalent(u.sr):
+                    raise u.UnitsError("beam_area must be in angular units "
+                                       "equivalent to solid angle. The given "
+                                       "units are {}".format(beam_area.unit))
+
+                # Can't use angular_equiv to do deg**2 to u.pix**2, so do sqrt
+                pix_area = \
+                    (np.sqrt(beam_area)
+                     .to(u.pix, equivalencies=self.angular_equiv)) ** 2
+
+            min_size = pix_area
+
+        self._genus_stats = np.empty((len(self.smoothed_images),
+                                      len(self.thresholds)))
+
+        for j, image in enumerate(self.smoothed_images):
+            for i, thresh in enumerate(self.thresholds):
+                high_density = remove_small_objects(image > thresh,
+                                                    min_size=min_size,
+                                                    connectivity=connectivity)
+                low_density = remove_small_objects(image < thresh,
+                                                   min_size=min_size,
+                                                   connectivity=connectivity)
+                # eight-connectivity to count the regions
+                high_density_labels, high_density_num = \
+                    nd.label(high_density, np.ones((3, 3)))
+                low_density_labels, low_density_num = \
+                    nd.label(low_density, np.ones((3, 3)))
+
+                self._genus_stats[j, i] = high_density_num - low_density_num
 
     @property
     def genus_stats(self):
@@ -147,7 +204,8 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
-    def run(self, verbose=False, **kwargs):
+    def run(self, verbose=False, use_beam=False, beam_area=None, min_size=4,
+            **kwargs):
         '''
         Run the whole statistic.
 
@@ -155,110 +213,39 @@ class Genus(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
+        use_beam : bool, optional
+            See `~Genus.make_genus_curve`.
+        beam_area : `~astropy.units.Quantity`, optional
+            See `~Genus.make_genus_curve`.
+        min_size : int, optional
+            See `~Genus.make_genus_curve`.
         kwargs : See `~Genus.make_smooth_arrays`.
         '''
 
-        self.make_smooth_arrays()
+        self.make_smooth_arrays(**kwargs)
         # self.clean_fft()
-        self.make_genus_curve(**kwargs)
+        self.make_genus_curve(use_beam=use_beam, beam_area=beam_area,
+                              min_size=min_size)
 
         if verbose:
             import matplotlib.pyplot as p
             num = len(self.smoothing_radii)
+            num_cols = num / 2 if num % 2 == 0 else (num / 2) + 1
             for i in range(1, num + 1):
-                p.subplot(num / 2, 2, i)
+                if num == 1:
+                    p.subplot(111)
+                else:
+                    p.subplot(num_cols, 2, i)
                 p.title(
                     "".join(["Smooth Size: ",
                             str(self.smoothing_radii[i - 1])]))
                 p.plot(self.thresholds, self.genus_stats[i - 1], "bD")
                 p.xlabel("Intensity")
                 p.grid(True)
+            p.tight_layout()
             p.show()
 
         return self
-
-
-def compute_genus(images, thresholds):
-    '''
-
-    Computes the Genus Statistic.
-
-    Parameters
-    ----------
-
-    image : list of numpy.ndarray OR a single numpy.ndarray
-        Images(s) to compute the Genus of.
-
-    thresholds : list or numpy.ndarray
-        Thresholds to calculate the statistic at.
-
-    Returns
-    -------
-
-    genus_stats : array
-    The calculated statistic.
-
-    '''
-
-    if not isinstance(images, list):
-        images = [images]
-
-    genus_stats = np.empty((len(images), len(thresholds)))
-    for j, image in enumerate(images):
-        for i, thresh in enumerate(thresholds):
-            high_density = remove_small_objects(
-                image > thresh, min_size=4, connectivity=1)
-            low_density = remove_small_objects(
-                image < thresh, min_size=4, connectivity=1)
-            high_density_labels, high_density_num = nd.label(
-                high_density, np.ones((3, 3)))  # eight-connectivity
-            low_density_labels, low_density_num = nd.label(
-                low_density, np.ones((3, 3)))  # eight-connectivity
-
-            genus_stats[j, i] = high_density_num - low_density_num
-
-        # genus_stats[j,:] = clip_genus(genus_stats[j,:])
-
-    return genus_stats
-
-
-def clip_genus(genus_curve, length_threshold=5):
-    '''
-
-    Clip out uninteresting regions in the genus curve
-    (large regions with value of 0).
-
-    Parameters
-    ----------
-
-    genus_curve : array
-        Computed genus curve.
-
-    length_threshold : int, optional
-        Minimum length to warrant clipping.
-
-    Returns
-    -------
-
-    genus_curve : numpy.ndarray
-        Clipped Genus Curve.
-
-    '''
-
-    zeros = np.where(genus_curve == 0)
-    continuous_sections = []
-    for _, g in groupby(enumerate(zeros[0]), lambda (i, x): i - x):
-        continuous_sections.append(map(itemgetter(1), g))
-
-    try:
-        max_cont_section = max(continuous_sections, key=len)
-    except ValueError:
-        max_cont_section = []
-
-    if len(max_cont_section) >= length_threshold:
-        genus_curve[max_cont_section] = np.NaN
-
-    return genus_curve
 
 
 class GenusDistance(object):
