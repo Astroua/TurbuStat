@@ -175,7 +175,7 @@ class Genus(BaseStatisticMixIn):
                     (np.sqrt(beam_area)
                      .to(u.pix, equivalencies=self.angular_equiv)) ** 2
 
-            min_size = pix_area
+            min_size = int(np.floor(pix_area.value))
 
         self._genus_stats = np.empty((len(self.smoothed_images),
                                       len(self.thresholds)))
