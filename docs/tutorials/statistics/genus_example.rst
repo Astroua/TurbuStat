@@ -52,7 +52,7 @@ Often the smallest size that can be "trusted" in a radio image is the beam area.
     >>> moment0.header["BMAJ"] = 2e-5  # deg.   # doctest: +SKIP
     >>> genus.run(verbose=True, use_beam=True)  # doctest: +SKIP
 
-..image:: images/genus_design4_beamarea.png
+.. image:: images/genus_design4_beamarea.png
 
 The curve has far less detail then before when requiring large connected regions. Note that the FITS keywords "BMIN" and "BPA" are also read and used, when available. More options for reading beam information are available when the optional package `radio_beam <https://github.com/radio-astro-tools/radio_beam>`_ is installed. If the beam information is not contained in the header, a custom area can be passed using `beam_area`,
 
