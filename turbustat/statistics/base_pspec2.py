@@ -190,7 +190,7 @@ class StatisticBase_PSpec2D(object):
         import matplotlib.pyplot as p
 
         if ang_units:
-            xlab = r"k/{}$^{-1}$".format(unit)
+            xlab = r"k/" + unit.to_string() + r"$^{-1}$"
         else:
             xlab = r"k/pixel$^{-1}$"
 

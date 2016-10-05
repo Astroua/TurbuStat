@@ -4,6 +4,7 @@
 import numpy as np
 from numpy.fft import fft2, fftshift
 import astropy.units as u
+from warnings import warn
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -30,15 +31,25 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, centroid, moment0, linewidth, header):
+    def __init__(self, centroid, moment0, linewidth, header=None):
 
         # data property not used here
         self.no_data_flag = True
         self.data = None
 
-        self.header = header
+        if header is None:
+            try:
+                self._centroid, self.header = input_data(centroid,
+                                                         no_header=False)
+            except TypeError:
+                warn("Could not load header from centroid. No header has been"
+                     " specified.")
+                self._centroid = input_data(centroid, no_header=True)
 
-        self._centroid = input_data(centroid, no_header=True)
+        else:
+            self._centroid = input_data(centroid, no_header=True)
+            self.header = header
+
         self._moment0 = input_data(moment0, no_header=True)
         self._linewidth = input_data(linewidth, no_header=True)
 
@@ -46,7 +57,6 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
         self._moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
         self._linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
-        self.degperpix = np.abs(header["CDELT2"])
 
         shape_check1 = self.centroid.shape == self.moment0.shape
         shape_check2 = self.centroid.shape == self.linewidth.shape
