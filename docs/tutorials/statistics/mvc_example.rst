@@ -9,20 +9,17 @@ Overview
 Centroid statistics have been used to study molecular clouds for decades. One of the best known works by :ref:`Miesch & Bally 1994 <ref-miesch_bally1994>` created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
 
 .. math::
-
-M_1 = \Sigma_{v} v I(x, v) \delta v / \Sigma_{v} I(x, v)  \delta v = \Sigma_{v} v I(x, v) \delta v / M_0,
+    M_1 = \Sigma_{v} v I(x, v) \delta v / \Sigma_{v} I(x, v)  \delta v = \Sigma_{v} v I(x, v) \delta v / M_0,
 
 where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. :ref:`Lazarian & Esquivel 2003 <ref-lazarian_esquivel_2003>` proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
-
-\Sigma_{v} v I(x, v) \delta v.
+    \Sigma_{v} v I(x, v) \delta v.
 
 The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of :math:`M_0` times the velocity dispersion (:math:`<v^2>`) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:
 
 .. math::
-
-P_2(k) = |\mathcal{M}_0\mathcal{M}_1|^2 - <M_2>_{x}|\mathcal{M}_0|^2,
+    P_2(k) = |\mathcal{M}_0\mathcal{M}_1|^2 - <M_2>_{x}|\mathcal{M}_0|^2,
 
 where :math:`\mathcal{M}_i` denotes the Fourier transform of the ith moment.
 
@@ -44,6 +41,12 @@ Most statistics in TurbuStat require only a single data input. MVC requires *3*,
 The unnormalized centroid can be recovered by multiplying the normal centroid value by the zeroth moment. The line width array here is the square root of the velocity dispersion. These three arrays must be passed to `~turbustat.statistics.MVC`:
 
     >>> mvc = MVC(moment1, moment0, lwidth)  # doctest: +SKIP
+
+The header is read in from `moment1` to convert into angular scales. Alternatively, a different header can be given with the `header` keyword.
+
+Calculating the power spectrum, radially averaging, and fitting a power-law are accomplished through the `~turbustat.statistics.MVC.run` command:
+
+    >>> mvc.run(verbose=True, ang_units=True, unit=u.arcsec)  # doctest: +SKIP
                                OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.967
@@ -66,12 +69,6 @@ The unnormalized centroid can be recovered by multiplying the normal centroid va
     Skew:                           0.664   Prob(JB):                        0.130
     Kurtosis:                       3.224   Cond. No.                         5.08
     ==============================================================================
-
-The header is read in from `moment1` to convert into angular scales. Alternatively, a different header can be given with the `header` keyword.
-
-Calculating the power spectrum, radially averaging, and fitting a power-law are accomplished through the `~turbustat.statistics.MVC.run` command:
-
-    >>> mvc.run(verbose=True, ang_units=True, unit=u.arcsec)  # doctest: +SKIP
 
 .. image:: images/mvc_design4.png
 
