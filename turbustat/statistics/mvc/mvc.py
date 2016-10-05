@@ -38,21 +38,46 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self.header = header
 
-        self.centroid = input_data(centroid, no_header=True)
-        self.moment0 = input_data(moment0, no_header=True)
-        self.linewidth = input_data(linewidth, no_header=True)
+        self._centroid = input_data(centroid, no_header=True)
+        self._moment0 = input_data(moment0, no_header=True)
+        self._linewidth = input_data(linewidth, no_header=True)
 
         # Get rid of nans.
-        self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
-        self.moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
-        self.linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
+        self._centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
+        self._moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
+        self._linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
         self.degperpix = np.abs(header["CDELT2"])
 
-        assert self.centroid.shape == self.moment0.shape
-        assert self.centroid.shape == self.linewidth.shape
+        shape_check1 = self.centroid.shape == self.moment0.shape
+        shape_check2 = self.centroid.shape == self.linewidth.shape
+        if not shape_check1 or not shape_check2:
+            raise IndexError("The centroid, moment0, and linewidth arrays must"
+                             "have the same shape.")
+
         self.shape = self.centroid.shape
 
         self._ps1D_stddev = None
+
+    @property
+    def centroid(self):
+        '''
+        Normalized centroid array.
+        '''
+        return self._centroid
+
+    @property
+    def moment0(self):
+        '''
+        Zeroth moment (integrated intensity) array.
+        '''
+        return self._moment0
+
+    @property
+    def linewidth(self):
+        '''
+        Linewidth array. Square root of the velocity dispersion.
+        '''
+        return self._linewidth
 
     def compute_pspec(self):
         '''
@@ -68,8 +93,9 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         linewidth subtracted by the square of the normalized centroid.
         '''
 
-        term1 = fft2(self.centroid*self.moment0)
+        term1 = fft2(self.centroid * self.moment0)
 
+        # Account for normalization in the line width.
         term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
 
         mvc_fft = term1 - term2 * fft2(self.moment0)
@@ -81,9 +107,10 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg):
+            ang_units=False, unit=u.deg, **kwargs):
         '''
-        Full computation of MVC.
+        Full computation of MVC. For fitting parameters and radial binning
+        options, see `~turbustat.statistics.StatisticBase_PSpec2D`.
 
         Parameters
         ----------
@@ -101,6 +128,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        kwargs : Passed to
+            `~turbustat.statistics.StatisticBase_PSpec2D.fit_pspec`.
         '''
 
         self.compute_pspec()
@@ -108,7 +137,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
                                   return_stddev=return_stddev)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
-                       large_scale=0.5)
+                       large_scale=0.5, **kwargs)
 
         if verbose:
 
