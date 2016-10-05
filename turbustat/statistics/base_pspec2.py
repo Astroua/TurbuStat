@@ -17,14 +17,23 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def ps2D(self):
+        '''
+        Two-dimensional power spectrum.
+        '''
         return self._ps2D
 
     @property
     def ps1D(self):
+        '''
+        One-dimensional power spectrum.
+        '''
         return self._ps1D
 
     @property
     def ps1D_stddev(self):
+        '''
+        1-sigma standard deviation of the 1D power spectrum.
+        '''
         if not self._stddev_flag:
             Warning("ps1D_stddev is only calculated when return_stddev"
                     " is enabled.")
@@ -33,6 +42,9 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def freqs(self):
+        '''
+        Corresponding spatial frequencies of the 1D power spectrum.
+        '''
         return self._freqs
 
     def compute_radial_pspec(self, return_stddev=True,
@@ -46,7 +58,9 @@ class StatisticBase_PSpec2D(object):
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
-        kwargs : passed to pspec
+        max_bin : float, optional
+            Maximum spatial frequency to bin values at.
+        kwargs : passed to `~turbustat.statistics.psds.pspec`.
         '''
 
         if return_stddev:
@@ -81,8 +95,10 @@ class StatisticBase_PSpec2D(object):
             error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
-        lg_scale_cut : int, optional
-            Cuts off largest scales, which deviate from the powerlaw.
+        low_cut : float, optional
+            Lowest frequency to consider in the fit.
+        high_cut : float, optional
+            Highest frequency to consider in the fit.
         min_fits_pts : int, optional
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
@@ -98,7 +114,7 @@ class StatisticBase_PSpec2D(object):
         if low_cut is None:
             # Default to the largest frequency, since this is just 1 pixel
             # in the 2D PSpec.
-            self.low_cut = 1/(large_scale*float(max(self.ps2D.shape)))
+            self.low_cut = 1. / (large_scale * float(max(self.ps2D.shape)))
         else:
             self.low_cut = low_cut
 
@@ -153,10 +169,16 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def slope(self):
+        '''
+        Power spectrum slope.
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        1-sigma error on the power spectrum slope.
+        '''
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
@@ -168,7 +190,7 @@ class StatisticBase_PSpec2D(object):
         import matplotlib.pyplot as p
 
         if ang_units:
-            xlab = r"k/"+unit.to_string()+"$^{-1}$"
+            xlab = r"k/{}$^{-1}$".format(unit)
         else:
             xlab = r"k/pixel$^{-1}$"
 
@@ -197,23 +219,23 @@ class StatisticBase_PSpec2D(object):
         if self._stddev_flag:
             ax.errorbar(np.log10(freqs[good_interval]),
                         np.log10(self.ps1D[good_interval]),
-                        yerr=0.434*(self.ps1D_stddev[good_interval] /
-                                    self.ps1D[good_interval]),
+                        yerr=0.434 * (self.ps1D_stddev[good_interval] /
+                                      self.ps1D[good_interval]),
                         color=color,
                         fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
 
-            ax.plot(np.log10(freqs[fit_index]), y_fit, color+'-',
+            ax.plot(np.log10(freqs[fit_index]), y_fit, color + '-',
                     label=label, linewidth=2)
-            ax.set_xlabel("log "+xlab)
+            ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
         else:
-            ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
+            ax.loglog(self.freqs[fit_index], 10**y_fit, color + '-',
                       label=label, linewidth=2)
 
             ax.loglog(self.freqs[good_interval],
-                      self.ps1D[good_interval], color+symbol, alpha=0.5,
+                      self.ps1D[good_interval], color + symbol, alpha=0.5,
                       markersize=5)
 
             ax.set_xlabel(xlab)
