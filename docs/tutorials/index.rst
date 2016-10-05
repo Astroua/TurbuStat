@@ -13,6 +13,7 @@ Statistics
     statistics/delta_variance_example
     statistics/dendrogram_example
     statistics/genus_example
+    statistics/mvc_example
     statistics/pca_example
 
 Distance Metrics
