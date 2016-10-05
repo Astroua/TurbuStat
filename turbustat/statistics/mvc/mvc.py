@@ -120,7 +120,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             ang_units=False, unit=u.deg, **kwargs):
         '''
         Full computation of MVC. For fitting parameters and radial binning
-        options, see `~turbustat.statistics.StatisticBase_PSpec2D`.
+        options, see `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D`.
 
         Parameters
         ----------
@@ -139,7 +139,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
         kwargs : Passed to
-            `~turbustat.statistics.StatisticBase_PSpec2D.fit_pspec`.
+            `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D.fit_pspec`.
         '''
 
         self.compute_pspec()
