@@ -9,17 +9,17 @@ Overview
 Centroid statistics have been used to study molecular clouds for decades. One of the best known works by :ref:`Miesch & Bally 1994 <ref-miesch_bally1994>` created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
 
 .. math::
-    M_1 = \Sigma_{v} v I(x, v) \delta v / \Sigma_{v} I(x, v)  \delta v = \Sigma_{v} v I(x, v) \delta v / M_0,
+    M_1 = \frac{\Sigma_{v}\, v \,I(x, v)\, \delta v}{\Sigma_{v}\, I(x, v)\,  \delta v} = \frac{\Sigma_{v}\, v\, I(x, v)\, \delta v}{M_0},
 
 where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. :ref:`Lazarian & Esquivel 2003 <ref-lazarian_esquivel_2003>` proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
-    \Sigma_{v} v I(x, v) \delta v.
+    \Sigma_{v}\, v I(x, v)\, \delta v.
 
 The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of :math:`M_0` times the velocity dispersion (:math:`<v^2>`) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:
 
 .. math::
-    P_2(k) = |\mathcal{M}_0\mathcal{M}_1|^2 - <M_2>_{x}|\mathcal{M}_0|^2,
+    P_2(k) = |\mathcal{M}_0\,\mathcal{M}_1|^2 - <M_2>_{x}\,|\mathcal{M}_0|^2,
 
 where :math:`\mathcal{M}_i` denotes the Fourier transform of the ith moment.
 
