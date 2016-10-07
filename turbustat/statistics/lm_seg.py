@@ -58,6 +58,9 @@ class Lm_Seg(object):
             self.x = self.x[np.isfinite(self.y)]
             self.y = self.y[np.isfinite(self.y)]
 
+        if self.x.size <= 3 or self.y.size <= 3:
+            raise Warning("Not enough finite points to fit.")
+
     def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
                   constant=True, verbose=True):
         '''
@@ -152,7 +155,8 @@ class Lm_Seg(object):
                                Result may not be minimized.")
                 break
 
-        if self.break_fail_flag:
+        # Is the initial model without a break better?
+        if self.break_fail_flag or np.sum(init_lm.resid**2) <= np.sum(fit.resid**2):
             self.brk = self.x.max()
 
             X_all = sm.add_constant(self.x)
@@ -175,8 +179,6 @@ class Lm_Seg(object):
             self.brk_err = 0.0
 
         self.get_slopes()
-
-        return self
 
     def model(self, x=None, model_return=False):
         p = self.params
@@ -213,8 +215,6 @@ class Lm_Seg(object):
                 self._slopes[s] = self.params[s+1] + self._slopes[:s]
                 self._slope_errs[s] = \
                     np.sqrt(self.param_errs[s+1]**2 + self._slope_errs[:s]**2)
-
-        return self
 
     @property
     def slopes(self):
