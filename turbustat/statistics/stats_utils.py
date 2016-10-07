@@ -26,8 +26,8 @@ def hellinger(data1, data2, bin_width=1.0):
     return distance
 
 
-def standardize(x):
-    return (x - np.nanmean(x)) / np.nanstd(x)
+def standardize(x, dtype=np.float64):
+    return (x - np.nanmean(x.astype(dtype))) / np.nanstd(x.astype(dtype))
 
 
 def kl_divergence(P, Q):
