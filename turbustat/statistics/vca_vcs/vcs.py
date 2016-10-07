@@ -100,8 +100,8 @@ class VCS(BaseStatisticMixIn):
 
             # Need to order the points
             shape = self.vel_freqs.size
-            spline_y = np.log10(self.ps1D[1:shape/2])
-            spline_x = np.log10(self.vel_freqs[1:shape/2])
+            spline_y = np.log10(self.ps1D[1:shape / 2])
+            spline_x = np.log10(self.vel_freqs[1:shape / 2])
 
             spline = UnivariateSpline(spline_x, spline_y, k=1, s=1)
 
@@ -115,22 +115,41 @@ class VCS(BaseStatisticMixIn):
             # largest x.
             breaks = breaks[::-1]
 
-            x = np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut])
-            y = np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut])
+            # Ensure a break doesn't fall at the max or min.
+            if breaks.size > 0:
+                if breaks[0] == spline_x.max():
+                    breaks = breaks[1:]
+            if breaks.size > 0:
+                if breaks[-1] == spline_x.min():
+                    breaks = breaks[:-1]
+
+            x = np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut])
+            y = np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut])
+
+            if x.size <= 3 or y.size <= 3:
+                raise Warning("There are no points to fit to. Try lowering "
+                              "'lg_scale_cut'.")
+
+            # If no breaks, set to half-way before last point
+            if breaks.size == 0:
+                x_copy = np.sort(x.copy())
+                breaks = np.array([0.5 * (x_copy[-1] + x_copy[-3])])
 
             # Now try these breaks until a good fit including the break is
             # found. If none are found, it accept that there wasn't a good
             # break and continues on.
             i = 0
             while True:
+                print(x.size, y.size)
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
                 self.fit.fit_model(verbose=verbose)
 
                 if self.fit.params.size == 5:
+                    # Success!
                     break
                 i += 1
-                if i >= breaks.shape:
+                if i >= breaks.size:
                     warnings.warn("No good break point found. Returned fit\
                                    does not include a break!")
                     break
@@ -141,8 +160,8 @@ class VCS(BaseStatisticMixIn):
             breaks = np.log10(breaks)
 
         self.fit = \
-            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut]),
-                   np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut]), breaks)
+            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut]),
+                   np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut]), breaks)
         self.fit.fit_model(verbose=verbose)
 
     @property
