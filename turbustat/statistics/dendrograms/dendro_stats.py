@@ -135,8 +135,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                     print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
                 d.prune(min_delta=delta)
                 self._numfeatures[i + 1] = len(d)
-                self._values.append([struct.vmax for struct in
-                                     d.all_structures])
+                self._values.append(np.array([struct.vmax for struct in
+                                              d.all_structures]))
 
     @property
     def numfeatures(self):
