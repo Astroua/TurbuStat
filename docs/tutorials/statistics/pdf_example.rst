@@ -28,8 +28,8 @@ Since the PDF is a one-dimensional view of the data, any dimension data can be p
 
 Starting first with the zeroth moment, the `~turbustat.statistics.PDF` class is called:
 
-    >>> pdf_mom0 = PDF(moment0, min_val=0.0, bins=None)
-    >>> pdf_mom0.run(verbose=True)
+    >>> pdf_mom0 = PDF(moment0, min_val=0.0, bins=None)  # doctest: +SKIP
+    >>> pdf_mom0.run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0.png
 
@@ -38,15 +38,15 @@ The resulting PDF and ECDF of the data are displayed. Using `min_val`, a minimum
 If an array of the errors is available, these may be passed as weights:
 
     >>> moment0_err = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0_error.fits")[0]  # doctest: +SKIP
-    >>> pdf_mom0 = PDF(moment0, min_val=0.0, bins=None, weights=moment0_error.data**-2)
-    >>> pdf_mom0.run(verbose=True)
+    >>> pdf_mom0 = PDF(moment0, min_val=0.0, bins=None, weights=moment0_error.data**-2)  # doctest: +SKIP
+    >>> pdf_mom0.run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0_weights.png
 
 For comparisons to other PDFs, standardizing the data to have a mean of zero and standard deviation of one is common practice in statistics. Standardization is enabled with `use_standardized=True`:
 
-    >>> pdf_mom0 = PDF(moment0, use_standardized=True)
-    >>> pdf_mom0.run(verbose=True)
+    >>> pdf_mom0 = PDF(moment0, use_standardized=True)  # doctest: +SKIP
+    >>> pdf_mom0.run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0_stand.png
 
@@ -54,7 +54,7 @@ If you are seeking to fit a model to the PDF, the PDF values and bin centers are
 
 The class and function calls are identical when using a PPV cube:
 
-    >>> pdf_cube = PDF(cube).run(verbose=True)
+    >>> pdf_cube = PDF(cube).run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/pdf_design4.png
 
