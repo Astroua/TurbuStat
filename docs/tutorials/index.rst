@@ -15,6 +15,7 @@ Statistics
     statistics/genus_example
     statistics/mvc_example
     statistics/pca_example
+    statistics/pdf_example
 
 Distance Metrics
 ================

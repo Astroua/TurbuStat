@@ -94,14 +94,23 @@ class PDF(BaseStatisticMixIn):
 
     @property
     def is_standardized(self):
+        '''
+        Returns `True` when standardization has been applied.
+        '''
         return self._standardize_flag
 
     @property
     def pdf(self):
+        '''
+        PDF values in `~PDF.bins`.
+        '''
         return self._pdf
 
     @property
     def bins(self):
+        '''
+        Bin centers.
+        '''
         return self._bins
 
     def make_ecdf(self):
@@ -118,6 +127,9 @@ class PDF(BaseStatisticMixIn):
 
     @property
     def ecdf(self):
+        '''
+        ECDF values in `~PDF.bins`.
+        '''
         return self._ecdf
 
     def find_percentile(self, values):
