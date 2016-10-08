@@ -140,7 +140,6 @@ class VCS(BaseStatisticMixIn):
             # break and continues on.
             i = 0
             while True:
-                print(x.size, y.size)
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
                 self.fit.fit_model(verbose=verbose)
