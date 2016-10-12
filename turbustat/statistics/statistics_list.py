@@ -6,7 +6,7 @@ Returns a list of all available distance metrics
 
 statistics_list = ["Wavelet", "MVC", "PSpec", "Bispectrum", "DeltaVariance",
                    "Genus", "VCS", "VCA", "Tsallis", "PCA", "SCF", "Cramer",
-                   "Skewness", "Kurtosis", "VCS_Small_Scale",
+                   "Skewness", "Kurtosis", "VCS_Small_Scale", "VCS_Break",
                    "VCS_Large_Scale", "PDF_Hellinger", "PDF_KS",  # "PDF_AD",
                    "Dendrogram_Hist", "Dendrogram_Num"]
 
