@@ -174,7 +174,7 @@ class StatMoments(BaseStatisticMixIn):
         kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
-    def run(self, verbose=False, kwargs={}):
+    def run(self, verbose=False, **kwargs):
         '''
         Compute the entire method.
 
@@ -182,9 +182,7 @@ class StatMoments(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
-        kwargs : dict, optional
-            Passed to `make_spatial_histograms`. Bins to use in the histograms
-            can be given here.
+        kwargs : Passed to `~StatMoments.make_spatial_histograms`.
         '''
 
         self.array_moments()
