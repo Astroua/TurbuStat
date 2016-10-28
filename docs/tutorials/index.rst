@@ -16,6 +16,7 @@ Statistics
     statistics/mvc_example
     statistics/pca_example
     statistics/pdf_example
+    statistics/pspec_example
 
 Distance Metrics
 ================
