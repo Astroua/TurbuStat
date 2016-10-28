@@ -23,10 +23,14 @@ class SCF(BaseStatisticMixIn):
     ----------
     cube : %(dtypes)s
         Data cube.
-    header : FITS header, optional
+    header :  FITS header, optional
         Header for the cube.
     size : int, optional
-        Maximum size roll over which SCF will be calculated.
+        Total size of the lags used in one dimension.
+    roll_lags : `~numpy.ndarray`, optional
+        Pass a custom array of lag values. These will be the pixel size of the
+        lags used in each dimension. Ideally, these should have symmetric
+        positive and negative values.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -58,14 +62,23 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def scf_surface(self):
+        '''
+        SCF correlation array
+        '''
         return self._scf_surface
 
     @property
     def scf_spectrum(self):
+        '''
+        Azimuthally averaged 1D SCF spectrum
+        '''
         return self._scf_spectrum
 
     @property
     def scf_spectrum_stddev(self):
+        '''
+        Standard deviation of the `~SCF.scf_spectrum`
+        '''
         if not self._stddev_flag:
             Warning("scf_spectrum_stddev is only calculated when return_stddev"
                     " is enabled.")
@@ -73,11 +86,14 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def lags(self):
+        '''
+        Values of the lags, in pixels, to compute SCF at
+        '''
         return self._lags
 
     def compute_surface(self):
         '''
-        Compute the SCF up to the given size.
+        Computes the SCF up to the given lag value.
         '''
 
         self._scf_surface = np.zeros((self.size, self.size))
@@ -120,8 +136,8 @@ class SCF(BaseStatisticMixIn):
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        kwargs : passed to pspec
+            Return the standard deviation in the 1D bins. Default is True.
+        kwargs : passed to `turbustat.statistics.psds.pspec`
         '''
 
         # If scf_surface hasn't been computed, do it
@@ -202,10 +218,16 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def slope(self):
+        '''
+        SCF spectrum slope
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        1-sigma error on the SCF spectrum slope
+        '''
         return self._slope_err
 
     def fitted_model(self, xvals):
@@ -231,7 +253,7 @@ class SCF(BaseStatisticMixIn):
 
     def save_results(self, output_name=None, keep_data=False):
         '''
-        Save the results of the dendrogram statistics to avoid re-computing.
+        Save the results of the SCF to avoid re-computing.
         The pickled file will not include the data cube by default.
 
         Parameters
@@ -288,7 +310,7 @@ class SCF(BaseStatisticMixIn):
             xlow=None, xhigh=None, save_results=False, output_name=None,
             ang_units=False, unit=u.deg):
         '''
-        Computes the SCF. Necessary to maintain package standards.
+        Computes all SCF outputs.
 
         Parameters
         ----------
