@@ -8,7 +8,7 @@ Overview
 
 A common technique used in ISM and molecular cloud studies is the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects.
 
-A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs. Because of this TurbuStat addresses only the creation of the PDF, and its associated ECDF. All comparisons purposely use non-parameteric approaches to be as general as possible.
+A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs. Because of this TurbuStat addresses only the creation of the PDF, and its associated ECDF. All comparisons purposely use non-parametric approaches to be as general as possible.
 
 Using
 -----
