@@ -27,6 +27,8 @@ where :math:`\mathcal{M}_i` denotes the Fourier transform of the ith moment.
 Using
 -----
 
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
+
 We need to import the `~turbustat.statistics.MVC` code, along with a few other common packages:
 
     >>> from turbustat.statistics import MVC
