@@ -37,7 +37,9 @@ class SCF(BaseStatisticMixIn):
     -------
     >>> from spectral_cube import SpectralCube
     >>> from turbustat.statistics import SCF
-    >>> cube = SpectralCube.read("Design4.13co.fits")
+    >>> cube = SpectralCube.read("Design4.13co.fits")  # doctest: +SKIP
+    >>> scf = SCF(cube)  # doctest: +SKIP
+    >>> scf.run(verbose=True)  # doctest: +SKIP
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
