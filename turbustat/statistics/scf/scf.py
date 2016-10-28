@@ -31,6 +31,13 @@ class SCF(BaseStatisticMixIn):
         Pass a custom array of lag values. These will be the pixel size of the
         lags used in each dimension. Ideally, these should have symmetric
         positive and negative values.
+
+
+    Example
+    -------
+    >>> from spectral_cube import SpectralCube
+    >>> from turbustat.statistics import SCF
+    >>> cube = SpectralCube.read("Design4.13co.fits")
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -190,6 +197,10 @@ class SCF(BaseStatisticMixIn):
                 np.ones_like(self.scf_spectrum, dtype=bool)
 
         within_limits = np.logical_and(lower_limit, upper_limit)
+
+        if not within_limits.any():
+            raise ValueError("Limits have removed all lag values. Make xlow"
+                             " and xhigh less restrictive.")
 
         y = y[within_limits]
         x = x[within_limits]
