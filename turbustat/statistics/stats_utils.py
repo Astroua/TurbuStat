@@ -30,6 +30,47 @@ def standardize(x):
     return (x - np.nanmean(x)) / np.nanstd(x)
 
 
+def normalize_by_mean(x):
+    return x / np.nanmean(x)
+
+
+def center(x):
+    return x - np.nanmean(x)
+
+
+def normalize(x):
+    return (x - np.nanmin(x)) / (np.nanmax(x) - np.nanmin(x))
+
+
+def data_normalization(x, norm_type="standardize"):
+    '''
+    Apply the specified form to normalize the data.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Input data.
+    norm_type : {"standardize", "center", "normalize", "normalize_by_mean"},
+                 optional
+        Normalization scheme to use.
+    '''
+
+    all_norm_types = ["standardize", "center", "normalize",
+                      "normalize_by_mean"]
+
+    if norm_type == "standardize":
+        return standardize(x)
+    elif norm_type == "center":
+        return center(x)
+    elif norm_type == "normalize":
+        return normalize(x)
+    elif norm_type == "normalize_by_mean":
+        return normalize_by_mean(x)
+    else:
+        raise ValueError("norm_type {0} is not an accepted input. Must be "
+                         "one of {1}".format(norm_type, all_norm_types))
+
+
 def kl_divergence(P, Q):
     '''
     Kullback Leidler Divergence

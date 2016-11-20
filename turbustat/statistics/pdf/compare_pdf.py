@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import ks_2samp, anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
 
-from ..stats_utils import hellinger, standardize, common_histogram_bins
+from ..stats_utils import hellinger, common_histogram_bins, data_normalization
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, threed_types, input_data
 
@@ -25,13 +25,15 @@ class PDF(BaseStatisticMixIn):
         Weights to apply to the image. Must have the same shape as the image.
     use_standardized : bool, optional
         Enable to standardize the data before computing the PDF and ECDF.
+    normalization_type : str, optional
+        See `~turbustat.statistics.stat_utils.data_normalization`.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, img, min_val=0.0, bins=None, weights=None,
-                 use_standardized=False):
+    def __init__(self, img, min_val=-np.inf, bins=None, weights=None,
+                 normalization_type=None):
         super(PDF, self).__init__()
 
         self.need_header_flag = False
@@ -56,10 +58,12 @@ class PDF(BaseStatisticMixIn):
 
             self.data = self.data[isfinite] * self.weights[isfinite]
 
-        self._standardize_flag = False
-        if use_standardized:
-            self._standardize_flag = True
-            self.data = standardize(self.data)
+        if normalization_type is not None:
+            self._normalization_type = normalization_type
+            self.data = data_normalization(self.data,
+                                           norm_type=normalization_type)
+        else:
+            self._normalization_type = "None"
 
         self._bins = bins
 
@@ -93,8 +97,8 @@ class PDF(BaseStatisticMixIn):
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     @property
-    def is_standardized(self):
-        return self._standardize_flag
+    def normalization_type(self):
+        return self._normalization_type
 
     @property
     def pdf(self):
@@ -171,17 +175,20 @@ class PDF(BaseStatisticMixIn):
 
             import matplotlib.pyplot as p
 
-            if self._standardize_flag:
+            if self.normalization_type == "standardize":
                 xlabel = r"z-score"
+            elif self.normalization_type == "center":
+                xlabel = r"I - $\bar{I}$"
+            elif self.normalization_type == "normalize_by_mean":
+                xlabel = r"I/$\bar{I}$"
             else:
                 xlabel = r"Intensity"
 
             # PDF
             p.subplot(121)
-            if self._standardize_flag:
-                p.plot(self.bins, self.pdf, 'b-')
-            else:
-                p.loglog(self.bins, self.pdf, 'b-')
+            p.semilogy(self.bins, self.pdf, 'b-')
+            # else:
+            #     p.loglog(self.bins, self.pdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("PDF")
@@ -190,7 +197,7 @@ class PDF(BaseStatisticMixIn):
             ax2 = p.subplot(122)
             ax2.yaxis.tick_right()
             ax2.yaxis.set_label_position("right")
-            if self._standardize_flag:
+            if self.normalization_type != "None":
                 ax2.plot(self.bins, self.ecdf, 'b-')
             else:
                 ax2.semilogx(self.bins, self.ecdf, 'b-')
@@ -227,14 +234,17 @@ class PDF_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, img1, img2, min_val1=0.0, min_val2=0.0,
+    def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
+                 normalization_type="standardize",
                  weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
 
-        self.PDF1 = PDF(img1, min_val=min_val1, use_standardized=True,
+        self.PDF1 = PDF(img1, min_val=min_val1,
+                        normalization_type=normalization_type,
                         weights=weights1)
 
-        self.PDF2 = PDF(img2, min_val=min_val2, use_standardized=True,
+        self.PDF2 = PDF(img2, min_val=min_val2,
+                        normalization_type=normalization_type,
                         weights=weights2)
 
         self.bins, self.bin_centers = \
