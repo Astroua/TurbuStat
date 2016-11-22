@@ -2,6 +2,7 @@
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import convolve
+import astropy.units as u
 from scipy import ndimage as nd
 import itertools as it
 import operator as op
@@ -79,9 +80,18 @@ class Mask_and_Moments(object):
                                   " estimation is not available. You must "
                                   "provide the noise scale.")
 
-            self.scale = Noise(self.cube).scale
+            self.scale = Noise(self.cube).scale * self.cube.unit
         else:
+            if not isinstance(scale, u.Quantity):
+                raise TypeError("scale must be a Quantity with the same units"
+                                " as the given cube.")
+            if not scale.unit == self.cube.unit:
+                raise u.UnitsError("scale must have the same units"
+                                   " as the given cube.")
             self.scale = scale
+
+        print(type(self.scale))
+        print(self.scale.unit)
 
         self.prop_headers = None
         self.prop_err_headers = None
@@ -129,7 +139,7 @@ class Mask_and_Moments(object):
 
         return self
 
-    def make_moments(self, axis=0, units=False):
+    def make_moments(self, axis=0, units=True):
         '''
         Calculate the moments.
 
@@ -351,6 +361,13 @@ class Mask_and_Moments(object):
           enumerate(zip(self.all_moments(), self.all_moment_errs(),
                         self.prop_headers, self.prop_err_headers)):
 
+            # Can't write quantities.
+            if _try_remove_unit(arr):
+                arr = arr.value
+
+            if _try_remove_unit(err):
+                err = err.value
+
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
 
@@ -402,7 +419,7 @@ class Mask_and_Moments(object):
             moments_path = ""
 
         if not isinstance(fits_name, SpectralCube):
-            root_name = os.path.basename(fits_name[:-4])
+            root_name = os.path.basename(fits_name[:-5])
         else:
             root_name = moments_prefix
 
