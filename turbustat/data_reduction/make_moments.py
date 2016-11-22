@@ -90,9 +90,6 @@ class Mask_and_Moments(object):
                                    " as the given cube.")
             self.scale = scale
 
-        print(type(self.scale))
-        print(self.scale.unit)
-
         self.prop_headers = None
         self.prop_err_headers = None
 
