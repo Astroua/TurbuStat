@@ -235,7 +235,7 @@ class PDF_Distance(object):
                                       threed_types)}
 
     def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
-                 normalization_type="standardize",
+                 normalization_type="standardize", nbins=None,
                  weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
 
@@ -249,7 +249,7 @@ class PDF_Distance(object):
 
         self.bins, self.bin_centers = \
             common_histogram_bins(self.PDF1.data, self.PDF2.data,
-                                  return_centered=True)
+                                  return_centered=True, nbins=nbins)
 
         # Feed the common set of bins to be used in the PDFs
         self.PDF1.run(verbose=False, bins=self.bins)
