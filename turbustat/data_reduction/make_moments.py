@@ -510,12 +510,13 @@ class Mask_and_Moments(object):
                 np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1] * shape[2]),
                           axis=1).value
         else:
-            channel_max = np.empty((shape[axis])) * self.cube.unit
+            channel_max = np.empty((shape[axis]))
             for i in range(shape[axis]):
                 view[axis] = i
                 plane = self.cube[view]
 
-                channel_max[i] = np.nanmax(plane)
+                channel_max[i] = np.nanmax(plane).value
+            channel_max = u.Quantity(channel_max, unit=self.cube.unit)
 
         good_channels = np.where(channel_max > self.clip * self.scale)[0]
 
