@@ -1,10 +1,13 @@
 
 import numpy as np
 import astropy.units as u
+from warnings import warn
 
 from spectral_cube._moments import _moment_shp
 from spectral_cube import SpectralCube
+from spectral_cube.lower_dimensional_structures import Projection
 from spectral_cube.cube_utils import iterator_strategy
+from spectral_cube.wcs_utils import drop_axis
 
 # from spectral_cube.np_compat import allbadtonan
 
@@ -16,6 +19,191 @@ Borrows heavily from the functionality in _moments.py from spectral-cube.
 Functions require, at minimum, a SpectralCube object and a scale value that
 characterizes the noise.
 '''
+
+# convenience structures to keep track of the reversed index
+# conventions between WCS and numpy
+np2wcs = {2: 0, 1: 1, 0: 2}
+
+
+def moment0_error(cube, scale, axis=0, how='auto'):
+    '''
+    Compute the zeroth moment error.
+
+    Parameters
+    ----------
+    cube : SpectralCube
+        Data cube.
+    scale : SpectralCube or `~astropy.units.Quantity`
+        The noise level in the data, either as a single value (with the same
+        units as the cube) or a SpectralCube of noise values.
+    axis : int
+        Axis to compute moment over.
+    how : {'auto', 'cube', 'slice'}, optional
+        The computational method to use.
+
+    Returns
+    -------
+    moment0 :  `~spectral_cube.lower_dimensional_structures.Projection`
+
+    '''
+
+    if how == "auto":
+        how = iterator_strategy(cube, 0)
+
+        if how == "ray":
+            warn("Automatically selected 'ray' which isn't implemented. Using"
+                 " 'slice' instead.")
+            how = 'slice'
+
+    if how == "cube":
+        moment0_err = _cube0(cube, axis, scale)
+    elif how == "slice":
+        moment0_err = _slice0(cube, axis, scale)
+    else:
+        raise ValueError("how must be 'cube' or 'slice'.")
+
+    meta = {'moment_order': 0,
+            'moment_axis': axis,
+            'moment_method': how}
+
+    cube_meta = cube.meta.copy()
+    meta.update(cube_meta)
+
+    new_wcs = drop_axis(cube._wcs, np2wcs[axis])
+
+    return Projection(moment0_err, copy=False, wcs=new_wcs, meta=meta,
+                      header=cube._nowcs_header)
+
+
+def moment1_error(cube, scale, axis=0, how='auto', moment0=None, moment1=None):
+    '''
+    Compute the first moment error.
+
+    Parameters
+    ----------
+    cube : SpectralCube
+        Data cube.
+    scale : SpectralCube or `~astropy.units.Quantity`
+        The noise level in the data, either as a single value (with the same
+        units as the cube) or a SpectralCube of noise values.
+    axis : int
+        Axis to compute moment over.
+    how : {'auto', 'cube', 'slice'}, optional
+        The computational method to use.
+
+    Returns
+    -------
+    moment1_err :  `~spectral_cube.lower_dimensional_structures.Projection`
+
+    '''
+
+    if how == "auto":
+        how = iterator_strategy(cube, 0)
+
+        if how == "ray":
+            warn("Automatically selected 'ray' which isn't implemented. Using"
+                 " 'slice' instead.")
+            how = 'slice'
+
+    # Compute moments if they aren't given.
+    if moment0 is None:
+        moment0 = cube.moment0(how=how, axis=axis)
+    if moment1 is None:
+        moment1 = cube.moment1(how=how, axis=axis)
+
+    # Remove velocity offset from centroid to match cube._pix_cen
+    # Requires converting to a Quantity
+    moment1 = u.Quantity(moment1.copy())
+    moment1 -= cube.spectral_axis[0]
+
+    if how == "cube":
+        moment1_err = _cube1(cube, axis, scale, moment0, moment1)
+    elif how == "slice":
+        moment1_err = _slice1(cube, axis, scale, moment0, moment1)
+    else:
+        raise ValueError("how must be 'cube' or 'slice'.")
+
+    meta = {'moment_order': 1,
+            'moment_axis': axis,
+            'moment_method': how}
+
+    cube_meta = cube.meta.copy()
+    meta.update(cube_meta)
+
+    new_wcs = drop_axis(cube._wcs, np2wcs[axis])
+
+    return Projection(moment1_err, copy=False, wcs=new_wcs, meta=meta,
+                      header=cube._nowcs_header)
+
+
+def moment2_error(cube, scale, axis=0, how='auto', moment0=None, moment1=None,
+                  moment2=None, moment1_err=None):
+    '''
+    Compute the second moment error.
+
+    Parameters
+    ----------
+    cube : SpectralCube
+        Data cube.
+    scale : SpectralCube or `~astropy.units.Quantity`
+        The noise level in the data, either as a single value (with the same
+        units as the cube) or a SpectralCube of noise values.
+    axis : int
+        Axis to compute moment over.
+    how : {'auto', 'cube', 'slice'}, optional
+        The computational method to use.
+
+    Returns
+    -------
+    moment2_err :  `~spectral_cube.lower_dimensional_structures.Projection`
+
+    '''
+
+    if how == "auto":
+        how = iterator_strategy(cube, 0)
+
+        if how == "ray":
+            warn("Automatically selected 'ray' which isn't implemented. Using"
+                 " 'slice' instead.")
+            how = 'slice'
+
+    # Compute moments if they aren't given.
+    if moment0 is None:
+        moment0 = cube.moment0(how='cube', axis=axis)
+    if moment1 is None:
+        moment1 = cube.moment1(how='cube', axis=axis)
+
+    # Remove velocity offset to match cube._pix_cen
+    # Requires converting to a Quantity
+    moment1 = u.Quantity(moment1.copy())
+    moment1 -= cube.spectral_axis[0]
+
+    if moment2 is None:
+        moment2 = cube.moment2(how='cube', axis=axis)
+    if moment1_err is None:
+        moment1_err = _cube1(cube, axis, scale, moment0=moment0,
+                             moment1=moment1)
+
+    if how == "cube":
+        moment2_err = _cube2(cube, axis, scale, moment0, moment1, moment2,
+                             moment1_err)
+    elif how == "slice":
+        moment2_err = _slice2(cube, axis, scale, moment0, moment1, moment2,
+                              moment1_err)
+    else:
+        raise ValueError("how must be 'cube' or 'slice'.")
+
+    meta = {'moment_order': 2,
+            'moment_axis': axis,
+            'moment_method': how}
+
+    cube_meta = cube.meta.copy()
+    meta.update(cube_meta)
+
+    new_wcs = drop_axis(cube._wcs, np2wcs[axis])
+
+    return Projection(moment2_err, copy=False, wcs=new_wcs, meta=meta,
+                      header=cube._nowcs_header)
 
 
 def _slice0(cube, axis, scale):
@@ -65,7 +253,7 @@ def _slice0(cube, axis, scale):
     return out_result
 
 
-def _slice1(cube, axis, scale, moment0=None, moment1=None):
+def _slice1(cube, axis, scale, moment0, moment1):
     """
     1st moment along an axis, calculated slicewise
 
@@ -73,7 +261,7 @@ def _slice1(cube, axis, scale, moment0=None, moment1=None):
     ----------
     cube : SpectralCube
     axis : int
-    scale : float
+    scale : float or SpectralCube
     moment0 : 0th moment
     moment1 : 1st moment
 
@@ -94,12 +282,6 @@ def _slice1(cube, axis, scale, moment0=None, moment1=None):
     # I don't think there is a way to do this with one pass.
     # The first 2 moments always have to be pre-computed.
 
-    # Compute moments if they aren't given.
-    if moment0 is None:
-        moment0 = cube.moment0(how='slice', axis=axis)
-    if moment1 is None:
-        moment1 = cube.moment1(how='slice', axis=axis)
-
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
@@ -111,13 +293,14 @@ def _slice1(cube, axis, scale, moment0=None, moment1=None):
 
     view = [slice(None)] * 3
     pix_cen = u.Quantity(cube._pix_cen()[axis] * spec_unit)
-    pix_size = cube._pix_size_slice(axis) * spec_unit
+
+    # term2 does not depend on the plane.
+    term2 = moment1 / axis_sum
 
     for i in range(cube.shape[axis]):
         view[axis] = i
 
-        term1 = (pix_cen[view] + pix_size) / axis_sum
-        term2 = moment1 / axis_sum
+        term1 = pix_cen[view] / axis_sum
 
         if _scale_cube:
             noise_plane = \
@@ -130,8 +313,8 @@ def _slice1(cube, axis, scale, moment0=None, moment1=None):
     return np.sqrt(result)
 
 
-def _slice2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
-            moment1_err=None):
+def _slice2(cube, axis, scale, moment0, moment1, moment2,
+            moment1_err):
     """
     2nd moment error along an axis, calculated slicewise
 
@@ -139,7 +322,7 @@ def _slice2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
     ----------
     cube : SpectralCube
     axis : int
-    scale : float
+    scale : float or SpectralCube
     moment0 : 0th moment
     moment1 : 1st moment
     moment2 : 2nd moment
@@ -159,20 +342,6 @@ def _slice2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
     else:
         _scale_cube = False
 
-    # I don't think there is a way to do this with one pass.
-    # The first 2 moments always have to be pre-computed.
-
-    # Compute moments if they aren't given.
-    if moment0 is None:
-        moment0 = cube.moment0(how='slice', axis=axis)
-    if moment1 is None:
-        moment1 = cube.moment1(how='slice', axis=axis)
-    if moment2 is None:
-        moment2 = cube.moment2(how='slice', axis=axis)
-    if moment1_err is None:
-        moment1_err = _slice1(cube, axis, scale, moment0=moment0,
-                              moment1=moment1)
-
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
@@ -185,14 +354,15 @@ def _slice2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
 
     view = [slice(None)] * 3
     pix_cen = cube._pix_cen()[axis] * spec_unit
-    pix_size = cube._pix_size_slice(axis) * spec_unit
+
+    # term12 does not depend on plane.
+    term12 = moment2 / axis_sum
 
     for i in range(cube.shape[axis]):
         view[axis] = i
         plane = np.nan_to_num(cube.filled_data[view])
 
-        term11 = np.power((pix_cen[view] + pix_size - moment1), 2) / axis_sum
-        term12 = moment2 / axis_sum
+        term11 = np.power((pix_cen[view] - moment1), 2) / axis_sum
 
         if _scale_cube:
             noise_plane = \
@@ -202,7 +372,7 @@ def _slice2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
 
         term1 += np.power((term11 - term12) * noise_plane, 2)
 
-        term2 += np.nan_to_num(plane) * (pix_cen[view] + pix_size - moment1)
+        term2 += np.nan_to_num(plane) * (pix_cen[view] - moment1)
 
     term2 = 4 * np.power((moment1_err * term2) / (axis_sum), 2)
 
@@ -231,7 +401,7 @@ def _cube0(cube, axis, scale):
     return error_arr
 
 
-def _cube1(cube, axis, scale, moment0=None, moment1=None):
+def _cube1(cube, axis, scale, moment0, moment1):
     '''
     Moment 1 error computed cube-wise.
     '''
@@ -248,12 +418,6 @@ def _cube1(cube, axis, scale, moment0=None, moment1=None):
     # I don't think there is a way to do this with one pass.
     # The first 2 moments always have to be pre-computed.
 
-    # Compute moments if they aren't given.
-    if moment0 is None:
-        moment0 = cube.moment0(how='cube', axis=axis)
-    if moment1 is None:
-        moment1 = cube.moment1(how='cube', axis=axis)
-
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
@@ -263,11 +427,9 @@ def _cube1(cube, axis, scale, moment0=None, moment1=None):
     shp = _moment_shp(cube, axis)
     result = np.zeros(shp) * spec_unit
 
-    view = [slice(None)] * 3
     pix_cen = cube._pix_cen()[axis] * spec_unit
-    pix_size = cube._pix_size_slice(axis) * spec_unit
 
-    term1 = (pix_cen[view] + pix_size) / axis_sum
+    term1 = pix_cen / axis_sum
     term2 = moment1 / axis_sum
 
     result = np.sqrt(np.sum(np.power((term1 - term2) *
@@ -281,25 +443,13 @@ def _cube1(cube, axis, scale, moment0=None, moment1=None):
     return result
 
 
-def _cube2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
-           moment1_err=None):
+def _cube2(cube, axis, scale, moment0, moment1, moment2,
+           moment1_err):
     '''
     '''
-
-    # Compute moments if they aren't given.
-    if moment0 is None:
-        moment0 = cube.moment0(how='cube', axis=axis)
-    if moment1 is None:
-        moment1 = cube.moment1(how='cube', axis=axis)
-    if moment2 is None:
-        moment2 = cube.moment2(how='cube', axis=axis)
-    if moment1_err is None:
-        moment1_err = _cube1(cube, axis, scale, moment0=moment0,
-                             moment1=moment1)
 
     spec_unit = cube.spectral_axis.unit
     pix_cen = cube._pix_cen()[axis] * spec_unit
-    pix_size = cube._pix_size_slice(axis) * spec_unit
 
     if isinstance(scale, SpectralCube):
         # scale should then have the same shape as the cube.
@@ -317,14 +467,15 @@ def _cube2(cube, axis, scale, moment0=None, moment1=None, moment2=None,
 
     plane = np.nan_to_num(cube.filled_data[:])
 
-    term11 = np.power((pix_cen + pix_size - moment1), 2) / axis_sum
+    term11 = np.power((pix_cen - moment1), 2) / axis_sum
     term12 = moment2 / axis_sum
 
     term1 = np.sum(np.power((term11 - term12) * noise_plane, 2), axis=axis)
 
-    term21 = u.Quantity(np.nan_to_num(plane) * (pix_cen + pix_size - moment1))
+    term21 = u.Quantity(np.nan_to_num(plane) * (pix_cen - moment1))
 
-    term2 = 4 * np.power((moment1_err * np.sum(term21, axis=axis)) / axis_sum, 2)
+    term2 = \
+        4 * np.power((moment1_err * np.sum(term21, axis=axis)) / axis_sum, 2)
 
     result = np.sqrt(term1 + term2)
 
@@ -347,27 +498,14 @@ def linewidth_sigma_err(cube, scale, how='auto', moment0=None, moment1=None,
     if how == "auto":
         how = iterator_strategy(cube, 0)
 
-    # Compute moments if they aren't given.
-    if moment0 is None:
-        moment0 = cube.moment0(how=how, axis=0)
-    if moment1 is None:
-        moment1 = cube.moment1(how=how, axis=0)
     if moment2 is None:
         moment2 = cube.moment2(how=how, axis=0)
-    if moment1_err is None:
-        moment1_err = _cube1(cube, 0, scale, moment0=moment0,
-                             moment1=moment1)
 
-    if how == "cube":
-        mom2_err = _cube2(cube, 0, scale, moment0, moment1, moment2,
-                          moment1_err)
-    elif how == "slice":
-        mom2_err = _slice2(cube, 0, scale, moment0, moment1, moment2,
-                           moment1_err)
-    elif how == "ray":
-        raise NotImplementedError("")
-    else:
-        raise ValueError("how must be cube, slice, or ray.")
+    mom2_err = moment2_error(cube, scale, axis=0, how=how,
+                             moment0=moment0,
+                             moment1=moment1,
+                             moment2=moment2,
+                             moment1_err=moment1_err)
 
     return mom2_err / (2 * np.sqrt(moment2))
 
@@ -384,38 +522,3 @@ def linewidth_fwhm_err(cube, scale, how='auto', moment0=None, moment1=None,
                                          moment2, moment1_err)
 
     return SIGMA2FWHM * del_lwidth_sig
-
-
-def moment_raywise(cube, order, axis):
-    """
-    Compute moments by accumulating the answer one ray at a time
-    """
-    shp = _moment_shp(cube, axis)
-    out = np.zeros(shp) * np.nan
-
-    pix_cen = cube._pix_cen()[axis]
-    pix_size = cube._pix_size()[axis]
-
-    for x, y, slc in cube._iter_rays(axis):
-        # the intensity, i.e. the weights
-        include = cube._mask.include(data=cube._data, wcs=cube._wcs,
-                                     view=slc)
-        if not include.any():
-            continue
-
-        data = cube.flattened(slc).value * pix_size[slc][include]
-
-        if order == 0:
-            out[x, y] = data.sum()
-            continue
-
-        order1 = (data * pix_cen[slc][include]).sum() / data.sum()
-        if order == 1:
-            out[x, y] = order1
-            continue
-
-        ordern = (data * (pix_cen[slc][include] - order1) ** order).sum()
-        ordern /= data.sum()
-
-        out[x, y] = ordern
-    return out
