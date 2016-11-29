@@ -24,14 +24,16 @@ except ImportError:
     Warning("signal-id is not installed. Disabling associated functionality.")
     signal_id_flag = False
 
-from _moment_errs import _slice0, _slice1, _slice2, _cube0, _cube1, _cube2
+from _moment_errs import (moment0_error, moment1_error, moment2_error,
+                          linewidth_sigma_err)
 
 
 class Mask_and_Moments(object):
     """
     A unified approach to deriving the noise level in a cube, applying a
     mask, and deriving moments along with their errors. All the heavy lifting
-    is done with `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+    is done with
+    `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
 
     Parameters
     ----------
@@ -162,7 +164,7 @@ class Mask_and_Moments(object):
             self._intint = self._intint.value
         return self
 
-    def make_moment_errors(self, axis=0):
+    def make_moment_errors(self, how='auto', axis=0):
         '''
         Calculate the errors in the moments.
 
@@ -172,9 +174,17 @@ class Mask_and_Moments(object):
             The axis to calculate the moments along.
         '''
 
-        self._moment0_err = self._get_moment0_err(axis=axis)
-        self._moment1_err = self._get_moment1_err(axis=axis)
-        self._moment2_err = self._get_moment2_err(axis=axis)
+        self._moment0_err = moment0_error(self.cube, self.scale, how=how,
+                                          axis=axis)
+        self._moment1_err = moment1_error(self.cube, self.scale, how=how,
+                                          axis=axis, moment0=self.moment0,
+                                          moment1=self.moment1)
+        self._moment2_err = moment2_error(self.cube, self.scale, axis=axis,
+                                          how=how, moment0=self.moment0,
+                                          moment1=self.moment1,
+                                          moment2=self.moment2,
+                                          moment1_err=self.moment1_err)
+
         self._intint_err = self._get_int_intensity_err(axis=axis)
 
         return self
@@ -515,14 +525,14 @@ class Mask_and_Moments(object):
                 np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1]*shape[2]),
                           axis=1).value
         else:
-            channel_max = np.empty((shape[axis]))
+            channel_max = np.empty((shape[axis])) * self.cube.unit
             for i in range(shape[axis]):
                 view[axis] = i
-                plane = self.cube._get_filled_data(fill=0, view=view)
+                plane = self.cube[view]
 
                 channel_max[i] = np.nanmax(plane)
 
-        good_channels = np.where(channel_max > self.clip*self.scale)[0]
+        good_channels = np.where(channel_max > self.clip * self.scale)[0]
 
         if not np.any(good_channels):
             raise ValueError("Cannot find any channels with signal.")
@@ -536,7 +546,7 @@ class Mask_and_Moments(object):
 
         return slab.moment0(axis=axis, how=self.moment_method)
 
-    def _get_int_intensity_err(self, axis=0):
+    def _get_int_intensity_err(self, axis=0, how='auto'):
         '''
         Parameters
         ----------
@@ -545,61 +555,7 @@ class Mask_and_Moments(object):
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
 
-        if self.moment_method is 'cube':
-            return _cube0(slab, axis, self.scale)
-        elif self.moment_method is 'slice':
-            return _slice0(slab, axis, self.scale)
-        elif self.moment_method is 'ray':
-            raise NotImplementedError
-
-    def _get_moment0_err(self, axis=0):
-        '''
-        Parameters
-        ----------
-        axis : int, optional
-            Axis to perform operations along.
-        '''
-
-        if self.moment_method is 'cube':
-            return _cube0(self.cube, axis, self.scale)
-        elif self.moment_method is 'slice':
-            return _slice0(self.cube, axis, self.scale)
-        elif self.moment_method is 'ray':
-            raise NotImplementedError
-
-    def _get_moment1_err(self, axis=0):
-        '''
-        Parameters
-        ----------
-        axis : int, optional
-            Axis to perform operations along.
-        '''
-
-        if self.moment_method is 'cube':
-            return _cube1(self.cube, axis, self.scale, self.moment0,
-                          self.moment1)
-        elif self.moment_method is 'slice':
-            return _slice1(self.cube, axis, self.scale, self.moment0,
-                           self.moment1)
-        elif self.moment_method is 'ray':
-            raise NotImplementedError
-
-    def _get_moment2_err(self, axis=0):
-        '''
-        Parameters
-        ----------
-        axis : int, optional
-            Axis to perform operations along.
-        '''
-
-        if self.moment_method is 'cube':
-            return _cube2(self.cube, axis, self.scale, self.moment0,
-                          self.moment1, self.moment2, self.moment1_err)
-        elif self.moment_method is 'slice':
-            return _slice2(self.cube, axis, self.scale, self.moment0,
-                           self.moment1, self.moment2, self.moment1_err)
-        elif self.moment_method is 'ray':
-            raise NotImplementedError
+        return moment0_error(slab, self.scale, axis=axis, how=how)
 
 
 def moment_masking(cube, kernel_size, clip=5, dilations=1):
