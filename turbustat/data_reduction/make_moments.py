@@ -24,8 +24,7 @@ except ImportError:
     Warning("signal-id is not installed. Disabling associated functionality.")
     signal_id_flag = False
 
-from _moment_errs import (moment0_error, moment1_error, moment2_error,
-                          linewidth_sigma_err)
+from _moment_errs import (moment0_error, moment1_error, linewidth_sigma_err)
 
 
 class Mask_and_Moments(object):
@@ -74,7 +73,7 @@ class Mask_and_Moments(object):
 
         if moment_method not in ['slice', 'cube', 'ray']:
             raise TypeError("Moment method must be 'slice', 'cube', or 'ray'.")
-        self.moment_method = moment_method
+        self.moment_how = moment_method
 
         if scale is None:
             if not signal_id_flag:
@@ -136,8 +135,6 @@ class Mask_and_Moments(object):
 
         self.cube = self.cube.with_mask(mask)
 
-        return self
-
     def make_moments(self, axis=0, units=True):
         '''
         Calculate the moments.
@@ -150,9 +147,10 @@ class Mask_and_Moments(object):
             If enabled, the units of the arrays are kept.
         '''
 
-        self._moment0 = self.cube.moment0(axis=axis, how=self.moment_method)
-        self._moment1 = self.cube.moment1(axis=axis, how=self.moment_method)
-        self._moment2 = self.cube.moment2(axis=axis, how=self.moment_method)
+        self._moment0 = self.cube.moment0(axis=axis, how=self.moment_how)
+        self._moment1 = self.cube.moment1(axis=axis, how=self.moment_how)
+        self._linewidth = \
+            self.cube.linewidth_sigma(how=self.moment_how)
 
         # The 'how' is set directly in the int intensity function.
         self._intint = self._get_int_intensity(axis=axis)
@@ -162,9 +160,8 @@ class Mask_and_Moments(object):
             self._moment1 = self._moment1.value
             self._moment2 = self._moment2.value
             self._intint = self._intint.value
-        return self
 
-    def make_moment_errors(self, how='auto', axis=0):
+    def make_moment_errors(self, axis=0):
         '''
         Calculate the errors in the moments.
 
@@ -174,20 +171,19 @@ class Mask_and_Moments(object):
             The axis to calculate the moments along.
         '''
 
-        self._moment0_err = moment0_error(self.cube, self.scale, how=how,
-                                          axis=axis)
-        self._moment1_err = moment1_error(self.cube, self.scale, how=how,
+        self._moment0_err = moment0_error(self.cube, self.scale,
+                                          how=self.moment_how, axis=axis)
+        self._moment1_err = moment1_error(self.cube, self.scale,
+                                          how=self.moment_how,
                                           axis=axis, moment0=self.moment0,
                                           moment1=self.moment1)
-        self._moment2_err = moment2_error(self.cube, self.scale, axis=axis,
-                                          how=how, moment0=self.moment0,
-                                          moment1=self.moment1,
-                                          moment2=self.moment2,
-                                          moment1_err=self.moment1_err)
+        self._linewidth_err = \
+            linewidth_sigma_err(self.cube, self.scale,
+                                how=self.moment_how, moment0=self.moment0,
+                                moment1=self.moment1,
+                                moment1_err=self.moment1_err)
 
         self._intint_err = self._get_int_intensity_err(axis=axis)
-
-        return self
 
     @property
     def moment0(self):
@@ -198,12 +194,8 @@ class Mask_and_Moments(object):
         return self._moment1
 
     @property
-    def moment2(self):
-        return self._moment2
-
-    @property
     def linewidth(self):
-        return np.sqrt(self.moment2)
+        return self._linewidth
 
     @property
     def intint(self):
@@ -218,12 +210,8 @@ class Mask_and_Moments(object):
         return self._moment1_err
 
     @property
-    def moment2_err(self):
-        return self._moment2_err
-
-    @property
     def linewidth_err(self):
-        return self.moment2_err / (2 * np.sqrt(self.moment2))
+        return self._linewidth_err
 
     @property
     def intint_err(self):
@@ -314,7 +302,7 @@ class Mask_and_Moments(object):
 
         bunits = [self.cube.unit, self.cube.spectral_axis.unit,
                   self.cube.spectral_axis.unit,
-                  self.cube.unit*self.cube.spectral_axis.unit]
+                  self.cube.unit * self.cube.spectral_axis.unit]
 
         comments = ["Image of the Zeroth Moment",
                     "Image of the First Moment",
@@ -338,8 +326,6 @@ class Mask_and_Moments(object):
 
             self.prop_headers.append(hdr)
             self.prop_err_headers.append(hdr_err)
-
-        return self
 
     def to_fits(self, save_name=None):
         '''
@@ -378,7 +364,7 @@ class Mask_and_Moments(object):
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
 
-            hdu.writeto(self.save_name+labels[i]+".fits")
+            hdu.writeto(self.save_name + labels[i] + ".fits")
 
     @staticmethod
     def from_fits(fits_name, moments_prefix=None, moments_path=None,
@@ -444,7 +430,7 @@ class Mask_and_Moments(object):
         else:
             try:
                 moment0 = fits.open(os.path.join(moments_path,
-                                                 root_name+"_moment0.fits"))
+                                                 root_name + "_moment0.fits"))
                 self._moment0 = moment0[0].data
                 self._moment0_err = moment0[1].data
             except IOError as e:
@@ -460,7 +446,7 @@ class Mask_and_Moments(object):
         else:
             try:
                 moment1 = fits.open(os.path.join(moments_path,
-                                                 root_name+"_centroid.fits"))
+                                                 root_name + "_centroid.fits"))
                 self._moment1 = moment1[0].data
                 self._moment1_err = moment1[1].data
             except IOError as e:
@@ -472,20 +458,19 @@ class Mask_and_Moments(object):
         if linewidth is not None:
             linewidth = fits.open(linewidth)
 
-            self._moment2 = np.power(linewidth[0].data, 2.)
-            self._moment2_err = linewidth[1].data * (2 * np.sqrt(self.moment2))
+            self._linewidth = linewidth[0].data
+            self._linewidth_err = linewidth[1].data
         else:
             try:
                 linewidth = \
                     fits.open(os.path.join(moments_path,
-                                           root_name+"_linewidth.fits"))
+                                           root_name + "_linewidth.fits"))
 
-                self._moment2 = np.power(linewidth[0].data, 2.)
-                self._moment2_err = linewidth[1].data * \
-                    (2 * np.sqrt(self.moment2))
+                self._linewidth = linewidth[0].data
+                self._linewidth_err = linewidth[1].data
             except IOError as e:
-                self._moment2 = None
-                self._moment2_err = None
+                self._linewidth = None
+                self._linewidth_err = None
                 print e
                 print("Linewidth fits file not found.")
 
@@ -496,7 +481,7 @@ class Mask_and_Moments(object):
         else:
             try:
                 intint = fits.open(os.path.join(moments_path,
-                                                root_name+"_intint.fits"))
+                                                root_name + "_intint.fits"))
                 self._intint = intint[0].data
                 self._intint_err = intint[1].data
             except IOError as e:
@@ -520,9 +505,9 @@ class Mask_and_Moments(object):
         shape = self.cube.shape
         view = [slice(None)] * 3
 
-        if self.moment_method is 'cube':
+        if self.moment_how is 'cube':
             channel_max = \
-                np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1]*shape[2]),
+                np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1] * shape[2]),
                           axis=1).value
         else:
             channel_max = np.empty((shape[axis])) * self.cube.unit
@@ -544,7 +529,7 @@ class Mask_and_Moments(object):
 
         slab = self.cube.spectral_slab(*self.channel_range)
 
-        return slab.moment0(axis=axis, how=self.moment_method)
+        return slab.moment0(axis=axis, how=self.moment_how)
 
     def _get_int_intensity_err(self, axis=0, how='auto'):
         '''
@@ -555,7 +540,7 @@ class Mask_and_Moments(object):
         '''
         slab = self.cube.spectral_slab(*self.channel_range)
 
-        return moment0_error(slab, self.scale, axis=axis, how=how)
+        return moment0_error(slab, self.scale, axis=axis, how=self.moment_how)
 
 
 def moment_masking(cube, kernel_size, clip=5, dilations=1):

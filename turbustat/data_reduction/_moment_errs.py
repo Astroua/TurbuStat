@@ -113,7 +113,7 @@ def moment1_error(cube, scale, axis=0, how='auto', moment0=None, moment1=None):
 
     # Remove velocity offset from centroid to match cube._pix_cen
     # Requires converting to a Quantity
-    moment1 = u.Quantity(moment1.copy())
+    moment1 = u.Quantity(moment1)
     moment1 -= cube.spectral_axis[0]
 
     if how == "cube":
@@ -175,7 +175,7 @@ def moment2_error(cube, scale, axis=0, how='auto', moment0=None, moment1=None,
 
     # Remove velocity offset to match cube._pix_cen
     # Requires converting to a Quantity
-    moment1 = u.Quantity(moment1.copy())
+    moment1 = u.Quantity(moment1)
     moment1 -= cube.spectral_axis[0]
 
     if moment2 is None:
@@ -285,7 +285,7 @@ def _slice1(cube, axis, scale, moment0, moment1):
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
-    axis_sum = u.Quantity(moment0.copy() /
+    axis_sum = u.Quantity(moment0 /
                           (cube._pix_size_slice(axis) * spec_unit))
 
     shp = _moment_shp(cube, axis)
@@ -345,7 +345,7 @@ def _slice2(cube, axis, scale, moment0, moment1, moment2,
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
-    axis_sum = u.Quantity(moment0.copy() /
+    axis_sum = u.Quantity(moment0 /
                           (cube._pix_size_slice(axis) * spec_unit))
 
     shp = _moment_shp(cube, axis)
@@ -421,7 +421,7 @@ def _cube1(cube, axis, scale, moment0, moment1):
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
     spec_unit = cube.spectral_axis.unit
-    axis_sum = u.Quantity(moment0.copy() /
+    axis_sum = u.Quantity(moment0 /
                           (cube._pix_size_slice(axis) * spec_unit))
 
     shp = _moment_shp(cube, axis)
@@ -462,7 +462,7 @@ def _cube2(cube, axis, scale, moment0, moment1, moment2,
 
     # Divide moment0 by the pixel size in the given axis so it represents the
     # sum.
-    axis_sum = u.Quantity(moment0.copy() /
+    axis_sum = u.Quantity(moment0 /
                           (cube._pix_size_slice(axis) * spec_unit))
 
     plane = np.nan_to_num(cube.filled_data[:])
