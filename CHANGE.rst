@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #131 - Another correction for centroid offset issue. Cleaned moment calcs up a bit.
 * #130 - Corrections to moment error calculations.
 * #128 - log-log plotting for SCF spectrum. Fitting for SCF spectrum.
 * #127 - Standardize all data used for calculating the delta-variance distance. Also allows the `allow_huge` flag to be set in `DeltaVariance` when working on large images (>1 Gb).
