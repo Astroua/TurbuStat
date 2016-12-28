@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #133 - Fix indexing when creating 1D power spectra.
 * #131 - Another correction for centroid offset issue. Cleaned moment calcs up a bit.
 * #130 - Corrections to moment error calculations.
 * #128 - log-log plotting for SCF spectrum. Fitting for SCF spectrum.
