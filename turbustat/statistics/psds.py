@@ -45,7 +45,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     x = np.arange(-np.floor(psd2.shape[1]/2.).astype(int),
                   psd2.shape[1] - np.floor(psd2.shape[1]/2.).astype(int))
 
-    yy, xx = np.meshgrid(y, x)
+    yy, xx = np.meshgrid(y, x, indexing='ij')
 
     dists = np.sqrt(yy**2 + xx**2)
 
@@ -56,7 +56,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         yfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[0])))
         xfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[1])))
 
-        yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs)
+        yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
 
         freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
