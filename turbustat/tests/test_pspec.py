@@ -38,3 +38,14 @@ class testPSpec(TestCase):
 
         npt.assert_almost_equal(self.tester_dist.distance,
                                 computed_distances['pspec_distance'])
+
+
+def test_pspec_nonequal_shape():
+
+    mom0_sliced = dataset1["moment0"][0][:16, :]
+    mom0_hdr = dataset1["moment0"][1]
+
+    test = PowerSpectrum((mom0_sliced, mom0_hdr)).run()
+    test_T = PowerSpectrum((mom0_sliced.T, mom0_hdr)).run()
+
+    npt.assert_almost_equal(test.slope, test_T.slope, decimal=7)
