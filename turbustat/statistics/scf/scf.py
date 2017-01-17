@@ -75,10 +75,19 @@ class SCF(BaseStatisticMixIn):
     def lags(self):
         return self._lags
 
-    def compute_surface(self):
+    def compute_surface(self, boundary='continuous'):
         '''
         Compute the SCF up to the given size.
+
+        Parameters
+        ----------
+        boundary : {"continuous", "cut"}
+            Treat the boundary as continuous (wrap-around) or cut values
+            beyond the edge (i.e., for most observational data).
         '''
+
+        if boundary not in ["continuous", "cut"]:
+            raise ValueError("boundary must be 'continuous' or 'cut'.")
 
         self._scf_surface = np.zeros((self.size, self.size))
 
@@ -107,9 +116,32 @@ class SCF(BaseStatisticMixIn):
                         shift_func = fourier_shift
                     tmp = shift_func(tmp, y_shift, axis=2)
 
-                values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
-                    (np.nansum(self.data ** 2, axis=0) +
-                     np.nansum(tmp ** 2, axis=0))
+                if boundary is "cut":
+                    if x_shift < 0:
+                        x_slice_data = slice(None, tmp.shape[1] + x_shift)
+                        x_slice_tmp = slice(-x_shift, None)
+                    else:
+                        x_slice_data = slice(x_shift, None)
+                        x_slice_tmp = slice(None, tmp.shape[1] - x_shift)
+
+                    if y_shift < 0:
+                        y_slice_data = slice(None, tmp.shape[2] + y_shift)
+                        y_slice_tmp = slice(-y_shift, None)
+                    else:
+                        y_slice_data = slice(y_shift, None)
+                        y_slice_tmp = slice(None, tmp.shape[2] - y_shift)
+
+                    data_slice = (slice(None), x_slice_data, y_slice_data)
+                    tmp_slice = (slice(None), x_slice_tmp, y_slice_tmp)
+                elif boundary is "continuous":
+                    data_slice = (slice(None),) * 3
+                    tmp_slice = (slice(None),) * 3
+
+                values = \
+                    np.nansum(((self.data[data_slice] - tmp[tmp_slice]) ** 2),
+                              axis=0) / \
+                    (np.nansum(self.data[data_slice] ** 2, axis=0) +
+                     np.nansum(tmp[tmp_slice] ** 2, axis=0))
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
@@ -292,9 +324,9 @@ class SCF(BaseStatisticMixIn):
 
         return self
 
-    def run(self, logspacing=False, return_stddev=True, verbose=False,
+    def run(self, logspacing=False, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            ang_units=False, unit=u.deg):
+            verbose=False, ang_units=False, unit=u.deg):
         '''
         Computes the SCF. Necessary to maintain package standards.
 
@@ -320,7 +352,7 @@ class SCF(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         '''
 
-        self.compute_surface()
+        self.compute_surface(boundary=boundary)
         self.compute_spectrum(logspacing=logspacing,
                               return_stddev=return_stddev)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
