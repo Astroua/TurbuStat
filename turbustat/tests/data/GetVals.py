@@ -165,6 +165,12 @@ scf_val = scf_distance.scf1.scf_surface
 scf_spectrum = scf_distance.scf1.scf_spectrum
 scf_slope = scf_distance.scf1.slope
 
+# Now run the SCF when the boundaries aren't continuous
+scf_distance_cut_bound = SCF_Distance(dataset1["cube"],
+                                      dataset2["cube"], size=11,
+                                      boundary='cut').distance_metric()
+scf_val_noncon_bound = scf_distance_cut_bound.scf1.scf_surface
+
 # Cramer Statistic
 
 from turbustat.statistics import Cramer_Distance
@@ -218,6 +224,7 @@ np.savez_compressed('checkVals', wavelet_val=wavelet_val,
                     pca_val=pca_val,
                     pca_fit_vals=pca_fit_vals,
                     scf_val=scf_val,
+                    scf_val_noncon_bound=scf_val_noncon_bound,
                     scf_spectrum=scf_spectrum,
                     scf_slope=scf_slope,
                     cramer_val=cramer_val,
