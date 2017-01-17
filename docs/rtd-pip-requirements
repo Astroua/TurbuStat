@@ -1,6 +1,7 @@
 numpy
 matplotlib
 Cython
+scipy
 astropy-helpers
 astropy
 mock
