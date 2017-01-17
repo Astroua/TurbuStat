@@ -11,7 +11,7 @@ import statsmodels.api as sm
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data
-from ..stats_utils import common_scale, fourier_shift
+from ..stats_utils import common_scale, fourier_shift, pixel_shift
 
 
 class SCF(BaseStatisticMixIn):
@@ -94,10 +94,18 @@ class SCF(BaseStatisticMixIn):
                 if x_shift == 0:
                     tmp = self.data
                 else:
-                    tmp = fourier_shift(self.data, x_shift, axis=1)
+                    if float(x_shift).is_integer():
+                        shift_func = pixel_shift
+                    else:
+                        shift_func = fourier_shift
+                    tmp = shift_func(self.data, x_shift, axis=1)
 
                 if y_shift != 0:
-                    tmp = fourier_shift(tmp, y_shift, axis=2)
+                    if float(y_shift).is_integer():
+                        shift_func = pixel_shift
+                    else:
+                        shift_func = fourier_shift
+                    tmp = shift_func(tmp, y_shift, axis=2)
 
                 values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
                     (np.nansum(self.data ** 2, axis=0) +
