@@ -336,8 +336,9 @@ class SCF(BaseStatisticMixIn):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        verbose : bool, optional
-            Enables plotting.
+        boundary : {"continuous", "cut"}
+            Treat the boundary as continuous (wrap-around) or cut values
+            beyond the edge (i.e., for most observational data).
         xlow : float, optional
             See `~SCF.fit_plaw`.
         xhigh : float, optional
@@ -346,6 +347,8 @@ class SCF(BaseStatisticMixIn):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        verbose : bool, optional
+            Enables plotting.
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
@@ -427,6 +430,9 @@ class SCF_Distance(object):
         Data cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
+    boundary : {"continuous", "cut"}
+        Treat the boundary as continuous (wrap-around) or cut values
+        beyond the edge (i.e., for most observational data).
     fiducial_model : SCF
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
@@ -435,8 +441,8 @@ class SCF_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, size=21, fiducial_model=None,
-                 weighted=True):
+    def __init__(self, cube1, cube2, size=21, boundary='continuous',
+                 fiducial_model=None, weighted=True):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
 
@@ -470,10 +476,10 @@ class SCF_Distance(object):
             self.scf1 = fiducial_model
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True)
+            self.scf1.run(return_stddev=True, boundary=boundary)
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True)
+        self.scf2.run(return_stddev=True, boundary=boundary)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg):
