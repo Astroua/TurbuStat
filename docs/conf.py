@@ -50,10 +50,7 @@ setup_cfg = dict(conf.items('metadata'))
 # Mock out the imports
 import mock
 
-MOCK_MODULES = ['scipy', 'scipy.stats', 'scipy.ndimage',
-                'scipy.interpolate', 'scipy.fftpack', 'scipy.spatial',
-                'scipy.spatial.distance', 'scipy.optimize', 'scipy.signal',
-                'sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
+MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
                 'statsmodels.formula', 'statsmodels.distributions',
                 'statsmodels.distributions.empirical_distribution',
