@@ -5,7 +5,7 @@
 Test functions for SCF
 '''
 
-from unittest import TestCase
+import pytest
 
 import numpy as np
 import numpy.testing as npt
@@ -16,43 +16,52 @@ from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
 
-class testSCF(TestCase):
+def test_SCF_method():
+    tester = SCF(dataset1["cube"], size=11)
+    tester.run(boundary='continuous')
 
-    def test_SCF_method(self):
-        self.tester = SCF(dataset1["cube"], size=11)
-        self.tester.run()
+    assert np.allclose(tester.scf_surface, computed_data['scf_val'])
+    npt.assert_array_almost_equal(tester.scf_spectrum,
+                                  computed_data["scf_spectrum"])
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
 
-        assert np.allclose(self.tester.scf_surface, computed_data['scf_val'])
-        npt.assert_array_almost_equal(self.tester.scf_spectrum,
-                                      computed_data["scf_spectrum"])
-        npt.assert_almost_equal(self.tester.slope, computed_data["scf_slope"])
 
-    def test_SCF_noninteger_shift(self):
-        # Not testing against anything, just make sure it runs w/o issue.
-        rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5])
-        self.tester_nonint = \
-            SCF(dataset1["cube"], roll_lags=rolls)
-        self.tester_nonint.run()
+def test_SCF_method_noncont_boundary():
+    tester = SCF(dataset1["cube"], size=11)
+    tester.run(boundary='cut')
 
-    def test_SCF_distance(self):
-        self.tester_dist = \
-            SCF_Distance(dataset1["cube"],
-                         dataset2["cube"], size=11).distance_metric()
-        npt.assert_almost_equal(self.tester_dist.distance,
-                                computed_distances['scf_distance'])
+    assert np.allclose(tester.scf_surface,
+                       computed_data['scf_val_noncon_bound'])
 
-    def test_SCF_regrid_distance(self):
-        hdr = dataset1["cube"][1].copy()
-        hdr["CDELT2"] = 0.5 * hdr["CDELT2"]
-        hdr["CDELT1"] = 0.5 * hdr["CDELT1"]
-        cube = zoom(dataset1["cube"][0], (1, 2, 2))
 
-        self.tester_dist_zoom = \
-            SCF_Distance([cube, hdr], dataset1["cube"],
-                         size=11).distance_metric()
+def test_SCF_noninteger_shift():
+    # Not testing against anything, just make sure it runs w/o issue.
+    rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5])
+    tester_nonint = \
+        SCF(dataset1["cube"], roll_lags=rolls)
+    tester_nonint.run()
 
-        # Based on the fiducial values, the distance should be
-        # at least less than this.
-        fid_dist = 0.02
 
-        assert self.tester_dist_zoom.distance < fid_dist
+def test_SCF_distance():
+    tester_dist = \
+        SCF_Distance(dataset1["cube"],
+                     dataset2["cube"], size=11).distance_metric()
+    npt.assert_almost_equal(tester_dist.distance,
+                            computed_distances['scf_distance'])
+
+
+def test_SCF_regrid_distance():
+    hdr = dataset1["cube"][1].copy()
+    hdr["CDELT2"] = 0.5 * hdr["CDELT2"]
+    hdr["CDELT1"] = 0.5 * hdr["CDELT1"]
+    cube = zoom(dataset1["cube"][0], (1, 2, 2))
+
+    tester_dist_zoom = \
+        SCF_Distance([cube, hdr], dataset1["cube"],
+                     size=11).distance_metric()
+
+    # Based on the fiducial values, the distance should be
+    # at least less than this.
+    fid_dist = 0.02
+
+    assert tester_dist_zoom.distance < fid_dist

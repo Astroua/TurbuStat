@@ -11,7 +11,7 @@ import statsmodels.api as sm
 from ..psds import pspec
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data
-from ..stats_utils import common_scale, fourier_shift
+from ..stats_utils import common_scale, fourier_shift, pixel_shift
 
 
 class SCF(BaseStatisticMixIn):
@@ -100,10 +100,19 @@ class SCF(BaseStatisticMixIn):
         '''
         return self._lags
 
-    def compute_surface(self):
+    def compute_surface(self, boundary='continuous'):
         '''
         Computes the SCF up to the given lag value.
+
+        Parameters
+        ----------
+        boundary : {"continuous", "cut"}
+            Treat the boundary as continuous (wrap-around) or cut values
+            beyond the edge (i.e., for most observational data).
         '''
+
+        if boundary not in ["continuous", "cut"]:
+            raise ValueError("boundary must be 'continuous' or 'cut'.")
 
         self._scf_surface = np.zeros((self.size, self.size))
 
@@ -119,14 +128,45 @@ class SCF(BaseStatisticMixIn):
                 if x_shift == 0:
                     tmp = self.data
                 else:
-                    tmp = fourier_shift(self.data, x_shift, axis=1)
+                    if float(x_shift).is_integer():
+                        shift_func = pixel_shift
+                    else:
+                        shift_func = fourier_shift
+                    tmp = shift_func(self.data, x_shift, axis=1)
 
                 if y_shift != 0:
-                    tmp = fourier_shift(tmp, y_shift, axis=2)
+                    if float(y_shift).is_integer():
+                        shift_func = pixel_shift
+                    else:
+                        shift_func = fourier_shift
+                    tmp = shift_func(tmp, y_shift, axis=2)
 
-                values = np.nansum(((self.data - tmp) ** 2), axis=0) / \
-                    (np.nansum(self.data ** 2, axis=0) +
-                     np.nansum(tmp ** 2, axis=0))
+                if boundary is "cut":
+                    if x_shift < 0:
+                        x_slice_data = slice(None, tmp.shape[1] + x_shift)
+                        x_slice_tmp = slice(-x_shift, None)
+                    else:
+                        x_slice_data = slice(x_shift, None)
+                        x_slice_tmp = slice(None, tmp.shape[1] - x_shift)
+
+                    if y_shift < 0:
+                        y_slice_data = slice(None, tmp.shape[2] + y_shift)
+                        y_slice_tmp = slice(-y_shift, None)
+                    else:
+                        y_slice_data = slice(y_shift, None)
+                        y_slice_tmp = slice(None, tmp.shape[2] - y_shift)
+
+                    data_slice = (slice(None), x_slice_data, y_slice_data)
+                    tmp_slice = (slice(None), x_slice_tmp, y_slice_tmp)
+                elif boundary is "continuous":
+                    data_slice = (slice(None),) * 3
+                    tmp_slice = (slice(None),) * 3
+
+                values = \
+                    np.nansum(((self.data[data_slice] - tmp[tmp_slice]) ** 2),
+                              axis=0) / \
+                    (np.nansum(self.data[data_slice] ** 2, axis=0) +
+                     np.nansum(tmp[tmp_slice] ** 2, axis=0))
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
@@ -319,9 +359,9 @@ class SCF(BaseStatisticMixIn):
 
         return self
 
-    def run(self, logspacing=False, return_stddev=True, verbose=False,
+    def run(self, logspacing=False, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            ang_units=False, unit=u.deg):
+            verbose=False, ang_units=False, unit=u.deg):
         '''
         Computes all SCF outputs.
 
@@ -331,8 +371,9 @@ class SCF(BaseStatisticMixIn):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        verbose : bool, optional
-            Enables plotting.
+        boundary : {"continuous", "cut"}
+            Treat the boundary as continuous (wrap-around) or cut values
+            beyond the edge (i.e., for most observational data).
         xlow : float, optional
             See `~SCF.fit_plaw`.
         xhigh : float, optional
@@ -341,13 +382,15 @@ class SCF(BaseStatisticMixIn):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        verbose : bool, optional
+            Enables plotting.
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
         '''
 
-        self.compute_surface()
+        self.compute_surface(boundary=boundary)
         self.compute_spectrum(logspacing=logspacing,
                               return_stddev=return_stddev)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
@@ -422,6 +465,9 @@ class SCF_Distance(object):
         Data cube.
     size : int, optional
         Maximum size roll over which SCF will be calculated.
+    boundary : {"continuous", "cut"}
+        Treat the boundary as continuous (wrap-around) or cut values
+        beyond the edge (i.e., for most observational data).
     fiducial_model : SCF
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
@@ -430,8 +476,8 @@ class SCF_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, size=21, fiducial_model=None,
-                 weighted=True):
+    def __init__(self, cube1, cube2, size=21, boundary='continuous',
+                 fiducial_model=None, weighted=True):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
 
@@ -465,10 +511,10 @@ class SCF_Distance(object):
             self.scf1 = fiducial_model
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True)
+            self.scf1.run(return_stddev=True, boundary=boundary)
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True)
+        self.scf2.run(return_stddev=True, boundary=boundary)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg):

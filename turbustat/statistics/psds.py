@@ -40,23 +40,23 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         within each of the bins.
     '''
 
-    y = np.arange(-np.floor(psd2.shape[0]/2.).astype(int),
-                  psd2.shape[0] - np.floor(psd2.shape[0]/2.).astype(int))
-    x = np.arange(-np.floor(psd2.shape[1]/2.).astype(int),
-                  psd2.shape[1] - np.floor(psd2.shape[1]/2.).astype(int))
+    y = np.arange(-np.floor(psd2.shape[0] / 2.).astype(int),
+                  psd2.shape[0] - np.floor(psd2.shape[0] / 2.).astype(int))
+    x = np.arange(-np.floor(psd2.shape[1] / 2.).astype(int),
+                  psd2.shape[1] - np.floor(psd2.shape[1] / 2.).astype(int))
 
-    yy, xx = np.meshgrid(y, x)
+    yy, xx = np.meshgrid(y, x, indexing='ij')
 
     dists = np.sqrt(yy**2 + xx**2)
 
     if nbins is None:
-        nbins = int(np.round(dists.max() / binsize)+1)
+        nbins = int(np.round(dists.max() / binsize) + 1)
 
     if return_freqs:
         yfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[0])))
         xfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[1])))
 
-        yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs)
+        yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
 
         freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
@@ -76,9 +76,9 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
             min_bin = 0.5
 
     if logspacing:
-        bins = np.logspace(np.log10(min_bin), np.log10(max_bin), nbins+1)
+        bins = np.logspace(np.log10(min_bin), np.log10(max_bin), nbins + 1)
     else:
-        bins = np.linspace(min_bin, max_bin, nbins+1)
+        bins = np.linspace(min_bin, max_bin, nbins + 1)
 
     if return_freqs:
         dist_arr = freqs_dist
