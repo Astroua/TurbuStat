@@ -38,6 +38,12 @@ Contents:
    statistics.rst
    helper_scripts.rst
 
+Papers using TurbuStat
+----------------------
+
+* `Boyden et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJ...833..233B>`_
+
+
 
 Indices and tables
 ==================

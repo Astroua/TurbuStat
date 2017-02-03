@@ -1,7 +1,7 @@
 # Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
-from scipy.stats import ks_2samp, anderson_ksamp
+from scipy.stats import ks_2samp  # , anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, common_histogram_bins, data_normalization
