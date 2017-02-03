@@ -19,7 +19,7 @@ class testPDF(TestCase):
 
     def test_PDF(self):
         self.test = PDF(self.dataset1["moment0"],
-                        use_standardized=True, min_val=0.05,
+                        normalization_type="standardize", min_val=0.05,
                         weights=self.dataset1["moment0_error"][0]**-2.,
                         bins=computed_data['pdf_bins'])
         self.test.run(verbose=False)
