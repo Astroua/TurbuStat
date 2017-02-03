@@ -25,7 +25,8 @@ class PDF(BaseStatisticMixIn):
         Weights to apply to the image. Must have the same shape as the image.
     use_standardized : bool, optional
         Enable to standardize the data before computing the PDF and ECDF.
-    normalization_type : str, optional
+    normalization_type : {"standardize", "center", "normalize",
+                          "normalize_by_mean"}, optional
         See `~turbustat.statistics.stat_utils.data_normalization`.
     '''
 
