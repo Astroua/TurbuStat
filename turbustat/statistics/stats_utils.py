@@ -27,18 +27,30 @@ def hellinger(data1, data2, bin_width=1.0):
 
 
 def standardize(x):
+    '''
+    Center and divide by standard deviation (i.e., z-scores).
+    '''
     return (x - np.nanmean(x)) / np.nanstd(x)
 
 
 def normalize_by_mean(x):
+    '''
+    Normalize by the mean.
+    '''
     return x / np.nanmean(x)
 
 
 def center(x):
+    '''
+    Centre data on zero by subtracting the mean.
+    '''
     return x - np.nanmean(x)
 
 
 def normalize(x):
+    '''
+    Force the data to have a range of 0 to 1.
+    '''
     return (x - np.nanmin(x)) / (np.nanmax(x) - np.nanmin(x))
 
 
