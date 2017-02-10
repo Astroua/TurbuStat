@@ -19,7 +19,7 @@ class testCramer(TestCase):
 
     def test_cramer(self):
         self.tester = Cramer_Distance(dataset1["cube"],
-                                      dataset2["cube"]).distance_metric()
+                                      dataset2["cube"]).distance_metric(normalize=False)
 
         npt.assert_allclose(self.tester.data_matrix1,
                             computed_data["cramer_val"])
@@ -31,8 +31,8 @@ class testCramer(TestCase):
         small_data = dataset1["cube"][0][:, :26, :26]
 
         self.tester2 = Cramer_Distance(small_data, dataset2["cube"])
-        self.tester2.distance_metric()
+        self.tester2.distance_metric(normalize=False)
         self.tester3 = Cramer_Distance(dataset2["cube"], small_data)
-        self.tester3.distance_metric()
+        self.tester3.distance_metric(normalize=False)
 
         npt.assert_almost_equal(self.tester2.distance, self.tester3.distance)
