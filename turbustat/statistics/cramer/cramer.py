@@ -51,15 +51,34 @@ class Cramer_Distance(object):
         self.data_matrix2 = None
         self.distance = None
 
-    def format_data(self, data_format='intensity', seed=13024):
+    def format_data(self, data_format='intensity', seed=13024, normalize=True,
+                    **kwargs):
         '''
         Rearrange data into a 2D object using the given format.
+
+        Parameters
+        ----------
+        data_format : {'intensity', 'spectra'}, optional
+            The method to use to construct the data matrix. The default is
+            intensity, which picks the brightest values in each channel. The
+            other option is 'spectra', which will pick the N brightest spectra
+            to compare.
+        seed : int, optional
+            When the data are mismatched, the larger data set is randomly
+            sampled to match the size of the other.
+        normalize : bool, optional
+            Forces the data sets into the same interval, removing the
+            effect of different ranges of intensities (or whatever unit the
+            data traces).
+        kwargs : Passed to `~turbustat.statistics.threeD_to_twoD._format_data`.
         '''
 
         self.data_matrix1 = _format_data(self.cube1, data_format=data_format,
-                                         noise_lim=self.noise_value1)
+                                         noise_lim=self.noise_value1,
+                                         normalize=normalize, **kwargs)
         self.data_matrix2 = _format_data(self.cube2, data_format=data_format,
-                                         noise_lim=self.noise_value2)
+                                         noise_lim=self.noise_value2,
+                                         normalize=normalize, **kwargs)
 
         # Need to check if the same number of samples is taken
         samps1 = self.data_matrix1.shape[1]
@@ -101,7 +120,7 @@ class Cramer_Distance(object):
 
         n_jobs : int, optional
             Sets the number of cores to use to calculate
-            pairwise distances
+            pairwise distances. Default is 1.
         '''
         # Adjust what we call n,m based on the larger dimension.
         # Then the looping below is valid.
@@ -145,15 +164,22 @@ class Cramer_Distance(object):
 
         self.distance = (m * n / (m + n)) * (term1 - term2 - term3)
 
-    def distance_metric(self, n_jobs=1):
+    def distance_metric(self, normalize=True, n_jobs=1):
         '''
 
         This serves as a simple wrapper in order to remain with the coding
         convention used throughout the rest of this project.
 
+        Parameters
+        ----------
+        normalize : bool, optional
+            See `Cramer_Distance.format_data`.
+
+        n_jobs : int, optional
+            See `Cramer_Distance.cramer_statistic`.
         '''
 
-        self.format_data()
+        self.format_data(normalize=normalize)
         self.cramer_statistic(n_jobs=n_jobs)
 
         return self

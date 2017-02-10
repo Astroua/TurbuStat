@@ -61,7 +61,7 @@ def intensity_data(cube, p=0.1, noise_lim=0.1, norm=True):
 
 
 def _format_data(cube, data_format='intensity', num_spec=1000,
-                 noise_lim=0.0, p=0.1):
+                 noise_lim=0.0, p=0.1, normalize=True):
     '''
     Rearrange data into a 2D object using the given format.
     '''
@@ -93,6 +93,14 @@ def _format_data(cube, data_format='intensity', num_spec=1000,
     else:
         raise NameError(
             "data_format must be either 'spectra' or 'intensity'.")
+
+    # Normalize by rescaling the data to an interval between 0 and 1
+    # Ignore all values of 0, since they're just filled in.
+    if normalize:
+        nonzero = np.nonzero(data_matrix)
+        ptp = np.ptp(data_matrix[nonzero])
+        data_matrix[nonzero] = \
+            (data_matrix[nonzero] - data_matrix[nonzero].min()) / ptp
 
     return data_matrix
 
