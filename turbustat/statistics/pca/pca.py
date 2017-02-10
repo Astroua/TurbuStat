@@ -106,6 +106,7 @@ class PCA(BaseStatisticMixIn):
         self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
 
         all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
+        all_eigsvals = np.real_if_close(all_eigsvals)
         eigvecs = eigvecs[:, np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
@@ -198,10 +199,12 @@ class PCA(BaseStatisticMixIn):
                 if self._mean_sub:
                     mean_value = np.nanmean(self.data[channel])
                     eigimg += np.nan_to_num((self.data[channel] - mean_value) *
-                                            self.eigvecs[channel, idx])
+                                            np.real_if_close(
+                                                self.eigvecs[channel, idx]))
                 else:
                     eigimg += np.nan_to_num(self.data[channel] *
-                                            self.eigvecs[channel, idx])
+                                            np.real_if_close(
+                                                self.eigvecs[channel, idx]))
             if ct == 0:
                 eigimgs = eigimg
             else:
