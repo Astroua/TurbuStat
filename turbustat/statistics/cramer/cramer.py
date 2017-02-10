@@ -38,8 +38,8 @@ class Cramer_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, noise_value1=0.1,
-                 noise_value2=0.1):
+    def __init__(self, cube1, cube2, noise_value1=-np.inf,
+                 noise_value2=-np.inf):
         super(Cramer_Distance, self).__init__()
         self.cube1 = input_data(cube1, no_header=True)
         self.cube2 = input_data(cube2, no_header=True)

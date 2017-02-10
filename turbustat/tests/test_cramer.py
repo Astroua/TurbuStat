@@ -18,8 +18,11 @@ from ._testing_data import \
 class testCramer(TestCase):
 
     def test_cramer(self):
-        self.tester = Cramer_Distance(dataset1["cube"],
-                                      dataset2["cube"]).distance_metric(normalize=False)
+        self.tester = \
+            Cramer_Distance(dataset1["cube"],
+                            dataset2["cube"],
+                            noise_value1=0.1,
+                            noise_value2=0.1).distance_metric(normalize=False)
 
         npt.assert_allclose(self.tester.data_matrix1,
                             computed_data["cramer_val"])
