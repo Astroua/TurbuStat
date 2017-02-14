@@ -1,7 +1,7 @@
 # Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
-from scipy.stats import ks_2samp  # , anderson_ksamp
+from scipy.stats import ks_2samp, lognorm  # , anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from ..stats_utils import hellinger, common_histogram_bins, data_normalization
@@ -89,11 +89,11 @@ class PDF(BaseStatisticMixIn):
             self._bins = np.sqrt(self.data.shape[0])
             self._bins = int(np.round(self.bins))
 
-        norm_weights = np.ones_like(self.data) / self.data.shape[0]
+        # norm_weights = np.ones_like(self.data) / self.data.shape[0]
 
         self._pdf, bin_edges = np.histogram(self.data, bins=self.bins,
-                                            density=False,
-                                            weights=norm_weights)
+                                            density=True)#,
+                                            # weights=norm_weights)
 
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2
 
@@ -156,7 +156,122 @@ class PDF(BaseStatisticMixIn):
 
         return np.percentile(self.data, percentiles)
 
-    def run(self, verbose=False, bins=None):
+    def fit_pdf(self, model=lognorm, verbose=False,
+                fit_type='mle', **kwargs):
+        '''
+        Fit a model to the PDF. Use statsmodel's generalized likelihood
+        setup to get uncertainty estimates and such.
+
+        Parameters
+        ----------
+        model : scipy.stats distribution, optional
+            Pass any scipy
+        verbose : bool, optional
+            Enable printing of the fit results.
+        fit_type : {'mle', 'mcmc'}, optional
+            Type of fitting to use. By default Maximum Likelihood Estimation
+             ('mle') is used. An MCMC approach ('mcmc') may also be used. This
+             requires the optional `emcee` to be installed. kwargs can be
+             passed to adjust various properties of the MCMC chain.
+        kwargs : Passed to `emcee.XXX`
+        '''
+
+        from statsmodels.base.model import GenericLikelihoodModel
+
+        class Likelihood(GenericLikelihoodModel):
+
+            # Get the number of parameters from shapes.
+            # Add one for scales, since we're assuming loc is frozen.
+            nparams = 1 if model.shapes is None else \
+                len(model.shapes.split(",")) + 1
+
+            def loglike(self, params):
+                if np.isnan(params).any():
+                    return - np.inf
+
+                loglikes = \
+                    model.logpdf(self.endog, *params[:-1],
+                                 scale=params[-1],
+                                 loc=0)
+
+                if not np.isfinite(loglikes).all():
+                    return - np.inf
+
+                else:
+                    return loglikes.sum()
+
+        def emcee_fit(model, init_params, burnin=200, steps=2000, thin=10):
+
+            try:
+                import emcee
+            except ImportError:
+                raise ImportError("emcee must be installed for MCMC fitting.")
+
+            ndim = len(init_params)
+            nwalkers = ndim * 10
+            p0 = np.zeros((nwalkers, ndim))
+            for i, val in enumerate(init_params):
+                p0[:, i] = np.random.randn(nwalkers) * 0.1 + val
+            sampler = emcee.EnsembleSampler(nwalkers,
+                                            ndim,
+                                            model.loglike,
+                                            args=[])
+            pos, prob, state = sampler.run_mcmc(p0, burnin)
+            sampler.reset()
+            pos, prob, state = sampler.run_mcmc(pos, steps, thin=thin)
+
+            return sampler
+
+        # Do an initial fit with the scipy model
+        init_params = model.fit(self.data, floc=0.0)
+        init_params = np.append(init_params[:-2], init_params[-1])
+
+        self._model = Likelihood(self.data)
+
+        if fit_type == 'mle':
+            fitted_model = \
+                self._model.fit(start_params=init_params, method='nm')
+            self._mle_fit = fitted_model
+            fitted_model.df_model = len(init_params)
+            fitted_model.df_resid = len(self.data) - len(init_params)
+
+            self._model_params = fitted_model.params.copy()
+            self._model_stderrs = fitted_model.bse.copy()
+        elif fit_type == 'mcmc':
+            chain = emcee_fit(self._model,
+                              init_params.copy(),
+                              **kwargs)
+            self._model_params = np.mean(chain.flatchain, axis=0)
+            self._model_stderrs = np.percentile(chain.flatchain, [15, 85],
+                                                axis=0)
+            self._mcmc_chain = chain
+
+        if verbose:
+            if fit_type == 'mle':
+                print(fitted_model.summary())
+            else:
+                print("Ran chain for {0} iterations".format(chain.iterations))
+                print("Used {} walkers".format(chain.acceptance_fraction.size))
+                print("Mean acceptance fraction of {}"
+                      .format(np.mean(chain.acceptance_fraction)))
+                print("Parameter values: {}".format(self.model_params))
+                print("15th to 85th percentile ranges: {}"
+                      .format(self.model_stderrs[1] - self.model_stderrs[0]))
+
+    @property
+    def model_params(self):
+        if hasattr(self, "_model_params"):
+            return self._model_params
+        raise Exception("Not model has been fit. Run `fit_pdf` first.")
+
+    @property
+    def model_stderrs(self):
+        if hasattr(self, "_model_stderrs"):
+            return self._model_stderrs
+        raise Exception("Not model has been fit. Run `fit_pdf` first.")
+
+    def run(self, verbose=False, bins=None, do_fit=True,
+            model=lognorm, **kwargs):
         '''
         Compute the PDF and ECDF. Enabling verbose provides
         a summary plot.
@@ -171,6 +286,9 @@ class PDF(BaseStatisticMixIn):
 
         self.make_pdf(bins=bins)
         self.make_ecdf()
+
+        if do_fit:
+            self.fit_pdf(model=model, verbose=verbose, **kwargs)
 
         if verbose:
 
@@ -187,7 +305,15 @@ class PDF(BaseStatisticMixIn):
 
             # PDF
             p.subplot(121)
-            p.semilogy(self.bins, self.pdf, 'b-')
+            p.semilogy(self.bins, self.pdf, 'b-', label='Data')
+            if do_fit:
+                # Plot the fitted model.
+                vals = np.linspace(self.bins[0], self.bins[-1], 1000)
+                p.semilogy(vals,
+                           model.pdf(vals, *self.model_params[:-1],
+                                     scale=self.model_params[-1],
+                                     loc=0), 'r--', label='Fit')
+                p.legend(loc='best')
             # else:
             #     p.loglog(self.bins, self.pdf, 'b-')
             p.grid(True)
@@ -200,8 +326,18 @@ class PDF(BaseStatisticMixIn):
             ax2.yaxis.set_label_position("right")
             if self.normalization_type != "None":
                 ax2.plot(self.bins, self.ecdf, 'b-')
+                if do_fit:
+                    ax2.plot(vals,
+                             model.cdf(vals, *self.model_params[:-1],
+                                       scale=self.model_params[-1],
+                                       loc=0), 'r--')
             else:
                 ax2.semilogx(self.bins, self.ecdf, 'b-')
+                if do_fit:
+                    ax2.semilogx(vals,
+                                 model.cdf(vals, *self.model_params[:-1],
+                                           scale=self.model_params[-1],
+                                           loc=0), 'r--')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
