@@ -176,6 +176,9 @@ class PDF(BaseStatisticMixIn):
         kwargs : Passed to `emcee.XXX`
         '''
 
+        if fit_type not in ['mle', 'mcmc']:
+            raise ValueError("fit_type must be 'mle' or 'mcmc'.")
+
         from statsmodels.base.model import GenericLikelihoodModel
 
         class Likelihood(GenericLikelihoodModel):
