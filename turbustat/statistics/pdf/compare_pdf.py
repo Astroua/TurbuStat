@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.stats import ks_2samp, lognorm  # , anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
+from warnings import warn
 
 from ..stats_utils import hellinger, common_histogram_bins, data_normalization
 from ..base_statistic import BaseStatisticMixIn
@@ -240,7 +241,11 @@ class PDF(BaseStatisticMixIn):
             fitted_model.df_resid = len(self.data) - len(init_params)
 
             self._model_params = fitted_model.params.copy()
-            self._model_stderrs = fitted_model.bse.copy()
+            try:
+                self._model_stderrs = fitted_model.bse.copy()
+            except ValueError:
+                warn("Variance calculation failed.")
+                self._model_stderrs = np.ones_like(self.model_params) * np.NaN
         elif fit_type == 'mcmc':
             chain = emcee_fit(self._model,
                               init_params.copy(),
