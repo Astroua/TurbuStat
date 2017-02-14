@@ -185,6 +185,7 @@ class PDF(BaseStatisticMixIn):
 
             # Get the number of parameters from shapes.
             # Add one for scales, since we're assuming loc is frozen.
+            # Keeping loc=0 is appropriate for log-normal models.
             nparams = 1 if model.shapes is None else \
                 len(model.shapes.split(",")) + 1
 
@@ -316,9 +317,9 @@ class PDF(BaseStatisticMixIn):
             if self.normalization_type == "standardize":
                 xlabel = r"z-score"
             elif self.normalization_type == "center":
-                xlabel = r"I - $\bar{I}$"
+                xlabel = r"$I - \bar{I}$"
             elif self.normalization_type == "normalize_by_mean":
-                xlabel = r"I/$\bar{I}$"
+                xlabel = r"$I/\bar{I}$"
             else:
                 xlabel = r"Intensity"
 
