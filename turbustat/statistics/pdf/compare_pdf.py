@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.stats import ks_2samp, lognorm  # , anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
+from statsmodels.base.model import GenericLikelihoodModel
 from warnings import warn
 
 from ..stats_utils import hellinger, common_histogram_bins, data_normalization
@@ -180,7 +181,6 @@ class PDF(BaseStatisticMixIn):
         if fit_type not in ['mle', 'mcmc']:
             raise ValueError("fit_type must be 'mle' or 'mcmc'.")
 
-        from statsmodels.base.model import GenericLikelihoodModel
 
         class Likelihood(GenericLikelihoodModel):
 
