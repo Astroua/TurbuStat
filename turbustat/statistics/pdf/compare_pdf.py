@@ -270,6 +270,22 @@ class PDF(BaseStatisticMixIn):
             return self._model_stderrs
         raise Exception("Not model has been fit. Run `fit_pdf` first.")
 
+    def corner_plot(self, **kwargs):
+        '''
+        Create a corner plot from the MCMC. Requires the 'corner' package.
+        '''
+
+        if not hasattr(self, "_mcmc_chain"):
+            raise Exception("Must run MCMC fitting first.")
+
+        try:
+            import corner
+        except ImportError:
+            raise ImportError("The optional package 'corner' is not "
+                              "installed.")
+
+        corner.corner(self._mcmc_chain.flatchain, **kwargs)
+
     def run(self, verbose=False, bins=None, do_fit=True,
             model=lognorm, **kwargs):
         '''
