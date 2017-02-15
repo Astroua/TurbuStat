@@ -412,6 +412,8 @@ class PDF_Distance(object):
                 raise Exception("Cannot perform lognormal fit when using"
                                 " 'standardize' or 'center'.")
 
+        self.normalization_type = normalization_type
+
         self.PDF1 = PDF(img1, min_val=min_val1,
                         normalization_type=normalization_type,
                         weights=weights1)
@@ -484,7 +486,7 @@ class PDF_Distance(object):
         self.lognormal_distance = diff / denom
 
     def distance_metric(self, statistic='all', verbose=False,
-                        label1=None, label2=None,
+                        label1="Data 1", label2="Data 2",
                         show_data=True):
         '''
         Calculate the distance.
@@ -530,28 +532,91 @@ class PDF_Distance(object):
                             # "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
+
             import matplotlib.pyplot as p
+
+            if self.normalization_type == "standardize":
+                xlabel = r"z-score"
+            elif self.normalization_type == "center":
+                xlabel = r"$I - \bar{I}$"
+            elif self.normalization_type == "normalize_by_mean":
+                xlabel = r"$I/\bar{I}$"
+            else:
+                xlabel = r"Intensity"
+
+            # Print fit summaries if using fitting
+            if self._do_fit:
+                try:
+                    print(self.PDF1._mle_fit.summary())
+                except ValueError:
+                    warn("Covariance calculation failed. Check the fit quality"
+                         " for data set 1!")
+                try:
+                    print(self.PDF2._mle_fit.summary())
+                except ValueError:
+                    warn("Covariance calculation failed. Check the fit quality"
+                         " for data set 2!")
+
             # PDF
             p.subplot(121)
-            p.plot(self.bin_centers,
-                   self.PDF1.pdf, 'b-', label=label1)
-            p.plot(self.bin_centers,
-                   self.PDF2.pdf, 'g-', label=label2)
-            p.legend(loc="best")
+            p.semilogy(self.bin_centers,
+                       self.PDF1.pdf, 'bD-', label=label1)
+            p.semilogy(self.bin_centers,
+                       self.PDF2.pdf, 'go-', label=label2)
+            if self._do_fit:
+                # Plot the fitted model.
+                vals = np.linspace(self.bin_centers[0], self.bin_centers[-1],
+                                   1000)
+
+                fit_params1 = self.PDF1.model_params
+                p.semilogy(vals,
+                           lognorm.pdf(vals, *fit_params1[:-1],
+                                       scale=fit_params1[-1],
+                                       loc=0), 'b-', label='Fit 1')
+                fit_params2 = self.PDF2.model_params
+                p.semilogy(vals,
+                           lognorm.pdf(vals, *fit_params2[:-1],
+                                       scale=fit_params2[-1],
+                                       loc=0), 'g-', label='Fit 2')
             p.grid(True)
-            p.xlabel(r"z-score")
+            p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             ax2 = p.subplot(122)
             ax2.yaxis.tick_right()
             ax2.yaxis.set_label_position("right")
-            ax2.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
-            ax2.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
+            if self.normalization_type is not None:
+                ax2.plot(self.bin_centers, self.PDF1.ecdf, 'bD-')
+                ax2.plot(self.bin_centers, self.PDF2.ecdf, 'go-')
+                if self._do_fit:
+                    ax2.plot(vals,
+                             lognorm.cdf(vals,
+                                         *fit_params1[:-1],
+                                         scale=fit_params1[-1],
+                                         loc=0), 'b-')
+                    ax2.plot(vals,
+                             lognorm.cdf(vals,
+                                         *fit_params2[:-1],
+                                         scale=fit_params2[-1],
+                                         loc=0), 'g-')
+            else:
+                ax2.semilogx(self.bin_centers, self.PDF1.ecdf, 'bD-')
+                ax2.semilogx(self.bin_centers, self.PDF2.ecdf, 'go-')
+                if self._do_fit:
+                    ax2.semilogx(vals,
+                                 lognorm.cdf(vals, *fit_params1[:-1],
+                                             scale=fit_params1[-1],
+                                             loc=0), 'b-')
+                    ax2.semilogx(vals,
+                                 lognorm.cdf(vals, *fit_params2[:-1],
+                                             scale=fit_params2[-1],
+                                             loc=0), 'g-')
             p.grid(True)
-            p.xlabel(r"z-score")
+            p.xlabel(xlabel)
             p.ylabel("ECDF")
 
+            p.tight_layout()
             p.show()
 
         return self
