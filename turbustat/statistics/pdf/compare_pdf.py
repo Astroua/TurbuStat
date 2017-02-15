@@ -403,9 +403,14 @@ class PDF_Distance(object):
                                       threed_types)}
 
     def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
-                 normalization_type="standardize", nbins=None,
-                 weights1=None, weights2=None):
+                 do_fit=True, normalization_type=None,
+                 nbins=None, weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
+
+        if do_fit:
+            if normalization_type in ["standardize", "center"]:
+                raise Exception("Cannot perform lognormal fit when using"
+                                " 'standardize' or 'center'.")
 
         self.PDF1 = PDF(img1, min_val=min_val1,
                         normalization_type=normalization_type,
@@ -420,15 +425,20 @@ class PDF_Distance(object):
                                   return_centered=True, nbins=nbins)
 
         # Feed the common set of bins to be used in the PDFs
-        self.PDF1.run(verbose=False, bins=self.bins)
-        self.PDF2.run(verbose=False, bins=self.bins)
+        self._do_fit = do_fit
+        self.PDF1.run(verbose=False, bins=self.bins, do_fit=do_fit)
+        self.PDF2.run(verbose=False, bins=self.bins, do_fit=do_fit)
 
     def compute_hellinger_distance(self):
         '''
         Computes the Hellinger Distance between the two PDFs.
         '''
 
-        self.hellinger_distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
+        # We're using the same bins, so normalize each to unity to keep the
+        # distance normalized.
+        self.hellinger_distance = \
+            hellinger(self.PDF1.pdf / self.PDF1.pdf.sum(),
+                      self.PDF2.pdf / self.PDF2.pdf.sum())
 
     def compute_ks_distance(self):
         '''
@@ -454,6 +464,25 @@ class PDF_Distance(object):
         # self.ad_distance = D
         # self.ad_pval = p
 
+    def compute_lognormal_distance(self):
+        '''
+        Compute the combined t-statistic for the difference in the widths of
+        a lognormal distribution.
+        '''
+
+        try:
+            self.PDF1.model_params
+            self.PDF2.model_params
+        except AttributeError:
+            raise Exception("Fitting has not been performed. 'do_fit' must "
+                            "first be enabled.")
+
+        diff = np.abs(self.PDF1.model_params[0] - self.PDF2.model_params[0])
+        denom = np.sqrt(self.PDF1.model_stderrs[0]**2 +
+                        self.PDF2.model_stderrs[0]**2)
+
+        self.lognormal_distance = diff / denom
+
     def distance_metric(self, statistic='all', verbose=False,
                         label1=None, label2=None,
                         show_data=True):
@@ -464,7 +493,7 @@ class PDF_Distance(object):
 
         Parameters
         ----------
-        statistic : 'all', 'hellinger', 'ks'
+        statistic : 'all', 'hellinger', 'ks', 'lognormal'
             Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
@@ -482,15 +511,22 @@ class PDF_Distance(object):
             self.compute_hellinger_distance()
             self.compute_ks_distance()
             # self.compute_ad_distance()
+            if self._do_fit:
+                self.compute_lognormal_distance()
         elif statistic is 'hellinger':
             self.compute_hellinger_distance()
         elif statistic is 'ks':
             self.compute_ks_distance()
+        elif statistic is 'lognormal':
+            if not self._do_fit:
+                raise Exception("Fitting must be enabled to compute the"
+                                " lognormal distance.")
+            self.compute_lognormal_distance()
         # elif statistic is 'ad':
         #     self.compute_ad_distance()
         else:
             raise TypeError("statistic must be 'all',"
-                            "'hellinger', or 'ks'.")
+                            "'hellinger', 'ks', or 'lognormal'.")
                             # "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
