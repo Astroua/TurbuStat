@@ -36,10 +36,10 @@ matrix:
           env: NP_VER=1.11 ASTRO_VER=1.2
 
         - python: 2.7
-          env = NP_VER=1.11 ASTRO_VER=1.3
+          env: NP_VER=1.11 ASTRO_VER=1.3
 
         - python: 2.7
-          env = NP_VER=1.12 ASTRO_VER=1.3
+          env: NP_VER=1.12 ASTRO_VER=1.3
 
 
 before_install:
