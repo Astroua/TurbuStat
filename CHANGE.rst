@@ -1,7 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
-* #138 - Add fitting routines and more normalization options for PDFs.
+* #138 - Add fitting routines and more normalization options for PDFs. Added testing for numpy 1.12 and astropy 1.3.
 * #136 - Normalize data to between 0 and 1 for the Cramer statistic.
 * #134 - Add rolling back for computing the SCF when shifts are integers (and so don't need the FFT approach)
 * #133 - Fix indexing when creating 1D power spectra.
