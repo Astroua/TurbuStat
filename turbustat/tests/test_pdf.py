@@ -27,7 +27,30 @@ def test_PDF():
                      test.find_percentile(np.median(test.data)))
 
 
+def test_PDF_fitting():
+    '''
+    Test distribution fitting for PDFs
+
+    By default, we use the lognormal distribution, and only test it here.
+    '''
+
+    from scipy.stats import lognorm
+    from numpy.random import seed
+
+    seed(13493099)
+
+    data1 = lognorm.rvs(0.4, loc=0.0, scale=1.0, size=50000)
+
+    test = PDF(data1).run()
+
+    npt.assert_almost_equal(0.40, test.model_params[0], decimal=2)
+    npt.assert_almost_equal(1.0, test.model_params[1], decimal=1)
+
+
 def test_PDF_distance():
+    '''
+    Test the non-parametric distances
+    '''
     test_dist = \
         PDF_Distance(dataset1["moment0"],
                      dataset2["moment0"],
@@ -50,4 +73,28 @@ def test_PDF_distance():
 
 
 def test_PDF_lognormal_distance():
-    pass
+    '''
+    Test the lognormal width based distance measure.
+    '''
+
+    from scipy.stats import lognorm
+    from numpy.random import seed
+
+    seed(13493099)
+
+    data1 = lognorm.rvs(0.4, loc=0.0, scale=1.0, size=5000)
+    data2 = lognorm.rvs(0.5, loc=0.0, scale=1.0, size=5000)
+
+    test_dist = \
+        PDF_Distance(data1,
+                     data2,
+                     do_fit=True,
+                     normalization_type='normalize_by_mean')
+    test_dist.distance_metric()
+
+    # Based on the samples, these are the expected stderrs.
+    actual_dist = (0.5 - 0.4) / np.sqrt(0.004**2 + 0.005**2)
+
+    # The distance value can scatter by a couple based on small variations.
+    # With the seed set, this should always be true.
+    assert np.abs(test_dist.lognormal_distance - actual_dist) < 2.
