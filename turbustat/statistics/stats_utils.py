@@ -27,7 +27,60 @@ def hellinger(data1, data2, bin_width=1.0):
 
 
 def standardize(x, dtype=np.float64):
+    '''
+    Center and divide by standard deviation (i.e., z-scores).
+    '''
     return (x - np.nanmean(x.astype(dtype))) / np.nanstd(x.astype(dtype))
+
+
+def normalize_by_mean(x):
+    '''
+    Normalize by the mean.
+    '''
+    return x / np.nanmean(x)
+
+
+def center(x):
+    '''
+    Centre data on zero by subtracting the mean.
+    '''
+    return x - np.nanmean(x)
+
+
+def normalize(x):
+    '''
+    Force the data to have a range of 0 to 1.
+    '''
+    return (x - np.nanmin(x)) / (np.nanmax(x) - np.nanmin(x))
+
+
+def data_normalization(x, norm_type="standardize"):
+    '''
+    Apply the specified form to normalize the data.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Input data.
+    norm_type : {"standardize", "center", "normalize", "normalize_by_mean"},
+                 optional
+        Normalization scheme to use.
+    '''
+
+    all_norm_types = ["standardize", "center", "normalize",
+                      "normalize_by_mean"]
+
+    if norm_type == "standardize":
+        return standardize(x)
+    elif norm_type == "center":
+        return center(x)
+    elif norm_type == "normalize":
+        return normalize(x)
+    elif norm_type == "normalize_by_mean":
+        return normalize_by_mean(x)
+    else:
+        raise ValueError("norm_type {0} is not an accepted input. Must be "
+                         "one of {1}".format(norm_type, all_norm_types))
 
 
 def kl_divergence(P, Q):

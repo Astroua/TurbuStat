@@ -1,10 +1,12 @@
 # Licensed under an MIT open source license - see LICENSE
 
 import numpy as np
-from scipy.stats import ks_2samp  # , anderson_ksamp
+from scipy.stats import ks_2samp, lognorm  # , anderson_ksamp
 from statsmodels.distributions.empirical_distribution import ECDF
+from statsmodels.base.model import GenericLikelihoodModel
+from warnings import warn
 
-from ..stats_utils import hellinger, standardize, common_histogram_bins
+from ..stats_utils import hellinger, common_histogram_bins, data_normalization
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, threed_types, input_data
 
@@ -25,6 +27,9 @@ class PDF(BaseStatisticMixIn):
         Weights to apply to the image. Must have the same shape as the image.
     use_standardized : bool, optional
         Enable to standardize the data before computing the PDF and ECDF.
+    normalization_type : {"standardize", "center", "normalize",
+                          "normalize_by_mean"}, optional
+        See `~turbustat.statistics.stat_utils.data_normalization`.
 
     Example
     -------
@@ -38,8 +43,8 @@ class PDF(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, img, min_val=0.0, bins=None, weights=None,
-                 use_standardized=False):
+    def __init__(self, img, min_val=-np.inf, bins=None, weights=None,
+                 normalization_type=None):
         super(PDF, self).__init__()
 
         self.need_header_flag = False
@@ -64,10 +69,12 @@ class PDF(BaseStatisticMixIn):
 
             self.data = self.data[isfinite] * self.weights[isfinite]
 
-        self._standardize_flag = False
-        if use_standardized:
-            self._standardize_flag = True
-            self.data = standardize(self.data)
+        if normalization_type is not None:
+            self._normalization_type = normalization_type
+            self.data = data_normalization(self.data,
+                                           norm_type=normalization_type)
+        else:
+            self._normalization_type = "None"
 
         self._bins = bins
 
@@ -92,20 +99,17 @@ class PDF(BaseStatisticMixIn):
             self._bins = np.sqrt(self.data.shape[0])
             self._bins = int(np.round(self.bins))
 
-        norm_weights = np.ones_like(self.data) / self.data.shape[0]
+        # norm_weights = np.ones_like(self.data) / self.data.shape[0]
 
         self._pdf, bin_edges = np.histogram(self.data, bins=self.bins,
-                                            density=False,
-                                            weights=norm_weights)
+                                            density=True)#,
+                                            # weights=norm_weights)
 
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     @property
-    def is_standardized(self):
-        '''
-        Returns `True` when standardization has been applied.
-        '''
-        return self._standardize_flag
+    def normalization_type(self):
+        return self._normalization_type
 
     @property
     def pdf(self):
@@ -171,7 +175,163 @@ class PDF(BaseStatisticMixIn):
 
         return np.percentile(self.data, percentiles)
 
-    def run(self, verbose=False, bins=None):
+    def fit_pdf(self, model=lognorm, verbose=False,
+                fit_type='mle', **kwargs):
+        '''
+        Fit a model to the PDF. Use statsmodel's generalized likelihood
+        setup to get uncertainty estimates and such.
+
+        Parameters
+        ----------
+        model : scipy.stats distribution, optional
+            Pass any scipy distribution. NOTE: All fits assume `loc` can be
+            fixed to 0. This is reasonable for all realistic PDF forms in the
+            ISM.
+        verbose : bool, optional
+            Enable printing of the fit results.
+        fit_type : {'mle', 'mcmc'}, optional
+            Type of fitting to use. By default Maximum Likelihood Estimation
+             ('mle') is used. An MCMC approach ('mcmc') may also be used. This
+             requires the optional `emcee` to be installed. kwargs can be
+             passed to adjust various properties of the MCMC chain.
+        kwargs : Passed to `~emcee.EnsembleSampler`.
+        '''
+
+        if fit_type not in ['mle', 'mcmc']:
+            raise ValueError("fit_type must be 'mle' or 'mcmc'.")
+
+        class Likelihood(GenericLikelihoodModel):
+
+            # Get the number of parameters from shapes.
+            # Add one for scales, since we're assuming loc is frozen.
+            # Keeping loc=0 is appropriate for log-normal models.
+            nparams = 1 if model.shapes is None else \
+                len(model.shapes.split(",")) + 1
+
+            def loglike(self, params):
+                if np.isnan(params).any():
+                    return - np.inf
+
+                loglikes = \
+                    model.logpdf(self.endog, *params[:-1],
+                                 scale=params[-1],
+                                 loc=0)
+
+                if not np.isfinite(loglikes).all():
+                    return - np.inf
+
+                else:
+                    return loglikes.sum()
+
+        def emcee_fit(model, init_params, burnin=200, steps=2000, thin=10):
+
+            try:
+                import emcee
+            except ImportError:
+                raise ImportError("emcee must be installed for MCMC fitting.")
+
+            ndim = len(init_params)
+            nwalkers = ndim * 10
+            p0 = np.zeros((nwalkers, ndim))
+            for i, val in enumerate(init_params):
+                p0[:, i] = np.random.randn(nwalkers) * 0.1 + val
+            sampler = emcee.EnsembleSampler(nwalkers,
+                                            ndim,
+                                            model.loglike,
+                                            args=[])
+            pos, prob, state = sampler.run_mcmc(p0, burnin)
+            sampler.reset()
+            pos, prob, state = sampler.run_mcmc(pos, steps, thin=thin)
+
+            return sampler
+
+        # Do an initial fit with the scipy model
+        init_params = model.fit(self.data, floc=0.0)
+        init_params = np.append(init_params[:-2], init_params[-1])
+
+        self._model = Likelihood(self.data)
+
+        if fit_type == 'mle':
+            fitted_model = \
+                self._model.fit(start_params=init_params, method='nm')
+            self._mle_fit = fitted_model
+            fitted_model.df_model = len(init_params)
+            fitted_model.df_resid = len(self.data) - len(init_params)
+
+            self._model_params = fitted_model.params.copy()
+            try:
+                self._model_stderrs = fitted_model.bse.copy()
+                cov_calc_failed = False
+            except ValueError:
+                warn("Variance calculation failed.")
+                self._model_stderrs = np.ones_like(self.model_params) * np.NaN
+                cov_calc_failed = True
+        elif fit_type == 'mcmc':
+            chain = emcee_fit(self._model,
+                              init_params.copy(),
+                              **kwargs)
+            self._model_params = np.mean(chain.flatchain, axis=0)
+            self._model_stderrs = np.percentile(chain.flatchain, [15, 85],
+                                                axis=0)
+            self._mcmc_chain = chain
+
+        if verbose:
+            if fit_type == 'mle':
+                if cov_calc_failed:
+                    print("Fitted parameters: {}".format(self.model_params))
+                    print("Covariance calculation failed.")
+                else:
+                    print(fitted_model.summary())
+            else:
+                print("Ran chain for {0} iterations".format(chain.iterations))
+                print("Used {} walkers".format(chain.acceptance_fraction.size))
+                print("Mean acceptance fraction of {}"
+                      .format(np.mean(chain.acceptance_fraction)))
+                print("Parameter values: {}".format(self.model_params))
+                print("15th to 85th percentile ranges: {}"
+                      .format(self.model_stderrs[1] - self.model_stderrs[0]))
+
+    @property
+    def model_params(self):
+        '''
+        Parameters of the fitted model.
+        '''
+        if hasattr(self, "_model_params"):
+            return self._model_params
+        raise Exception("No model has been fit. Run `fit_pdf` first.")
+
+    @property
+    def model_stderrs(self):
+        '''
+        Standard errors of the fitted model. If using an MCMC, the 15th and
+        85th percentiles are returned.
+        '''
+        if hasattr(self, "_model_stderrs"):
+            return self._model_stderrs
+        raise Exception("No model has been fit. Run `fit_pdf` first.")
+
+    def corner_plot(self, **kwargs):
+        '''
+        Create a corner plot from the MCMC. Requires the 'corner' package.
+
+        Parameters
+        ----------
+        kwargs : Passed to `~corner.corner`.
+        '''
+
+        if not hasattr(self, "_mcmc_chain"):
+            raise Exception("Must run MCMC fitting first.")
+
+        try:
+            import corner
+        except ImportError:
+            raise ImportError("The optional package 'corner' is not "
+                              "installed.")
+
+        corner.corner(self._mcmc_chain.flatchain, **kwargs)
+
+    def run(self, verbose=False, bins=None, do_fit=True,
+            model=lognorm, **kwargs):
         '''
         Compute the PDF and ECDF. Enabling verbose provides
         a summary plot.
@@ -182,26 +342,45 @@ class PDF(BaseStatisticMixIn):
             Enables plotting of the results.
         bins : list or numpy.ndarray or int, optional
             Bins to compute the PDF from. Overrides initial bin input.
+        do_fit : bool, optional
+            Enables (by default) fitting a given model.
+        model : scipy.stats distribution, optional
+            Pass any scipy distribution. See `~PDF.fit_pdf`.
+        kwargs : Passed to `~PDF.fit_pdf`.
         '''
 
         self.make_pdf(bins=bins)
         self.make_ecdf()
 
+        if do_fit:
+            self.fit_pdf(model=model, verbose=verbose, **kwargs)
+
         if verbose:
 
             import matplotlib.pyplot as p
 
-            if self._standardize_flag:
+            if self.normalization_type == "standardize":
                 xlabel = r"z-score"
+            elif self.normalization_type == "center":
+                xlabel = r"$I - \bar{I}$"
+            elif self.normalization_type == "normalize_by_mean":
+                xlabel = r"$I/\bar{I}$"
             else:
                 xlabel = r"Intensity"
 
             # PDF
             p.subplot(121)
-            if self._standardize_flag:
-                p.plot(self.bins, self.pdf, 'b-')
-            else:
-                p.loglog(self.bins, self.pdf, 'b-')
+            p.semilogy(self.bins, self.pdf, 'b-', label='Data')
+            if do_fit:
+                # Plot the fitted model.
+                vals = np.linspace(self.bins[0], self.bins[-1], 1000)
+                p.semilogy(vals,
+                           model.pdf(vals, *self.model_params[:-1],
+                                     scale=self.model_params[-1],
+                                     loc=0), 'r--', label='Fit')
+                p.legend(loc='best')
+            # else:
+            #     p.loglog(self.bins, self.pdf, 'b-')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("PDF")
@@ -210,10 +389,20 @@ class PDF(BaseStatisticMixIn):
             ax2 = p.subplot(122)
             ax2.yaxis.tick_right()
             ax2.yaxis.set_label_position("right")
-            if self._standardize_flag:
+            if self.normalization_type != "None":
                 ax2.plot(self.bins, self.ecdf, 'b-')
+                if do_fit:
+                    ax2.plot(vals,
+                             model.cdf(vals, *self.model_params[:-1],
+                                       scale=self.model_params[-1],
+                                       loc=0), 'r--')
             else:
                 ax2.semilogx(self.bins, self.ecdf, 'b-')
+                if do_fit:
+                    ax2.semilogx(vals,
+                                 model.cdf(vals, *self.model_params[:-1],
+                                           scale=self.model_params[-1],
+                                           loc=0), 'r--')
             p.grid(True)
             p.xlabel(xlabel)
             p.ylabel("ECDF")
@@ -238,6 +427,12 @@ class PDF_Distance(object):
         Minimum value to keep in img1
     min_val2 : float, optional
         Minimum value to keep in img2
+    do_fit : bool, optional
+        Enables fitting a lognormal distribution to each data set.
+    normalization_type : {"normalize", "normalize_by_mean"}, optional
+        See `~turbustat.statistics.stat_utils.data_normalization`.
+    nbins : int, optional
+        Manually set the number of bins to use for creating the PDFs.
     weights1 : %(dtypes)s, optional
         Weights to be used with img1
     weights2 : %(dtypes)s, optional
@@ -247,30 +442,45 @@ class PDF_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, img1, img2, min_val1=0.0, min_val2=0.0,
-                 weights1=None, weights2=None):
+    def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
+                 do_fit=True, normalization_type=None,
+                 nbins=None, weights1=None, weights2=None):
         super(PDF_Distance, self).__init__()
 
-        self.PDF1 = PDF(img1, min_val=min_val1, use_standardized=True,
+        if do_fit:
+            if normalization_type in ["standardize", "center"]:
+                raise Exception("Cannot perform lognormal fit when using"
+                                " 'standardize' or 'center'.")
+
+        self.normalization_type = normalization_type
+
+        self.PDF1 = PDF(img1, min_val=min_val1,
+                        normalization_type=normalization_type,
                         weights=weights1)
 
-        self.PDF2 = PDF(img2, min_val=min_val2, use_standardized=True,
+        self.PDF2 = PDF(img2, min_val=min_val2,
+                        normalization_type=normalization_type,
                         weights=weights2)
 
         self.bins, self.bin_centers = \
             common_histogram_bins(self.PDF1.data, self.PDF2.data,
-                                  return_centered=True)
+                                  return_centered=True, nbins=nbins)
 
         # Feed the common set of bins to be used in the PDFs
-        self.PDF1.run(verbose=False, bins=self.bins)
-        self.PDF2.run(verbose=False, bins=self.bins)
+        self._do_fit = do_fit
+        self.PDF1.run(verbose=False, bins=self.bins, do_fit=do_fit)
+        self.PDF2.run(verbose=False, bins=self.bins, do_fit=do_fit)
 
     def compute_hellinger_distance(self):
         '''
         Computes the Hellinger Distance between the two PDFs.
         '''
 
-        self.hellinger_distance = hellinger(self.PDF1.pdf, self.PDF2.pdf)
+        # We're using the same bins, so normalize each to unity to keep the
+        # distance normalized.
+        self.hellinger_distance = \
+            hellinger(self.PDF1.pdf / self.PDF1.pdf.sum(),
+                      self.PDF2.pdf / self.PDF2.pdf.sum())
 
     def compute_ks_distance(self):
         '''
@@ -296,8 +506,27 @@ class PDF_Distance(object):
         # self.ad_distance = D
         # self.ad_pval = p
 
+    def compute_lognormal_distance(self):
+        '''
+        Compute the combined t-statistic for the difference in the widths of
+        a lognormal distribution.
+        '''
+
+        try:
+            self.PDF1.model_params
+            self.PDF2.model_params
+        except AttributeError:
+            raise Exception("Fitting has not been performed. 'do_fit' must "
+                            "first be enabled.")
+
+        diff = np.abs(self.PDF1.model_params[0] - self.PDF2.model_params[0])
+        denom = np.sqrt(self.PDF1.model_stderrs[0]**2 +
+                        self.PDF2.model_stderrs[0]**2)
+
+        self.lognormal_distance = diff / denom
+
     def distance_metric(self, statistic='all', verbose=False,
-                        label1=None, label2=None,
+                        label1="Data 1", label2="Data 2",
                         show_data=True):
         '''
         Calculate the distance.
@@ -306,7 +535,7 @@ class PDF_Distance(object):
 
         Parameters
         ----------
-        statistic : 'all', 'hellinger', 'ks'
+        statistic : 'all', 'hellinger', 'ks', 'lognormal'
             Which measure of distance to use.
         labels : tuple, optional
             Sets the labels in the output plot.
@@ -324,40 +553,110 @@ class PDF_Distance(object):
             self.compute_hellinger_distance()
             self.compute_ks_distance()
             # self.compute_ad_distance()
+            if self._do_fit:
+                self.compute_lognormal_distance()
         elif statistic is 'hellinger':
             self.compute_hellinger_distance()
         elif statistic is 'ks':
             self.compute_ks_distance()
+        elif statistic is 'lognormal':
+            if not self._do_fit:
+                raise Exception("Fitting must be enabled to compute the"
+                                " lognormal distance.")
+            self.compute_lognormal_distance()
         # elif statistic is 'ad':
         #     self.compute_ad_distance()
         else:
             raise TypeError("statistic must be 'all',"
-                            "'hellinger', or 'ks'.")
+                            "'hellinger', 'ks', or 'lognormal'.")
                             # "'hellinger', 'ks' or 'ad'.")
 
         if verbose:
+
             import matplotlib.pyplot as p
+
+            if self.normalization_type == "standardize":
+                xlabel = r"z-score"
+            elif self.normalization_type == "center":
+                xlabel = r"$I - \bar{I}$"
+            elif self.normalization_type == "normalize_by_mean":
+                xlabel = r"$I/\bar{I}$"
+            else:
+                xlabel = r"Intensity"
+
+            # Print fit summaries if using fitting
+            if self._do_fit:
+                try:
+                    print(self.PDF1._mle_fit.summary())
+                except ValueError:
+                    warn("Covariance calculation failed. Check the fit quality"
+                         " for data set 1!")
+                try:
+                    print(self.PDF2._mle_fit.summary())
+                except ValueError:
+                    warn("Covariance calculation failed. Check the fit quality"
+                         " for data set 2!")
+
             # PDF
             p.subplot(121)
-            p.plot(self.bin_centers,
-                   self.PDF1.pdf, 'b-', label=label1)
-            p.plot(self.bin_centers,
-                   self.PDF2.pdf, 'g-', label=label2)
-            p.legend(loc="best")
+            p.semilogy(self.bin_centers,
+                       self.PDF1.pdf, 'bD-', label=label1)
+            p.semilogy(self.bin_centers,
+                       self.PDF2.pdf, 'go-', label=label2)
+            if self._do_fit:
+                # Plot the fitted model.
+                vals = np.linspace(self.bin_centers[0], self.bin_centers[-1],
+                                   1000)
+
+                fit_params1 = self.PDF1.model_params
+                p.semilogy(vals,
+                           lognorm.pdf(vals, *fit_params1[:-1],
+                                       scale=fit_params1[-1],
+                                       loc=0), 'b-', label='Fit 1')
+                fit_params2 = self.PDF2.model_params
+                p.semilogy(vals,
+                           lognorm.pdf(vals, *fit_params2[:-1],
+                                       scale=fit_params2[-1],
+                                       loc=0), 'g-', label='Fit 2')
             p.grid(True)
-            p.xlabel(r"z-score")
+            p.xlabel(xlabel)
             p.ylabel("PDF")
 
             # ECDF
             ax2 = p.subplot(122)
             ax2.yaxis.tick_right()
             ax2.yaxis.set_label_position("right")
-            ax2.plot(self.bin_centers, self.PDF1.ecdf, 'b-')
-            ax2.plot(self.bin_centers, self.PDF2.ecdf, 'g-')
+            if self.normalization_type is not None:
+                ax2.plot(self.bin_centers, self.PDF1.ecdf, 'bD-')
+                ax2.plot(self.bin_centers, self.PDF2.ecdf, 'go-')
+                if self._do_fit:
+                    ax2.plot(vals,
+                             lognorm.cdf(vals,
+                                         *fit_params1[:-1],
+                                         scale=fit_params1[-1],
+                                         loc=0), 'b-')
+                    ax2.plot(vals,
+                             lognorm.cdf(vals,
+                                         *fit_params2[:-1],
+                                         scale=fit_params2[-1],
+                                         loc=0), 'g-')
+            else:
+                ax2.semilogx(self.bin_centers, self.PDF1.ecdf, 'bD-')
+                ax2.semilogx(self.bin_centers, self.PDF2.ecdf, 'go-')
+                if self._do_fit:
+                    ax2.semilogx(vals,
+                                 lognorm.cdf(vals, *fit_params1[:-1],
+                                             scale=fit_params1[-1],
+                                             loc=0), 'b-')
+                    ax2.semilogx(vals,
+                                 lognorm.cdf(vals, *fit_params2[:-1],
+                                             scale=fit_params2[-1],
+                                             loc=0), 'g-')
             p.grid(True)
-            p.xlabel(r"z-score")
+            p.xlabel(xlabel)
             p.ylabel("ECDF")
 
+            p.tight_layout()
             p.show()
 
         return self
