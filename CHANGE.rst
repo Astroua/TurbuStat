@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #138 - Add fitting routines and more normalization options for PDFs.
 * #134 - Add rolling back for computing the SCF when shifts are integers (and so don't need the FFT approach)
 * #133 - Fix indexing when creating 1D power spectra.
 * #131 - Another correction for centroid offset issue. Cleaned moment calcs up a bit.
