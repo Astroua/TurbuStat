@@ -243,9 +243,11 @@ class PDF(BaseStatisticMixIn):
             self._model_params = fitted_model.params.copy()
             try:
                 self._model_stderrs = fitted_model.bse.copy()
+                cov_calc_failed = False
             except ValueError:
                 warn("Variance calculation failed.")
                 self._model_stderrs = np.ones_like(self.model_params) * np.NaN
+                cov_calc_failed = True
         elif fit_type == 'mcmc':
             chain = emcee_fit(self._model,
                               init_params.copy(),
@@ -257,7 +259,11 @@ class PDF(BaseStatisticMixIn):
 
         if verbose:
             if fit_type == 'mle':
-                print(fitted_model.summary())
+                if cov_calc_failed:
+                    print("Fitted parameters: {}".format(self.model_params))
+                    print("Covariance calculation failed.")
+                else:
+                    print(fitted_model.summary())
             else:
                 print("Ran chain for {0} iterations".format(chain.iterations))
                 print("Used {} walkers".format(chain.acceptance_fraction.size))
