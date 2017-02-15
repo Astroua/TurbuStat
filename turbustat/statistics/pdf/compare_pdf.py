@@ -281,7 +281,7 @@ class PDF(BaseStatisticMixIn):
         '''
         if hasattr(self, "_model_params"):
             return self._model_params
-        raise Exception("Not model has been fit. Run `fit_pdf` first.")
+        raise Exception("No model has been fit. Run `fit_pdf` first.")
 
     @property
     def model_stderrs(self):
@@ -291,7 +291,7 @@ class PDF(BaseStatisticMixIn):
         '''
         if hasattr(self, "_model_stderrs"):
             return self._model_stderrs
-        raise Exception("Not model has been fit. Run `fit_pdf` first.")
+        raise Exception("No model has been fit. Run `fit_pdf` first.")
 
     def corner_plot(self, **kwargs):
         '''
