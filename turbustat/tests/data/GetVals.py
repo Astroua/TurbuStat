@@ -202,7 +202,9 @@ pdf_distance = \
                  min_val1=0.05,
                  min_val2=0.05,
                  weights1=dataset1["moment0_error"][0] ** -2.,
-                 weights2=dataset2["moment0_error"][0] ** -2.)
+                 weights2=dataset2["moment0_error"][0] ** -2.,
+                 do_fit=False,
+                 normalization_type='standardize')
 
 pdf_distance.distance_metric()
 

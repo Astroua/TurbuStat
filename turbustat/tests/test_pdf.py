@@ -22,7 +22,7 @@ class testPDF(TestCase):
                         normalization_type="standardize", min_val=0.05,
                         weights=self.dataset1["moment0_error"][0]**-2.,
                         bins=computed_data['pdf_bins'])
-        self.test.run(verbose=False)
+        self.test.run(verbose=False, do_fit=False)
 
         npt.assert_almost_equal(self.test.pdf / self.test.pdf.sum(),
                                 computed_data["pdf_val"])
@@ -41,7 +41,9 @@ class testPDF(TestCase):
                          min_val1=0.05,
                          min_val2=0.05,
                          weights1=self.dataset1["moment0_error"][0]**-2.,
-                         weights2=self.dataset2["moment0_error"][0]**-2.)
+                         weights2=self.dataset2["moment0_error"][0]**-2.,
+                         do_fit=False,
+                         normalization_type='standardize')
         self.test_dist.distance_metric()
 
         npt.assert_almost_equal(self.test_dist.hellinger_distance,
@@ -52,3 +54,6 @@ class testPDF(TestCase):
 
         # npt.assert_almost_equal(self.test_dist.ad_distance,
         #                         computed_distances['pdf_ad_distance'])
+
+    def test_PDF_lognormal_distance():
+        pass
