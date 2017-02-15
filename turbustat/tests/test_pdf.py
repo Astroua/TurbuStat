@@ -24,7 +24,8 @@ class testPDF(TestCase):
                         bins=computed_data['pdf_bins'])
         self.test.run(verbose=False)
 
-        npt.assert_almost_equal(self.test.pdf, computed_data["pdf_val"])
+        npt.assert_almost_equal(self.test.pdf / self.test.pdf.sum(),
+                                computed_data["pdf_val"])
         npt.assert_almost_equal(self.test.ecdf, computed_data["pdf_ecdf"])
 
         npt.assert_equal(np.median(self.test.data),
