@@ -176,7 +176,9 @@ scf_val_noncon_bound = scf_distance_cut_bound.scf1.scf_surface
 from turbustat.statistics import Cramer_Distance
 
 cramer_distance = Cramer_Distance(dataset1["cube"],
-                                  dataset2["cube"]).distance_metric()
+                                  dataset2["cube"],
+                                  noise_value1=0.1,
+                                  noise_value2=0.1).distance_metric(normalize=False)
 
 cramer_val = cramer_distance.data_matrix1
 

@@ -4,6 +4,8 @@ Wrapper to run all of the statistics between two data sets.
 For large-scale comparisons, this is the function that should be called.
 '''
 
+import numpy as np
+
 from .wavelets import Wavelet_Distance
 from .mvc import MVC_Distance
 from .pspec_bispec import PSpec_Distance, BiSpectrum_Distance
@@ -24,6 +26,7 @@ from statistics_list import statistics_list
 def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                   statistics=None, multicore=False, vca_break=None,
                   vcs_break=None, dendro_params=None,
+                  noise_value=[-np.inf, -np.inf],
                   dendro_saves=[None, None],
                   cleanup=True):
     '''
@@ -206,7 +209,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
         if any("Cramer" in s for s in statistics):
             cramer_distance = \
                 Cramer_Distance(dataset1["cube"],
-                                dataset2["cube"]).distance_metric()
+                                dataset2["cube"],
+                                noise_value1=noise_value[0],
+                                noise_value2=noise_value[1]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
             if cleanup:
@@ -406,7 +411,9 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
         if any("Cramer" in s for s in statistics):
             cramer_distance = \
                 Cramer_Distance(dataset1["cube"],
-                                dataset2["cube"]).distance_metric()
+                                dataset2["cube"],
+                                noise_value1=noise_value[0],
+                                noise_value2=noise_value[1]).distance_metric()
             distances["Cramer"] = cramer_distance.distance
 
             if cleanup:
