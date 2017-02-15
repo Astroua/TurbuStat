@@ -167,7 +167,9 @@ class PDF(BaseStatisticMixIn):
         Parameters
         ----------
         model : scipy.stats distribution, optional
-            Pass any scipy
+            Pass any scipy distribution. NOTE: All fits assume `loc` can be
+            fixed to 0. This is reasonable for all realistic PDF forms in the
+            ISM.
         verbose : bool, optional
             Enable printing of the fit results.
         fit_type : {'mle', 'mcmc'}, optional
@@ -175,12 +177,11 @@ class PDF(BaseStatisticMixIn):
              ('mle') is used. An MCMC approach ('mcmc') may also be used. This
              requires the optional `emcee` to be installed. kwargs can be
              passed to adjust various properties of the MCMC chain.
-        kwargs : Passed to `emcee.XXX`
+        kwargs : Passed to `~emcee.EnsembleSampler`.
         '''
 
         if fit_type not in ['mle', 'mcmc']:
             raise ValueError("fit_type must be 'mle' or 'mcmc'.")
-
 
         class Likelihood(GenericLikelihoodModel):
 
@@ -275,12 +276,19 @@ class PDF(BaseStatisticMixIn):
 
     @property
     def model_params(self):
+        '''
+        Parameters of the fitted model.
+        '''
         if hasattr(self, "_model_params"):
             return self._model_params
         raise Exception("Not model has been fit. Run `fit_pdf` first.")
 
     @property
     def model_stderrs(self):
+        '''
+        Standard errors of the fitted model. If using an MCMC, the 15th and
+        85th percentiles are returned.
+        '''
         if hasattr(self, "_model_stderrs"):
             return self._model_stderrs
         raise Exception("Not model has been fit. Run `fit_pdf` first.")
@@ -288,6 +296,10 @@ class PDF(BaseStatisticMixIn):
     def corner_plot(self, **kwargs):
         '''
         Create a corner plot from the MCMC. Requires the 'corner' package.
+
+        Parameters
+        ----------
+        kwargs : Passed to `~corner.corner`.
         '''
 
         if not hasattr(self, "_mcmc_chain"):
@@ -313,6 +325,11 @@ class PDF(BaseStatisticMixIn):
             Enables plotting of the results.
         bins : list or numpy.ndarray or int, optional
             Bins to compute the PDF from. Overrides initial bin input.
+        do_fit : bool, optional
+            Enables (by default) fitting a given model.
+        model : scipy.stats distribution, optional
+            Pass any scipy distribution. See `~PDF.fit_pdf`.
+        kwargs : Passed to `~PDF.fit_pdf`.
         '''
 
         self.make_pdf(bins=bins)
@@ -393,6 +410,12 @@ class PDF_Distance(object):
         Minimum value to keep in img1
     min_val2 : float, optional
         Minimum value to keep in img2
+    do_fit : bool, optional
+        Enables fitting a lognormal distribution to each data set.
+    normalization_type : {"normalize", "normalize_by_mean"}, optional
+        See `~turbustat.statistics.stat_utils.data_normalization`.
+    nbins : int, optional
+        Manually set the number of bins to use for creating the PDFs.
     weights1 : %(dtypes)s, optional
         Weights to be used with img1
     weights2 : %(dtypes)s, optional
