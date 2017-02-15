@@ -467,7 +467,9 @@ class SCF_Distance(object):
         Maximum size roll over which SCF will be calculated.
     boundary : {"continuous", "cut"}
         Treat the boundary as continuous (wrap-around) or cut values
-        beyond the edge (i.e., for most observational data).
+        beyond the edge (i.e., for most observational data). A two element
+        list can also be passed for treating the boundaries differently
+        between the given cubes.
     fiducial_model : SCF
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
@@ -507,14 +509,21 @@ class SCF_Distance(object):
             roll_lags1 = roll_lags
             roll_lags2 = roll_lags / float(scale)
 
+        if not isinstance(boundary, basestring):
+            if len(boundary) != 2:
+                raise ValueError("If boundary is not a string, it must be a "
+                                 "list or array of 2 string elements.")
+        else:
+            boundary = [boundary, boundary]
+
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True, boundary=boundary)
+            self.scf1.run(return_stddev=True, boundary=boundary[0])
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True, boundary=boundary)
+        self.scf2.run(return_stddev=True, boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg):
