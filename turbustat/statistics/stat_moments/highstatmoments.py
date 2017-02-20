@@ -174,7 +174,7 @@ class StatMoments(BaseStatisticMixIn):
         kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
-    def run(self, verbose=False, save_name=None **kwargs):
+    def run(self, verbose=False, save_name=None, **kwargs):
         '''
         Compute the entire method.
 
