@@ -112,7 +112,7 @@ class Tsallis(BaseStatisticMixIn):
             self.tsallis_fits[i, 6] = chisquare(
                 np.exp(fitted_vals), f_exp=np.exp(clipped[1]), ddof=3)[0]
 
-    def run(self, verbose=False, sigma_clip=2):
+    def run(self, verbose=False, sigma_clip=2, save_name=None):
         '''
         Run all steps.
 
@@ -123,6 +123,8 @@ class Tsallis(BaseStatisticMixIn):
         sigma_clip : float
             Sets the sigma value to clip data at.
             Passed to :func:`fit_tsallis`.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.make_tsallis()
@@ -148,7 +150,12 @@ class Tsallis(BaseStatisticMixIn):
                 p.legend(loc="best")
 
                 i += 2
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -193,7 +200,7 @@ class Tsallis_Distance(object):
 
         self.distance = None
 
-    def distance_metric(self, verbose=False):
+    def distance_metric(self, verbose=False, save_name=None):
         '''
 
         We do not consider the parameter a in the distance metric. Since we
@@ -207,7 +214,8 @@ class Tsallis_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         w1 = self.tsallis1.tsallis_fits[:, 1]
@@ -232,8 +240,12 @@ class Tsallis_Distance(object):
             p.ylabel("Normalized Difference")
             p.xlabel("Lags (pixels)")
             p.grid(True)
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 

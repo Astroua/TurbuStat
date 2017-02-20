@@ -8,7 +8,7 @@ from copy import copy
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..stats_utils import common_scale, standardize
+from ..stats_utils import common_scale, standardize, center
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -171,7 +171,7 @@ class DeltaVariance(BaseStatisticMixIn):
         return self._delta_var_error
 
     def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False):
+            allow_huge=False, save_name=None):
         '''
         Compute the delta-variance.
 
@@ -185,6 +185,8 @@ class DeltaVariance(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.do_convolutions(allow_huge=allow_huge)
@@ -209,7 +211,12 @@ class DeltaVariance(BaseStatisticMixIn):
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -328,6 +335,8 @@ class DeltaVariance_Distance(object):
         # different scales.
         dataset1[0] = standardize(dataset1[0])
         dataset2[0] = standardize(dataset2[0])
+        # dataset1[0] = center(dataset1[0])
+        # dataset2[0] = center(dataset2[0])
 
         # Create a default set of lags, in pixels
         if lags is None:
@@ -374,7 +383,7 @@ class DeltaVariance_Distance(object):
         self.delvar2.run()
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, save_name=None):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -390,6 +399,8 @@ class DeltaVariance_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Check for NaNs and negatives
@@ -407,6 +418,7 @@ class DeltaVariance_Distance(object):
 
         if verbose:
             import matplotlib.pyplot as p
+
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
@@ -431,7 +443,12 @@ class DeltaVariance_Distance(object):
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

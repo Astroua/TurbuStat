@@ -60,7 +60,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg):
+            ang_units=False, unit=u.deg, save_name=None):
         '''
         Full computation of the spatial power spectrum.
 
@@ -80,6 +80,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.compute_pspec()
@@ -89,9 +91,12 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
         if verbose:
-            print self.fit.summary()
+            print(self.fit.summary())
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit)
+                          unit=unit, save_name=save_name)
+            if save_name is not None:
+                import matplotlib.pyplot as plt
+                plt.close()
 
         return self
 
@@ -142,7 +147,8 @@ class PSpec_Distance(object):
         self.distance = None
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None, ang_units=False, unit=u.deg):
+                        label1=None, label2=None, ang_units=False, unit=u.deg,
+                        save_name=None):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -169,6 +175,8 @@ class PSpec_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.distance = \
@@ -177,10 +185,11 @@ class PSpec_Distance(object):
                            self.pspec2.slope_err**2))
 
         if verbose:
-            print self.pspec1.fit.summary()
-            print self.pspec2.fit.summary()
+            print(self.pspec1.fit.summary())
+            print(self.pspec2.fit.summary())
 
             import matplotlib.pyplot as p
+
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
                                  ang_units=ang_units, unit=unit)
@@ -188,7 +197,12 @@ class PSpec_Distance(object):
                                  label=label2, symbol='o',
                                  ang_units=ang_units, unit=unit)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -329,7 +343,8 @@ class BiSpectrum(BaseStatisticMixIn):
         '''
         return self._tracker
 
-    def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False):
+    def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False,
+            save_name=None):
         '''
         Compute the bispectrum. Necessary to maintain package standards.
 
@@ -343,6 +358,8 @@ class BiSpectrum(BaseStatisticMixIn):
             See `~BiSpectrum.compute_bispectrum`.
         verbose : bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.compute_bispectrum(nsamples=nsamples)
@@ -367,7 +384,12 @@ class BiSpectrum(BaseStatisticMixIn):
             p.ylabel(r"$k_2$")
 
             p.tight_layout()
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -407,7 +429,7 @@ class BiSpectrum_Distance(object):
         self.distance = None
 
     def distance_metric(self, metric='average', verbose=False, label1=None,
-                        label2=None):
+                        label2=None, save_name=None):
         '''
         verbose : bool, optional
             Enable plotting.
@@ -415,6 +437,8 @@ class BiSpectrum_Distance(object):
             Object or region name for data1
         label2 : str, optional
             Object or region name for data2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         if metric is 'surface':
@@ -428,6 +452,7 @@ class BiSpectrum_Distance(object):
 
         if verbose:
             import matplotlib.pyplot as p
+            p.ion()
 
             fig = p.figure()
             ax1 = fig.add_subplot(121)
@@ -452,7 +477,11 @@ class BiSpectrum_Distance(object):
             fig.colorbar(im, cax=cbar_ax)
 
             # p.tight_layout()
-            p.show()
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

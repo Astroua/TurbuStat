@@ -215,8 +215,8 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
-    def run(self, verbose=False, use_beam=False, beam_area=None, min_size=4,
-            **kwargs):
+    def run(self, verbose=False, save_name=None, use_beam=False,
+            beam_area=None, min_size=4, **kwargs):
         '''
         Run the whole statistic.
 
@@ -224,6 +224,8 @@ class Genus(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         use_beam : bool, optional
             See `~Genus.make_genus_curve`.
         beam_area : `~astropy.units.Quantity`, optional
@@ -254,7 +256,12 @@ class Genus(BaseStatisticMixIn):
                 p.xlabel("Intensity")
                 p.grid(True)
             p.tight_layout()
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -306,7 +313,8 @@ class GenusDistance(object):
         # the scaling between the angular size of the grids.
         self.scale = common_scale(WCS(hdr1), WCS(hdr2))
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        save_name=None):
         '''
 
         Data is centered and normalized (via normalize).
@@ -323,6 +331,8 @@ class GenusDistance(object):
             Object or region name for img1
         label2 : str, optional
             Object or region name for img2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # 2 times the average number between the two
@@ -371,7 +381,12 @@ class GenusDistance(object):
             p.ylabel("Genus Score")
             p.grid(True)
             p.legend(loc="best")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

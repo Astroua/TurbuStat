@@ -621,10 +621,11 @@ class PCA(BaseStatisticMixIn):
 
         return lambd, lambd_error_range
 
-    def run(self, verbose=False, mean_sub=False, decomp_only=False,
-            n_eigs='auto', min_eigval=None, eigen_cut_method='value',
-            spatial_method='contour', spectral_method='walk-down',
-            fit_method='odr', beam_fwhm=None, brunt_beamcorrect=True):
+    def run(self, verbose=False, save_name=None, mean_sub=False,
+            decomp_only=False, n_eigs='auto', min_eigval=None,
+            eigen_cut_method='value', spatial_method='contour',
+            spectral_method='walk-down', fit_method='odr',
+            beam_fwhm=None, brunt_beamcorrect=True):
         '''
         Run the decomposition and fitting in one step.
 
@@ -632,6 +633,8 @@ class PCA(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting of the results.
+        save_name : str,optional
+            Save the figure when a file name is given.
         mean_sub : bool, optional
             See `~PCA.compute_pca`
         decomp_only : bool, optional
@@ -728,7 +731,12 @@ class PCA(BaseStatisticMixIn):
                     x_range / 4])
 
             p.tight_layout()
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -777,7 +785,8 @@ class PCA_Distance(object):
         self._mean_sub = mean_sub
         self._n_eigs = n_eigs
 
-    def distance_metric(self, verbose=False, label1="Cube 1", label2="Cube 2"):
+    def distance_metric(self, verbose=False, label1="Cube 1", label2="Cube 2",
+                        save_name=None):
         '''
         Computes the distance between the cubes.
 
@@ -789,6 +798,9 @@ class PCA_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        save_name : str, optional
+            Save the figure when a file name is given.
+
         '''
 
         # The eigenvalues need to be normalized before being compared. If
@@ -836,7 +848,12 @@ class PCA_Distance(object):
             p.xlabel('Eigenvalues')
 
             p.tight_layout()
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

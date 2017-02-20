@@ -115,7 +115,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, logspacing=True,
+    def run(self, verbose=False, save_name=None, logspacing=True,
             return_stddev=True, low_cut=None, high_cut=0.5,
             ang_units=False, unit=u.deg, **kwargs):
         '''
@@ -126,6 +126,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose: bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
@@ -154,7 +156,10 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             print self.fit.summary()
 
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit)
+                          unit=unit, save_name=save_name)
+            if save_name is not None:
+                import matplotlib.pyplot as p
+                p.close()
 
         return self
 
@@ -218,7 +223,8 @@ class MVC_Distance(object):
         self.mvc2.run()
 
     def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None, ang_units=False, unit=u.deg):
+                        label1=None, label2=None, ang_units=False, unit=u.deg,
+                        save_name=None):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -244,6 +250,8 @@ class MVC_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Construct t-statistic
@@ -258,11 +266,17 @@ class MVC_Distance(object):
             print self.mvc2.fit.summary()
 
             import matplotlib.pyplot as p
+
             self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
                                ang_units=ang_units, unit=unit)
             self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o',
                                ang_units=ang_units, unit=unit)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

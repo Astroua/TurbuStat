@@ -182,7 +182,7 @@ class StatisticBase_PSpec2D(object):
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", ang_units=False, unit=u.deg):
+                 symbol="D", ang_units=False, unit=u.deg, save_name=None):
         '''
         Plot the fitted model.
         '''
@@ -242,6 +242,9 @@ class StatisticBase_PSpec2D(object):
             ax.set_ylabel(r"P$_2(K)$")
 
         p.grid(True)
+
+        if save_name is not None:
+            p.savefig(save_name)
 
         if show:
             p.show()

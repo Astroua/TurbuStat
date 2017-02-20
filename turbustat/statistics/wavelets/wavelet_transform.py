@@ -189,7 +189,8 @@ class Wavelet_Distance(object):
         self.wt2.run()
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None, ang_units=False, unit=u.deg):
+                        label2=None, ang_units=False, unit=u.deg,
+                        save_name=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -206,6 +207,8 @@ class Wavelet_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Construct t-statistic
@@ -234,6 +237,7 @@ class Wavelet_Distance(object):
             values2 = np.log10(self.wt2.values)
 
             import matplotlib.pyplot as p
+
             p.plot(scales1, values1, 'bD', label=label1)
             p.plot(scales2, values2, 'go', label=label2)
             p.plot(scales1,
@@ -249,7 +253,12 @@ class Wavelet_Distance(object):
 
             p.ylabel(r"log $T_g$")
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

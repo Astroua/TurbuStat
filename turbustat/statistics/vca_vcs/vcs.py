@@ -48,7 +48,7 @@ class VCS(BaseStatisticMixIn):
             try:
                 spec_unit = u.Unit(self.header["CUNIT3"])
                 self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
-                                   spec_unit).to(u.km/u.s).value
+                                   spec_unit).to(u.km / u.s).value
             except (KeyError, u.UnitsError) as e:
                 print("Spectral unit not in the header or it cannot be parsed "
                       "by astropy.units. Using pixel units.")
@@ -179,7 +179,7 @@ class VCS(BaseStatisticMixIn):
     def brk_err(self):
         return self.fit.brk_err
 
-    def run(self, verbose=False, breaks=None):
+    def run(self, verbose=False, save_name=None, breaks=None):
         '''
         Run the entire computation.
 
@@ -187,6 +187,8 @@ class VCS(BaseStatisticMixIn):
         ----------
         verbose: bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         breaks : float, optional
             Specify where the break point is. If None, attempts to find using
             spline.
@@ -198,7 +200,8 @@ class VCS(BaseStatisticMixIn):
             import matplotlib.pyplot as p
 
             if self.vel_units:
-                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
+                xlab = \
+                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
                 xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
@@ -209,7 +212,12 @@ class VCS(BaseStatisticMixIn):
             p.ylabel(r"log P$_{1}$(k$_{v}$)")
             p.grid(True)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -259,7 +267,8 @@ class VCS_Distance(object):
         self.vcs2 = VCS(cube2,
                         vel_units=vel_units).run(breaks=breaks[1])
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        save_name=None):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -274,6 +283,8 @@ class VCS_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Now construct the t-statistics for each portion
@@ -311,11 +322,13 @@ class VCS_Distance(object):
             print(self.vcs2.fit.fit.summary())
 
             if self.vel_units:
-                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
+                xlab = \
+                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
                 xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
             import matplotlib.pyplot as p
+
             p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
                    label=label1)
             p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
@@ -326,6 +339,11 @@ class VCS_Distance(object):
             p.legend()
             p.xlabel(xlab)
             p.ylabel(r"$P_{1}(k_v)$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

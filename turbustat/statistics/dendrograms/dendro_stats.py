@@ -324,9 +324,9 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
-    def run(self, verbose=False, dendro_verbose=False, dendro_obj=None,
-            save_results=False, output_name=None, make_hists=True,
-            **kwargs):
+    def run(self, verbose=False, save_name=None, dendro_verbose=False,
+            dendro_obj=None, save_results=False, output_name=None,
+            make_hists=True, **kwargs):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -335,6 +335,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         ----------
         verbose : optional, bool
             Enable plotting of results.
+        save_name : str,optional
+            Save the figure when a file name is given.
         dendro_verbose : optional, bool
             Prints out updates while making the dendrogram.
         dendro_obj : Dendrogram, optional
@@ -380,7 +382,11 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                             width=bin_width, alpha=0.25)
                     p.xlabel("Data Values")
 
-            p.show()
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         if save_results:
             self.save_results(output_name=output_name)
@@ -504,7 +510,7 @@ class DendroDistance(object):
         self.histogram_distance = None
 
     def numfeature_stat(self, verbose=False, label1=None, label2=None,
-                        savename=None):
+                        save_name=None):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -516,7 +522,7 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
-        savename : str, optional
+        save_name : str, optional
             Saves the plot when a filename is given.
         '''
 
@@ -546,8 +552,8 @@ class DendroDistance(object):
             p.ylabel("log Number of Features")
             p.legend(loc='best')
 
-            if savename is not None:
-                p.savefig(savename)
+            if save_name is not None:
+                p.savefig(save_name)
                 p.clf()
             else:
                 p.show()
@@ -555,7 +561,7 @@ class DendroDistance(object):
         return self
 
     def histogram_stat(self, verbose=False, label1=None, label2=None,
-                       savename=None):
+                       save_name=None):
         '''
         Computes the distance using histograms.
 
@@ -567,7 +573,7 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
-        savename : str, optional
+        save_name : str, optional
             Saves the plot when a filename is given.
         '''
 
@@ -655,8 +661,8 @@ class DendroDistance(object):
             ax4.axes.yaxis.set_ticklabels([])
 
             p.tight_layout()
-            if savename is not None:
-                p.savefig(savename)
+            if save_name is not None:
+                p.savefig(save_name)
                 p.clf()
             else:
                 p.show()

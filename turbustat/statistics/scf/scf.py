@@ -361,7 +361,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, logspacing=False, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            verbose=False, ang_units=False, unit=u.deg):
+            verbose=False, ang_units=False, unit=u.deg, save_name=None):
         '''
         Computes all SCF outputs.
 
@@ -388,6 +388,8 @@ class SCF(BaseStatisticMixIn):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.compute_surface(boundary=boundary)
@@ -445,8 +447,12 @@ class SCF(BaseStatisticMixIn):
                 ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 
@@ -526,7 +532,7 @@ class SCF_Distance(object):
         self.scf2.run(return_stddev=True, boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, save_name=None):
         '''
         Compute the distance between the surfaces.
 
@@ -542,6 +548,8 @@ class SCF_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Since the angular scales are matched, we can assume that they will
@@ -622,6 +630,10 @@ class SCF_Distance(object):
                    linewidth=2)
             ax.legend(loc='upper right')
             p.tight_layout()
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
