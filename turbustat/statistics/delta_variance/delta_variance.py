@@ -5,6 +5,7 @@ from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy.wcs import WCS
 from copy import copy
+import statsmodels.api as sm
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -119,8 +120,94 @@ class DeltaVariance(BaseStatisticMixIn):
             self.delta_var[i] = val
             self.delta_var_error[i] = err
 
+    def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
+        '''
+        Fit a power-law to the SCF spectrum.
+
+        Parameters
+        ----------
+        xlow : float, optional
+            Lower lag value to consider in the fit.
+        xhigh : float, optional
+            Upper lag value to consider in the fit.
+        verbose : bool, optional
+            Show fit summary when enabled.
+        '''
+
+        x = np.log10(self.lags.value)
+        y = np.log10(self.delta_var)
+
+        if xlow is not None:
+            lower_limit = x >= np.log10(xlow)
+        else:
+            lower_limit = \
+                np.ones_like(self.delta_var, dtype=bool)
+
+        if xhigh is not None:
+            upper_limit = x <= np.log10(xhigh)
+        else:
+            upper_limit = \
+                np.ones_like(self.delta_var, dtype=bool)
+
+        within_limits = np.logical_and(lower_limit, upper_limit)
+
+        y = y[within_limits]
+        x = x[within_limits]
+
+        x = sm.add_constant(x)
+
+        # If the std were computed, use them as weights
+        weighted_fit = True
+        if weighted_fit:
+
+            # Converting to the log stds doesn't matter since the weights
+            # remain proportional to 1/sigma^2, and an overal normalization is
+            # applied in the fitting routine.
+            weights = self.delta_var_error[within_limits] ** -2
+
+            model = sm.WLS(y, x, missing='drop', weights=weights)
+        else:
+            model = sm.OLS(y, x, missing='drop')
+
+        self.fit = model.fit()
+
+        if verbose:
+            print(self.fit.summary())
+
+        self._slope = self.fit.params[1]
+        self._slope_err = self.fit.bse[1]
+
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def slope_err(self):
+        return self._slope_err
+
+    def fitted_model(self, xvals):
+        '''
+        Computes the fitted power-law in log-log space using the
+        given x values.
+
+        Parameters
+        ----------
+        xvals : `~numpy.ndarray`
+            Values of log(lags) to compute the model at (base 10 log).
+
+        Returns
+        -------
+        model_values : `~numpy.ndarray`
+            Values of the model at the given values. Equivalent to log values
+            of the SCF spectrum.
+        '''
+
+        model_values = self.fit.params[0] + self.fit.params[1] * xvals
+
+        return model_values
+
     def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False):
+            allow_huge=False, xlow=None, xhigh=None):
         '''
         Compute the delta-variance.
 
@@ -136,6 +223,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
         self.do_convolutions(allow_huge=allow_huge)
         self.compute_deltavar()
+        self.fit_plaw(xlow=xlow, xhigh=xhigh, verbose=verbose)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -148,7 +236,14 @@ class DeltaVariance(BaseStatisticMixIn):
             else:
                 lags = self.lags.value
             p.errorbar(lags, self.delta_var, yerr=self.delta_var_error,
-                       fmt="bD-")
+                       fmt="bD-", label="Data")
+            xvals = \
+                np.linspace(self.lags.min().value if xlow is None else xlow,
+                            self.lags.max().value if xhigh is None else xhigh,
+                            100)
+            p.plot(xvals, 10**self.fitted_model(np.log10(xvals)), 'r--',
+                   linewidth=2, label='Fit')
+            p.legend(loc='best')
             ax.grid(True)
 
             if ang_units:
@@ -273,8 +368,8 @@ class DeltaVariance_Distance(object):
         # Enforce standardization on both datasets. Values for the
         # delta-variance then represents a relative fraction of structure on
         # different scales.
-        dataset1[0] = standardize(dataset1[0])
-        dataset2[0] = standardize(dataset2[0])
+        # dataset1[0] = standardize(dataset1[0])
+        # dataset2[0] = standardize(dataset2[0])
 
         # Create a default set of lags, in pixels
         if lags is None:
