@@ -10,6 +10,7 @@ import statsmodels.api as sm
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..stats_utils import common_scale, standardize
+from ..fitting_utils import check_fit_limits
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -73,32 +74,41 @@ class DeltaVariance(BaseStatisticMixIn):
         self.delta_var = np.empty((len(self.lags)))
         self.delta_var_error = np.empty((len(self.lags)))
 
-    def do_convolutions(self, allow_huge=False):
+    def do_convolutions(self, allow_huge=False, boundary='wrap'):
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
                 lag, self.diam_ratio, self.data.shape[0], self.data.shape[1])
 
-            # Extend to avoid boundary effects from non-periodicity
-            pad_weights = np.pad(self.weights, int(lag), padwithzeros)
-            pad_img = np.pad(self.data, int(lag), padwithzeros) * pad_weights
+            if boundary == "wrap":
+                # Don't pad for periodic boundaries
+                pad_weights = self.weights
+                pad_img = self.data * self.weights
+            elif boundary == "cut":
+                # Extend to avoid boundary effects from non-periodicity
+                pad_weights = np.pad(self.weights, int(lag), padwithzeros)
+                pad_img = np.pad(self.data, int(lag), padwithzeros) * pad_weights
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge)
+                ignore_edge_zeros=True, allow_huge=allow_huge,
+                boundary=boundary)
             img_annulus = convolve_fft(
                 pad_img, annulus, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge)
+                ignore_edge_zeros=True, allow_huge=allow_huge,
+                boundary=boundary)
             weights_core = convolve_fft(
                 pad_weights, core, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge)
+                ignore_edge_zeros=True, allow_huge=allow_huge,
+                boundary=boundary)
             weights_annulus = convolve_fft(
                 pad_weights, annulus, normalize_kernel=True,
                 interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge)
+                ignore_edge_zeros=True, allow_huge=allow_huge,
+                boundary=boundary)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
             weights_annulus[np.where(weights_annulus == 0)] = np.NaN
@@ -149,6 +159,8 @@ class DeltaVariance(BaseStatisticMixIn):
             upper_limit = \
                 np.ones_like(self.delta_var, dtype=bool)
 
+        self._fit_range = [xlow, xhigh]
+
         within_limits = np.logical_and(lower_limit, upper_limit)
 
         y = y[within_limits]
@@ -185,6 +197,10 @@ class DeltaVariance(BaseStatisticMixIn):
     def slope_err(self):
         return self._slope_err
 
+    @property
+    def fit_range(self):
+        return self._fit_range
+
     def fitted_model(self, xvals):
         '''
         Computes the fitted power-law in log-log space using the
@@ -207,7 +223,7 @@ class DeltaVariance(BaseStatisticMixIn):
         return model_values
 
     def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False, xlow=None, xhigh=None):
+            allow_huge=False, boundary='wrap', xlow=None, xhigh=None):
         '''
         Compute the delta-variance.
 
@@ -221,7 +237,7 @@ class DeltaVariance(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         '''
 
-        self.do_convolutions(allow_huge=allow_huge)
+        self.do_convolutions(allow_huge=allow_huge, boundary=boundary)
         self.compute_deltavar()
         self.fit_plaw(xlow=xlow, xhigh=xhigh, verbose=verbose)
 
@@ -354,12 +370,18 @@ class DeltaVariance_Distance(object):
         A computed DeltaVariance model. Used to avoid recomputing.
     ang_units : bool, optional
         Convert frequencies to angular units using the given header.
+    xlow : float or np.ndarray, optional
+        The lower lag fitting limit. An array with 2 elements can be passed to
+        give separate lower limits for the datasets.
+    xhigh : float or np.ndarray, optional
+        The upper lag fitting limit. See `xlow` above.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
-                 diam_ratio=1.5, lags=None, fiducial_model=None):
+                 diam_ratio=1.5, lags=None, fiducial_model=None,
+                 xlow=None, xhigh=None, boundary='wrap'):
         super(DeltaVariance_Distance, self).__init__()
 
         dataset1 = copy(input_data(dataset1, no_header=False))
@@ -388,6 +410,10 @@ class DeltaVariance_Distance(object):
                                 np.log10(min(shape1) / 2.),
                                 nlags) * u.pix
 
+        # Check the limits are given in an understandable form.
+        # The returned xlow and xhigh are arrays.
+        xlow, xhigh = check_fit_limits(xlow, xhigh)
+
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
         scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
@@ -408,12 +434,12 @@ class DeltaVariance_Distance(object):
             self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags1)
-            self.delvar1.run()
+            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0], boundary=boundary)
 
         self.delvar2 = DeltaVariance(dataset2,
                                      weights=weights2,
                                      diam_ratio=diam_ratio, lags=lags2)
-        self.delvar2.run()
+        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg):
@@ -442,30 +468,89 @@ class DeltaVariance_Distance(object):
 
         all_nans = np.logical_or(nans1, nans2)
 
-        deltavar1 = np.log10(self.delvar1.delta_var)[~all_nans]
-        deltavar2 = np.log10(self.delvar2.delta_var)[~all_nans]
+        deltavar1_sum = np.sum(self.delvar1.delta_var[~all_nans])
+        deltavar1 = np.log10(self.delvar1.delta_var[~all_nans] / deltavar1_sum)
 
-        self.distance = np.linalg.norm(deltavar1 - deltavar2)
+        deltavar2_sum = np.sum(self.delvar2.delta_var[~all_nans])
+        deltavar2 = np.log10(self.delvar2.delta_var[~all_nans] / deltavar2_sum)
+
+        # Distance between two normalized curves
+        self.curve_distance = np.linalg.norm(deltavar1 - deltavar2)
+
+        # Distance between the fitted slopes (combined t-statistic)
+        self.slope_distance = \
+            np.abs(self.delvar1.slope - self.delvar2.slope) / \
+            np.sqrt(self.delvar1.slope_err**2 + self.delvar2.slope_err**2)
 
         if verbose:
             import matplotlib.pyplot as p
+            p.ion()
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
             if ang_units:
+                ang_equiv1 = self.delvar1.angular_equiv
+                ang_equiv2 = self.delvar2.angular_equiv
                 lags1 = \
-                    self.delvar1.lags.to(unit, equivalencies=self.delvar1.angular_equiv).value
+                    self.delvar1.lags.to(unit, equivalencies=ang_equiv1).value
                 lags2 = \
-                    self.delvar2.lags.to(unit, equivalencies=self.delvar2.angular_equiv).value
+                    self.delvar2.lags.to(unit, equivalencies=ang_equiv2).value
             else:
                 lags1 = self.delvar1.lags.value
                 lags2 = self.delvar2.lags.value
-            p.errorbar(lags1, self.delvar1.delta_var,
-                       yerr=self.delvar1.delta_var_error, fmt="bD-",
+
+            # Normalize the errors for when plotting. NOT log-scaled.
+            deltavar1_err = \
+                self.delvar1.delta_var_error[~all_nans] / deltavar1_sum
+            deltavar2_err = \
+                self.delvar2.delta_var_error[~all_nans] / deltavar2_sum
+
+            p.errorbar(lags1, 10**deltavar1,
+                       yerr=deltavar1_err, fmt="bD-",
                        label=label1)
-            p.errorbar(lags2, self.delvar2.delta_var,
-                       yerr=self.delvar2.delta_var_error, fmt="go-",
+            p.errorbar(lags2, 10**deltavar2,
+                       yerr=deltavar2_err, fmt="go-",
                        label=label2)
+
+            lims1 = self.delvar1.fit_range
+            xvals1 = \
+                np.linspace(self.delvar1.lags.min().value if lims1[0] is None
+                            else lims1[0],
+                            self.delvar1.lags.max().value if lims1[1] is None
+                            else lims1[1],
+                            100)
+            lims2 = self.delvar2.fit_range
+            xvals2 = \
+                np.linspace(self.delvar2.lags.min().value if lims2[0] is None
+                            else lims2[0],
+                            self.delvar2.lags.max().value if lims2[1] is None
+                            else lims2[1],
+                            100)
+            if ang_units:
+                xvals1_conv = xvals1.to(unit, equivalencies=ang_equiv1).value
+                xvals2_conv = xvals2.to(unit, equivalencies=ang_equiv2).value
+            else:
+                xvals1_conv = xvals1
+                xvals2_conv = xvals2
+
+            p.plot(xvals1_conv,
+                   10**self.delvar1.fitted_model(np.log10(xvals1)) / deltavar1_sum,
+                   'b--', linewidth=8, alpha=0.75)
+            p.plot(xvals2_conv,
+                   10**self.delvar2.fitted_model(np.log10(xvals2)) / deltavar2_sum,
+                   'g--', linewidth=8, alpha=0.75)
+
+            # Vertical lines to indicate fit region
+            p.axvline(self.delvar1.lags.min().value if lims1[0] is None
+                      else lims1[0], color='b', alpha=0.5, linestyle='-')
+            p.axvline(self.delvar1.lags.max().value if lims1[1] is None
+                      else lims1[1], color='b', alpha=0.5, linestyle='-')
+
+            p.axvline(self.delvar2.lags.min().value if lims2[0] is None
+                      else lims2[0], color='g', alpha=0.5, linestyle='-')
+            p.axvline(self.delvar2.lags.max().value if lims2[1] is None
+                      else lims2[1], color='g', alpha=0.5, linestyle='-')
+
             ax.legend(loc='best')
             ax.grid(True)
             if ang_units:
