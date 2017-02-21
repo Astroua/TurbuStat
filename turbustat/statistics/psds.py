@@ -53,8 +53,8 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         nbins = int(np.round(dists.max() / binsize) + 1)
 
     if return_freqs:
-        yfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[0])))
-        xfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[1])))
+        yfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[0], 0.5)))
+        xfreqs = np.fft.fftshift(np.abs(np.fft.fftfreq(psd2.shape[1], 0.5)))
 
         yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
 
@@ -65,13 +65,14 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
 
     if max_bin is None:
         if return_freqs:
-            max_bin = freqs_dist.flatten()[np.argmax(dists)]
+            # max_bin = freqs_dist.flatten()[np.argmax(dists)]
+            max_bin = 1.0
         else:
             max_bin = dists.max()
 
     if min_bin is None:
         if return_freqs:
-            min_bin = zero_freq_val
+            min_bin = 1.99 / min(psd2.shape)
         else:
             min_bin = 0.5
 
