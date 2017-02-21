@@ -10,6 +10,7 @@ from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
+from ..fitting_utils import check_fit_limits
 
 
 class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -58,7 +59,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, logspacing=True,
+    def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
             ang_units=False, unit=u.deg):
         '''
@@ -117,30 +118,43 @@ class PSpec_Distance(object):
         Computed PowerSpectrum object. use to avoid recomputing.
     ang_units : bool, optional
         Convert the frequencies to angular units using the header.
+    low_cut : float or np.ndarray, optional
+        The lower frequency fitting limit. An array with 2 elements can be
+        passed to give separate lower limits for the datasets.
+    high_cut : float or np.ndarray, optional
+        The upper frequency fitting limit. See `low_cut` above. Defaults to
+        0.5.
+    logspacing : bool, optional
+        Enable to use logarithmically-spaced bins.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, ang_units=False):
+                 fiducial_model=None, ang_units=False, low_cut=None,
+                 high_cut=0.5, logspacing=False):
         super(PSpec_Distance, self).__init__()
 
         self.ang_units = ang_units
 
+        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
+
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1, weights=weights1)
-            self.pspec1.run()
+            self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
+                            logspacing=logspacing)
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2, weights=weights2)
-        self.pspec2.run()
+        self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
+                        logspacing=logspacing)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None, ang_units=False, unit=u.deg):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -179,6 +193,7 @@ class PSpec_Distance(object):
             print self.pspec2.fit.summary()
 
             import matplotlib.pyplot as p
+            p.ion()
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
                                  ang_units=ang_units, unit=unit)
