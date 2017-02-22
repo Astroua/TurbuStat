@@ -68,7 +68,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         linewidth subtracted by the square of the normalized centroid.
         '''
 
-        term1 = fft2(self.centroid*self.moment0)
+        term1 = fft2(self.centroid * self.moment0)
 
         term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
 
@@ -79,9 +79,9 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, logspacing=True,
+    def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg):
+            ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
         Full computation of MVC.
 
@@ -101,21 +101,21 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
-
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
 
         if verbose:
-
-            print self.fit.summary()
+            print(self.fit.summary())
 
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit)
+                          unit=unit, use_wavenumber=use_wavenumber)
 
         return self
 
@@ -140,10 +140,19 @@ class MVC_Distance(object):
     weight_by_error : bool, optional
         When enabled, the property arrays are weighted by the inverse
         squared of the error arrays.
+    low_cut : int or float, optional
+        Set the cut-off for low spatial frequencies. Visually, below ~2
+        deviates from the power law (for the simulation set).
+    high_cut : int or float, optional
+        Set the cut-off for high spatial frequencies. Values beyond the
+        size of the root grid are found to have no meaningful contribution
+    logspacing : bool, optional
+        Use logarithmically spaced bins in the 1D power spectrum.
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
-                 weight_by_error=False):
+                 weight_by_error=False, low_cut=None, high_cut=None,
+                 logspacing=False):
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -172,14 +181,16 @@ class MVC_Distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
-            self.mvc1.run()
+            self.mvc1.run(logspacing=logspacing, high_cut=high_cut,
+                          low_cut=low_cut)
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
-        self.mvc2.run()
+        self.mvc2.run(logspacing=logspacing, high_cut=high_cut,
+                      low_cut=low_cut)
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None, ang_units=False, unit=u.deg):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -189,12 +200,6 @@ class MVC_Distance(object):
 
         Parameters
         ----------
-        low_cut : int or float, optional
-            Set the cut-off for low spatial frequencies. Visually, below ~2
-            deviates from the power law (for the simulation set).
-        high_cut : int or float, optional
-            Set the cut-off for high spatial frequencies. Values beyond the
-            size of the root grid are found to have no meaningful contribution
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
@@ -205,6 +210,8 @@ class MVC_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         # Construct t-statistic
@@ -214,15 +221,16 @@ class MVC_Distance(object):
                            self.mvc2.slope_err**2))
 
         if verbose:
-
-            print self.mvc1.fit.summary()
-            print self.mvc2.fit.summary()
+            print(self.mvc1.fit.summary())
+            print(self.mvc2.fit.summary())
 
             import matplotlib.pyplot as p
             self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             p.legend(loc='best')
             p.show()
 
