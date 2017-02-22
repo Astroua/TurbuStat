@@ -93,7 +93,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                        large_scale=0.5)
         if verbose:
             print(self.fit.summary())
-            self.plot_fit(show=True, show_2D=True,
+            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
+                          unit=unit,
                           use_wavenumber=use_wavenumber)
         return self
 
