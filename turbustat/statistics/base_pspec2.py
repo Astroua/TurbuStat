@@ -35,6 +35,10 @@ class StatisticBase_PSpec2D(object):
     def freqs(self):
         return self._freqs
 
+    @property
+    def wavenumbers(self):
+        return self._freqs * min(self._ps2D.shape)
+
     def compute_radial_pspec(self, return_stddev=True,
                              logspacing=True, max_bin=None, **kwargs):
         '''
