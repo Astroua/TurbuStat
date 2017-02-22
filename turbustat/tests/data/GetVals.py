@@ -25,6 +25,7 @@ wavelet_distance = \
                      dataset2["moment0"]).distance_metric()
 
 wavelet_val = wavelet_distance.wt1.values
+wavelet_slope = wavelet_distance.wt1.slope
 
 # MVC
 
@@ -33,6 +34,7 @@ from turbustat.statistics import MVC_Distance
 mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric()
 
 mvc_val = mvc_distance.mvc1.ps1D
+mvc_slope = mvc_distance.mvc1.slope
 
 # Spatial Power Spectrum/ Bispectrum
 
@@ -40,11 +42,10 @@ from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
 
 pspec_distance = \
     PSpec_Distance(dataset1["moment0"],
-                   dataset2["moment0"],
-                   weights1=dataset1["moment0_error"][0]**2.,
-                   weights2=dataset2["moment0_error"][0]**2.).distance_metric()
+                   dataset2["moment0"]).distance_metric()
 
 pspec_val = pspec_distance.pspec1.ps1D
+pspec_slope = pspec_distance.pspec1.slope
 
 bispec_distance = \
     BiSpectrum_Distance(dataset1["moment0"],
@@ -78,6 +79,7 @@ delvar = DeltaVariance(dataset1["moment0"],
                        weights=dataset1['moment0_error'][0]).run()
 
 delvar_val = delvar.delta_var
+delvar_slope = delvar.slope
 
 # VCA/VCS
 
@@ -92,6 +94,7 @@ vca_distance = VCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
 
 vca_val = vca_distance.vca1.ps1D
+vca_slope = vca_distance.vca1.slope
 
 # Tsallis
 
@@ -203,8 +206,8 @@ pdf_distance = \
                  dataset2["moment0"],
                  min_val1=0.05,
                  min_val2=0.05,
-                 weights1=dataset1["moment0_error"][0] ** -2.,
-                 weights2=dataset2["moment0_error"][0] ** -2.,
+                 weights1=dataset1["moment0_error"][0]**-2.,
+                 weights2=dataset2["moment0_error"][0]**-2.,
                  do_fit=False,
                  normalization_type='standardize')
 
@@ -214,14 +217,20 @@ pdf_val = pdf_distance.PDF1.pdf
 pdf_ecdf = pdf_distance.PDF1.ecdf
 pdf_bins = pdf_distance.bins
 
-np.savez_compressed('checkVals', wavelet_val=wavelet_val,
+np.savez_compressed('checkVals',
+                    wavelet_val=wavelet_val,
+                    wavelet_slope=wavelet_slope,
                     mvc_val=mvc_val,
+                    mvc_slope=mvc_slope,
                     pspec_val=pspec_val,
+                    pspec_slope=pspec_slope,
                     bispec_val=bispec_val,
                     genus_val=genus_val,
                     delvar_val=delvar_val,
+                    delvar_slope=delvar_slope,
                     vcs_val=vcs_val,
                     vca_val=vca_val,
+                    vca_slope=vca_slope,
                     tsallis_val=tsallis_val,
                     kurtosis_val=kurtosis_val,
                     skewness_val=skewness_val,
@@ -243,7 +252,8 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     pspec_distance=pspec_distance.distance,
                     scf_distance=scf_distance.distance,
                     wavelet_distance=wavelet_distance.distance,
-                    delvar_distance=delvar_distance.distance,
+                    delvar_curve_distance=delvar_distance.curve_distance,
+                    delvar_slope_distance=delvar_distance.slope_distance,
                     tsallis_distance=tsallis_distance.distance,
                     kurtosis_distance=moment_distance.kurtosis_distance,
                     skewness_distance=moment_distance.skewness_distance,
