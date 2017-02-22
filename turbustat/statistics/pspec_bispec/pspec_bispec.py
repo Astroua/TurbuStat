@@ -330,15 +330,15 @@ class BiSpectrum(BaseStatisticMixIn):
                 self.bispectrum_amp, origin="lower", interpolation="nearest")
             p.colorbar()
             p.contour(self.bispectrum_amp, colors="k")
-            p.xlabel("k1")
-            p.ylabel("k2")
+            p.xlabel(r"$k_1$")
+            p.ylabel(r"$k_2$")
 
             p.subplot(1, 2, 2)
             p.title("Bicoherence")
             p.imshow(self.bicoherence, origin="lower", interpolation="nearest")
             p.colorbar()
-            p.xlabel("k1")
-            p.ylabel("k2")
+            p.xlabel(r"$k_1$")
+            p.ylabel(r"$k_2$")
 
             p.show()
 
