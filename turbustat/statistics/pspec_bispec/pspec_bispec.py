@@ -61,7 +61,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg):
+            ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
 
@@ -81,6 +81,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.compute_pspec()
@@ -90,8 +92,9 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
                        large_scale=0.5)
         if verbose:
-            print self.fit.summary()
-            self.plot_fit(show=True, show_2D=True)
+            print(self.fit.summary())
+            self.plot_fit(show=True, show_2D=True,
+                          use_wavenumber=use_wavenumber)
         return self
 
 
@@ -154,7 +157,7 @@ class PSpec_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -181,6 +184,8 @@ class PSpec_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.distance = \
@@ -189,17 +194,19 @@ class PSpec_Distance(object):
                            self.pspec2.slope_err**2))
 
         if verbose:
-            print self.pspec1.fit.summary()
-            print self.pspec2.fit.summary()
+            print(self.pspec1.fit.summary())
+            print(self.pspec2.fit.summary())
 
             import matplotlib.pyplot as p
             p.ion()
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
-                                 ang_units=ang_units, unit=unit)
+                                 ang_units=ang_units, unit=unit,
+                                 use_wavenumber=use_wavenumber)
             self.pspec2.plot_fit(show=False, color='g',
                                  label=label2, symbol='o',
-                                 ang_units=ang_units, unit=unit)
+                                 ang_units=ang_units, unit=unit,
+                                 use_wavenumber=use_wavenumber)
             p.legend(loc='best')
             p.show()
 
