@@ -187,9 +187,11 @@ class VCA_Distance(object):
 
             import matplotlib.pyplot as p
             self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             p.legend(loc='upper right')
             p.show()
 
