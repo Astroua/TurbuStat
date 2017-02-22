@@ -101,13 +101,13 @@ class Wavelet(BaseStatisticMixIn):
             lower_limit = x >= np.log10(xlow)
         else:
             lower_limit = \
-                np.ones_like(self.delta_var, dtype=bool)
+                np.ones_like(self.scales, dtype=bool).value
 
         if xhigh is not None:
             upper_limit = x <= np.log10(xhigh)
         else:
             upper_limit = \
-                np.ones_like(self.delta_var, dtype=bool)
+                np.ones_like(self.scales, dtype=bool).value
 
         self._fit_range = [xlow, xhigh]
 
