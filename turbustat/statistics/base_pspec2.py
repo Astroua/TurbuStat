@@ -164,7 +164,8 @@ class StatisticBase_PSpec2D(object):
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", ang_units=False, unit=u.deg):
+                 symbol="D", ang_units=False, unit=u.deg,
+                 use_wavenumber=False):
         '''
         Plot the fitted model.
         '''
@@ -172,9 +173,15 @@ class StatisticBase_PSpec2D(object):
         import matplotlib.pyplot as p
 
         if ang_units:
-            xlab = r"k/"+unit.to_string()+"$^{-1}$"
+            if use_wavenumber:
+                xlab = r"k/" + unit.to_string() + "$^{-1}$"
+            else:
+                xlab = r"Spatial Frequency/" + unit.to_string() + "$^{-1}$"
         else:
-            xlab = r"k/pixel$^{-1}$"
+            if use_wavenumber:
+                xlab = r"k/pixel$^{-1}$"
+            else:
+                xlab = r"Spatial Frequency/pixel$^{-1}$"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -193,35 +200,48 @@ class StatisticBase_PSpec2D(object):
         y_fit = self.fit.fittedvalues
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
-        if ang_units:
-            freqs = 1. / (1. / self.freqs).to(unit, equivalencies=self.angular_equiv).value
+        # Set the x-values to use (freqs or k)
+        if use_wavenumber:
+            xvals = self.wavenumbers
         else:
-            freqs = self.freqs.value
+            xvals = self.freqs
+
+        if ang_units:
+            xvals = 1. / (1. / xvals).to(unit,
+                                         equivalencies=self.angular_equiv)
+
+        xvals = xvals.value
 
         if self._stddev_flag:
-            ax.errorbar(np.log10(freqs[good_interval]),
-                        np.log10(self.ps1D[good_interval]),
-                        yerr=0.434*(self.ps1D_stddev[good_interval] /
-                                    self.ps1D[good_interval]),
+            ax.errorbar(np.log10(xvals),
+                        np.log10(self.ps1D),
+                        yerr=0.434 * (self.ps1D_stddev / self.ps1D),
                         color=color,
                         fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
 
-            ax.plot(np.log10(freqs[fit_index]), y_fit, color+'-',
+            ax.plot(np.log10(xvals[fit_index]), y_fit, color + '-',
                     label=label, linewidth=2)
-            ax.set_xlabel("log "+xlab)
+            ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
         else:
-            ax.loglog(self.freqs[fit_index], 10**y_fit, color+'-',
+            ax.loglog(self.xvals[fit_index], 10**y_fit, color + '-',
                       label=label, linewidth=2)
 
-            ax.loglog(self.freqs[good_interval],
-                      self.ps1D[good_interval], color+symbol, alpha=0.5,
+            ax.loglog(self.xvals, self.ps1D, color + symbol, alpha=0.5,
                       markersize=5)
 
             ax.set_xlabel(xlab)
             ax.set_ylabel(r"P$_2(K)$")
+
+        # Show the fitting extents
+        low_cut = self.low_cut if not use_wavenumber else \
+            self.low_cut * min(self._ps2D.shape)
+        high_cut = self.high_cut if not use_wavenumber else \
+            self.high_cut * min(self._ps2D.shape)
+        p.axvline(np.log10(low_cut), color=color, alpha=0.5, linestyle='--')
+        p.axvline(np.log10(high_cut), color=color, alpha=0.5, linestyle='--')
 
         p.grid(True)
 
