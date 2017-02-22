@@ -198,7 +198,7 @@ class PSpec_Distance(object):
             print(self.pspec2.fit.summary())
 
             import matplotlib.pyplot as p
-            p.ion()
+
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
                                  ang_units=ang_units, unit=unit,
