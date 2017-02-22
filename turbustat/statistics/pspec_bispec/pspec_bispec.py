@@ -429,7 +429,3 @@ class BiSpectrum_Distance(object):
             p.show()
 
         return self
-
-
-def clip_func(arr, low, high):
-    return np.logical_and(arr > low, arr < high)

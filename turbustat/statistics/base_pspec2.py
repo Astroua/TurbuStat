@@ -8,6 +8,7 @@ import astropy.units as u
 
 from .lm_seg import Lm_Seg
 from .psds import pspec
+from .fitting_utils import clip_func
 
 
 class StatisticBase_PSpec2D(object):
@@ -247,7 +248,3 @@ class StatisticBase_PSpec2D(object):
 
         if show:
             p.show()
-
-
-def clip_func(arr, low, high):
-    return np.logical_and(arr > low, arr < high)

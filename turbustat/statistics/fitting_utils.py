@@ -260,3 +260,7 @@ def check_fit_limits(xlow, xhigh):
                              "separate fitting limits for each dataset.")
 
     return xlow, xhigh
+
+
+def clip_func(arr, low, high):
+    return np.logical_and(arr > low, arr < high)
