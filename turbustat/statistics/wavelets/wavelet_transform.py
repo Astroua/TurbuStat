@@ -9,6 +9,7 @@ import statsmodels.api as sm
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types
+from ..fitting_utils import check_fit_limits
 
 
 class Wavelet(BaseStatisticMixIn):
@@ -42,7 +43,7 @@ class Wavelet(BaseStatisticMixIn):
 
         if scales is None:
             a_min = round((5. / 3.), 3)  # Smallest scale given by paper
-            a_max = min(self.data.shape)/2
+            a_max = min(self.data.shape) / 2.
             # Log spaces scales up to half of the smallest size of the array
             self.scales = \
                 np.logspace(np.log10(a_min), np.log10(a_max), num) * u.pix
@@ -88,7 +89,7 @@ class Wavelet(BaseStatisticMixIn):
         for i, plane in enumerate(self.Wf):
             self.values[i] = (plane[plane > 0]).mean()
 
-    def fit_transform(self):
+    def fit_transform(self, xlow=None, xhigh=None):
         '''
         Perform a fit to the transform in log-log space.
         '''
@@ -96,6 +97,24 @@ class Wavelet(BaseStatisticMixIn):
         x = np.log10(self.scales.value)
         y = np.log10(self.values)
 
+        if xlow is not None:
+            lower_limit = x >= np.log10(xlow)
+        else:
+            lower_limit = \
+                np.ones_like(self.delta_var, dtype=bool)
+
+        if xhigh is not None:
+            upper_limit = x <= np.log10(xhigh)
+        else:
+            upper_limit = \
+                np.ones_like(self.delta_var, dtype=bool)
+
+        self._fit_range = [xlow, xhigh]
+
+        within_limits = np.logical_and(lower_limit, upper_limit)
+
+        y = y[within_limits]
+        x = x[within_limits]
         x = sm.add_constant(x)
 
         model = sm.OLS(y, x, missing='drop')
@@ -113,7 +132,56 @@ class Wavelet(BaseStatisticMixIn):
     def slope_err(self):
         return self._slope_err
 
-    def run(self, verbose=False, ang_units=False, unit=u.deg):
+    def plot_transform(self, ang_units=False, unit=u.deg, show=True,
+                       color='b', symbol='D', label=None):
+        '''
+        Plot the transform and the fit.
+        '''
+
+        import matplotlib.pyplot as p
+
+        if ang_units:
+            scales = \
+                self.scales.to(unit,
+                               equivalencies=self.angular_equiv).value
+        else:
+            scales = self.scales.value
+
+        p.loglog(scales, self.values, color + symbol)
+        # Plot the fit within the fitting range.
+        within_limits = np.logical_and(scales >= self._fit_range[0],
+                                       scales <= self._fit_range[1])
+
+        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
+                 color + '--', label=label, linewidth=8, alpha=0.75)
+
+        low_lim = self._fit_range[0]
+        high_lim = self._fit_range[1]
+        if ang_units:
+            low_lim = (low_lim * self.scales.unit)
+            low_lim = low_lim.to(unit, equivalencies=self.angular_equiv)
+            low_lim = low_lim.value
+
+            high_lim = (high_lim * self.scales.unit)
+            high_lim = high_lim.to(unit, equivalencies=self.angular_equiv)
+            high_lim = high_lim.value
+
+        p.axvline(low_lim,
+                  color=color, alpha=0.5, linestyle='-')
+        p.axvline(high_lim,
+                  color=color, alpha=0.5, linestyle='-')
+
+        p.ylabel(r"$T_g$")
+        if ang_units:
+            p.xlabel("Scales (deg)")
+        else:
+            p.xlabel("Scales (pixels)")
+
+        if show:
+            p.show()
+
+    def run(self, verbose=False, ang_units=False, unit=u.deg,
+            xlow=None, xhigh=None):
         '''
         Compute the Wavelet transform.
 
@@ -128,26 +196,10 @@ class Wavelet(BaseStatisticMixIn):
         '''
         self.compute_transform()
         self.make_1D_transform()
-        self.fit_transform()
+        self.fit_transform(xlow=xlow, xhigh=xhigh)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            if ang_units:
-                scales = \
-                    self.scales.to(unit,
-                                   equivalencies=self.angular_equiv).value
-            else:
-                scales = self.scales.value
-
-            p.loglog(scales, self.values, 'bD')
-            p.loglog(scales, 10**self.fit.fittedvalues, 'b-')
-
-            p.ylabel(r"$T_g$")
-            if ang_units:
-                p.xlabel("Scales (deg)")
-            else:
-                p.xlabel("Scales (pixels)")
+            self.plot_transform(ang_units=ang_units, unit=unit, show=True)
 
         return self
 
@@ -171,22 +223,31 @@ class Wavelet_Distance(object):
         Number of scales to calculate the transform at.
     fiducial_model : wt2D
         Computed wt2D object. use to avoid recomputing.
+    xlow : float or np.ndarray, optional
+        The lower lag fitting limit. An array with 2 elements can be passed to
+        give separate lower limits for the datasets.
+    xhigh : float or np.ndarray, optional
+        The upper lag fitting limit. See `xlow` above.
+
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2,
-                 scales=None, num=50, fiducial_model=None):
+                 scales=None, num=50, xlow=None, xhigh=None,
+                 fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
+
+        xlow, xhigh = check_fit_limits(xlow, xhigh)
 
         if fiducial_model is None:
             self.wt1 = Wavelet(dataset1, scales=scales)
-            self.wt1.run()
+            self.wt1.run(xlow=xlow[0], xhigh=xhigh[0])
         else:
             self.wt1 = fiducial_model
 
         self.wt2 = Wavelet(dataset2, scales=scales)
-        self.wt2.run()
+        self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
     def distance_metric(self, verbose=False, label1=None,
                         label2=None, ang_units=False, unit=u.deg):
@@ -219,87 +280,12 @@ class Wavelet_Distance(object):
             print(self.wt1.fit.summary())
             print(self.wt2.fit.summary())
 
-            if ang_units:
-                scales1 = \
-                    self.wt1.scales.to(unit, equivalencies=self.wt1.angular_equiv).value
-                scales2 = \
-                    self.wt2.scales.to(unit, equivalencies=self.wt2.angular_equiv).value
-            else:
-                scales1 = self.wt1.scales.value
-                scales2 = self.wt2.scales.value
-
-            scales1 = np.log10(scales1)
-            values1 = np.log10(self.wt1.values)
-            scales2 = np.log10(scales2)
-            values2 = np.log10(self.wt2.values)
-
             import matplotlib.pyplot as p
-            p.plot(scales1, values1, 'bD', label=label1)
-            p.plot(scales2, values2, 'go', label=label2)
-            p.plot(scales1,
-                   self.wt1.fit.fittedvalues[:len(values1)], "b",
-                   scales2,
-                   self.wt2.fit.fittedvalues[-len(values2):], "g")
-            p.grid(True)
-
-            if ang_units:
-                p.xlabel("log a ("+unit.to_string()+")")
-            else:
-                p.xlabel("log a (pixels)")
-
-            p.ylabel(r"log $T_g$")
+            self.wt1.plot_transform(ang_units=ang_units, unit=unit, show=False,
+                                    color='b', symbol='D', label=label1)
+            self.wt2.plot_transform(ang_units=ang_units, unit=unit, show=False,
+                                    color='g', symbol='o', label=label1)
             p.legend(loc='best')
             p.show()
 
         return self
-
-
-# def clip_to_linear(data, threshold=1.0, kernel_width=0.05, ends_clipped=0.05):
-#     '''
-#     Takes the second derivative of the data with a ricker wavelet.
-#     Data is clipped to the linear portion (2nd derivative ~ 0)
-
-#     Parameters
-#     ----------
-
-#     data : numpy.ndarray
-#         x and y data.
-#     threshold : float, optional
-#         Acceptable value of the second derivative to be called linear.
-#     kernel_width : float, optional
-#         Kernel width set to this percentage of the data length
-#     ends_clipped : float, optional
-#         Percentage of data to clip off at the ends. End points have residual
-#         effects from the convolution.
-
-#     Returns
-#     -------
-#     data_clipped : numpy.ndarray
-#         Linear portion of the data set returned.
-#     '''
-
-#     from scipy.signal import ricker
-
-#     y = data[1, :]
-#     x = data[0, :]
-
-#     num_pts = len(y)
-
-#     kernel = ricker(num_pts, num_pts * kernel_width)
-
-#     sec_deriv = np.convolve(y, kernel, mode="same")
-
-#     # Ends go back to being ~ linear, so clip them off
-#     if ends_clipped > 0.0:
-#         clipped_pts = int(num_pts * ends_clipped)
-
-#         sec_deriv = sec_deriv[: num_pts - clipped_pts]
-#         y = y[: num_pts - clipped_pts]
-#         x = x[: num_pts - clipped_pts]
-
-#     linear_pts = np.abs(sec_deriv) < threshold
-
-#     data_clipped = np.empty((2, len(y[linear_pts])))
-#     data_clipped[:, :] = x[linear_pts], y[linear_pts]
-
-#     return data_clipped
