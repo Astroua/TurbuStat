@@ -10,6 +10,7 @@ from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
+from ..fitting_utils import check_fit_limits
 
 
 class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -58,9 +59,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, logspacing=True,
+    def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg, save_name=None):
+            ang_units=False, unit=u.deg, save_name=None,
+            use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
 
@@ -82,6 +84,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Choose the angular unit to convert to when ang_units is enabled.
         save_name : str,optional
             Save the figure when a file name is given.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.compute_pspec()
@@ -93,7 +97,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if verbose:
             print(self.fit.summary())
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, save_name=save_name)
+                          unit=unit, save_name=save_name,
+                          use_wavenumber=use_wavenumber)
             if save_name is not None:
                 import matplotlib.pyplot as plt
                 plt.close()
@@ -124,31 +129,44 @@ class PSpec_Distance(object):
         Computed PowerSpectrum object. use to avoid recomputing.
     ang_units : bool, optional
         Convert the frequencies to angular units using the header.
+    low_cut : float or np.ndarray, optional
+        The lower frequency fitting limit. An array with 2 elements can be
+        passed to give separate lower limits for the datasets.
+    high_cut : float or np.ndarray, optional
+        The upper frequency fitting limit. See `low_cut` above. Defaults to
+        0.5.
+    logspacing : bool, optional
+        Enable to use logarithmically-spaced bins.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, ang_units=False):
+                 fiducial_model=None, ang_units=False, low_cut=None,
+                 high_cut=0.5, logspacing=False):
         super(PSpec_Distance, self).__init__()
 
         self.ang_units = ang_units
 
+        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
+
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1, weights=weights1)
-            self.pspec1.run()
+            self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
+                            logspacing=logspacing)
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2, weights=weights2)
-        self.pspec2.run()
+        self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
+                        logspacing=logspacing)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, low_cut=None, high_cut=0.5, verbose=False,
-                        label1=None, label2=None, ang_units=False, unit=u.deg,
-                        save_name=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        ang_units=False, unit=u.deg, save_name=None,
+                        use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -158,13 +176,6 @@ class PSpec_Distance(object):
 
         Parameters
         ----------
-        low_cut : float, optional
-            Set the cut-off for low spatial frequencies. By default, this is
-            set to the inverse of half of the smallest axis in the 2 images.
-        high_cut : float, optional
-            Set the cut-off for high spatial frequencies. Defaults to a
-            frequency of 0.5; low pixel counts below this may lead to
-            significant scatter.
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
@@ -177,6 +188,8 @@ class PSpec_Distance(object):
             Choose the angular unit to convert to when ang_units is enabled.
         save_name : str,optional
             Save the figure when a file name is given.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.distance = \
@@ -192,10 +205,12 @@ class PSpec_Distance(object):
 
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
-                                 ang_units=ang_units, unit=unit)
+                                 ang_units=ang_units, unit=unit,
+                                 use_wavenumber=use_wavenumber)
             self.pspec2.plot_fit(show=False, color='g',
                                  label=label2, symbol='o',
-                                 ang_units=ang_units, unit=unit)
+                                 ang_units=ang_units, unit=unit,
+                                 use_wavenumber=use_wavenumber)
             p.legend(loc='best')
 
             if save_name is not None:
@@ -484,7 +499,3 @@ class BiSpectrum_Distance(object):
                 p.show()
 
         return self
-
-
-def clip_func(arr, low, high):
-    return np.logical_and(arr > low, arr < high)
