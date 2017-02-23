@@ -11,6 +11,7 @@ from slice_thickness import change_slice_thickness
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
+from ..fitting_utils import check_fit_limits
 
 
 class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -58,7 +59,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
     def run(self, verbose=False, brk=None, return_stddev=True,
-            logspacing=True, ang_units=False, unit=u.deg):
+            logspacing=False, low_cut=None, high_cut=None,
+            ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
         Full computation of VCA.
 
@@ -76,18 +78,22 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         self.compute_pspec()
-        self.compute_radial_pspec(return_stddev=return_stddev, max_bin=0.5)
-        self.fit_pspec(brk=brk)
+        self.compute_radial_pspec(return_stddev=return_stddev,
+                                  logspacing=logspacing)
+        self.fit_pspec(brk=brk, low_cut=low_cut, high_cut=high_cut,
+                       large_scale=0.5)
 
         if verbose:
 
-            print self.fit.summary()
+            print(self.fit.summary())
 
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit)
+                          unit=unit, use_wavenumber=use_wavenumber)
 
         return self
 
@@ -117,10 +123,14 @@ class VCA_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
-                 fiducial_model=None):
+                 fiducial_model=None, logspacing=False, low_cut=None,
+                 high_cut=None):
         super(VCA_Distance, self).__init__()
 
-        assert isinstance(slice_size, float)
+        if not isinstance(slice_size, float):
+            raise TypeError("slice_size must be a float.")
+
+        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
@@ -129,13 +139,17 @@ class VCA_Distance(object):
             self.vca1 = fiducial_model
         else:
             self.vca1 = \
-                VCA(cube1, slice_size=slice_size).run(brk=breaks[0])
+                VCA(cube1, slice_size=slice_size)
+            self.vca1.run(brk=breaks[0], low_cut=low_cut[0],
+                          high_cut=high_cut[0], logspacing=logspacing)
 
         self.vca2 = \
-            VCA(cube2, slice_size=slice_size).run(brk=breaks[1])
+            VCA(cube2, slice_size=slice_size)
+        self.vca2.run(brk=breaks[1], low_cut=low_cut[1], high_cut=high_cut[1],
+                      logspacing=logspacing)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -154,6 +168,8 @@ class VCA_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        use_wavenumber : bool, optional
+            Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
 
         # Construct t-statistic
@@ -164,16 +180,18 @@ class VCA_Distance(object):
 
         if verbose:
 
-            print "Fit to %s" % (label1)
-            print self.vca1.fit.summary()
-            print "Fit to %s" % (label2)
-            print self.vca2.fit.summary()
+            print("Fit to %s" % (label1))
+            print(self.vca1.fit.summary())
+            print("Fit to %s" % (label2))
+            print(self.vca2.fit.summary())
 
             import matplotlib.pyplot as p
             self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit)
+                               ang_units=ang_units, unit=unit,
+                               use_wavenumber=use_wavenumber)
             p.legend(loc='upper right')
             p.show()
 

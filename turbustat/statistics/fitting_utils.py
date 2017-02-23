@@ -230,3 +230,37 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
         return params, error_intervals, np.vstack([slopes, intercepts])
 
     return params, error_intervals
+
+
+def check_fit_limits(xlow, xhigh):
+    '''
+    Check that the inputs are floats (or ints), or a 2-element array for
+    passing separate limits.
+
+    Parameters
+    ----------
+    xlow : float or np.ndarray, optional
+        The lower lag fitting limit. An array with 2 elements can be passed to
+        give separate lower limits for the datasets.
+    xhigh : float or np.ndarray, optional
+        The upper lag fitting limit. See `xlow` above.
+
+    '''
+    if not hasattr(xlow, "__len__"):
+        xlow = np.array([xlow] * 2)
+    else:
+        if not len(xlow) == 2:
+            raise ValueError("xlow must be a 2-element array when giving "
+                             "separate fitting limits for each dataset.")
+    if not hasattr(xhigh, "__len__"):
+        xhigh = np.array([xhigh] * 2)
+    else:
+        if not len(xhigh) == 2:
+            raise ValueError("xhigh must be a 2-element array when giving "
+                             "separate fitting limits for each dataset.")
+
+    return xlow, xhigh
+
+
+def clip_func(arr, low, high):
+    return np.logical_and(arr > low, arr < high)

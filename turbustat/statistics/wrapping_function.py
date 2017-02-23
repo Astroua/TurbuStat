@@ -116,7 +116,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                                      dataset2["moment0"],
                                      weights1=dataset1["moment0_error"][0],
                                      weights2=dataset2["moment0_error"][0]).distance_metric()
-            distances["DeltaVariance"] = delvar_distance.distance
+            distances["DeltaVariance_Curve"] = delvar_distance.curve_distance
+            distances["DeltaVariance_Slope"] = delvar_distance.slope_distance
             if not multicore:
                 fiducial_models["DeltaVariance"] = delvar_distance.delvar1
 
@@ -326,7 +327,8 @@ def stats_wrapper(dataset1, dataset2, fiducial_models=None,
                                      weights1=dataset1["moment0_error"][0],
                                      weights2=dataset2["moment0_error"][0],
                                      fiducial_model=fiducial_models["DeltaVariance"]).distance_metric()
-            distances["DeltaVariance"] = delvar_distance.distance
+            distances["DeltaVariance_Curve"] = delvar_distance.curve_distance
+            distances["DeltaVariance_Slope"] = delvar_distance.slope_distance
 
             if cleanup:
                 del delvar_distance
