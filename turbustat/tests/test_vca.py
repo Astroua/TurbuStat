@@ -16,7 +16,7 @@ def test_VCA_method():
     tester.run()
     npt.assert_allclose(tester.ps1D, computed_data['vca_val'])
     npt.assert_almost_equal(tester.slope, computed_data['vca_slope'],
-                            decimals=3)
+                            decimal=3)
 
 
 def test_VCA_distance():
