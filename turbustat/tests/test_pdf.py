@@ -16,7 +16,7 @@ def test_PDF():
                bins=computed_data['pdf_bins'])
     test.run(verbose=False, do_fit=False)
 
-    npt.assert_almost_equal(test.pdf / test.pdf.sum(),
+    npt.assert_almost_equal(test.pdf,
                             computed_data["pdf_val"])
     npt.assert_almost_equal(test.ecdf, computed_data["pdf_ecdf"])
 
@@ -98,3 +98,20 @@ def test_PDF_lognormal_distance():
     # The distance value can scatter by a couple based on small variations.
     # With the seed set, this should always be true.
     assert np.abs(test_dist.lognormal_distance - actual_dist) < 2.
+
+
+def test_PDF_lognorm_distance():
+    '''
+    Test the non-parametric distances
+    '''
+    test_dist = \
+        PDF_Distance(dataset1["moment0"],
+                     dataset2["moment0"],
+                     min_val1=0.05,
+                     min_val2=0.05,
+                     do_fit=True,
+                     normalization_type=None)
+    test_dist.distance_metric()
+
+    npt.assert_almost_equal(test_dist.lognormal_distance,
+                            computed_distances['pdf_lognorm_distance'])

@@ -217,6 +217,17 @@ pdf_val = pdf_distance.PDF1.pdf
 pdf_ecdf = pdf_distance.PDF1.ecdf
 pdf_bins = pdf_distance.bins
 
+# Do a fitted version of the PDF test
+pdf_fit_distance = \
+    PDF_Distance(dataset1["moment0"],
+                 dataset2["moment0"],
+                 min_val1=0.05,
+                 min_val2=0.05,
+                 do_fit=True,
+                 normalization_type=None)
+
+pdf_fit_distance.distance_metric()
+
 np.savez_compressed('checkVals',
                     wavelet_val=wavelet_val,
                     wavelet_slope=wavelet_slope,
@@ -264,5 +275,6 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     dendrohist_distance=dendro_distance.histogram_distance,
                     dendronum_distance=dendro_distance.num_distance,
                     pdf_hellinger_distance=pdf_distance.hellinger_distance,
-                    pdf_ks_distance=pdf_distance.ks_distance)
+                    pdf_ks_distance=pdf_distance.ks_distance,
+                    pdf_lognorm_distance=pdf_fit_distance.lognormal_distance)
                     # pdf_ad_distance=pdf_distance.ad_distance)
