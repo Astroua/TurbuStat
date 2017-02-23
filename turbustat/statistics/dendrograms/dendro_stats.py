@@ -20,7 +20,7 @@ import statsmodels.api as sm
 from mecdf import mecdf
 
 try:
-    from astrodendro import Dendrogram
+    from astrodendro import Dendrogram, periodic_neighbours
     astrodendro_flag = True
 except ImportError:
     Warning("Need to install astrodendro to use dendrogram statistics.")
@@ -28,7 +28,7 @@ except ImportError:
 
 from ..stats_utils import hellinger, common_histogram_bins, standardize
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, threed_types, twod_types, input_data
+from ...io import common_types, threed_types, twod_types
 
 
 class Dendrogram_Stats(BaseStatisticMixIn):
@@ -55,17 +55,14 @@ class Dendrogram_Stats(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, data, min_deltas=None, dendro_params=None):
+    def __init__(self, data, header=None, min_deltas=None, dendro_params=None):
         super(Dendrogram_Stats, self).__init__()
 
         if not astrodendro_flag:
             raise ImportError("astrodendro must be installed to use "
                               "Dendrogram_Stats.")
 
-        # A header isn't needed. Disable the check flag
-        self.need_header_flag = False
-        self.header = None
-        self.data = input_data(data, no_header=True)
+        self.input_data_header(data, header)
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
@@ -94,7 +91,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             self._min_deltas = value
 
     def compute_dendro(self, verbose=False, save_dendro=False,
-                       dendro_name=None, dendro_obj=None):
+                       dendro_name=None, dendro_obj=None,
+                       periodic_bounds=False):
         '''
         Compute the dendrogram and prune to the minimum deltas.
         ** min_deltas must be in ascending order! **
@@ -111,18 +109,30 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         dendro_obj : Dendrogram, optional
             Input a pre-computed dendrogram object. It is assumed that
             the dendrogram has already been computed!
-
+        periodic_bounds : bool, optional
+            Enable when the data is periodic in the spatial dimensions.
         '''
 
         self._numfeatures = np.empty(self.min_deltas.shape)
         self._values = []
 
         if dendro_obj is None:
-            d = \
-                Dendrogram.compute(self.data, verbose=verbose,
+            if periodic_bounds:
+                # Find the spatial dimensions
+                num_axes = self.data.ndim
+                spat_axes = []
+                for i, axis_type in enumerate(self._wcs.get_axis_types()):
+                    if axis_type["coordinate_type"] == u"celestial":
+                        spat_axes.append(num_axes - i - 1)
+                neighbours = periodic_neighbours(spat_axes)
+            else:
+                neighbours = None
+
+            d = Dendrogram.compute(self.data, verbose=verbose,
                                    min_delta=self.min_deltas[0],
                                    min_value=self.dendro_params["min_value"],
-                                   min_npix=self.dendro_params["min_npix"])
+                                   min_npix=self.dendro_params["min_npix"],
+                                   neighbours=neighbours)
         else:
             d = dendro_obj
         self._numfeatures[0] = len(d)
@@ -324,15 +334,19 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
-    def run(self, verbose=False, save_name=None, dendro_verbose=False,
-            dendro_obj=None, save_results=False, output_name=None,
-            make_hists=True, **kwargs):
+    def run(self, periodic_bounds=False, verbose=False, save_name=None,
+            dendro_verbose=False, dendro_obj=None, save_results=False,
+            output_name=None, make_hists=True, **kwargs):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
 
         Parameters
         ----------
+        periodic_bounds : bool or list, optional
+            Enable when the data is periodic in the spatial dimensions. Passing
+            a two-element list can be used to individually set how the
+            boundaries are treated for the datasets.
         verbose : optional, bool
             Enable plotting of results.
         save_name : str,optional
@@ -352,7 +366,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable computing histograms.
         kwargs : Passed to `~Dendro_Statistics.make_hists`.
         '''
-        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj)
+        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj,
+                            periodic_bounds=periodic_bounds)
         self.fit_numfeat(verbose=verbose)
 
         if make_hists:
@@ -428,14 +443,18 @@ class DendroDistance(object):
         (see www.dendrograms.org for more info). If a list of dictionaries is
         given, the first list entry should be the dictionary for cube1, and the
         second for cube2.
-
+    periodic_bounds : bool or list, optional
+        Enable when the data is periodic in the spatial dimensions. Passing
+        a two-element list can be used to individually set how the boundaries
+        are treated for the datasets.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
     def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
-                 min_features=100, fiducial_model=None, dendro_params=None):
+                 min_features=100, fiducial_model=None, dendro_params=None,
+                 periodic_bounds=False):
         super(DendroDistance, self).__init__()
 
         if not astrodendro_flag:
@@ -464,6 +483,13 @@ class DendroDistance(object):
             dendro_params1 = None
             dendro_params2 = None
 
+        if isinstance(periodic_bounds, bool):
+            periodic_bounds = [periodic_bounds] * 2
+        else:
+            if not len(periodic_bounds) == 2:
+                raise ValueError("periodic_bounds should be a two-element"
+                                 " list.")
+
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
         elif isinstance(cube1, str):
@@ -471,7 +497,8 @@ class DendroDistance(object):
         else:
             self.dendro1 = Dendrogram_Stats(
                 cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
-            self.dendro1.run(verbose=False, make_hists=False)
+            self.dendro1.run(verbose=False, make_hists=False,
+                             periodic_bounds=periodic_bounds[0])
 
         if isinstance(cube2, str):
             self.dendro2 = Dendrogram_Stats.load_results(cube2)
@@ -479,7 +506,8 @@ class DendroDistance(object):
             self.dendro2 = \
                 Dendrogram_Stats(cube2, min_deltas=min_deltas,
                                  dendro_params=dendro_params2)
-            self.dendro2.run(verbose=False, make_hists=False)
+            self.dendro2.run(verbose=False, make_hists=False,
+                             periodic_bounds=periodic_bounds[1])
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
