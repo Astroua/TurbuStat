@@ -226,13 +226,13 @@ class MVC_Distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
-            self.mvc1.run(logspacing=logspacing, high_cut=high_cut,
-                          low_cut=low_cut)
+            self.mvc1.run(logspacing=logspacing, high_cut=high_cut[0],
+                          low_cut=low_cut[0])
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
-        self.mvc2.run(logspacing=logspacing, high_cut=high_cut,
-                      low_cut=low_cut)
+        self.mvc2.run(logspacing=logspacing, high_cut=high_cut[1],
+                      low_cut=low_cut[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg, save_name=None,
