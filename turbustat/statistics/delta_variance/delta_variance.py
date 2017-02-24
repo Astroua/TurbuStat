@@ -444,6 +444,9 @@ class DeltaVariance_Distance(object):
         give separate lower limits for the datasets.
     xhigh : float or np.ndarray, optional
         The upper lag fitting limit. See `xlow` above.
+    boundary : str, np.ndarray or list, optional
+        Set how boundaries should be handled. If a string is not passed, a
+        two element list/array with separate boundary conditions is expected.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -483,6 +486,14 @@ class DeltaVariance_Distance(object):
         # The returned xlow and xhigh are arrays.
         xlow, xhigh = check_fit_limits(xlow, xhigh)
 
+        # Allow separate boundary conditions to be passed
+        if isinstance(boundary, basestring):
+            boundary = [boundary] * 2
+        else:
+            if not len(boundary) == 2:
+                raise ValueError("boundary must be a two-element list/array"
+                                 " when a string is not passed.")
+
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
         scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
@@ -503,12 +514,13 @@ class DeltaVariance_Distance(object):
             self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags1)
-            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0], boundary=boundary)
+            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0],
+                             boundary=boundary[0])
 
         self.delvar2 = DeltaVariance(dataset2,
                                      weights=weights2,
                                      diam_ratio=diam_ratio, lags=lags2)
-        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary)
+        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg, save_name=None):
