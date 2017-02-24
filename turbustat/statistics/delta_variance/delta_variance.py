@@ -105,8 +105,8 @@ class DeltaVariance(BaseStatisticMixIn):
         allow_huge : bool, optional
             Passed to `~astropy.convolve.convolve_fft`. Allows operations on
             images larger than 1 Gb.
-        boundary : {"wrap", "cut"}, optional
-            Use "wrap" for periodic boundaries, and "cut" for non-periodic.
+        boundary : {"wrap", "fill"}, optional
+            Use "wrap" for periodic boundaries, and "fill" for non-periodic.
         '''
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
@@ -117,10 +117,11 @@ class DeltaVariance(BaseStatisticMixIn):
                 # Don't pad for periodic boundaries
                 pad_weights = self.weights
                 pad_img = self.data * self.weights
-            elif boundary == "cut":
+            elif boundary == "fill":
                 # Extend to avoid boundary effects from non-periodicity
                 pad_weights = np.pad(self.weights, int(lag), padwithzeros)
-                pad_img = np.pad(self.data, int(lag), padwithzeros) * pad_weights
+                pad_img = np.pad(self.data, int(lag), padwithzeros) * \
+                    pad_weights
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
@@ -291,7 +292,7 @@ class DeltaVariance(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
-        boundary : {"wrap", "cut"}, optional
+        boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "cut" for non-periodic.
         xlow : float, optional
             Lower lag value to consider in the fit.
