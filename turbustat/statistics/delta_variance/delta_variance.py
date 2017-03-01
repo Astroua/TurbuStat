@@ -167,8 +167,12 @@ class DeltaVariance(BaseStatisticMixIn):
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
-            self._delta_var[i] = val
-            self._delta_var_error[i] = err
+            if (val <= 0) or (err <= 0):
+                self._delta_var[i] = np.NaN
+                self._delta_var_error[i] = np.NaN
+            else:
+                self._delta_var[i] = val
+                self._delta_var_error[i] = err
 
     @property
     def delta_var(self):
