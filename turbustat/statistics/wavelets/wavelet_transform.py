@@ -109,7 +109,9 @@ class Wavelet(BaseStatisticMixIn):
             upper_limit = \
                 np.ones_like(self.scales, dtype=bool).value
 
-        self._fit_range = [xlow, xhigh]
+        self._fit_range = \
+            [xlow if xlow is not None else self.scales.min().value,
+             xhigh if xhigh is not None else self.scales.max().value]
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
@@ -149,12 +151,6 @@ class Wavelet(BaseStatisticMixIn):
 
         p.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
-        within_limits = np.logical_and(scales >= self._fit_range[0],
-                                       scales <= self._fit_range[1])
-
-        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
-                 color + '--', label=label, linewidth=8, alpha=0.75)
-
         low_lim = self._fit_range[0]
         high_lim = self._fit_range[1]
         if ang_units:
@@ -165,6 +161,12 @@ class Wavelet(BaseStatisticMixIn):
             high_lim = (high_lim * self.scales.unit)
             high_lim = high_lim.to(unit, equivalencies=self.angular_equiv)
             high_lim = high_lim.value
+
+        within_limits = np.logical_and(scales >= low_lim,
+                                       scales <= high_lim)
+
+        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
+                 color + '--', label=label, linewidth=8, alpha=0.75)
 
         p.axvline(low_lim,
                   color=color, alpha=0.5, linestyle='-')
