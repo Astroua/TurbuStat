@@ -122,6 +122,9 @@ class DeltaVariance(BaseStatisticMixIn):
                 pad_weights = np.pad(self.weights, int(lag), padwithzeros)
                 pad_img = np.pad(self.data, int(lag), padwithzeros) * \
                     pad_weights
+            else:
+                raise ValueError("boundary must be 'wrap' or 'fill'. "
+                                 "Given {}".format(boundary))
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
