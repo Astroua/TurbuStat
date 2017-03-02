@@ -70,7 +70,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         term1 = fft2(self.centroid * self.moment0)
 
-        term2 = np.power(self.linewidth, 2) + np.power(self.centroid, 2)
+        term2 = np.nanmean(self.linewidth**2 + self.centroid**2)
 
         mvc_fft = term1 - term2 * fft2(self.moment0)
 
