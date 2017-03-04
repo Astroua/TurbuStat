@@ -9,6 +9,7 @@ from warnings import warn
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import input_data, common_types, twod_types
+from ..fitting_utils import check_fit_limits
 
 
 class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -220,6 +221,8 @@ class MVC_Distance(object):
             centroid2 = data2["centroid"][0]
             moment02 = data2["moment0"][0]
             linewidth2 = data2["linewidth"][0]
+
+        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
