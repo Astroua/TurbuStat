@@ -170,7 +170,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
-            if (val <= 0) or (err <= 0):
+            if (val <= 0) or (err <= 0) or np.isnan(val) or np.isnan(err):
                 self._delta_var[i] = np.NaN
                 self._delta_var_error[i] = np.NaN
             else:
@@ -323,7 +323,12 @@ class DeltaVariance(BaseStatisticMixIn):
                     self.lags.to(unit, equivalencies=self.angular_equiv).value
             else:
                 lags = self.lags.value
-            p.errorbar(lags, self.delta_var, yerr=self.delta_var_error,
+
+            # Check for NaNs
+            fin_vals = np.logical_or(np.isfinite(self.delta_var),
+                                     np.isfinite(self.delta_var_error))
+            p.errorbar(lags, self.delta_var[fin_vals],
+                       yerr=self.delta_var_error[fin_vals],
                        fmt="bD-", label="Data")
             xvals = \
                 np.linspace(self.lags.min().value if xlow is None else xlow,
