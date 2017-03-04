@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #146 - Allow weights to be passed in `StatsMoments`.
 * #144 - Fix the MVC: subtract mean velocity dispersion, not the array of dispersions.
 * #143 - Set periodic boundaries for dendrograms.
 * #141 - Added fitting for delta-variance. Added setting of fit limits for delta-variance, wavelets, power spectrum, MVC, and VCA.
