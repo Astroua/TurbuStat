@@ -590,6 +590,9 @@ class DeltaVariance_Distance(object):
                 lags1 = self.delvar1.lags.value
                 lags2 = self.delvar2.lags.value
 
+            lags1 = lags1[~all_nans]
+            lags2 = lags2[~all_nans]
+
             # Normalize the errors for when plotting. NOT log-scaled.
             deltavar1_err = \
                 self.delvar1.delta_var_error[~all_nans] / deltavar1_sum
