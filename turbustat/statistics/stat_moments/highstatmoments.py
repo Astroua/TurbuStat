@@ -19,6 +19,8 @@ class StatMoments(BaseStatisticMixIn):
     ----------
     img : %(dtypes)s
         2D Image.
+    weights : %(dtypes)s
+        2D array of weights. Uniform weights are used if none are given.
     radius : int, optional
         Radius of circle to use when computing moments.
     periodic : bool, optional
@@ -29,13 +31,18 @@ class StatMoments(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, radius=5, periodic=True, nbins=None):
+    def __init__(self, img, weights=None, radius=5, periodic=True, nbins=None):
         super(StatMoments, self).__init__()
 
         self.need_header_flag = False
         self.header = None
 
         self.data = input_data(img, no_header=True)
+
+        if weights is None:
+            self.weights = np.ones_like(self.data)
+        else:
+            self.weights = input_data(weights, no_header=True)
 
         self.radius = radius
         self.periodic_flag = periodic
@@ -65,7 +72,7 @@ class StatMoments(BaseStatisticMixIn):
         Moments over the entire image.
         '''
         self.mean, self.variance, self.skewness, self.kurtosis =\
-            compute_moments(self.data)
+            compute_moments(self.data, self.weights)
 
     def compute_spatial_distrib(self):
         '''
@@ -74,38 +81,44 @@ class StatMoments(BaseStatisticMixIn):
 
         if self.periodic_flag:
             pad_img = np.pad(self.data, self.radius, mode="wrap")
+            pad_weights = np.pad(self.weights, self.radius, mode="wrap")
         else:
             pad_img = np.pad(self.data, self.radius, padwithnans)
+            pad_weights = np.pad(self.weights, self.radius, padwithnans)
+
         circle_mask = circular_region(self.radius)
 
         for i in range(self.radius, pad_img.shape[0] - self.radius):
             for j in range(self.radius, pad_img.shape[1] - self.radius):
-                img_slice = pad_img[
-                    i - self.radius:i + self.radius + 1,
-                    j - self.radius:j + self.radius + 1]
+                img_slice = pad_img[i - self.radius:i + self.radius + 1,
+                                    j - self.radius:j + self.radius + 1]
+                wgt_slice = pad_weights[i - self.radius:i + self.radius + 1,
+                                        j - self.radius:j + self.radius + 1]
 
-                if np.isnan(img_slice).all():
+                if np.isnan(img_slice).all() or np.isnan(wgt_slice).all():
+                    # Subtract off radius to account for padding.
                     self.mean_array[i - self.radius, j - self.radius] = np.NaN
-                    self.variance_array[
-                        i - self.radius, j - self.radius] = np.NaN
-                    self.skewness_array[
-                        i - self.radius, j - self.radius] = np.NaN
-                    self.kurtosis_array[
-                        i - self.radius, j - self.radius] = np.NaN
+                    self.variance_array[i - self.radius, j - self.radius] = \
+                        np.NaN
+                    self.skewness_array[i - self.radius, j - self.radius] = \
+                        np.NaN
+                    self.kurtosis_array[i - self.radius, j - self.radius] = \
+                        np.NaN
 
                 else:
                     img_slice = img_slice * circle_mask
+                    wgt_slice = wgt_slice * circle_mask
 
-                    moments = compute_moments(img_slice)
+                    moments = compute_moments(img_slice, wgt_slice)
 
-                    self.mean_array[
-                        i - self.radius, j - self.radius] = moments[0]
-                    self.variance_array[
-                        i - self.radius, j - self.radius] = moments[1]
-                    self.skewness_array[
-                        i - self.radius, j - self.radius] = moments[2]
-                    self.kurtosis_array[
-                        i - self.radius, j - self.radius] = moments[3]
+                    self.mean_array[i - self.radius, j - self.radius] = \
+                        moments[0]
+                    self.variance_array[i - self.radius, j - self.radius] = \
+                        moments[1]
+                    self.skewness_array[i - self.radius, j - self.radius] = \
+                        moments[2]
+                    self.kurtosis_array[i - self.radius, j - self.radius] = \
+                        moments[3]
 
     @property
     def mean_extrema(self):
@@ -251,6 +264,10 @@ class StatMoments_Distance(object):
         applied to the coarsest grid (if the datasets are not on a common
         grid). The radius for the finer grid is adjusted so the angular scales
         match.
+    weights1 : %(dtypes)s
+        2D array of weights. Uniform weights are used if none are given.
+    weights2 : %(dtypes)s
+        2D array of weights. Uniform weights are used if none are given.
     nbins : int, optional
         Number of bins to use when constructing histograms.
     periodic1 : bool, optional
@@ -264,8 +281,9 @@ class StatMoments_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, image1, image2, radius=5, nbins=None,
-                 periodic1=False, periodic2=False, fiducial_model=None):
+    def __init__(self, image1, image2, radius=5, weights1=None, weights2=None,
+                 nbins=None, periodic1=False, periodic2=False,
+                 fiducial_model=None):
         super(StatMoments_Distance, self).__init__()
 
         image1 = input_data(image1, no_header=False)
@@ -292,12 +310,13 @@ class StatMoments_Distance(object):
         if fiducial_model is not None:
             self.moments1 = fiducial_model
         else:
-            self.moments1 = StatMoments(image1, radius1, nbins=self.nbins,
-                                        periodic=periodic1)
+            self.moments1 = StatMoments(image1, radius=radius1,
+                                        nbins=self.nbins,
+                                        periodic=periodic1, weights=weights1)
             self.moments1.compute_spatial_distrib()
 
-        self.moments2 = StatMoments(image2, radius2, nbins=self.nbins,
-                                    periodic=periodic1)
+        self.moments2 = StatMoments(image2, radius=radius2, nbins=self.nbins,
+                                    periodic=periodic2, weights=weights2)
         self.moments2.compute_spatial_distrib()
 
     def create_common_histograms(self, nbins=None):
@@ -421,7 +440,7 @@ def circular_region(radius):
     return circle
 
 
-def compute_moments(img):
+def compute_moments(img, weights):
     '''
     Compute the moments of the given image.
 
@@ -429,6 +448,8 @@ def compute_moments(img):
     ----------
     img : numpy.ndarray
         2D image.
+    weights : numpy.ndarray
+        2D weight image.
 
     Returns
     -------
@@ -443,12 +464,12 @@ def compute_moments(img):
 
     '''
 
-    mean = np.nanmean(img, axis=None)
-    variance = np.nanvar(img, axis=None)
-    skewness = np.nansum(
-        ((img - mean) / np.sqrt(variance)) ** 3.) / np.sum(~np.isnan(img))
-    kurtosis = np.nansum(
-        ((img - mean) / np.sqrt(variance)) ** 4.) / np.sum(~np.isnan(img)) - 3
+    mean = np.nansum(img * weights) / np.nansum(weights)
+    variance = np.nansum(weights * (img - mean) ** 2.) / np.nansum(weights)
+    skewness = np.nansum(weights * ((img - mean) / np.sqrt(variance)) ** 3.) / \
+        np.nansum(weights)
+    kurtosis = np.nansum(weights * ((img - mean) / np.sqrt(variance)) ** 4.) / \
+        np.nansum(weights) - 3
 
     return mean, variance, skewness, kurtosis
 
