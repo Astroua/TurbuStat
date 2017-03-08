@@ -6,7 +6,7 @@ Routines for transforming data cubes to 2D representations
 import numpy as np
 
 
-def intensity_data(cube, p=0.1, noise_lim=0.1, norm=True):
+def intensity_data(cube, p=0.2, noise_lim=-np.inf, norm=True):
     '''
     Clips off channels below the given noise limit and keep the
     upper percentile specified.
@@ -61,7 +61,7 @@ def intensity_data(cube, p=0.1, noise_lim=0.1, norm=True):
 
 
 def _format_data(cube, data_format='intensity', num_spec=1000,
-                 noise_lim=0.0, p=0.1, normalize=True):
+                 noise_lim=-np.inf, p=0.2, normalize=True):
     '''
     Rearrange data into a 2D object using the given format.
     '''
@@ -97,10 +97,7 @@ def _format_data(cube, data_format='intensity', num_spec=1000,
     # Normalize by rescaling the data to an interval between 0 and 1
     # Ignore all values of 0, since they're just filled in.
     if normalize:
-        nonzero = np.nonzero(data_matrix)
-        ptp = np.ptp(data_matrix[nonzero])
-        data_matrix[nonzero] = \
-            (data_matrix[nonzero] - data_matrix[nonzero].min()) / ptp
+        data_matrix /= np.linalg.norm(data_matrix, ord=2)
 
     return data_matrix
 
