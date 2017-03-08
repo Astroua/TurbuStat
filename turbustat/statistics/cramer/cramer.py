@@ -143,6 +143,14 @@ class Cramer_Distance(object):
             larger, smaller,
             metric="euclidean", n_jobs=n_jobs)
 
+        # Take sqrt of each
+        # We default to using the Cramer kernel in Baringhaus & Franz (2004)
+        # \phi(dist) = sqrt(dist) / 2.
+        # The normalization values below reflect this
+        pairdist11 = np.sqrt(pairdist11)
+        pairdist12 = np.sqrt(pairdist12)
+        pairdist22 = np.sqrt(pairdist22)
+
         term1 = 0.0
         term2 = 0.0
         term3 = 0.0
