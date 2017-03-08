@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #147 - Changed Cramer normalization to the spectral norm.
 * #146 - Allow weights to be passed in `StatsMoments`.
 * #144 - Fix the MVC: subtract mean velocity dispersion, not the array of dispersions.
 * #143 - Set periodic boundaries for dendrograms.
