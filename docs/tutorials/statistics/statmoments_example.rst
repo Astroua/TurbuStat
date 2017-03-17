@@ -20,15 +20,15 @@ Import a few packages that are needed and read-in the zeroth moment:
 
     >>> from astropy.io import fits
     >>> from turbustat.statistics import StatMoments
-    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.fits")[0]
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits")[0] # doctest: +SKIP
 
 The moment0 HDU and radius of the neighborhood (in pixels) are given to initialize `~turbustat.statistics.StatMoments`:
 
-    >>> moments = StatMoments(moment0, radius=5, periodic=True)
+    >>> moments = StatMoments(moment0, radius=5, periodic=True)  # doctest: +SKIP
 
 In this case, the simulation has periodic boundaries. The spatial moment arrays can then be computed:
 
-    >>> moments.run(verbose=True)
+    >>> moments.run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/design4_statmoments.png
 
@@ -36,7 +36,7 @@ The mean array is simply a smoothed version of the zeroth moment. Overlaid on al
 
 Recomputing the moments with a larger radius shows variations on a larger scale:
 
-    >>> moments = StatMoments(moment0, radius=5, periodic=True).run(verbose=True)
+    >>> moments = StatMoments(moment0, radius=5, periodic=True).run(verbose=True)  # doctest: +SKIP
 
 .. image:: images/design4_statmoments_radius10.png
 
