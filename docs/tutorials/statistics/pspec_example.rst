@@ -55,8 +55,7 @@ The power spectrum is computed using:
 
 The power spectrum of this simulation has a slope of :math:`-2.59\pm0.06`. The spatial frequencies (in **pixels**) used in the fit can be limited by setting `low_cut` and `high_cut`. For example,
 
-    >>> pspec.run(verbose=True, ang_units=True, unit=u.arcsec,
-                  low_cut=0.02, high_cut=0.2)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, ang_units=True, unit=u.arcsec, low_cut=0.02, high_cut=0.2)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.970
