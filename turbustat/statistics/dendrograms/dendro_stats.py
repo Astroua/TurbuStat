@@ -113,7 +113,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable when the data is periodic in the spatial dimensions.
         '''
 
-        self._numfeatures = np.empty(self.min_deltas.shape)
+        self._numfeatures = np.empty(self.min_deltas.shape, dtype=int)
         self._values = []
 
         if dendro_obj is None:
@@ -612,6 +612,8 @@ class DendroDistance(object):
         else:
             self.nbins = [self.nbins] * \
                 len(self.dendro1.numfeatures[:self.cutoff])
+
+        self.nbins = np.array(self.nbins, dtype=int)
 
         self.histograms1 = \
             np.empty((len(self.dendro1.numfeatures[:self.cutoff]),

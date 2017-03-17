@@ -25,7 +25,7 @@ class StatMoments(BaseStatisticMixIn):
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
-    bins : array or int, optional
+    nbins : array or int, optional
         Number of bins to use in the histogram.
     """
 
@@ -51,6 +51,8 @@ class StatMoments(BaseStatisticMixIn):
             self.nbins = np.sqrt(self.data.size)
         else:
             self.nbins = nbins
+
+        self.nbins = int(self.nbins)
 
         self.mean = None
         self.variance = None
