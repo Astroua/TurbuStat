@@ -30,6 +30,14 @@ class PDF(BaseStatisticMixIn):
     normalization_type : {"standardize", "center", "normalize",
                           "normalize_by_mean"}, optional
         See `~turbustat.statistics.stat_utils.data_normalization`.
+
+    Example
+    -------
+    >>> from turbustat.statistics import PDF
+    >>> from astropy.io import fits
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits")[0]  # doctest: +SKIP
+    >>> pdf_mom0 = PDF(moment0).run(verbose=True)  # doctest: +SKIP
+
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
@@ -105,10 +113,16 @@ class PDF(BaseStatisticMixIn):
 
     @property
     def pdf(self):
+        '''
+        PDF values in `~PDF.bins`.
+        '''
         return self._pdf
 
     @property
     def bins(self):
+        '''
+        Bin centers.
+        '''
         return self._bins
 
     def make_ecdf(self):
@@ -125,6 +139,9 @@ class PDF(BaseStatisticMixIn):
 
     @property
     def ecdf(self):
+        '''
+        ECDF values in `~PDF.bins`.
+        '''
         return self._ecdf
 
     def find_percentile(self, values):
@@ -313,7 +330,7 @@ class PDF(BaseStatisticMixIn):
 
         corner.corner(self._mcmc_chain.flatchain, **kwargs)
 
-    def run(self, verbose=False, bins=None, do_fit=True,
+    def run(self, verbose=False, save_name=None, bins=None, do_fit=True,
             model=lognorm, **kwargs):
         '''
         Compute the PDF and ECDF. Enabling verbose provides
@@ -323,6 +340,8 @@ class PDF(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting of the results.
+        save_name : str,optional
+            Save the figure when a file name is given.
         bins : list or numpy.ndarray or int, optional
             Bins to compute the PDF from. Overrides initial bin input.
         do_fit : bool, optional
@@ -391,8 +410,12 @@ class PDF(BaseStatisticMixIn):
             p.ylabel("ECDF")
 
             p.tight_layout()
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 
@@ -510,7 +533,7 @@ class PDF_Distance(object):
 
     def distance_metric(self, statistic='all', verbose=False,
                         label1="Data 1", label2="Data 2",
-                        show_data=True):
+                        save_name=None):
         '''
         Calculate the distance.
         *NOTE:* The data are standardized before comparing to ensure the
@@ -528,8 +551,8 @@ class PDF_Distance(object):
             Object or region name for img1
         label2 : str, optional
             Object or region name for img2
-        show_data : bool, optional
-            Plot the moment0, image, or 1D data.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         if statistic is 'all':
@@ -640,6 +663,11 @@ class PDF_Distance(object):
             p.ylabel("ECDF")
 
             p.tight_layout()
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

@@ -109,7 +109,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             sortidx = np.argsort(zvec)
             rvec = rvec[sortidx]
             zvec = zvec[sortidx]
-            dz = len(zvec) / 100.
+            dz = int(len(zvec) / 100.)
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
 
             x_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)
@@ -133,7 +133,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             sortidx = np.argsort(zvec)
             rvec = rvec[sortidx]
             zvec = zvec[sortidx]
-            dz = len(zvec) / 100.
+            dz = int(len(zvec) / 100.)
             spl = LSQUnivariateSpline(zvec, rvec, zvec[dz:-dz:dz])
 
             x_scales[idx] = spl(np.exp(-1)) / np.sqrt(2)

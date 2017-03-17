@@ -109,7 +109,9 @@ class Wavelet(BaseStatisticMixIn):
             upper_limit = \
                 np.ones_like(self.scales, dtype=bool).value
 
-        self._fit_range = [xlow, xhigh]
+        self._fit_range = \
+            [xlow if xlow is not None else self.scales.min().value,
+             xhigh if xhigh is not None else self.scales.max().value]
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
@@ -149,12 +151,6 @@ class Wavelet(BaseStatisticMixIn):
 
         p.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
-        within_limits = np.logical_and(scales >= self._fit_range[0],
-                                       scales <= self._fit_range[1])
-
-        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
-                 color + '--', label=label, linewidth=8, alpha=0.75)
-
         low_lim = self._fit_range[0]
         high_lim = self._fit_range[1]
         if ang_units:
@@ -165,6 +161,12 @@ class Wavelet(BaseStatisticMixIn):
             high_lim = (high_lim * self.scales.unit)
             high_lim = high_lim.to(unit, equivalencies=self.angular_equiv)
             high_lim = high_lim.value
+
+        within_limits = np.logical_and(scales >= low_lim,
+                                       scales <= high_lim)
+
+        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
+                 color + '--', label=label, linewidth=8, alpha=0.75)
 
         p.axvline(low_lim,
                   color=color, alpha=0.5, linestyle='-')
@@ -250,7 +252,8 @@ class Wavelet_Distance(object):
         self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None, ang_units=False, unit=u.deg):
+                        label2=None, ang_units=False, unit=u.deg,
+                        save_name=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -267,6 +270,8 @@ class Wavelet_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Construct t-statistic
@@ -281,11 +286,17 @@ class Wavelet_Distance(object):
             print(self.wt2.fit.summary())
 
             import matplotlib.pyplot as p
+
             self.wt1.plot_transform(ang_units=ang_units, unit=unit, show=False,
                                     color='b', symbol='D', label=label1)
             self.wt2.plot_transform(ang_units=ang_units, unit=unit, show=False,
                                     color='g', symbol='o', label=label1)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

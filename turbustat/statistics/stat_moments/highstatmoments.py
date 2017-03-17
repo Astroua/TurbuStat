@@ -25,7 +25,7 @@ class StatMoments(BaseStatisticMixIn):
         Radius of circle to use when computing moments.
     periodic : bool, optional
         If the data is periodic (ie. from asimulation), wrap the data.
-    bins : array or int, optional
+    nbins : array or int, optional
         Number of bins to use in the histogram.
     """
 
@@ -51,6 +51,8 @@ class StatMoments(BaseStatisticMixIn):
             self.nbins = np.sqrt(self.data.size)
         else:
             self.nbins = nbins
+
+        self.nbins = int(self.nbins)
 
         self.mean = None
         self.variance = None
@@ -187,7 +189,7 @@ class StatMoments(BaseStatisticMixIn):
         kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
         self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
 
-    def run(self, verbose=False, kwargs={}):
+    def run(self, verbose=False, save_name=None, **kwargs):
         '''
         Compute the entire method.
 
@@ -195,9 +197,9 @@ class StatMoments(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
-        kwargs : dict, optional
-            Passed to `make_spatial_histograms`. Bins to use in the histograms
-            can be given here.
+        save_name : str,optional
+            Save the figure when a file name is given.
+        kwargs : Passed to `~StatMoments.make_spatial_histograms`.
         '''
 
         self.array_moments()
@@ -206,6 +208,7 @@ class StatMoments(BaseStatisticMixIn):
 
         if verbose:
             import matplotlib.pyplot as p
+
             p.subplot(221)
             p.imshow(self.mean_array, cmap="binary",
                      origin="lower", interpolation="nearest")
@@ -230,7 +233,12 @@ class StatMoments(BaseStatisticMixIn):
             p.title("Kurtosis")
             p.colorbar()
             p.contour(self.data)
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 
@@ -342,7 +350,7 @@ class StatMoments_Distance(object):
                                               kurtosis_bins=kurt_bins)
 
     def distance_metric(self, metric='Hellinger', verbose=False, nbins=None,
-                        label1=None, label2=None):
+                        label1=None, label2=None, save_name=None):
         '''
         Compute the distance.
 
@@ -358,6 +366,8 @@ class StatMoments_Distance(object):
             Object or region name for image1
         label2 : str, optional
             Object or region name for image2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.create_common_histograms(nbins=nbins)
@@ -381,7 +391,7 @@ class StatMoments_Distance(object):
                               self.moments2.skewness_hist[1]))
         else:
             raise ValueError("metric must be 'Hellinger' or 'KL Divergence'. "
-                             "Was given as "+str(metric))
+                             "Was given as " + str(metric))
 
         if verbose:
             import matplotlib.pyplot as p
@@ -407,8 +417,12 @@ class StatMoments_Distance(object):
                    self.moments2.skewness_hist[0],
                    self.moments2.skewness_hist[1], 'g', alpha=0.5)
             p.xlabel("Skewness")
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 

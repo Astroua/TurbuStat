@@ -36,6 +36,7 @@ class Lm_Seg(object):
     """
 
     """
+
     def __init__(self, x, y, brk):
         super(Lm_Seg, self).__init__()
         self.x = x
@@ -57,6 +58,9 @@ class Lm_Seg(object):
         if not np.isfinite(y).all():
             self.x = self.x[np.isfinite(self.y)]
             self.y = self.y[np.isfinite(self.y)]
+
+        if self.x.size <= 3 or self.y.size <= 3:
+            raise Warning("Not enough finite points to fit.")
 
     def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
                   constant=True, verbose=True):
@@ -140,7 +144,7 @@ class Lm_Seg(object):
             dev_0 = dev_1
 
             if verbose:
-                print "Iteration: %s/%s" % (it+1, iter_max)
+                print "Iteration: %s/%s" % (it + 1, iter_max)
                 print fit.summary()
                 print "Break Point: " + str(self.brk)
                 print "Epsilon: " + str(epsil)
@@ -152,7 +156,8 @@ class Lm_Seg(object):
                                Result may not be minimized.")
                 break
 
-        if self.break_fail_flag:
+        # Is the initial model without a break better?
+        if self.break_fail_flag or np.sum(init_lm.resid**2) <= np.sum(fit.resid**2):
             self.brk = self.x.max()
 
             X_all = sm.add_constant(self.x)
@@ -176,15 +181,13 @@ class Lm_Seg(object):
 
         self.get_slopes()
 
-        return self
-
     def model(self, x=None, model_return=False):
         p = self.params
 
-        trans_pt = np.abs(self.x-self.brk).argmin()
+        trans_pt = np.abs(self.x - self.brk).argmin()
 
-        mod_eqn = lambda k: p[0] + p[1]*k*(k < self.brk) + \
-            ((p[1]+p[2])*k + (-p[2])*k[trans_pt])*(k >= self.brk)
+        mod_eqn = lambda k: p[0] + p[1] * k * (k < self.brk) + \
+            ((p[1] + p[2]) * k + (-p[2]) * k[trans_pt]) * (k >= self.brk)
 
         if model_return or x is None:
             return mod_eqn
@@ -207,14 +210,13 @@ class Lm_Seg(object):
 
         for s in range(n_slopes):
             if s == 0:
-                self._slopes[s] = self.params[s+1]
-                self._slope_errs[s] = self.param_errs[s+1]
+                self._slopes[s] = self.params[s + 1]
+                self._slope_errs[s] = self.param_errs[s + 1]
             else:
-                self._slopes[s] = self.params[s+1] + self._slopes[:s]
+                self._slopes[s] = self.params[s + 1] + self._slopes[:s]
                 self._slope_errs[s] = \
-                    np.sqrt(self.param_errs[s+1]**2 + self._slope_errs[:s]**2)
-
-        return self
+                    np.sqrt(self.param_errs[s + 1] **
+                            2 + self._slope_errs[:s]**2)
 
     @property
     def slopes(self):
@@ -253,7 +255,7 @@ def deriv_max(a, b, pow=1):
         dum[a < b] = 0
         return dum
     else:
-        return -pow * np.max(a - b, axis=0) ** (pow-1)
+        return -pow * np.max(a - b, axis=0) ** (pow - 1)
 
 
 def brk_errs(params, cov):
@@ -266,9 +268,9 @@ def brk_errs(params, cov):
     term1 = cov[3, 3]
 
     # Var beta * (beta/gamma)^2`
-    term2 = cov[2, 2] * (params[3]/params[2])**2.
+    term2 = cov[2, 2] * (params[3] / params[2])**2.
 
     # Correlation b/w gamma and beta
-    term3 = 2 * cov[3, 2] * (params[3]/params[2])
+    term3 = 2 * cov[3, 2] * (params[3] / params[2])
 
     return np.sqrt(term1 + term2 + term3)

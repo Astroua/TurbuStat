@@ -23,10 +23,23 @@ class SCF(BaseStatisticMixIn):
     ----------
     cube : %(dtypes)s
         Data cube.
-    header : FITS header, optional
+    header :  FITS header, optional
         Header for the cube.
     size : int, optional
-        Maximum size roll over which SCF will be calculated.
+        Total size of the lags used in one dimension.
+    roll_lags : `~numpy.ndarray`, optional
+        Pass a custom array of lag values. These will be the pixel size of the
+        lags used in each dimension. Ideally, these should have symmetric
+        positive and negative values.
+
+
+    Example
+    -------
+    >>> from spectral_cube import SpectralCube
+    >>> from turbustat.statistics import SCF
+    >>> cube = SpectralCube.read("Design4.13co.fits")  # doctest: +SKIP
+    >>> scf = SCF(cube)  # doctest: +SKIP
+    >>> scf.run(verbose=True)  # doctest: +SKIP
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -58,14 +71,23 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def scf_surface(self):
+        '''
+        SCF correlation array
+        '''
         return self._scf_surface
 
     @property
     def scf_spectrum(self):
+        '''
+        Azimuthally averaged 1D SCF spectrum
+        '''
         return self._scf_spectrum
 
     @property
     def scf_spectrum_stddev(self):
+        '''
+        Standard deviation of the `~SCF.scf_spectrum`
+        '''
         if not self._stddev_flag:
             Warning("scf_spectrum_stddev is only calculated when return_stddev"
                     " is enabled.")
@@ -73,11 +95,14 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def lags(self):
+        '''
+        Values of the lags, in pixels, to compute SCF at
+        '''
         return self._lags
 
     def compute_surface(self, boundary='continuous'):
         '''
-        Compute the SCF up to the given size.
+        Computes the SCF up to the given lag value.
 
         Parameters
         ----------
@@ -160,8 +185,8 @@ class SCF(BaseStatisticMixIn):
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        kwargs : passed to pspec
+            Return the standard deviation in the 1D bins. Default is True.
+        kwargs : passed to `turbustat.statistics.psds.pspec`
         '''
 
         # If scf_surface hasn't been computed, do it
@@ -215,6 +240,10 @@ class SCF(BaseStatisticMixIn):
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
+        if not within_limits.any():
+            raise ValueError("Limits have removed all lag values. Make xlow"
+                             " and xhigh less restrictive.")
+
         y = y[within_limits]
         x = x[within_limits]
 
@@ -242,10 +271,16 @@ class SCF(BaseStatisticMixIn):
 
     @property
     def slope(self):
+        '''
+        SCF spectrum slope
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        1-sigma error on the SCF spectrum slope
+        '''
         return self._slope_err
 
     def fitted_model(self, xvals):
@@ -271,7 +306,7 @@ class SCF(BaseStatisticMixIn):
 
     def save_results(self, output_name=None, keep_data=False):
         '''
-        Save the results of the dendrogram statistics to avoid re-computing.
+        Save the results of the SCF to avoid re-computing.
         The pickled file will not include the data cube by default.
 
         Parameters
@@ -292,7 +327,7 @@ class SCF(BaseStatisticMixIn):
 
         # Don't keep the whole cube unless keep_data enabled.
         if not keep_data:
-            self_copy.cube = None
+            self_copy._data = None
 
         with open(output_name, 'wb') as output:
                 pickle.dump(self_copy, output, -1)
@@ -326,9 +361,9 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, logspacing=False, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            verbose=False, ang_units=False, unit=u.deg):
+            verbose=False, ang_units=False, unit=u.deg, save_name=None):
         '''
-        Computes the SCF. Necessary to maintain package standards.
+        Computes all SCF outputs.
 
         Parameters
         ----------
@@ -353,6 +388,8 @@ class SCF(BaseStatisticMixIn):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.compute_surface(boundary=boundary)
@@ -410,8 +447,12 @@ class SCF(BaseStatisticMixIn):
                 ax.set_xlabel("Lag (pixels)")
 
             p.tight_layout()
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self
 
 
@@ -432,7 +473,9 @@ class SCF_Distance(object):
         Maximum size roll over which SCF will be calculated.
     boundary : {"continuous", "cut"}
         Treat the boundary as continuous (wrap-around) or cut values
-        beyond the edge (i.e., for most observational data).
+        beyond the edge (i.e., for most observational data). A two element
+        list can also be passed for treating the boundaries differently
+        between the given cubes.
     fiducial_model : SCF
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
@@ -472,17 +515,24 @@ class SCF_Distance(object):
             roll_lags1 = roll_lags
             roll_lags2 = roll_lags / float(scale)
 
+        if not isinstance(boundary, basestring):
+            if len(boundary) != 2:
+                raise ValueError("If boundary is not a string, it must be a "
+                                 "list or array of 2 string elements.")
+        else:
+            boundary = [boundary, boundary]
+
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True, boundary=boundary)
+            self.scf1.run(return_stddev=True, boundary=boundary[0])
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True, boundary=boundary)
+        self.scf2.run(return_stddev=True, boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, save_name=None):
         '''
         Compute the distance between the surfaces.
 
@@ -498,6 +548,8 @@ class SCF_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Since the angular scales are matched, we can assume that they will
@@ -578,6 +630,10 @@ class SCF_Distance(object):
                    linewidth=2)
             ax.legend(loc='upper right')
             p.tight_layout()
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self

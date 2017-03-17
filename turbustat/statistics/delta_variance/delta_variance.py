@@ -25,7 +25,7 @@ class DeltaVariance(BaseStatisticMixIn):
     img : %(dtypes)s
         The image calculate the delta-variance of.
     header : FITS header, optional
-        Image header.
+        Image header. Required when img is a `~numpy.ndarray`.
     weights : %(dtypes)s
         Weights to be used.
     diam_ratio : float, optional
@@ -34,6 +34,14 @@ class DeltaVariance(BaseStatisticMixIn):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
+
+    Example
+    -------
+    >>> from turbustat.statistics import DeltaVariance
+    >>> from astropy.io import fits
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
+    >>> delvar = DeltaVariance(moment0) # doctest: +SKIP
+    >>> delvar.run(verbose=True) # doctest: +SKIP
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -71,10 +79,35 @@ class DeltaVariance(BaseStatisticMixIn):
 
         self.convolved_arrays = []
         self.convolved_weights = []
-        self.delta_var = np.empty((len(self.lags)))
-        self.delta_var_error = np.empty((len(self.lags)))
+
+    @property
+    def weights(self):
+        '''
+        Array of weights.
+        '''
+        return self._weights
+
+    @weights.setter
+    def weights(self, arr):
+
+        if arr.shape != self.data.shape:
+            raise ValueError("Given weight array does not match the shape of "
+                             "the given image.")
+
+        self._weights = arr
 
     def do_convolutions(self, allow_huge=False, boundary='wrap'):
+        '''
+        Perform the convolutions at all lags.
+
+        Parameters
+        ----------
+        allow_huge : bool, optional
+            Passed to `~astropy.convolve.convolve_fft`. Allows operations on
+            images larger than 1 Gb.
+        boundary : {"wrap", "fill"}, optional
+            Use "wrap" for periodic boundaries, and "fill" for non-periodic.
+        '''
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
@@ -84,10 +117,14 @@ class DeltaVariance(BaseStatisticMixIn):
                 # Don't pad for periodic boundaries
                 pad_weights = self.weights
                 pad_img = self.data * self.weights
-            elif boundary == "cut":
+            elif boundary == "fill":
                 # Extend to avoid boundary effects from non-periodicity
                 pad_weights = np.pad(self.weights, int(lag), padwithzeros)
-                pad_img = np.pad(self.data, int(lag), padwithzeros) * pad_weights
+                pad_img = np.pad(self.data, int(lag), padwithzeros) * \
+                    pad_weights
+            else:
+                raise ValueError("boundary must be 'wrap' or 'fill'. "
+                                 "Given {}".format(boundary))
 
             img_core = convolve_fft(
                 pad_img, core, normalize_kernel=True,
@@ -118,6 +155,12 @@ class DeltaVariance(BaseStatisticMixIn):
             self.convolved_weights.append(weights_core * weights_annulus)
 
     def compute_deltavar(self):
+        '''
+        Computes the delta-variance values and errors.
+        '''
+
+        self._delta_var = np.empty((len(self.lags)))
+        self._delta_var_error = np.empty((len(self.lags)))
 
         for i, (conv_arr,
                 conv_weight,
@@ -127,8 +170,26 @@ class DeltaVariance(BaseStatisticMixIn):
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
-            self.delta_var[i] = val
-            self.delta_var_error[i] = err
+            if (val <= 0) or (err <= 0) or np.isnan(val) or np.isnan(err):
+                self._delta_var[i] = np.NaN
+                self._delta_var_error[i] = np.NaN
+            else:
+                self._delta_var[i] = val
+                self._delta_var_error[i] = err
+
+    @property
+    def delta_var(self):
+        '''
+        Delta Variance values.
+        '''
+        return self._delta_var
+
+    @property
+    def delta_var_error(self):
+        '''
+        1-sigma errors on the Delta variance values.
+        '''
+        return self._delta_var_error
 
     def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
         '''
@@ -223,7 +284,8 @@ class DeltaVariance(BaseStatisticMixIn):
         return model_values
 
     def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False, boundary='wrap', xlow=None, xhigh=None):
+            allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
+            save_name=None):
         '''
         Compute the delta-variance.
 
@@ -235,6 +297,16 @@ class DeltaVariance(BaseStatisticMixIn):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        allow_huge : bool, optional
+            See `~DeltaVariance.do_convolutions`.
+        boundary : {"wrap", "fill"}, optional
+            Use "wrap" for periodic boundaries, and "cut" for non-periodic.
+        xlow : float, optional
+            Lower lag value to consider in the fit.
+        xhigh : float, optional
+            Upper lag value to consider in the fit.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.do_convolutions(allow_huge=allow_huge, boundary=boundary)
@@ -251,7 +323,12 @@ class DeltaVariance(BaseStatisticMixIn):
                     self.lags.to(unit, equivalencies=self.angular_equiv).value
             else:
                 lags = self.lags.value
-            p.errorbar(lags, self.delta_var, yerr=self.delta_var_error,
+
+            # Check for NaNs
+            fin_vals = np.logical_or(np.isfinite(self.delta_var),
+                                     np.isfinite(self.delta_var_error))
+            p.errorbar(lags, self.delta_var[fin_vals],
+                       yerr=self.delta_var_error[fin_vals],
                        fmt="bD-", label="Data")
             xvals = \
                 np.linspace(self.lags.min().value if xlow is None else xlow,
@@ -267,7 +344,12 @@ class DeltaVariance(BaseStatisticMixIn):
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -375,6 +457,9 @@ class DeltaVariance_Distance(object):
         give separate lower limits for the datasets.
     xhigh : float or np.ndarray, optional
         The upper lag fitting limit. See `xlow` above.
+    boundary : str, np.ndarray or list, optional
+        Set how boundaries should be handled. If a string is not passed, a
+        two element list/array with separate boundary conditions is expected.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -414,6 +499,14 @@ class DeltaVariance_Distance(object):
         # The returned xlow and xhigh are arrays.
         xlow, xhigh = check_fit_limits(xlow, xhigh)
 
+        # Allow separate boundary conditions to be passed
+        if isinstance(boundary, basestring):
+            boundary = [boundary] * 2
+        else:
+            if not len(boundary) == 2:
+                raise ValueError("boundary must be a two-element list/array"
+                                 " when a string is not passed.")
+
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
         scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
@@ -434,15 +527,16 @@ class DeltaVariance_Distance(object):
             self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags1)
-            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0], boundary=boundary)
+            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0],
+                             boundary=boundary[0])
 
         self.delvar2 = DeltaVariance(dataset2,
                                      weights=weights2,
                                      diam_ratio=diam_ratio, lags=lags2)
-        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary)
+        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg):
+                        ang_units=False, unit=u.deg, save_name=None):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -458,6 +552,8 @@ class DeltaVariance_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Check for NaNs and negatives
@@ -484,7 +580,7 @@ class DeltaVariance_Distance(object):
 
         if verbose:
             import matplotlib.pyplot as p
-            p.ion()
+
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
@@ -498,6 +594,9 @@ class DeltaVariance_Distance(object):
             else:
                 lags1 = self.delvar1.lags.value
                 lags2 = self.delvar2.lags.value
+
+            lags1 = lags1[~all_nans]
+            lags2 = lags2[~all_nans]
 
             # Normalize the errors for when plotting. NOT log-scaled.
             deltavar1_err = \
@@ -558,7 +657,12 @@ class DeltaVariance_Distance(object):
             else:
                 ax.set_xlabel("Lag (pixels)")
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 

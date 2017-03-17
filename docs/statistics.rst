@@ -26,3 +26,6 @@ Source Code
 .. automodapi:: turbustat.statistics
     :no-heading:
     :no-inheritance-diagram:
+
+.. autoclass:: turbustat.statistics.base_statistic.BaseStatisticsMixIn
+.. autoclass:: turbustat.statistics.base_pspec2.StatisticBase_PSpec2D

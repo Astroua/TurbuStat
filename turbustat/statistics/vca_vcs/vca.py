@@ -58,7 +58,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
-    def run(self, verbose=False, brk=None, return_stddev=True,
+    def run(self, verbose=False, save_name=None, brk=None, return_stddev=True,
             logspacing=False, low_cut=None, high_cut=None,
             ang_units=False, unit=u.deg, use_wavenumber=False):
         '''
@@ -68,6 +68,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose : bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         brk : float, optional
             Initial guess for the break point.
         return_stddev : bool, optional
@@ -93,7 +95,11 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             print(self.fit.summary())
 
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, use_wavenumber=use_wavenumber)
+                          unit=unit, save_name=save_name,
+                          use_wavenumber=use_wavenumber)
+            if save_name is not None:
+                import matplotlib.pyplot as p
+                p.close()
 
         return self
 
@@ -149,7 +155,8 @@ class VCA_Distance(object):
                       logspacing=logspacing)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, use_wavenumber=False):
+                        ang_units=False, unit=u.deg, save_name=None,
+                        use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 VCA transforms, each with the
@@ -168,6 +175,8 @@ class VCA_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -186,6 +195,7 @@ class VCA_Distance(object):
             print(self.vca2.fit.summary())
 
             import matplotlib.pyplot as p
+
             self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
                                ang_units=ang_units, unit=unit,
                                use_wavenumber=use_wavenumber)
@@ -193,6 +203,10 @@ class VCA_Distance(object):
                                ang_units=ang_units, unit=unit,
                                use_wavenumber=use_wavenumber)
             p.legend(loc='upper right')
-            p.show()
 
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
         return self

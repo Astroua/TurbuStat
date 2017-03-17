@@ -15,6 +15,7 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 import numpy as np
 from copy import deepcopy
 import cPickle as pickle
+from warnings import warn
 import statsmodels.api as sm
 from mecdf import mecdf
 
@@ -65,25 +66,29 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         if dendro_params is None:
             self.dendro_params = {"min_npix": 10,
-                                  "min_value": 0.001}
+                                  "min_value": 0.001,
+                                  "min_delta": 0.1}
         else:
-            # poss_keys = dir(pruning)
-            # for key in dendro_params.keys():
-            #     if key not in poss_keys:
-            #         raise KeyError(key + " is not a valid pruning parameter.")
             self.dendro_params = dendro_params
 
-        # In the case where only one min_delta is given
-        if "min_delta" in self.dendro_params and min_deltas is None:
-            self.min_deltas = np.array([self.dendro_params["min_delta"]])
-        elif not isinstance(min_deltas, np.ndarray):
-            self.min_deltas = np.array([min_deltas])
-        else:
-            self.min_deltas = min_deltas
+        self.min_deltas = min_deltas
 
-        self.numfeatures = np.empty(self.min_deltas.shape)
-        self.values = []
-        self.histograms = []
+    @property
+    def min_deltas(self):
+        '''
+        Array of min_delta values to compute the dendrogram.
+        '''
+        return self._min_deltas
+
+    @min_deltas.setter
+    def min_deltas(self, value):
+        # In the case where only one min_delta is given
+        if "min_delta" in self.dendro_params and value is None:
+            self._min_deltas = np.array([self.dendro_params["min_delta"]])
+        elif not isinstance(value, np.ndarray):
+            self._min_deltas = np.array([value])
+        else:
+            self._min_deltas = value
 
     def compute_dendro(self, verbose=False, save_dendro=False,
                        dendro_name=None, dendro_obj=None,
@@ -108,6 +113,9 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable when the data is periodic in the spatial dimensions.
         '''
 
+        self._numfeatures = np.empty(self.min_deltas.shape, dtype=int)
+        self._values = []
+
         if dendro_obj is None:
             if periodic_bounds:
                 # Find the spatial dimensions
@@ -127,41 +135,74 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                                    neighbours=neighbours)
         else:
             d = dendro_obj
-        self.numfeatures[0] = len(d)
-        self.values.append(
-            np.asarray([struct.vmax for struct in d.all_structures]))
+        self._numfeatures[0] = len(d)
+        self._values.append(np.array([struct.vmax for struct in
+                                      d.all_structures]))
 
         if len(self.min_deltas) > 1:
             for i, delta in enumerate(self.min_deltas[1:]):
                 if verbose:
                     print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
                 d.prune(min_delta=delta)
-                self.numfeatures[i + 1] = len(d)
-                self.values.append([struct.vmax for struct in
-                                    d.all_structures])
+                self._numfeatures[i + 1] = len(d)
+                self._values.append(np.array([struct.vmax for struct in
+                                              d.all_structures]))
 
-        return self
+    @property
+    def numfeatures(self):
+        '''
+        Number of branches and leaves at each value of min_delta
+        '''
+        return self._numfeatures
 
-    def make_hist(self):
+    @property
+    def values(self):
+        '''
+        Array of peak intensity values of leaves and branches at all values of
+        min_delta.
+        '''
+        return self._values
+
+    def make_hists(self, min_number=10, **kwargs):
         '''
         Creates histograms based on values from the tree.
         *Note:* These histograms are remade when calculating the distance to
         ensure the proper form for the Hellinger distance.
 
-        Returns
-        -------
-        hists : list
-            Each list entry contains the histogram values and bins for a
-            value of delta.
+        Parameters
+        ----------
+        min_number : int, optional
+            Minimum number of structures needed to create a histogram.
         '''
 
         hists = []
 
         for value in self.values:
-            hist, bins = np.histogram(value, bins=int(np.sqrt(len(value))))
-            hists.append([hist, bins])
 
-        return hists
+            if len(value) < min_number:
+                hists.append([np.zeros((0, ))] * 2)
+                continue
+
+            if 'bins' not in kwargs:
+                bins = int(np.sqrt(len(value)))
+            else:
+                bins = kwargs['bins']
+                kwargs.pop('bins')
+
+            hist, bins = np.histogram(value, bins=bins, **kwargs)
+            bin_cents = (bins[:-1] + bins[1:]) / 2
+            hists.append([bin_cents, hist])
+
+        self._hists = hists
+
+    @property
+    def hists(self):
+        '''
+        Histogram values and bins computed from the peak intensity in all
+        structures. One set of values and bins are returned for each value
+        of `~Dendro_Statistics.min_deltas`
+        '''
+        return self._hists
 
     def fit_numfeat(self, size=5, verbose=False):
         '''
@@ -172,14 +213,15 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         Parameters
         ----------
         size : int. optional
-            Size of window. Passed to std_window.
+            Size of std. window. Passed to std_window.
         verbose : bool, optional
             Shows the model summary.
         '''
 
         if len(self.numfeatures) == 1:
-            raise Exception("Must provide multiple min_delta values to perform"
-                            " fitting. Only one value was given.")
+            warn("Multiple min_delta values must be provided to perform"
+                 " fitting. Only one value was given.")
+            return
 
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
@@ -189,20 +231,49 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         self.break_pos = deltas[break_pos]
 
         # Remove points where there is only 1 feature or less.
-        self.x = np.log10(deltas[break_pos:])
-        self.y = np.log10(nums[break_pos:])
+        self._fitvals = [np.log10(deltas[break_pos:]),
+                         np.log10(nums[break_pos:])]
 
-        x = sm.add_constant(self.x)
+        x = sm.add_constant(self.fitvals[0])
 
-        self.model = sm.OLS(self.y, x).fit()
+        self._model = sm.OLS(self.fitvals[1], x).fit()
 
         if verbose:
             print self.model.summary()
 
         errors = self.model.bse
 
-        self.tail_slope = self.model.params[-1]
-        self.tail_slope_err = errors[-1]
+        self._tail_slope = self.model.params[-1]
+        self._tail_slope_err = errors[-1]
+
+    @property
+    def model(self):
+        '''
+        Power-law tail fit model.
+        '''
+        return self._model
+
+    @property
+    def fitvals(self):
+        '''
+        Log values of delta and number of structures used for the power-law
+        tail fit.
+        '''
+        return self._fitvals
+
+    @property
+    def tail_slope(self):
+        '''
+        Slope of power-law tail.
+        '''
+        return self._tail_slope
+
+    @property
+    def tail_slope_err(self):
+        '''
+        1-sigma error on slope of power-law tail.
+        '''
+        return self._tail_slope_err
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -223,7 +294,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             self_copy.cube = None
 
         with open(output_name, 'wb') as output:
-                pickle.dump(self_copy, output, -1)
+            pickle.dump(self_copy, output, -1)
 
     @staticmethod
     def load_results(pickle_file):
@@ -237,7 +308,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
 
         with open(pickle_file, 'rb') as input:
-                self = pickle.load(input)
+            self = pickle.load(input)
 
         return self
 
@@ -252,7 +323,6 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Name of saved file.
         min_deltas : numpy.ndarray or list
             Minimum deltas of leaves in the dendrogram.
-
         '''
 
         dendro = Dendrogram.load_from(hdf5_file)
@@ -264,30 +334,74 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
-    def run(self, periodic_bounds=False, verbose=False,
-            dendro_verbose=False, save_results=False,
-            output_name=None):
+    def run(self, periodic_bounds=False, verbose=False, save_name=None,
+            dendro_verbose=False, dendro_obj=None, save_results=False,
+            output_name=None, make_hists=True, **kwargs):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
 
         Parameters
         ----------
+        periodic_bounds : bool or list, optional
+            Enable when the data is periodic in the spatial dimensions. Passing
+            a two-element list can be used to individually set how the
+            boundaries are treated for the datasets.
         verbose : optional, bool
-            Plots the number of objects in the tree as a function of delta.
+            Enable plotting of results.
+        save_name : str,optional
+            Save the figure when a file name is given.
         dendro_verbose : optional, bool
             Prints out updates while making the dendrogram.
+        dendro_obj : Dendrogram, optional
+            Pass a pre-computed dendrogram object. **MUST have min_delta set
+            at or below the smallest value in`~Dendro_Statistics.min_deltas`.**
+        save_results : bool, optional
+            Save the statistic results as a pickle file. See
+            `~Dendro_Statistics.save_results`.
+        output_name : str, optional
+            Filename used when `save_results` is enabled. Must be given when
+            saving.
+        make_hists : bool, optional
+            Enable computing histograms.
+        kwargs : Passed to `~Dendro_Statistics.make_hists`.
         '''
-        self.compute_dendro(verbose=dendro_verbose,
+        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj,
                             periodic_bounds=periodic_bounds)
         self.fit_numfeat(verbose=verbose)
+
+        if make_hists:
+            self.make_hists(**kwargs)
 
         if verbose:
             import matplotlib.pyplot as p
 
-            p.plot(self.x, self.y, 'bD')
-            p.plot(self.x, self.model.fittedvalues, 'g')
-            p.show()
+            if not make_hists:
+                ax1 = p.subplot(111)
+            else:
+                ax1 = p.subplot(121)
+
+            ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
+            ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
+            p.xlabel(r"log $\delta$")
+            p.ylabel(r"log Number of Features")
+
+            if make_hists:
+                ax2 = p.subplot(122)
+
+                for bins, vals in self.hists:
+                    if bins.size < 1:
+                        continue
+                    bin_width = np.abs(bins[1] - bins[0])
+                    ax2.bar(bins, vals, align="center",
+                            width=bin_width, alpha=0.25)
+                    p.xlabel("Data Values")
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         if save_results:
             self.save_results(output_name=output_name)
@@ -362,9 +476,9 @@ class DendroDistance(object):
                 dendro_params1 = dendro_params
                 dendro_params2 = dendro_params
             else:
-                raise TypeError("dendro_params is a "+str(type(dendro_params)) +
-                                "It must be a dictionary, or a list containing" +
-                                " a dictionary entries.")
+                raise TypeError("dendro_params is a {}. It must be a dictionary"
+                                ", or a list containing a dictionary entries."
+                                .format(type(dendro_params)))
         else:
             dendro_params1 = None
             dendro_params2 = None
@@ -383,7 +497,8 @@ class DendroDistance(object):
         else:
             self.dendro1 = Dendrogram_Stats(
                 cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
-            self.dendro1.run(verbose=False, periodic_bounds=periodic_bounds[0])
+            self.dendro1.run(verbose=False, make_hists=False,
+                             periodic_bounds=periodic_bounds[0])
 
         if isinstance(cube2, str):
             self.dendro2 = Dendrogram_Stats.load_results(cube2)
@@ -391,7 +506,8 @@ class DendroDistance(object):
             self.dendro2 = \
                 Dendrogram_Stats(cube2, min_deltas=min_deltas,
                                  dendro_params=dendro_params2)
-            self.dendro2.run(verbose=False, periodic_bounds=periodic_bounds[1])
+            self.dendro2.run(verbose=False, make_hists=False,
+                             periodic_bounds=periodic_bounds[1])
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
@@ -422,7 +538,7 @@ class DendroDistance(object):
         self.histogram_distance = None
 
     def numfeature_stat(self, verbose=False, label1=None, label2=None,
-                        savename=None):
+                        save_name=None):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -434,7 +550,7 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
-        savename : str, optional
+        save_name : str, optional
             Saves the plot when a filename is given.
         '''
 
@@ -448,20 +564,24 @@ class DendroDistance(object):
             import matplotlib.pyplot as p
 
             # Dendrogram 1
-            p.plot(self.dendro1.x, self.dendro1.y, 'bD', label=label1)
-            p.plot(self.dendro1.x, self.dendro1.model.fittedvalues, 'b')
+            p.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1], 'bD',
+                   label=label1)
+            p.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
+                   'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.x, self.dendro2.y, 'go', label=label2)
-            p.plot(self.dendro2.x, self.dendro2.model.fittedvalues, 'g')
+            p.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1], 'go',
+                   label=label2)
+            p.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
+                   'g')
 
             p.grid(True)
             p.xlabel(r"log $\delta$")
             p.ylabel("log Number of Features")
             p.legend(loc='best')
 
-            if savename is not None:
-                p.savefig(savename)
+            if save_name is not None:
+                p.savefig(save_name)
                 p.clf()
             else:
                 p.show()
@@ -469,7 +589,7 @@ class DendroDistance(object):
         return self
 
     def histogram_stat(self, verbose=False, label1=None, label2=None,
-                       savename=None):
+                       save_name=None):
         '''
         Computes the distance using histograms.
 
@@ -481,24 +601,26 @@ class DendroDistance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
-        savename : str, optional
+        save_name : str, optional
             Saves the plot when a filename is given.
         '''
 
         if self.nbins == "best":
-            self.nbins = [np.floor(np.sqrt((n1 + n2)/2.)) for n1, n2 in
+            self.nbins = [np.floor(np.sqrt((n1 + n2) / 2.)) for n1, n2 in
                           zip(self.dendro1.numfeatures[:self.cutoff],
                               self.dendro2.numfeatures[:self.cutoff])]
         else:
             self.nbins = [self.nbins] * \
                 len(self.dendro1.numfeatures[:self.cutoff])
 
+        self.nbins = np.array(self.nbins, dtype=int)
+
         self.histograms1 = \
             np.empty((len(self.dendro1.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                      np.max(self.nbins)))
         self.histograms2 = \
             np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
-                     np.max(self.nbins)))
+                      np.max(self.nbins)))
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -508,19 +630,21 @@ class DendroDistance(object):
             stand_data2 = standardize(data2)
 
             bins = common_histogram_bins(stand_data1, stand_data2,
-                                         nbins=nbin+1)
+                                         nbins=nbin + 1)
 
             self.bins.append(bins)
 
             hist1 = np.histogram(stand_data1, bins=bins,
                                  density=True)[0]
             self.histograms1[n, :] = \
-                np.append(hist1, (np.max(self.nbins)-bins.size+1) * [np.NaN])
+                np.append(hist1, (np.max(self.nbins) -
+                                  bins.size + 1) * [np.NaN])
 
             hist2 = np.histogram(stand_data2, bins=bins,
                                  density=True)[0]
             self.histograms2[n, :] = \
-                np.append(hist2, (np.max(self.nbins)-bins.size+1) * [np.NaN])
+                np.append(hist2, (np.max(self.nbins) -
+                                  bins.size + 1) * [np.NaN])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])
@@ -567,8 +691,8 @@ class DendroDistance(object):
             ax4.axes.yaxis.set_ticklabels([])
 
             p.tight_layout()
-            if savename is not None:
-                p.savefig(savename)
+            if save_name is not None:
+                p.savefig(save_name)
                 p.clf()
             else:
                 p.show()
@@ -627,7 +751,7 @@ def std_window(y, size=5, return_results=False):
         position of the break is returned.
     '''
 
-    half_size = (size - 1)/2
+    half_size = (size - 1) / 2
 
     shape = max(y.shape)
 

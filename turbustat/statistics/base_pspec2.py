@@ -18,14 +18,23 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def ps2D(self):
+        '''
+        Two-dimensional power spectrum.
+        '''
         return self._ps2D
 
     @property
     def ps1D(self):
+        '''
+        One-dimensional power spectrum.
+        '''
         return self._ps1D
 
     @property
     def ps1D_stddev(self):
+        '''
+        1-sigma standard deviation of the 1D power spectrum.
+        '''
         if not self._stddev_flag:
             Warning("ps1D_stddev is only calculated when return_stddev"
                     " is enabled.")
@@ -34,6 +43,9 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def freqs(self):
+        '''
+        Corresponding spatial frequencies of the 1D power spectrum.
+        '''
         return self._freqs
 
     @property
@@ -51,7 +63,9 @@ class StatisticBase_PSpec2D(object):
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
-        kwargs : passed to pspec
+        max_bin : float, optional
+            Maximum spatial frequency to bin values at.
+        kwargs : passed to `~turbustat.statistics.psds.pspec`.
         '''
 
         if return_stddev:
@@ -86,8 +100,10 @@ class StatisticBase_PSpec2D(object):
             error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
-        lg_scale_cut : int, optional
-            Cuts off largest scales, which deviate from the powerlaw.
+        low_cut : float, optional
+            Lowest frequency to consider in the fit.
+        high_cut : float, optional
+            Highest frequency to consider in the fit.
         min_fits_pts : int, optional
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
@@ -103,7 +119,7 @@ class StatisticBase_PSpec2D(object):
         if low_cut is None:
             # Default to the largest frequency, since this is just 1 pixel
             # in the 2D PSpec.
-            self.low_cut = 1/(large_scale*float(max(self.ps2D.shape)))
+            self.low_cut = 1. / (large_scale * float(max(self.ps2D.shape)))
         else:
             self.low_cut = low_cut
 
@@ -158,14 +174,20 @@ class StatisticBase_PSpec2D(object):
 
     @property
     def slope(self):
+        '''
+        Power spectrum slope.
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        1-sigma error on the power spectrum slope.
+        '''
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", ang_units=False, unit=u.deg,
+                 symbol="D", ang_units=False, unit=u.deg, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
@@ -245,6 +267,9 @@ class StatisticBase_PSpec2D(object):
         p.axvline(np.log10(high_cut), color=color, alpha=0.5, linestyle='--')
 
         p.grid(True)
+
+        if save_name is not None:
+            p.savefig(save_name)
 
         if show:
             p.show()

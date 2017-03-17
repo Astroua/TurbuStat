@@ -9,7 +9,14 @@ Statistics
 .. toctree::
     :maxdepth: 2
 
+    statistics/bispectrum_example
+    statistics/delta_variance_example
+    statistics/dendrogram_example
+    statistics/genus_example
+    statistics/mvc_example
     statistics/pca_example
+    statistics/pdf_example
+    statistics/pspec_example
 
 Distance Metrics
 ================

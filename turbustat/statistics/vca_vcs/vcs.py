@@ -48,7 +48,7 @@ class VCS(BaseStatisticMixIn):
             try:
                 spec_unit = u.Unit(self.header["CUNIT3"])
                 self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
-                                   spec_unit).to(u.km/u.s).value
+                                   spec_unit).to(u.km / u.s).value
             except (KeyError, u.UnitsError) as e:
                 print("Spectral unit not in the header or it cannot be parsed "
                       "by astropy.units. Using pixel units.")
@@ -100,8 +100,8 @@ class VCS(BaseStatisticMixIn):
 
             # Need to order the points
             shape = self.vel_freqs.size
-            spline_y = np.log10(self.ps1D[1:shape/2])
-            spline_x = np.log10(self.vel_freqs[1:shape/2])
+            spline_y = np.log10(self.ps1D[1:shape / 2])
+            spline_x = np.log10(self.vel_freqs[1:shape / 2])
 
             spline = UnivariateSpline(spline_x, spline_y, k=1, s=1)
 
@@ -115,8 +115,25 @@ class VCS(BaseStatisticMixIn):
             # largest x.
             breaks = breaks[::-1]
 
-            x = np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut])
-            y = np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut])
+            # Ensure a break doesn't fall at the max or min.
+            if breaks.size > 0:
+                if breaks[0] == spline_x.max():
+                    breaks = breaks[1:]
+            if breaks.size > 0:
+                if breaks[-1] == spline_x.min():
+                    breaks = breaks[:-1]
+
+            x = np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut])
+            y = np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut])
+
+            if x.size <= 3 or y.size <= 3:
+                raise Warning("There are no points to fit to. Try lowering "
+                              "'lg_scale_cut'.")
+
+            # If no breaks, set to half-way before last point
+            if breaks.size == 0:
+                x_copy = np.sort(x.copy())
+                breaks = np.array([0.5 * (x_copy[-1] + x_copy[-3])])
 
             # Now try these breaks until a good fit including the break is
             # found. If none are found, it accept that there wasn't a good
@@ -128,9 +145,10 @@ class VCS(BaseStatisticMixIn):
                 self.fit.fit_model(verbose=verbose)
 
                 if self.fit.params.size == 5:
+                    # Success!
                     break
                 i += 1
-                if i >= breaks.shape:
+                if i >= breaks.size:
                     warnings.warn("No good break point found. Returned fit\
                                    does not include a break!")
                     break
@@ -141,8 +159,8 @@ class VCS(BaseStatisticMixIn):
             breaks = np.log10(breaks)
 
         self.fit = \
-            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut+1:-lg_scale_cut]),
-                   np.log10(self.ps1D[lg_scale_cut+1:-lg_scale_cut]), breaks)
+            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut]),
+                   np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut]), breaks)
         self.fit.fit_model(verbose=verbose)
 
     @property
@@ -161,7 +179,7 @@ class VCS(BaseStatisticMixIn):
     def brk_err(self):
         return self.fit.brk_err
 
-    def run(self, verbose=False, breaks=None):
+    def run(self, verbose=False, save_name=None, breaks=None):
         '''
         Run the entire computation.
 
@@ -169,6 +187,8 @@ class VCS(BaseStatisticMixIn):
         ----------
         verbose: bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         breaks : float, optional
             Specify where the break point is. If None, attempts to find using
             spline.
@@ -180,7 +200,8 @@ class VCS(BaseStatisticMixIn):
             import matplotlib.pyplot as p
 
             if self.vel_units:
-                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
+                xlab = \
+                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
                 xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
@@ -191,7 +212,12 @@ class VCS(BaseStatisticMixIn):
             p.ylabel(r"log P$_{1}$(k$_{v}$)")
             p.grid(True)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -241,7 +267,8 @@ class VCS_Distance(object):
         self.vcs2 = VCS(cube2,
                         vel_units=vel_units).run(breaks=breaks[1])
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1=None, label2=None,
+                        save_name=None):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -256,6 +283,8 @@ class VCS_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         # Now construct the t-statistics for each portion
@@ -293,11 +322,13 @@ class VCS_Distance(object):
             print(self.vcs2.fit.fit.summary())
 
             if self.vel_units:
-                xlab = r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
+                xlab = \
+                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
             else:
                 xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
 
             import matplotlib.pyplot as p
+
             p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
                    label=label1)
             p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
@@ -308,6 +339,11 @@ class VCS_Distance(object):
             p.legend()
             p.xlabel(xlab)
             p.ylabel(r"$P_{1}(k_v)$")
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

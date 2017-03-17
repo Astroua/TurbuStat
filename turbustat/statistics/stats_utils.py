@@ -26,11 +26,11 @@ def hellinger(data1, data2, bin_width=1.0):
     return distance
 
 
-def standardize(x):
+def standardize(x, dtype=np.float64):
     '''
     Center and divide by standard deviation (i.e., z-scores).
     '''
-    return (x - np.nanmean(x)) / np.nanstd(x)
+    return (x - np.nanmean(x.astype(dtype))) / np.nanstd(x.astype(dtype))
 
 
 def normalize_by_mean(x):

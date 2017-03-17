@@ -61,7 +61,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg, use_wavenumber=False):
+            ang_units=False, unit=u.deg, save_name=None,
+            use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
 
@@ -81,6 +82,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -94,8 +97,12 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if verbose:
             print(self.fit.summary())
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit,
+                          unit=unit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
+            if save_name is not None:
+                import matplotlib.pyplot as plt
+                plt.close()
+
         return self
 
 
@@ -158,7 +165,8 @@ class PSpec_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, use_wavenumber=False):
+                        ang_units=False, unit=u.deg, save_name=None,
+                        use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 Power Spectrum transforms.
@@ -168,13 +176,6 @@ class PSpec_Distance(object):
 
         Parameters
         ----------
-        low_cut : float, optional
-            Set the cut-off for low spatial frequencies. By default, this is
-            set to the inverse of half of the smallest axis in the 2 images.
-        high_cut : float, optional
-            Set the cut-off for high spatial frequencies. Defaults to a
-            frequency of 0.5; low pixel counts below this may lead to
-            significant scatter.
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
@@ -185,6 +186,8 @@ class PSpec_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -209,7 +212,12 @@ class PSpec_Distance(object):
                                  ang_units=ang_units, unit=unit,
                                  use_wavenumber=use_wavenumber)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -226,6 +234,16 @@ class BiSpectrum(BaseStatisticMixIn):
     ----------
     img : %(dtypes)s
         2D image.
+
+
+    Example
+    -------
+    >>> from turbustat.statistics import BiSpectrum
+    >>> from astropy.io import fits
+    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
+    >>> bispec = BiSpectrum(moment0) # doctest: +SKIP
+    >>> bispec.run(verbose=True, nsamples=1.e3) # doctest: +SKIP
+
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -243,7 +261,7 @@ class BiSpectrum(BaseStatisticMixIn):
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
     def compute_bispectrum(self, nsamples=100, seed=1000,
-                           mean_subract=False):
+                           mean_subtract=False):
         '''
         Do the computation.
 
@@ -254,9 +272,13 @@ class BiSpectrum(BaseStatisticMixIn):
             magnitude.
         seed : int, optional
             Sets the seed for the distribution draws.
+        mean_subtract : bool, optional
+            Subtract the mean from the data before computing. This removes the
+            "zero frequency" (i.e., constant) portion of the power, resulting
+            in a loss of phase coherence along the k_1=k_2 line.
         '''
 
-        if mean_subract:
+        if mean_subtract:
             norm_data = self.data - self.data.mean()
         else:
             norm_data = self.data
@@ -267,9 +289,9 @@ class BiSpectrum(BaseStatisticMixIn):
 
         bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
 
-        self.bispectrum = np.zeros(bispec_shape, dtype=np.complex)
-        self.bicoherence = np.zeros(bispec_shape, dtype=np.float)
-        self.tracker = np.zeros(self.shape, dtype=np.int16)
+        self._bispectrum = np.zeros(bispec_shape, dtype=np.complex)
+        self._bicoherence = np.zeros(bispec_shape, dtype=np.float)
+        self._tracker = np.zeros(self.shape, dtype=np.int16)
 
         biconorm = np.ones_like(self.bispectrum, dtype=float)
 
@@ -296,28 +318,63 @@ class BiSpectrum(BaseStatisticMixIn):
 
                 samps = fftarr[k1x, k1y] * fftarr[k2x, k2y] * conjfft[k3x, k3y]
 
-                self.bispectrum[k1mag, k2mag] = np.sum(samps)
+                self._bispectrum[k1mag, k2mag] = np.sum(samps)
 
                 biconorm[k1mag, k2mag] = np.sum(np.abs(samps))
 
                 # Track where we're sampling from in fourier space
-                self.tracker[k1x, k1y] += 1
-                self.tracker[k2x, k2y] += 1
-                self.tracker[k3x, k3y] += 1
+                self._tracker[k1x, k1y] += 1
+                self._tracker[k2x, k2y] += 1
+                self._tracker[k3x, k3y] += 1
 
-        self.bicoherence = (np.abs(self.bispectrum) / biconorm)
-        self.bispectrum_amp = np.log10(np.abs(self.bispectrum))
+        self._bicoherence = (np.abs(self.bispectrum) / biconorm)
+        self._bispectrum_amp = np.log10(np.abs(self.bispectrum))
 
-    def run(self, nsamples=100, verbose=False):
+    @property
+    def bispectrum(self):
         '''
-        Compute the bispectrum. Necessary to maintiain package standards.
+        Bispectrum array.
+        '''
+        return self._bispectrum
+
+    @property
+    def bispectrum_amp(self):
+        '''
+        log amplitudes of the bispectrum.
+        '''
+        return self._bispectrum_amp
+
+    @property
+    def bicoherence(self):
+        '''
+        Bicoherence array.
+        '''
+        return self._bicoherence
+
+    @property
+    def tracker(self):
+        '''
+        Array showing the number of samples in each k_1 k_2 bin.
+        '''
+        return self._tracker
+
+    def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False,
+            save_name=None):
+        '''
+        Compute the bispectrum. Necessary to maintain package standards.
 
         Parameters
         ----------
         nsamples : int, optional
-            Sets the number of samples to take at each vector magnitude.
+            See `~BiSpectrum.compute_bispectrum`.
+        seed : int, optional
+            See `~BiSpectrum.compute_bispectrum`.
+        mean_subtract : bool, optional
+            See `~BiSpectrum.compute_bispectrum`.
         verbose : bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.compute_bispectrum(nsamples=nsamples)
@@ -341,7 +398,13 @@ class BiSpectrum(BaseStatisticMixIn):
             p.xlabel(r"$k_1$")
             p.ylabel(r"$k_2$")
 
-            p.show()
+            p.tight_layout()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
 
@@ -381,7 +444,7 @@ class BiSpectrum_Distance(object):
         self.distance = None
 
     def distance_metric(self, metric='average', verbose=False, label1=None,
-                        label2=None):
+                        label2=None, save_name=None):
         '''
         verbose : bool, optional
             Enable plotting.
@@ -389,6 +452,8 @@ class BiSpectrum_Distance(object):
             Object or region name for data1
         label2 : str, optional
             Object or region name for data2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         if metric is 'surface':
@@ -402,6 +467,7 @@ class BiSpectrum_Distance(object):
 
         if verbose:
             import matplotlib.pyplot as p
+            p.ion()
 
             fig = p.figure()
             ax1 = fig.add_subplot(121)
@@ -426,6 +492,10 @@ class BiSpectrum_Distance(object):
             fig.colorbar(im, cax=cbar_ax)
 
             # p.tight_layout()
-            p.show()
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self

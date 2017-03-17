@@ -4,10 +4,12 @@
 import numpy as np
 from numpy.fft import fft2, fftshift
 import astropy.units as u
+from warnings import warn
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import input_data, common_types, twod_types
+from ..fitting_utils import check_fit_limits
 
 
 class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -30,29 +32,63 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, centroid, moment0, linewidth, header):
+    def __init__(self, centroid, moment0, linewidth, header=None):
 
         # data property not used here
         self.no_data_flag = True
         self.data = None
 
-        self.header = header
+        if header is None:
+            try:
+                self._centroid, self.header = input_data(centroid,
+                                                         no_header=False)
+            except TypeError:
+                warn("Could not load header from centroid. No header has been"
+                     " specified.")
+                self._centroid = input_data(centroid, no_header=True)
 
-        self.centroid = input_data(centroid, no_header=True)
-        self.moment0 = input_data(moment0, no_header=True)
-        self.linewidth = input_data(linewidth, no_header=True)
+        else:
+            self._centroid = input_data(centroid, no_header=True)
+            self.header = header
+
+        self._moment0 = input_data(moment0, no_header=True)
+        self._linewidth = input_data(linewidth, no_header=True)
 
         # Get rid of nans.
-        self.centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
-        self.moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
-        self.linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
-        self.degperpix = np.abs(header["CDELT2"])
+        self._centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
+        self._moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
+        self._linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
 
-        assert self.centroid.shape == self.moment0.shape
-        assert self.centroid.shape == self.linewidth.shape
+        shape_check1 = self.centroid.shape == self.moment0.shape
+        shape_check2 = self.centroid.shape == self.linewidth.shape
+        if not shape_check1 or not shape_check2:
+            raise IndexError("The centroid, moment0, and linewidth arrays must"
+                             "have the same shape.")
+
         self.shape = self.centroid.shape
 
         self._ps1D_stddev = None
+
+    @property
+    def centroid(self):
+        '''
+        Normalized centroid array.
+        '''
+        return self._centroid
+
+    @property
+    def moment0(self):
+        '''
+        Zeroth moment (integrated intensity) array.
+        '''
+        return self._moment0
+
+    @property
+    def linewidth(self):
+        '''
+        Linewidth array. Square root of the velocity dispersion.
+        '''
+        return self._linewidth
 
     def compute_pspec(self):
         '''
@@ -70,6 +106,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         term1 = fft2(self.centroid * self.moment0)
 
+        # Account for normalization in the line width.
         term2 = np.nanmean(self.linewidth**2 + self.centroid**2)
 
         mvc_fft = term1 - term2 * fft2(self.moment0)
@@ -79,16 +116,19 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, logspacing=False,
+    def run(self, verbose=False, save_name=None, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg, use_wavenumber=False):
+            ang_units=False, unit=u.deg, use_wavenumber=False, **kwargs):
         '''
-        Full computation of MVC.
+        Full computation of MVC. For fitting parameters and radial binning
+        options, see `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D`.
 
         Parameters
         ----------
         verbose: bool, optional
             Enables plotting.
+        save_name : str,optional
+            Save the figure when a file name is given.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
@@ -103,19 +143,25 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Choose the angular unit to convert to when ang_units is enabled.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
+        kwargs : Passed to
+            `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D.fit_pspec`.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
-                       large_scale=0.5)
+                       large_scale=0.5, **kwargs)
 
         if verbose:
             print(self.fit.summary())
 
             self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, use_wavenumber=use_wavenumber)
+                          unit=unit, save_name=save_name,
+                          use_wavenumber=use_wavenumber)
+            if save_name is not None:
+                import matplotlib.pyplot as p
+                p.close()
 
         return self
 
@@ -176,21 +222,24 @@ class MVC_Distance(object):
             moment02 = data2["moment0"][0]
             linewidth2 = data2["linewidth"][0]
 
+        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
+
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1])
-            self.mvc1.run(logspacing=logspacing, high_cut=high_cut,
-                          low_cut=low_cut)
+            self.mvc1.run(logspacing=logspacing, high_cut=high_cut[0],
+                          low_cut=low_cut[0])
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1])
-        self.mvc2.run(logspacing=logspacing, high_cut=high_cut,
-                      low_cut=low_cut)
+        self.mvc2.run(logspacing=logspacing, high_cut=high_cut[1],
+                      low_cut=low_cut[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, use_wavenumber=False):
+                        ang_units=False, unit=u.deg, save_name=None,
+                        use_wavenumber=False):
         '''
 
         Implements the distance metric for 2 MVC transforms.
@@ -210,6 +259,8 @@ class MVC_Distance(object):
             Convert frequencies to angular units using the given header.
         unit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
+        save_name : str,optional
+            Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -225,6 +276,7 @@ class MVC_Distance(object):
             print(self.mvc2.fit.summary())
 
             import matplotlib.pyplot as p
+
             self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
                                ang_units=ang_units, unit=unit,
                                use_wavenumber=use_wavenumber)
@@ -232,6 +284,11 @@ class MVC_Distance(object):
                                ang_units=ang_units, unit=unit,
                                use_wavenumber=use_wavenumber)
             p.legend(loc='best')
-            p.show()
+
+            if save_name is not None:
+                p.savefig(save_name)
+                p.close()
+            else:
+                p.show()
 
         return self
