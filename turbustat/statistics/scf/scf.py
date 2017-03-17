@@ -327,7 +327,7 @@ class SCF(BaseStatisticMixIn):
 
         # Don't keep the whole cube unless keep_data enabled.
         if not keep_data:
-            self_copy.cube = None
+            self_copy._data = None
 
         with open(output_name, 'wb') as output:
                 pickle.dump(self_copy, output, -1)
