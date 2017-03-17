@@ -116,7 +116,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, save_name=None, logspacing=True,
+    def run(self, verbose=False, save_name=None, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=0.5,
             ang_units=False, unit=u.deg, use_wavenumber=False, **kwargs):
         '''
