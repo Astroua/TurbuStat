@@ -15,9 +15,10 @@ class test_Mask_and_Moments(TestCase):
     def test_loading(self):
 
         # Try loading the files.
-
+        # Set the scale to the assumed value.
         test = Mask_and_Moments.from_fits(sc1, moments_prefix="dataset1",
-                                          moments_path=".")
+                                          moments_path=".",
+                                          scale=0.003031065017916262 * u.Unit(""))
 
         npt.assert_allclose(test.moment0, dataset1["moment0"][0])
         npt.assert_allclose(test.moment1, dataset1["centroid"][0])
