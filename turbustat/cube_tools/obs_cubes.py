@@ -9,146 +9,147 @@ import numpy as np
 
 from spectral_cube import SpectralCube, CompositeMask
 
-try:
-    from signal_id import Noise
-except:
-    print("No signal_id package!")
-    pass
-    prefix = "/srv/astro/erickoch/"  # Adjust if you're not me!
-    execfile(prefix + "Dropbox/code_development/signal-id/signal_id/noise.py")
-
-
 from cube_utils import _check_mask, _check_beam, _get_int_intensity
 #  from cleaning_algs import *
 
+try:
+    from signal_id import Noise
 
-class ObsCube(object):
-    """
-    A wrapping class of SpectralCube which prepares observational data cubes
-    to be compared to any other data cube.
+    class ObsCube(object):
+        """
+        A wrapping class of SpectralCube which prepares observational data
+        cubes to be compared to any other data cube.
 
-    Parameters
-    ----------
+        Parameters
+        ----------
 
-    cube : str
-        Path to file.
-    mask : numpy.ndarray, any mask class from spectral_cube, optional
-        Mask to be applied to the cube.
-    algorithm : {NAME HERE}, optional
-        Name of the cleaning algorithm to use.
+        cube : str
+            Path to file.
+        mask : numpy.ndarray, any mask class from spectral_cube, optional
+            Mask to be applied to the cube.
+        algorithm : {NAME HERE}, optional
+            Name of the cleaning algorithm to use.
 
-    Example
-    -------
-    ```
-    from turbustat.cube_tools import ObsCube
+        Example
+        -------
+        ```
+        from turbustat.cube_tools import ObsCube
 
-    cube = ObsCube("data.fits")
-    cube.apply_cleaning(algorithm="SUPERAWESOMECLEANING")
+        cube = ObsCube("data.fits")
+        cube.apply_cleaning(algorithm="SUPERAWESOMECLEANING")
 
-    ```
-    """
-    def __init__(self, cube, mask=None, algorithm=None, beam=None):
-        super(ObsCube, self).__init__()
-        self.cube = sc.SpectralCube.read(cube)
+        ```
+        """
+        def __init__(self, cube, mask=None, algorithm=None, beam=None):
 
-        self.algorithm = algorithm
+            raise NotImplementedError("ObsCube is not yet implemented for "
+                                      "general use.")
 
-        # Make sure mask is an accepted type
-        if mask is not None:
-            _check_mask(mask)
-        self.mask = mask
+            super(ObsCube, self).__init__()
+            self.cube = SpectralCube.read(cube)
 
-        if beam is not None:
-            _check_beam(beam)
-        self.noise = Noise(self.cube, beam=beam)
+            self.algorithm = algorithm
 
-    def clean_cube(self, algorithm=None):
-        raise NotImplementedError("")
-
-    def apply_mask(self, mask=None):
-        '''
-        Check if the given mask is acceptable abd apply to
-        SpectralCube.
-        '''
-
-        # Update mask
-        if mask is not None:
-            _check_mask(mask)
+            # Make sure mask is an accepted type
+            if mask is not None:
+                _check_mask(mask)
             self.mask = mask
 
-        # Create the mask, auto masking nan values
-        default_mask = np.isfinite(self.cube.filled_data[:])
-        if self.mask is not None:
-            self.mask = CompositeMask(default_mask, self.mask)
-        else:
-            self.mask = default_mask
+            if beam is not None:
+                _check_beam(beam)
+            self.noise = Noise(self.cube, beam=beam)
 
-        # Apply mask to spectral cube object
-        self.cube = self.cube.with_mask(mask)
+        def clean_cube(self, algorithm=None):
+            raise NotImplementedError("")
 
-        return self
+        def apply_mask(self, mask=None):
+            '''
+            Check if the given mask is acceptable abd apply to
+            SpectralCube.
+            '''
 
-    def _update(self, data=None, wcs=None, beam=None, method="MAD"):
-        '''
-        Helper function to update classes.
-        '''
+            # Update mask
+            if mask is not None:
+                _check_mask(mask)
+                self.mask = mask
 
-        # Check if we need a new SpectralCube
-        if data is None and wcs is None:
-            pass
-        else:
-            if data is None:
-                data = self.cube.unmasked_data[:]
-            if wcs is None:
-                wcs = self.cube.wcs
-            # Make new SpectralCube object
-            self.cube = SpectralCube(data=data, wcs=wcs)
+            # Create the mask, auto masking nan values
+            default_mask = np.isfinite(self.cube.filled_data[:])
+            if self.mask is not None:
+                self.mask = CompositeMask(default_mask, self.mask)
+            else:
+                self.mask = default_mask
 
-        if beam is not None:
-            _check_beam(beam)
-            self.noise = Noise(self.cube, beam=beam, method=method)
+            # Apply mask to spectral cube object
+            self.cube = self.cube.with_mask(mask)
 
-    def compute_properties(self):
-        '''
-        Use SpectralCube to compute the moments. Also compute the integrated
-        intensity based on the noise properties from Noise.
-        '''
+            return self
 
-        self._moment0 = self.cube.moment0().value
+        def _update(self, data=None, wcs=None, beam=None, method="MAD"):
+            '''
+            Helper function to update classes.
+            '''
 
-        self._moment1 = self.cube.moment1().value
+            # Check if we need a new SpectralCube
+            if data is None and wcs is None:
+                pass
+            else:
+                if data is None:
+                    data = self.cube.unmasked_data[:]
+                if wcs is None:
+                    wcs = self.cube.wcs
+                # Make new SpectralCube object
+                self.cube = SpectralCube(data=data, wcs=wcs)
 
-        self._moment2 = self.cube.moment2().value
+            if beam is not None:
+                _check_beam(beam)
+                self.noise = Noise(self.cube, beam=beam, method=method)
 
-        _get_int_intensity(self)
+        def compute_properties(self):
+            '''
+            Use SpectralCube to compute the moments. Also compute the integrated
+            intensity based on the noise properties from Noise.
+            '''
 
-        return self
+            self._moment0 = self.cube.moment0().value
 
-    @property
-    def moment0(self):
-        return self._moment0
+            self._moment1 = self.cube.moment1().value
 
-    @property
-    def moment1(self):
-        return self._moment1
+            self._moment2 = self.cube.moment2().value
 
-    @property
-    def moment2(self):
-        return self._moment2
+            _get_int_intensity(self)
 
-    @property
-    def intint(self):
-        return self._intint
+            return self
 
-    def prep(self, mask=None, algorithm=None):
-        '''
-        Prepares the cube to be compared to another cube.
-        '''
+        @property
+        def moment0(self):
+            return self._moment0
 
-        if not mask is None:
-            self.apply_mask()
+        @property
+        def moment1(self):
+            return self._moment1
 
-        self.clean_cube()
-        self.compute_properties()
+        @property
+        def moment2(self):
+            return self._moment2
 
-        return self
+        @property
+        def intint(self):
+            return self._intint
+
+        def prep(self, mask=None, algorithm=None):
+            '''
+            Prepares the cube to be compared to another cube.
+            '''
+
+            if not mask is None:
+                self.apply_mask()
+
+            self.clean_cube()
+            self.compute_properties()
+
+            return self
+
+except ImportError:
+    # raise ImportError("The signal_id package must be installed")
+    pass

@@ -59,7 +59,7 @@ install:
     # Use pip to install development versions
     - pip install git+https://github.com/dendrograms/astrodendro.git
     - pip install git+https://github.com/radio-astro-tools/spectral-cube.git
-    - pip install git+https://github.com/radio-astro-tools/signal-id.git
+    # - pip install git+https://github.com/radio-astro-tools/signal-id.git
     - pip install git+https://github.com/radio-astro-tools/radio_beam.git
     - pip install emcee
 

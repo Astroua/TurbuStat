@@ -21,6 +21,7 @@ import numpy.random as ra
 from astropy.io.fits import getheader
 from astropy.wcs import WCS
 from astropy.io import fits
+import astropy.units as u
 
 # Set seed for adding noise.
 ra.seed(121212)
@@ -54,7 +55,8 @@ for posn, kept in zip(*dataset1["channels"]):
 sc1 = SpectralCube(data=cube1, wcs=WCS(header))
 mask = LazyMask(np.isfinite, sc1)
 sc1 = sc1.with_mask(mask)
-props1 = Mask_and_Moments(sc1)
+# Set the scale for the purposes of the tests
+props1 = Mask_and_Moments(sc1, scale=0.003031065017916262 * u.Unit(""))
 props1.make_mask(mask=mask)
 props1.make_moments()
 props1.make_moment_errors()
@@ -90,7 +92,8 @@ for posn, kept in zip(*dataset2["channels"]):
 sc2 = SpectralCube(data=cube2, wcs=WCS(header))
 mask = LazyMask(np.isfinite, sc2)
 sc2 = sc2.with_mask(mask)
-props2 = Mask_and_Moments(sc2)
+# Set the scale for the purposes of the tests
+props2 = Mask_and_Moments(sc2, scale=0.003029658694658428 * u.Unit(""))
 props2.make_moments()
 props2.make_moment_errors()
 
