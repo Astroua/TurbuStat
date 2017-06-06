@@ -3,7 +3,7 @@
 from unittest import TestCase
 
 import numpy.testing as npt
-
+import astropy.units as u
 
 from ..data_reduction import Mask_and_Moments
 from ._testing_data import dataset1, sc1
