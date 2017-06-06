@@ -44,7 +44,7 @@ class Mask_and_Moments(object):
         for deriving the noise level.
     clip : float, optional
         Sigma level to clip data at.
-    scale : float, optional
+    scale : `~astropy.units.Quantity`, optional
         The noise level in the cube. Overrides estimation using
         `signal_id <https://github.com/radio-astro-tools/signal-id>`_
     moment_method : {'slice', 'cube', 'ray'}, optional
@@ -369,7 +369,7 @@ class Mask_and_Moments(object):
     @staticmethod
     def from_fits(fits_name, moments_prefix=None, moments_path=None,
                   mask_name=None, moment0=None, centroid=None, linewidth=None,
-                  intint=None):
+                  intint=None, scale=None):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
         match the naming of the cube for the automatic loading to work
@@ -401,6 +401,9 @@ class Mask_and_Moments(object):
         intint : str, optional
             Filename of the integrated intensity array. Use if naming scheme
             is not valid for automatic loading.
+        scale : `~astropy.units.Quantity`, optional
+            The noise level in the cube. Overrides estimation using
+            `signal_id <https://github.com/radio-astro-tools/signal-id>`_
         '''
 
         if not spectral_cube_flag:
@@ -416,7 +419,7 @@ class Mask_and_Moments(object):
         else:
             root_name = moments_prefix
 
-        self = Mask_and_Moments(fits_name)
+        self = Mask_and_Moments(fits_name, scale=scale)
 
         if mask_name is not None:
             mask = fits.getdata(mask_name)
