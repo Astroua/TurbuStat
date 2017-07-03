@@ -177,7 +177,9 @@ class BaseStatisticMixIn(object):
         if isinstance(unit, u.Quantity):
             unit = unit.unit
 
-        if unit.is_equivalent(u.deg):
+        if unit.is_equivalent(u.pix):
+            return pixel_value
+        elif unit.is_equivalent(u.deg):
             return self._to_angular(pixel_value, unit)
         elif unit.is_equivalent(u.pc):
             return self._to_physical(pixel_value, unit)
