@@ -377,7 +377,8 @@ class BiSpectrum(BaseStatisticMixIn):
             Save the figure when a file name is given.
         '''
 
-        self.compute_bispectrum(nsamples=nsamples)
+        self.compute_bispectrum(nsamples=nsamples, mean_subtract=mean_subtract,
+                                seed=seed)
 
         if verbose:
             import matplotlib.pyplot as p
