@@ -83,8 +83,7 @@ class StatisticBase_PSpec2D(object):
         self._freqs = self.freqs / u.pix
 
     def fit_pspec(self, brk=None, log_break=True, low_cut=None,
-                  high_cut=None, min_fits_pts=10, verbose=False,
-                  large_scale=1.):
+                  high_cut=None, min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -100,38 +99,34 @@ class StatisticBase_PSpec2D(object):
             error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
-        low_cut : float, optional
+        low_cut : `~astropy.units.Quantity`, optional
             Lowest frequency to consider in the fit.
-        high_cut : float, optional
+        high_cut : `~astropy.units.Quantity`, optional
             Highest frequency to consider in the fit.
         min_fits_pts : int, optional
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
-        large_scale : float, optional
-            Set fraction of array shape corresponding to the largest frequency
-            to include while fitting (i.e., 1. uses all frequencies, 0.5 limits
-            the maximum frequency to half of the smallest array shape).
         '''
 
         # Make the data to fit to
         if low_cut is None:
             # Default to the largest frequency, since this is just 1 pixel
             # in the 2D PSpec.
-            self.low_cut = 1. / (large_scale * float(max(self.ps2D.shape)))
+            self.low_cut = 1. / (0.5 * float(max(self.ps2D.shape)) * u.pix)
         else:
-            self.low_cut = low_cut
+            self.low_cut = self._to_pixel_freq(low_cut)
 
         if high_cut is None:
-            self.high_cut = self.freqs.max().value + 1
+            self.high_cut = (self.freqs.max().value + 1) / u.pix
         else:
-            self.high_cut = high_cut
+            self.high_cut = self._to_pixel_freq(high_cut)
 
-        x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut,
-                                          self.high_cut)].value)
-        y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut,
-                                         self.high_cut)])
+        x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut.value,
+                                          self.high_cut.value)].value)
+        y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut.value,
+                                         self.high_cut.value)])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -149,7 +144,7 @@ class StatisticBase_PSpec2D(object):
                     warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max().value
+                    self.high_cut = self.freqs.max()
                 else:
                     good_pts = x.copy() < brk_fit.brk
                     x = x[good_pts]
@@ -158,7 +153,7 @@ class StatisticBase_PSpec2D(object):
                     self.high_cut = 10**brk_fit.brk
 
             else:
-                self.high_cut = self.freqs.max().value
+                self.high_cut = self.freqs.max()
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
@@ -187,7 +182,7 @@ class StatisticBase_PSpec2D(object):
         return self._slope_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", ang_units=False, unit=u.deg, save_name=None,
+                 symbol="D", xunit=u.deg, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
@@ -195,16 +190,10 @@ class StatisticBase_PSpec2D(object):
 
         import matplotlib.pyplot as p
 
-        if ang_units:
-            if use_wavenumber:
-                xlab = r"k/" + unit.to_string() + "$^{-1}$"
-            else:
-                xlab = r"Spatial Frequency/" + unit.to_string() + "$^{-1}$"
+        if use_wavenumber:
+            xlab = r"k / (" + xunit.to_string() + ")"
         else:
-            if use_wavenumber:
-                xlab = r"k/pixel$^{-1}$"
-            else:
-                xlab = r"Spatial Frequency/pixel$^{-1}$"
+            xlab = r"Spatial Frequency (" + xunit.to_string() + ")"
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -217,8 +206,8 @@ class StatisticBase_PSpec2D(object):
         else:
             ax = p.subplot(111)
 
-        good_interval = clip_func(self.freqs.value, self.low_cut,
-                                  self.high_cut)
+        good_interval = clip_func(self.freqs.value, self.low_cut.value,
+                                  self.high_cut.value)
 
         y_fit = self.fit.fittedvalues
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
@@ -229,11 +218,7 @@ class StatisticBase_PSpec2D(object):
         else:
             xvals = self.freqs
 
-        if ang_units:
-            xvals = 1. / (1. / xvals).to(unit,
-                                         equivalencies=self.angular_equiv)
-
-        xvals = xvals.value
+        xvals = self._spatial_freq_unit_conversion(xvals, xunit).value
 
         if self._stddev_flag:
             ax.errorbar(np.log10(xvals),
@@ -259,10 +244,13 @@ class StatisticBase_PSpec2D(object):
             ax.set_ylabel(r"P$_2(K)$")
 
         # Show the fitting extents
-        low_cut = self.low_cut if not use_wavenumber else \
-            self.low_cut * min(self._ps2D.shape)
-        high_cut = self.high_cut if not use_wavenumber else \
-            self.high_cut * min(self._ps2D.shape)
+        low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value
+        high_cut = \
+            self._spatial_freq_unit_conversion(self.high_cut, xunit).value
+        low_cut = low_cut if not use_wavenumber else \
+            low_cut * min(self._ps2D.shape)
+        high_cut = high_cut if not use_wavenumber else \
+            high_cut * min(self._ps2D.shape)
         p.axvline(np.log10(low_cut), color=color, alpha=0.5, linestyle='--')
         p.axvline(np.log10(high_cut), color=color, alpha=0.5, linestyle='--')
 
