@@ -334,7 +334,10 @@ class DeltaVariance(BaseStatisticMixIn):
                 np.linspace(self.lags.min().value if xlow is None else xlow,
                             self.lags.max().value if xhigh is None else xhigh,
                             100)
-            p.plot(xvals, 10**self.fitted_model(np.log10(xvals)), 'r--',
+            if ang_units:
+                xvals_conv = xvals * self.lags.unit
+                xvals_conv = xvals_conv.to(unit, self.angular_equiv)
+            p.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals)), 'r--',
                    linewidth=2, label='Fit')
             p.legend(loc='best')
             ax.grid(True)
