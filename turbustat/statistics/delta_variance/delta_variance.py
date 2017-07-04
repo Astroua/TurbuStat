@@ -47,7 +47,7 @@ class DeltaVariance(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img, header=None, weights=None, diam_ratio=1.5,
-                 lags=None, nlags=25):
+                 lags=None, nlags=25, distance=None):
         super(DeltaVariance, self).__init__()
 
         # Set the data and perform checks
@@ -59,6 +59,9 @@ class DeltaVariance(BaseStatisticMixIn):
             self.weights = np.ones(self.data.shape)
         else:
             self.weights = input_data(weights, no_header=True)
+
+        if distance is not None:
+            self.distance = distance
 
         self.nanflag = False
         if np.isnan(self.data).any() or np.isnan(self.weights).any():
@@ -209,16 +212,22 @@ class DeltaVariance(BaseStatisticMixIn):
         y = np.log10(self.delta_var)
 
         if xlow is not None:
-            lower_limit = x >= np.log10(xlow)
+            xlow = self._to_pixel(xlow)
+
+            lower_limit = x >= np.log10(xlow.value)
         else:
             lower_limit = \
                 np.ones_like(self.delta_var, dtype=bool)
+            xlow = self.lags.min() * 0.99
 
         if xhigh is not None:
-            upper_limit = x <= np.log10(xhigh)
+            xhigh = self._to_pixel(xhigh)
+
+            upper_limit = x <= np.log10(xhigh.value)
         else:
             upper_limit = \
                 np.ones_like(self.delta_var, dtype=bool)
+            xhigh = self.lags.max() * 1.01
 
         self._fit_range = [xlow, xhigh]
 
@@ -283,9 +292,8 @@ class DeltaVariance(BaseStatisticMixIn):
 
         return model_values
 
-    def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
-            save_name=None):
+    def run(self, verbose=False, xunit=u.pix, allow_huge=False,
+            boundary='wrap', xlow=None, xhigh=None, save_name=None):
         '''
         Compute the delta-variance.
 
@@ -293,10 +301,8 @@ class DeltaVariance(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Plot delta-variance transform.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            The unit to show the x-axis in.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
         boundary : {"wrap", "fill"}, optional
@@ -318,11 +324,8 @@ class DeltaVariance(BaseStatisticMixIn):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            if ang_units:
-                lags = \
-                    self.lags.to(unit, equivalencies=self.angular_equiv).value
-            else:
-                lags = self.lags.value
+
+            lags = self._spatial_unit_conversion(self.lags, xunit).value
 
             # Check for NaNs
             fin_vals = np.logical_or(np.isfinite(self.delta_var),
@@ -330,22 +333,26 @@ class DeltaVariance(BaseStatisticMixIn):
             p.errorbar(lags, self.delta_var[fin_vals],
                        yerr=self.delta_var_error[fin_vals],
                        fmt="bD-", label="Data")
-            xvals = \
-                np.linspace(self.lags.min().value if xlow is None else xlow,
-                            self.lags.max().value if xhigh is None else xhigh,
-                            100)
-            if ang_units:
-                xvals_conv = xvals * self.lags.unit
-                xvals_conv = xvals_conv.to(unit, self.angular_equiv)
-            p.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals)), 'r--',
-                   linewidth=2, label='Fit')
+
+            xvals = np.linspace(self._fit_range[0].value,
+                                self._fit_range[1].value,
+                                100) * self.lags.unit
+            xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
+
+            p.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
+                   'r--', linewidth=2, label='Fit')
+
+            xlow = \
+                self._spatial_unit_conversion(self._fit_range[0], xunit).value
+            xhigh = \
+                self._spatial_unit_conversion(self._fit_range[1], xunit).value
+            p.axvline(xlow, color="r", alpha=0.5, linestyle='-.')
+            p.axvline(xhigh, color="r", alpha=0.5, linestyle='-.')
+
             p.legend(loc='best')
             ax.grid(True)
 
-            if ang_units:
-                ax.set_xlabel("Lag ({})".format(unit))
-            else:
-                ax.set_xlabel("Lag (pixels)")
+            ax.set_xlabel("Lag ({})".format(xunit))
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
 
             if save_name is not None:
