@@ -1,5 +1,6 @@
 
 import numpy as np
+import astropy.units as u
 
 '''
 Routines for fitting a line with errors in both variables.
@@ -246,18 +247,26 @@ def check_fit_limits(xlow, xhigh):
         The upper lag fitting limit. See `xlow` above.
 
     '''
-    if not hasattr(xlow, "__len__"):
+
+    if xlow is None:
         xlow = np.array([xlow] * 2)
-    else:
-        if not len(xlow) == 2:
-            raise ValueError("xlow must be a 2-element array when giving "
-                             "separate fitting limits for each dataset.")
-    if not hasattr(xhigh, "__len__"):
+    elif isinstance(xlow, u.Quantity):
+        if xlow.isscalar:
+            xlow = u.Quantity([xlow] * 2)
+
+    if not len(xlow) == 2:
+        raise ValueError("xlow must be a 2-element array when giving "
+                         "separate fitting limits for each dataset.")
+
+    if xhigh is None:
         xhigh = np.array([xhigh] * 2)
-    else:
-        if not len(xhigh) == 2:
-            raise ValueError("xhigh must be a 2-element array when giving "
-                             "separate fitting limits for each dataset.")
+    elif isinstance(xhigh, u.Quantity):
+        if xhigh.isscalar:
+            xhigh = u.Quantity([xhigh] * 2)
+
+    if not len(xhigh) == 2:
+        raise ValueError("xhigh must be a 2-element array when giving "
+                         "separate fitting limits for each dataset.")
 
     return xlow, xhigh
 
