@@ -131,7 +131,13 @@ class StatisticBase_PSpec2D(object):
         if brk is not None:
             # Try the fit with a break in it.
             if not log_break:
+                brk = self._to_pixel_freq(brk).value
                 brk = np.log10(brk)
+            else:
+                # A value given in log shouldn't have dimensions
+                if hasattr(brk, "unit"):
+                    assert brk.unit == u.dimensionless_unscaled
+                    brk = brk.value
 
             brk_fit = \
                 Lm_Seg(x, y, brk)
@@ -144,45 +150,70 @@ class StatisticBase_PSpec2D(object):
                     warnings.warn("Not enough points to fit to." +
                                   " Ignoring break.")
 
-                    self.high_cut = self.freqs.max()
+                    self._brk = None
                 else:
                     good_pts = x.copy() < brk_fit.brk
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self.high_cut = 10**brk_fit.brk
+                    self._brk = 10**brk_fit.brk / u.pix
+                    self._brk_err = np.log(10) * self.brk.value * \
+                        brk_fit.brk_err / u.pix
+
+                    self._slope = brk_fit.slopes
+                    self._slope_err = brk_fit.slope_errs
+
+                    self.fit = brk_fit.fit
 
             else:
-                self.high_cut = self.freqs.max()
+                self._brk = None
                 # Break fit failed, revert to normal model
                 warnings.warn("Model with break failed, reverting to model\
                                without break.")
+        else:
+            self._brk = None
+            self._brk_err = None
 
-        x = sm.add_constant(x)
+        if self.brk is None:
+            x = sm.add_constant(x)
 
-        model = sm.OLS(y, x, missing='drop')
+            model = sm.OLS(y, x, missing='drop')
 
-        self.fit = model.fit()
+            self.fit = model.fit()
 
-        self._slope = self.fit.params[1]
-        self._slope_err = self.fit.bse[1]
+            self._slope = self.fit.params[1]
+            self._slope_err = self.fit.bse[1]
 
     @property
     def slope(self):
         '''
-        Power spectrum slope.
+        Power spectrum slope(s).
         '''
         return self._slope
 
     @property
     def slope_err(self):
         '''
-        1-sigma error on the power spectrum slope.
+        1-sigma error on the power spectrum slope(s).
         '''
         return self._slope_err
 
+    @property
+    def brk(self):
+        '''
+        Fitted break point.
+        '''
+        return self._brk
+
+    @property
+    def brk_err(self):
+        '''
+        1-sigma on the break point.
+        '''
+        return self._brk_err
+
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", xunit=u.deg, save_name=None,
+                 symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
