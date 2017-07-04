@@ -30,7 +30,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, header=None, weights=None):
+    def __init__(self, img, header=None, weights=None, distance=None):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
@@ -50,6 +50,9 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        if distance is not None:
+            self.distance = distance
+
     def compute_pspec(self):
         '''
         Compute the 2D power spectrum.
@@ -60,8 +63,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.power(fft, 2.)
 
     def run(self, verbose=False, logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg, save_name=None,
+            return_stddev=True, low_cut=None, high_cut=None,
+            xunit=u.pix**-1, save_name=None,
             use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
@@ -80,8 +83,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             High frequency cut off in frequencies used in the fitting.
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
@@ -92,12 +95,12 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
 
-        self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
-                       large_scale=0.5)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut)
+
         if verbose:
             print(self.fit.summary())
-            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, save_name=save_name,
+            self.plot_fit(show=True, show_2D=True,
+                          xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
             if save_name is not None:
                 import matplotlib.pyplot as plt
@@ -142,22 +145,22 @@ class PSpec_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, ang_units=False, low_cut=None,
-                 high_cut=0.5, logspacing=False):
+                 fiducial_model=None, low_cut=None,
+                 high_cut=0.5 / u.pix, logspacing=False, phys_distance=None):
         super(PSpec_Distance, self).__init__()
-
-        self.ang_units = ang_units
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
         if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1, weights=weights1)
+            self.pspec1 = PowerSpectrum(data1, weights=weights1,
+                                        distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
                             logspacing=logspacing)
         else:
             self.pspec1 = fiducial_model
 
-        self.pspec2 = PowerSpectrum(data2, weights=weights2)
+        self.pspec2 = PowerSpectrum(data2, weights=weights2,
+                                    distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
                         logspacing=logspacing)
 
@@ -165,7 +168,7 @@ class PSpec_Distance(object):
         self.distance = None
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None,
+                        xunit=u.pix**-1, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -205,11 +208,11 @@ class PSpec_Distance(object):
 
             self.pspec1.plot_fit(show=False, color='b',
                                  label=label1, symbol='D',
-                                 ang_units=ang_units, unit=unit,
+                                 xunit=xunit,
                                  use_wavenumber=use_wavenumber)
             self.pspec2.plot_fit(show=False, color='g',
                                  label=label2, symbol='o',
-                                 ang_units=ang_units, unit=unit,
+                                 xunit=xunit,
                                  use_wavenumber=use_wavenumber)
             p.legend(loc='best')
 
@@ -242,7 +245,7 @@ class BiSpectrum(BaseStatisticMixIn):
     >>> from astropy.io import fits
     >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
     >>> bispec = BiSpectrum(moment0) # doctest: +SKIP
-    >>> bispec.run(verbose=True, nsamples=1.e3) # doctest: +SKIP
+    >>> bispec.run(verbose=True, nsamples=1000) # doctest: +SKIP
 
     """
 
