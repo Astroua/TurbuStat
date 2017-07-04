@@ -65,7 +65,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
             xunit=u.pix**-1, save_name=None,
-            use_wavenumber=False):
+            use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of the spatial power spectrum.
 
@@ -95,7 +95,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
 
-        self.fit_pspec(low_cut=low_cut, high_cut=high_cut)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
         if verbose:
             print(self.fit.summary())
