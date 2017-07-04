@@ -24,8 +24,5 @@ Additionally, the statistics should ideally be insensitive to spatial shifts :ma
 Source Code
 -----------
 .. automodapi:: turbustat.statistics
-    :no-heading:
     :no-inheritance-diagram:
-
-.. autoclass:: turbustat.statistics.base_statistic.BaseStatisticsMixIn
-.. autoclass:: turbustat.statistics.base_pspec2.StatisticBase_PSpec2D
+    :inherited-members:
