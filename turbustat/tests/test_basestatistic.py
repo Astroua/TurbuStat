@@ -96,7 +96,7 @@ def test_no_spectral():
 
     obj.header = celestial_header
 
-    obj.spectral_size
+    obj._spectral_size
 
 
 def test_pixel_to_spatial_conversions():
@@ -123,6 +123,13 @@ def test_pixel_to_spatial_conversions():
 
     assert_allclose(obj._to_pixel((header["CDELT2"] * np.pi / 180.) * u.pc),
                     1.0 * u.pix)
+
+    # Now area conversions
+    assert_allclose(obj._to_pixel_area((header["CDELT2"] * u.deg)**2),
+                    1.0 * u.pix**2)
+
+    assert_allclose(obj._to_pixel_area(((header["CDELT2"] * np.pi / 180.) * u.pc)**2),
+                    1.0 * u.pix**2)
 
 
 def test_pixel_to_spatial_freq_conversions():

@@ -157,6 +157,12 @@ class BaseStatisticMixIn(object):
 
         return 1 / self._to_pixel(1 / value)
 
+    def _to_pixel_area(self, value):
+        '''
+        Should have an area-equivalent unit.
+        '''
+        return self._to_pixel(np.sqrt(value))**2
+
     def _to_angular(self, value, unit=u.deg):
         if not hasattr(self, "_header"):
             raise AttributeError("No header has not been given.")
@@ -222,7 +228,7 @@ class BaseStatisticMixIn(object):
             u.Unit(self._wcs.wcs.cunit[spec])
 
     @property
-    def spectral_equiv(self):
+    def _spectral_equiv(self):
         return [(u.pix, self._spectral_size.unit,
                 lambda x: x * float(self._spectral_size.value),
                 lambda x: x / float(self._spectral_size.value))]
@@ -232,7 +238,7 @@ class BaseStatisticMixIn(object):
         Convert to spectral unit to pixel, and in reverse.
         '''
 
-        return value.to(unit, self.spectral_equiv)
+        return value.to(unit, self._spectral_equiv)
 
     def _spectral_freq_unit_conversion(self, value, unit):
         '''
