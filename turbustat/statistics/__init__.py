@@ -12,6 +12,5 @@ from vca_vcs import *
 from wavelets import *
 from pdf import *
 from mahalanobis import *
-from wrapping_function import stats_wrapper
 from statistics_list import statistics_list, twoD_statistics_list
 from lm_seg import Lm_Seg
