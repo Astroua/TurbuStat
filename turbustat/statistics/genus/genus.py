@@ -132,6 +132,8 @@ class Genus(BaseStatisticMixIn):
         else:
             if isinstance(smoothing_radii, u.Quantity):
                 self._smoothing_radii = self._to_pixel(smoothing_radii).value
+            else:
+                self._smoothing_radii = smoothing_radii
 
     @property
     def thresholds(self):
@@ -271,8 +273,7 @@ class Genus(BaseStatisticMixIn):
 
         self.make_smooth_arrays(**kwargs)
         # self.clean_fft()
-        self.make_genus_curve(use_beam=use_beam, beam_area=beam_area,
-                              min_size=min_size)
+        self.make_genus_curve(use_beam=use_beam, min_size=min_size)
 
         if verbose:
             import matplotlib.pyplot as p
