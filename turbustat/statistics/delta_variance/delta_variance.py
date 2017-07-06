@@ -78,7 +78,7 @@ class DeltaVariance(BaseStatisticMixIn):
             if not hasattr(lags, "value"):
                 self.lags = lags * u.pix
             else:
-                self.lags = self.to_pixel(lags)
+                self.lags = self._to_pixel(lags)
 
         self.convolved_arrays = []
         self.convolved_weights = []
