@@ -34,6 +34,8 @@ class DeltaVariance(BaseStatisticMixIn):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
 
     Example
     -------

@@ -26,6 +26,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         The image header. Needed for the pixel scale.
     weights : %(dtypes)s
         Weights to be applied to the image.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
