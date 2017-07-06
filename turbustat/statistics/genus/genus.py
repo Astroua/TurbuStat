@@ -41,8 +41,11 @@ class Genus(BaseStatisticMixIn):
         `max_value`.
     numpts : int, optional
         Number of thresholds to calculate statistic at.
-    smoothing_radii : list, optional
-        Kernel radii to smooth data to.
+    smoothing_radii : np.ndarray or `astropy.units.Quantity`, optional
+        Kernel radii to smooth data to. If units are not attached, the radii
+        are assumed to be in pixels. If no radii are given, 5 smoothing radii
+        will be used ranging from 1 pixel to one-tenth the smallest dimension
+        size.
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
@@ -123,15 +126,12 @@ class Genus(BaseStatisticMixIn):
 
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
-        if smoothing_radii is not None:
-            try:
-                self._smoothing_radii = np.asarray(smoothing_radii)
-            except Exception:
-                raise TypeError("smoothing_radii must be convertible to a "
-                                "numpy array.")
-        else:
+        if smoothing_radii is None:
             self._smoothing_radii = \
                 np.linspace(1.0, 0.1 * min(self.data.shape), 5)
+        else:
+            if isinstance(smoothing_radii, u.Quantity):
+                self._smoothing_radii = self._to_pixel(smoothing_radii).value
 
     @property
     def thresholds(self):
