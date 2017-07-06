@@ -188,7 +188,7 @@ class Genus(BaseStatisticMixIn):
 
     #     return self
 
-    def make_genus_curve(self, use_beam=False, beam_area=None, min_size=4,
+    def make_genus_curve(self, use_beam=False, min_size=4,
                          connectivity=1):
         '''
         Create the genus curve from the smoothed_images at the specified\
@@ -199,8 +199,6 @@ class Genus(BaseStatisticMixIn):
         use_beam : bool, optional
             When enabled, will use the given `beam_fwhm` or try to load it from
             the header. When disabled, the minimum size is set by `min_size`.
-        beam_area : `~astropy.units.Quantity`, optional
-            The angular area of the beam size. Requires a header to be given.
         min_size : int or `~astropy.units.Quantity`, optional
             Directly specify the number of pixels to be used as the minimum
             area a region must have to be counted.
@@ -209,26 +207,10 @@ class Genus(BaseStatisticMixIn):
         '''
 
         if use_beam:
-            if self.header is None:
-                raise TypeError("A header must be provided with the data to "
-                                "use the beam area.")
-
-            if beam_area is None:
-                major, minor = find_beam_properties(self.header)[:2]
-                major = self._to_pixel(major)
-                minor = self._to_pixel(minor)
-                pix_area = np.pi * major * minor
-            else:
-                if not beam_area.unit.is_equivalent(u.sr):
-                    raise u.UnitsError("beam_area must be in angular units "
-                                       "equivalent to solid angle. The given "
-                                       "units are {}".format(beam_area.unit))
-
-                # Can't use angular_equiv to do deg**2 to u.pix**2, so do sqrt
-                pix_area = \
-                    (np.sqrt(beam_area)
-                     .to(u.pix, equivalencies=self.angular_equiv)) ** 2
-
+            major, minor = find_beam_properties(self.header)[:2]
+            major = self._to_pixel(major)
+            minor = self._to_pixel(minor)
+            pix_area = np.pi * major * minor
             min_size = int(np.floor(pix_area.value))
         else:
             if isinstance(min_size, u.Quantity):
