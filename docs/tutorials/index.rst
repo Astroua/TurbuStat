@@ -3,6 +3,13 @@
 TurbuStat Tutorials
 *******************
 
+.. toctree::
+    :maxdepth: 2
+
+    accepted_input_formats
+    preparing_simulated_data
+    preprocessing_data
+
 Statistics
 ==========
 
@@ -17,6 +24,8 @@ Statistics
     statistics/pca_example
     statistics/pdf_example
     statistics/pspec_example
+
+    statistics/vca_example
 
 Distance Metrics
 ================
