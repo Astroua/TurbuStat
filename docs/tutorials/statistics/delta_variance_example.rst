@@ -101,7 +101,7 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
     Kurtosis:                       2.438   Cond. No.                         11.5
     ==============================================================================
 
-.. image:: images/delvar_design4.png
+.. image:: images/delvar_design4_wlimits.png
 
 `xlow`, `xhigh`, and `xunit` can also be passed any angular unit, and since a distance was given, physical units can also be passed.
 
