@@ -83,8 +83,6 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : float, optional
             High frequency cut off in frequencies used in the fitting.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
@@ -132,8 +130,6 @@ class PSpec_Distance(object):
         Weights to apply to data2
     fiducial_model : PowerSpectrum
         Computed PowerSpectrum object. use to avoid recomputing.
-    ang_units : bool, optional
-        Convert the frequencies to angular units using the header.
     low_cut : float or np.ndarray, optional
         The lower frequency fitting limit. An array with 2 elements can be
         passed to give separate lower limits for the datasets.
@@ -187,10 +183,8 @@ class PSpec_Distance(object):
             Object or region name for data1
         label2 : str, optional
             Object or region name for data2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
