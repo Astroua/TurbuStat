@@ -30,7 +30,8 @@ def test_PCA_method():
     tester.run(mean_sub=True, n_eigs=50,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='odr', brunt_beamcorrect=False)
+               fit_method='odr', brunt_beamcorrect=False,
+               spectral_output_unit=u.m / u.s)
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
@@ -54,7 +55,8 @@ def test_PCA_method_w_bayes():
     tester.run(mean_sub=True, n_eigs=50,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='bayes', brunt_beamcorrect=False)
+               fit_method='bayes', brunt_beamcorrect=False,
+               spectral_output_unit=u.m / u.s)
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
