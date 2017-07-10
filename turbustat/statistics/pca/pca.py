@@ -572,9 +572,8 @@ class PCA(BaseStatisticMixIn):
 
         # Sound speed in m/s
         c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
-        # Convert to pixel units, if spectral_width not in physical units
-        c_s = c_s.to(self.spectral_width.unit,
-                     equivalencies=self.spectral_equiv)
+        # Convert to the same spectral unit
+        c_s = self._to_spectral(c_s, self.spectral_width.unit)
 
         if use_gamma:
             index = self.gamma
