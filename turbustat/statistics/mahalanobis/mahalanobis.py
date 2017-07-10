@@ -7,7 +7,14 @@ from ..mantel import mantel_test
 
 
 class Mahalanobis(object):
-    """docstring for Mahalanobis"""
+    """
+    Calculate a distance matrix using the Mahalanobis distance.
+
+    .. warning::
+        Testing for this method has not been implemented. The output cannot be
+        trusted to be correct.
+
+    """
     def __init__(self, cube):
         super(Mahalanobis, self).__init__()
         self.cube = cube
@@ -61,7 +68,14 @@ class Mahalanobis(object):
 
 class Mahalanobis_Distance(object):
 
-    """docstring for Mahalanobis_Distance"""
+    """
+    Compare distance matrices based on the Mahalanobis distance.
+
+    .. warning::
+        Testing for this method has not been implemented. The output cannot be
+        trusted to be correct.
+
+    """
 
     def __init__(self, cube1, cube2):
         super(Mahalanobis_Distance, self).__init__()
