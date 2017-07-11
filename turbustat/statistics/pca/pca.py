@@ -51,6 +51,11 @@ class PCA(BaseStatisticMixIn):
 
         _enforce_velocity_axis(self)
 
+        # We need to check for completely empty channels. These cause
+        # issues for the decomposition of the covariance matrix (eigenvectors
+        # will have significant imaginary components).
+        self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
+
         self.spectral_shape = self.data.shape[0]
 
         if n_eigs is not None:
@@ -168,6 +173,16 @@ class PCA(BaseStatisticMixIn):
         '''
         return self._eigvecs
 
+    def _valid_eigenvectors(self):
+        '''
+        Find the indices where the eigenvalues are above the machine precision
+        limit of self.data's dtype. This stops us from running into
+        eigenvectors with significant imaginary components (which we expect to
+        get for empty channels).
+        '''
+
+        return np.where(self.eigvals >= np.finfo(self.data.dtype).eps)[0]
+
     def eigimages(self, n_eigs=None):
         '''
         Create eigenimages up to the n_eigs.
@@ -191,7 +206,10 @@ class PCA(BaseStatisticMixIn):
         if n_eigs > 0:
             iterat = xrange(n_eigs)
         elif n_eigs < 0:
-            iterat = xrange(n_eigs, 0, 1)
+            # We're looking for the noisy components whenever n_eigs < 0
+            # Find where we have valid eigenvalues, and use the last
+            # n_eigs of those.
+            iterat = self._valid_eigenvectors()[n_eigs:]
 
         for ct, idx in enumerate(iterat):
             eigimg = np.zeros(self.data.shape[1:], dtype=float)
@@ -280,7 +298,15 @@ class PCA(BaseStatisticMixIn):
     def noise_ACF(self, n_eigs=-10):
         '''
         Create the noise autocorrelation function based off of the eigenvalues
-        beyond `PCA.n_eigs`.
+        beyond `PCA.n_eigs`. By default the final 10 eigenvectors **whose
+        eigenvalues are above the machine precision limit of the data cube's
+        dtype** are used.
+
+        Parameters
+        ----------
+        n_eigs : int, optional
+            The number of eigenvalues to use for estimating the noise ACF.
+            The default is to use the last 10 eigenvectors.
         '''
 
         if n_eigs is None:
