@@ -320,7 +320,8 @@ class PCA(BaseStatisticMixIn):
 
     def find_spatial_widths(self, method='contour',
                             brunt_beamcorrect=True, beam_fwhm=None,
-                            output_unit=u.pix, distance=None):
+                            output_unit=u.pix, distance=None,
+                            diagnosticplots=False):
         '''
         Derive the spatial widths using the autocorrelation of the
         eigenimages.
@@ -348,6 +349,9 @@ class PCA(BaseStatisticMixIn):
         distance : `~astropy.units.Quantity`, optional
             Distance to object in physical units. The output spatial widths
             will be converted to the units given here.
+        diagnosticplots : bool, optional
+            Plot the first 9 autocorrelation images with the contour fits.
+            *Only implemented for* `method='contour'`.
 
         '''
         # Try reading beam width from the header is it is not given.
@@ -362,7 +366,8 @@ class PCA(BaseStatisticMixIn):
             WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method,
                             brunt_beamcorrect=brunt_beamcorrect,
                             beam_fwhm=beam_fwhm,
-                            spatial_cdelt=self.header['CDELT2'] * u.deg)
+                            spatial_cdelt=self.header['CDELT2'] * u.deg,
+                            diagnosticplots=diagnosticplots)
 
         self._spatial_width = self._spatial_width * u.pix
         self._spatial_width_error = self._spatial_width_error * u.pix
