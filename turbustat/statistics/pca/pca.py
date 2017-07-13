@@ -227,7 +227,11 @@ class PCA(BaseStatisticMixIn):
                 eigimgs = eigimg
             else:
                 eigimgs = np.dstack((eigimgs, eigimg))
-        return eigimgs.swapaxes(0, 2)
+
+        if eigimgs.ndim == 3:
+            return eigimgs.swapaxes(0, 2)
+        else:
+            return eigimgs
 
     def autocorr_images(self, n_eigs=None):
         '''
@@ -263,7 +267,10 @@ class PCA(BaseStatisticMixIn):
             else:
                 acors = np.dstack((acors, acor.real))
 
-        return acors.swapaxes(0, 2)
+        if acors.ndim == 3:
+            return acors.swapaxes(0, 2)
+        else:
+            return acors
 
     def autocorr_spec(self, n_eigs=None):
         '''
