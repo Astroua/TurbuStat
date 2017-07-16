@@ -140,8 +140,30 @@ Many of the techniques in TurbuStat are derived from two-dimensional power spect
 
 Finally, the frequency units of the final plot (`xunit`) and the units of `low_cut` and `high_cut` can be given in angular units, as well as physical units when a distance is given. For example:
 
-    >>> mvc = MVC(centroid, moment0, lwidth, distance=500 * u.pc)  # doctest: +SKIP
+    >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
     >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.952
+    Model:                            OLS   Adj. R-squared:                  0.948
+    Method:                 Least Squares   F-statistic:                     255.9
+    Date:                Sun, 16 Jul 2017   Prob (F-statistic):           6.22e-10
+    Time:                        14:18:45   Log-Likelihood:                 10.465
+    No. Observations:                  15   AIC:                            -16.93
+    Df Residuals:                      13   BIC:                            -15.51
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const         16.7121      0.220     75.957      0.000      16.237      17.187
+    x1            -2.7357      0.171    -15.997      0.000      -3.105      -2.366
+    ==============================================================================
+    Omnibus:                        0.814   Durbin-Watson:                   2.077
+    Prob(Omnibus):                  0.666   Jarque-Bera (JB):                0.614
+    Skew:                          -0.445   Prob(JB):                        0.736
+    Kurtosis:                       2.564   Cond. No.                         13.5
+    ==============================================================================
 
 .. image:: images/mvc_design4_physunits.png
 

@@ -26,7 +26,7 @@ And we load in the data:
 
 The power spectrum is computed using:
 
-    >>> pspec = PowerSpectrum(moment0, distance=500 * u.pc)  # doctest: +SKIP
+    >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
     >>> pspec.run(verbose=True, xunit=u.pix**-1)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================

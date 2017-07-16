@@ -41,7 +41,7 @@ Then, we load in the data and the associated error array:
 
 Next, we initialize the `~turbustat.statistics.DeltaVariance` class:
 
-    >>> delvar = DeltaVariance(moment0, weights=moment0_err)  # doctest: +SKIP
+    >>> delvar = DeltaVariance(moment0, weights=moment0_err, distance=250 * u.pc)  # doctest: +SKIP
 
 The weight array is optional, but is recommended. Note that this is not the exact form of the weight array used by :ref:`Ossenkopf et al. 2008b <_ref-ossenkopf2008b>`; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
 
@@ -103,8 +103,33 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
 
 .. image:: images/delvar_design4_wlimits.png
 
-`xlow`, `xhigh`, and `xunit` can also be passed any angular unit, and since a distance was given, physical units can also be passed.
+`xlow`, `xhigh`, and `xunit` can also be passed any angular unit, and since a distance was given, physical units can also be passed. For example, using the previous example:
 
+    >>> delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=30 * u.pix)  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.995
+    Model:                            WLS   Adj. R-squared:                  0.995
+    Method:                 Least Squares   F-statistic:                     2726.
+    Date:                Tue, 04 Jul 2017   Prob (F-statistic):           1.91e-17
+    Time:                        12:47:27   Log-Likelihood:                 40.177
+    No. Observations:                  16   AIC:                            -76.35
+    Df Residuals:                      14   BIC:                            -74.81
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          1.8838      0.015    121.613      0.000       1.851       1.917
+    x1             1.0584      0.020     52.211      0.000       1.015       1.102
+    ==============================================================================
+    Omnibus:                        0.637   Durbin-Watson:                   0.560
+    Prob(Omnibus):                  0.727   Jarque-Bera (JB):                0.609
+    Skew:                          -0.386   Prob(JB):                        0.738
+    Kurtosis:                       2.438   Cond. No.                         11.5
+    ==============================================================================
+
+.. image:: images/delvar_design4_physunits.png
 Since the Delta-variance is based on a series of convolutions, there is a choice for how the boundaries should be treated. This is set by the `boundary` keyword in `~turbustat.statistics.DeltaVariance.run`. By default, `boundary='wrap'` as is appropriate for simulated data in a periodic box. If the data is *not* periodic in the spatial dimensions, `boundary='fill'` should be used. This mode pads the edges of the data based on the size of the convolution kernel used.
 
 
