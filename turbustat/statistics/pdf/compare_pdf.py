@@ -330,6 +330,27 @@ class PDF(BaseStatisticMixIn):
 
         corner.corner(self._mcmc_chain.flatchain, **kwargs)
 
+    def trace_plot(self, **kwargs):
+        '''
+        Create a trace plot from the MCMC.
+
+        Parameters
+        ----------
+        kwargs : Passed to `~matplotlib.pyplot.plot`.
+        '''
+
+        if not hasattr(self, "_mcmc_chain"):
+            raise Exception("Must run MCMC fitting first.")
+
+        npars = self._mcmc_chain.flatchain.shape[1]
+
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(npars, 1, sharex=True)
+        for i, ax in enumerate(axes.ravel()):
+            ax.plot(self._mcmc_chain.flatchain[:, i], **kwargs)
+            ax.set_ylabel("par{}".format(i + 1))
+
     def run(self, verbose=False, save_name=None, bins=None, do_fit=True,
             model=lognorm, **kwargs):
         '''
