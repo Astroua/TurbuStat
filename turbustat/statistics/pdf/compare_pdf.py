@@ -176,7 +176,8 @@ class PDF(BaseStatisticMixIn):
         return np.percentile(self.data, percentiles)
 
     def fit_pdf(self, model=lognorm, verbose=False,
-                fit_type='mle', **kwargs):
+                fit_type='mle', floc=True, loc=0.0, fscale=False, scale=1.0,
+                **kwargs):
         '''
         Fit a model to the PDF. Use statsmodel's generalized likelihood
         setup to get uncertainty estimates and such.
@@ -194,11 +195,21 @@ class PDF(BaseStatisticMixIn):
              ('mle') is used. An MCMC approach ('mcmc') may also be used. This
              requires the optional `emcee` to be installed. kwargs can be
              passed to adjust various properties of the MCMC chain.
+        floc : bool, optional
+            Fix the `loc` parameter when fitting.
+        loc : float, optional
+            Value to set `loc` to when fixed.
+        fscale : bool, optional
+            Fix the `scale` parameter when fitting.
+        scale : float, optional
+            Value to set `scale` to when fixed.
         kwargs : Passed to `~emcee.EnsembleSampler`.
         '''
 
         if fit_type not in ['mle', 'mcmc']:
             raise ValueError("fit_type must be 'mle' or 'mcmc'.")
+
+        self._fit_fixes = {"loc": [floc, loc], "scale": [fscale, scale]}
 
         class Likelihood(GenericLikelihoodModel):
 
@@ -208,17 +219,33 @@ class PDF(BaseStatisticMixIn):
             nparams = 1 if model.shapes is None else \
                 len(model.shapes.split(",")) + 1
 
+            _loc = loc
+            _scale = scale
+
             def loglike(self, params):
                 if np.isnan(params).any():
                     return - np.inf
 
+                if not floc and not fscale:
+                    loc = params[-2]
+                    scale = params[-1]
+                    cut = -2
+                elif not floc:
+                    loc = params[-1]
+                    scale = self._scale
+                    cut = -1
+                elif not fscale:
+                    scale = params[-1]
+                    loc = self._loc
+                    cut = -1
+
                 loglikes = \
-                    model.logpdf(self.endog, *params[:-1],
-                                 scale=params[-1],
-                                 loc=0)
+                    model.logpdf(self.endog, *params[:cut],
+                                 scale=scale,
+                                 loc=loc)
 
                 if not np.isfinite(loglikes).all():
-                    return - np.inf
+                    return -np.inf
 
                 else:
                     return loglikes.sum()
@@ -246,8 +273,20 @@ class PDF(BaseStatisticMixIn):
             return sampler
 
         # Do an initial fit with the scipy model
-        init_params = model.fit(self.data, floc=0.0)
-        init_params = np.append(init_params[:-2], init_params[-1])
+        if floc and fscale:
+            init_params = model.fit(self.data)
+        elif floc:
+            init_params = model.fit(self.data, floc=loc)
+            # Remove loc from the params
+            init_params = np.append(init_params[:-2], init_params[-1])
+        elif fscale:
+            init_params = model.fit(self.data, fscale=scale)
+            # Remove scale from the params
+            init_params = np.append(init_params[:-2], init_params[-2])
+        else:
+            init_params = model.fit(self.data)
+
+        init_params = np.array(init_params)
 
         self._model = Likelihood(self.data)
 
@@ -397,10 +436,29 @@ class PDF(BaseStatisticMixIn):
             if do_fit:
                 # Plot the fitted model.
                 vals = np.linspace(self.bins[0], self.bins[-1], 1000)
+
+                # Check which of the parameters were kept fixed
+                if self._fit_fixes['loc'][0] and self._fit_fixes['scale'][0]:
+                    loc = self._fit_fixes['loc'][1]
+                    scale = self._fit_fixes['scale'][1]
+                    params = self.model_params
+                elif self._fit_fixes['loc'][0]:
+                    loc = self._fit_fixes['loc'][1]
+                    scale = self.model_params[-1]
+                    params = self.model_params[:-1]
+                elif self._fit_fixes['scale'][0]:
+                    loc = self.model_params[-1]
+                    scale = self._fit_fixes['scale'][1]
+                    params = self.model_params[:-1]
+                else:
+                    loc = self.model_params[-2]
+                    scale = self.model_params[-1]
+                    params = self.model_params[:-2]
+
                 p.semilogy(vals,
-                           model.pdf(vals, *self.model_params[:-1],
-                                     scale=self.model_params[-1],
-                                     loc=0), 'r--', label='Fit')
+                           model.pdf(vals, *params,
+                                     scale=scale,
+                                     loc=loc), 'r--', label='Fit')
                 p.legend(loc='best')
             # else:
             #     p.loglog(self.bins, self.pdf, 'b-')
@@ -416,15 +474,15 @@ class PDF(BaseStatisticMixIn):
                 ax2.plot(self.bins, self.ecdf, 'b-')
                 if do_fit:
                     ax2.plot(vals,
-                             model.cdf(vals, *self.model_params[:-1],
-                                       scale=self.model_params[-1],
-                                       loc=0), 'r--')
+                             model.cdf(vals, *params,
+                                       scale=scale,
+                                       loc=loc), 'r--')
             else:
                 ax2.semilogx(self.bins, self.ecdf, 'b-')
                 if do_fit:
                     ax2.semilogx(vals,
-                                 model.cdf(vals, *self.model_params[:-1],
-                                           scale=self.model_params[-1],
+                                 model.cdf(vals, *params,
+                                           scale=scale,
                                            loc=0), 'r--')
             p.grid(True)
             p.xlabel(xlabel)
