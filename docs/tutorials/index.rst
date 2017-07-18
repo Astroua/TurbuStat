@@ -25,6 +25,7 @@ Statistics
     statistics/pca_example
     statistics/pdf_example
     statistics/pspec_example
+    statistics/scf_example
 
     statistics/vca_example
 

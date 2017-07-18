@@ -14,9 +14,9 @@ The Spectral Correlation Function was introduced by :ref:`Rosolowsky et al. 1999
     |I(\mathbf{x},v)-I(\mathbf{x}+\boldsymbol{\ell},v)|^2}{\sum_v
     |I(\mathbf{x},v)|^2+\sum_v |I(\mathbf{x}+\boldsymbol{\ell},v)|^2}}\right\rangle_{\mathbf{x}}.
 
-:math:`S(\boldsymbol{\ell})` is the total correlation between the cube, and the cube shifted by the *lag*, the vector :math:`\boldsymbol{\ell}=(\Deltax, \Deltay)`. By repeating this process for a series of :math:`\Deltax, \Deltay)` in the spatial dimensions, a 2D correlation surface is created. This surface describes the spatial scales on which the spectral features begin to change.
+:math:`S(\boldsymbol{\ell})` is the total correlation between the cube, and the cube shifted by the *lag*, the vector :math:`\boldsymbol{\ell}=(\Delta x, \Delta y)`. By repeating this process for a series of :math:`\Delta x, \Delta y)` in the spatial dimensions, a 2D correlation surface is created. This surface describes the spatial scales on which the spectral features begin to change.
 
-The correlation surface can be further simplified by computing an azimuthal average, yielding a 1D spectrum of the correlation vs. length of the lag vector. This form, as is presented in XXX and XXX, yields a power-law relation, whose slope can be used to quantify differences between different spectral cubes. An example of this comparison is the study by :ref:`Gaches et al. 2015 <ref-gaches2015>`, where the effect of chemical species analyzed is traced through changes in the SCF slope.
+The correlation surface can be further simplified by computing an azimuthal average, yielding a 1D spectrum of the correlation vs. length of the lag vector. This form, as is presented in :ref:`Rosolowsky et al. 1999 <ref-rosolowsky1999>` and :ref:`Padoan et al. 2001 <ref-padoan2001>`, yields a power-law relation, whose slope can be used to quantify differences between different spectral cubes. An example of this comparison is the study by :ref:`Gaches et al. 2015 <ref-gaches2015>`, where the effect of chemical species analyzed is traced through changes in the SCF slope.
 
 Using
 -----
@@ -27,16 +27,17 @@ Importing a few common packages:
 
     >>> from turbustat.statistics import SCF
     >>> from astropy.io import fits
+    >>> import astropy.units as u
 
 And we load in the data:
 
-    >>> cube = fits.open("Design4_21_0_0_flatrho_0021_13co.fits")[0]  # doctest: +SKIP
+    >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
 
 The cube and lags to use are given to initialize the `~turbustat.statistics.SCF`  class:
 
     >>> scf = SCF(cube, size=11)  # doctest: +SKIP
 
-`size` describes the total size of one dimension of the correlation surface. Thus `size=11` will compute up to a lag size of 5 pixels in each direction. Alternatively, a set of custom lag values can be passed using `roll_lags`. No restriction is placed on the values of these lags, however the azimuthally average spectrum is only usable if the given lags are symmetric with positive and negative values.
+`size` describes the total size of one dimension of the correlation surface and will compute the SCF up to a lag of 5 pixels in each direction. Alternatively, a set of custom lag values can be passed using `roll_lags` (see the example with physical units below). No restriction is placed on the values of these lags, however the azimuthally average spectrum is only usable if the given lags are symmetric with positive and negative values. Also note that lags do not have to be integer values! `~turbustat.statistics.SCF` handles non-integer shifts by shifting the data in the Fourier plane.
 
 To compute the SCF, we run:
 
@@ -44,79 +45,164 @@ To compute the SCF, we run:
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.991
-    Model:                            WLS   Adj. R-squared:                  0.989
-    Method:                 Least Squares   F-statistic:                     658.8
-    Date:                Thu, 27 Oct 2016   Prob (F-statistic):           2.31e-07
-    Time:                        22:48:36   Log-Likelihood:                 28.480
-    No. Observations:                   8   AIC:                            -52.96
-    Df Residuals:                       6   BIC:                            -52.80
+    Model:                            WLS   Adj. R-squared:                  0.990
+    Method:                 Least Squares   F-statistic:                     661.0
+    Date:                Tue, 18 Jul 2017   Prob (F-statistic):           2.28e-07
+    Time:                        10:07:56   Log-Likelihood:                 26.958
+    No. Observations:                   8   AIC:                            -49.92
+    Df Residuals:                       6   BIC:                            -49.76
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
-                     coef    std err          t      P>|t|      [95.0% Conf. Int.]
+                     coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const         -0.1258      0.005    -23.019      0.000        -0.139    -0.112
-    x1            -0.2355      0.009    -25.667      0.000        -0.258    -0.213
+    const         -0.0450      0.001    -33.254      0.000      -0.048      -0.042
+    x1            -0.1624      0.006    -25.710      0.000      -0.178      -0.147
     ==============================================================================
-    Omnibus:                        1.126   Durbin-Watson:                   0.998
-    Prob(Omnibus):                  0.570   Jarque-Bera (JB):                0.708
-    Skew:                           0.371   Prob(JB):                        0.702
-    Kurtosis:                       1.745   Cond. No.                         4.36
+    Omnibus:                        1.340   Durbin-Watson:                   0.445
+    Prob(Omnibus):                  0.512   Jarque-Bera (JB):                0.696
+    Skew:                          -0.248   Prob(JB):                        0.706
+    Kurtosis:                       1.643   Cond. No.                         4.70
     ==============================================================================
 
 .. image:: images/design4_scf.png
 
 The summary plot shows the correlation surface, a histogram of correlation values, and the 1D spectrum from the azimuthal average, plotted with the power-law fit. A weighted least-squares fit is used to find the slope of the SCF spectrum, where the inverse squared standard deviation from the azimuthal average are used as the weights.
 
-Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh`. These cutoffs correspond to log pixel scales.
+Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh` to limit which scales are used in the fit.
 
-    >>> scf.run(verbose=True, xlow=1, xhigh=np.log10(5))  # doctest: +SKIP
+    >>> scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.992
-    Model:                            WLS   Adj. R-squared:                  0.989
-    Method:                 Least Squares   F-statistic:                     263.7
-    Date:                Thu, 27 Oct 2016   Prob (F-statistic):            0.00377
-    Time:                        23:09:26   Log-Likelihood:                 17.473
-    No. Observations:                   4   AIC:                            -30.95
-    Df Residuals:                       2   BIC:                            -32.17
+    Dep. Variable:                      y   R-squared:                       0.983
+    Model:                            WLS   Adj. R-squared:                  0.975
+    Method:                 Least Squares   F-statistic:                     118.9
+    Date:                Tue, 18 Jul 2017   Prob (F-statistic):            0.00831
+    Time:                        10:10:42   Log-Likelihood:                 16.864
+    No. Observations:                   4   AIC:                            -29.73
+    Df Residuals:                       2   BIC:                            -30.95
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
-                     coef    std err          t      P>|t|      [95.0% Conf. Int.]
+                     coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const         -0.0993      0.009    -11.261      0.008        -0.137    -0.061
-    x1            -0.2746      0.017    -16.238      0.004        -0.347    -0.202
+    const         -0.0103      0.010     -1.036      0.409      -0.053       0.032
+    x1            -0.2027      0.019    -10.902      0.008      -0.283      -0.123
     ==============================================================================
-    Omnibus:                          nan   Durbin-Watson:                   2.120
-    Prob(Omnibus):                    nan   Jarque-Bera (JB):                0.466
-    Skew:                           0.120   Prob(JB):                        0.792
-    Kurtosis:                       1.345   Cond. No.                         10.3
+    Omnibus:                          nan   Durbin-Watson:                   2.000
+    Prob(Omnibus):                    nan   Jarque-Bera (JB):                0.637
+    Skew:                          -0.020   Prob(JB):                        0.727
+    Kurtosis:                       1.045   Cond. No.                         10.0
     ==============================================================================
 
-The slope has steepened a bit, but the simulated cube gives a near power-law relation already. See Figure 8 in :ref:`Padoan et al. 2001 <ref-padoan2001>` shows deviations from power-law behaviour.
+.. image:: images/design4_scf_fitlimits.png
 
-Computing the SCF is one of the more computationally expensive statistics in TurbuStat. This is due to shifting the entire cube along the spatial dimensions for each value in the correlation surface. The results of the SCF can be saved to avoid recomputing the statistic. As for the dendrogram statistics, the class is pickled:
+Here the fit limits were given in pixel units, but angular units and physical units (if a distance is given) can also be passed. For these data, there is some deviation from a power-law at small lags over the range of lags used and so limiting the fitting range has not significantly changed the fit. See Figure 8 in :ref:`Padoan et al. 2001 <ref-padoan2001>` for an example of deviations from power-law behaviour in the SCF spectrum.
+
+The slope of the model can be accessed with `scf.slope` and its standard error with `scf.slope_err`. The slope and intercept values are in `scf.fit.params`. `scf.fitted_model` can be used to evaluate the model at any given lag value. For example:
+
+    >>> scf.fitted_model(1 * u.pix)
+    0.97659777310171636
+    >>> scf.fitted_model(u.Quantity([1, 10]) * u.pix)
+    array([ 0.97659777,  0.61242384])
+    >>> scf.fitted_model(u.Quantity([50, 100]) * u.arcsec)
+    array([ 0.44197356,  0.3840506 ])
+
+All values passed must have an attached unit. Physical units can be given when a distance has been given (see below).
+
+In some cases, it may be preferable to calculate the SCF on specific physical scales. When `~turbustat.statistics.SCF` is given a distance,
+`roll_lags`, `xlow`, `xhigh`, and `xunit` can be given in physical units. Angular units can always be given, as well, since `~turbustat.statistics.SCF` requires a FITS header. In this example, we will use a set of custom lags in physical units:
+
+    >>> distance = 250 * u.pc  # Assume a distance
+    >>> phys_conv = (np.abs(cube.header['CDELT2']) * u.deg).to(u.rad).value * distance  # doctest: +SKIP
+    >>> custom_lags = np.arange(-4.5, 5, 1.5) * phys_conv  # doctest: +SKIP
+    >>> print(custom_lags)  # doctest: +SKIP
+    [-0.10296379 -0.06864253 -0.03432126  0.          0.03432126  0.06864253 0.10296379] pc
+
+The lags here are equally spaced and centered around zero. `phys_conv` converts the pixel values into physical units. When calling `~turbustat.statistics.SCF`, the distance must now be given:
+
+    >>> scf_physroll = SCF(cube, roll_lags=custom_lags, distance=distance)  # doctest: +SKIP
+    >>> scf_physroll.run(verbose=True, xunit=u.pc)  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.892
+    Model:                            WLS   Adj. R-squared:                  0.856
+    Method:                 Least Squares   F-statistic:                     24.77
+    Date:                Tue, 18 Jul 2017   Prob (F-statistic):             0.0156
+    Time:                        10:57:18   Log-Likelihood:                 14.907
+    No. Observations:                   5   AIC:                            -25.81
+    Df Residuals:                       3   BIC:                            -26.59
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const         -0.2522      0.038     -6.725      0.007      -0.372      -0.133
+    x1            -0.1292      0.026     -4.977      0.016      -0.212      -0.047
+    ==============================================================================
+    Omnibus:                          nan   Durbin-Watson:                   1.495
+    Prob(Omnibus):                    nan   Jarque-Bera (JB):                0.757
+    Skew:                           0.914   Prob(JB):                        0.685
+    Kurtosis:                       2.464   Cond. No.                         19.3
+    ==============================================================================
+
+.. image:: images/design4_scf_physroll.png
+
+This example takes a bit longer to run than the others because, whenever a non-integer lag is used, the cube is shifted in Fourier space.
+
+Throughout all of these examples, we have assumed that the spatial boundaries can be wrapped. This is appropriate for the example data since it is generated from a periodic-box simulation and is the default setting (`boundary='continuous'`). Typically this will not be the case for observational data. To avoid wrapping the edges of the data, `boundary='cut'` can be set to avoid using the portion of the data that has been spatially wrapped:
+
+    >>> scf = SCF(cube, size=11)  # doctest: +SKIP
+    >>> scf.run(verbose=True, boundary='cut')  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.993
+    Model:                            WLS   Adj. R-squared:                  0.992
+    Method:                 Least Squares   F-statistic:                     830.7
+    Date:                Tue, 18 Jul 2017   Prob (F-statistic):           1.16e-07
+    Time:                        11:13:18   Log-Likelihood:                 24.569
+    No. Observations:                   8   AIC:                            -45.14
+    Df Residuals:                       6   BIC:                            -44.98
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const         -0.0834      0.003    -31.106      0.000      -0.090      -0.077
+    x1            -0.2425      0.008    -28.821      0.000      -0.263      -0.222
+    ==============================================================================
+    Omnibus:                        0.723   Durbin-Watson:                   0.501
+    Prob(Omnibus):                  0.697   Jarque-Bera (JB):                0.556
+    Skew:                          -0.236   Prob(JB):                        0.757
+    Kurtosis:                       1.797   Cond. No.                         3.38
+    ==============================================================================
+
+.. image:: images/design4_scf_boundcut.png
+
+This results in a steeper SCF slope as the edges of the rolled cubes are no longer used.
+
+Computing the SCF can be computationally expensive for moderately-size data cubes. This is due to the need for shifting the entire cube along the spatial dimensions at each lag value. To avoid recomputing the SCF surface, the results of the SCF can be saved as a pickled object:
 
     >>> scf.save_results(output_name="Design4_SCF", keep_data=False)  # doctest: +SKIP
 
-`keep_data` will remove the data cube before saving. Having saved the results, they can be reloaded using:
+Disabling `keep_data` will remove the data cube before saving to save storage space.
+Having saved the results, they can be reloaded using:
 
     >>> scf = SCF.load_results("Design4_SCF.pkl")  # doctest: +SKIP
 
-Note that using `keep_data=False` means the loaded version cannot be used to recalculate the SCF.
+Note that if `keep_data=False` was used when saving the file, the loaded version cannot be used to recalculate the SCF.
 
 References
 ----------
 
 .. _ref-rosolowsky1999:
 
-`Rosolowsky et al. 1999 <XXX>`_
+`Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_
 
 .. _ref-padoan2001:
 
-`Padoan et al. 2001 <XXX>`_
+`Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_
 
 .. _ref-gaches2015:
 
-`Gaches et al. 2015 <XXX>`_
+`Gaches et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...799..235G/abstract>`_
