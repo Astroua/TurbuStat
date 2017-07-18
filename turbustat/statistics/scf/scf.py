@@ -231,7 +231,7 @@ class SCF(BaseStatisticMixIn):
 
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
-        self._lags = self._lags * roll_lag_diff * self.roll_lags.unit
+        self._lags = self._lags * roll_lag_diff
 
     def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
         '''
@@ -265,7 +265,7 @@ class SCF(BaseStatisticMixIn):
         if xhigh is not None:
             if not isinstance(xhigh, u.Quantity):
                 raise TypeError("xlow must be an astropy.units.Quantity.")
-            # Convert xlow into the same units as the lags
+            # Convert xhigh into the same units as the lags
             xhigh = self._spatial_unit_conversion(xhigh, self.lags.unit)
 
             upper_limit = x <= np.log10(xhigh.value)
