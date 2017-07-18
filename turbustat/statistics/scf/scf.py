@@ -470,7 +470,7 @@ class SCF(BaseStatisticMixIn):
 
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,
-                                lags.max() * 1.05, 50)
+                                lags.max() * 1.05, 50) * lags.unit
             p.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
                      label='Fit')
 
