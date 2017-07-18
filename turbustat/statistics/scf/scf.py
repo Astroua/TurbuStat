@@ -340,9 +340,10 @@ class SCF(BaseStatisticMixIn):
         # Convert into the lag units used for the fit
         xvals = self._spatial_unit_conversion(xvals, self.lags.unit).value
 
-        model_values = self.fit.params[0] + self.fit.params[1] * xvals
+        model_values = \
+            self.fit.params[0] + self.fit.params[1] * np.log10(xvals)
 
-        return model_values
+        return 10**model_values
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -468,10 +469,10 @@ class SCF(BaseStatisticMixIn):
                         self.scf_spectrum.max() * 1.25)
 
             # Overlay the fit. Use points 5% lower than the min and max.
-            xvals = np.linspace(np.log10(lags.min() * 0.95),
-                                np.log10(lags.max() * 1.05), 50)
-            p.plot(10**xvals, 10**self.fitted_model(xvals), 'r--', linewidth=2,
-                   label='Fit')
+            xvals = np.linspace(lags.min() * 0.95,
+                                lags.max() * 1.05, 50)
+            p.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
+                     label='Fit')
 
             p.legend()
 
