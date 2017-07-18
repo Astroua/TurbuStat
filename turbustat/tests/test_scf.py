@@ -10,6 +10,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 from scipy.ndimage import zoom
+import astropy.units as u
 
 from ..statistics import SCF, SCF_Distance
 from ._testing_data import \
@@ -36,7 +37,7 @@ def test_SCF_method_noncont_boundary():
 
 def test_SCF_noninteger_shift():
     # Not testing against anything, just make sure it runs w/o issue.
-    rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5])
+    rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5]) * u.pix
     tester_nonint = \
         SCF(dataset1["cube"], roll_lags=rolls)
     tester_nonint.run()

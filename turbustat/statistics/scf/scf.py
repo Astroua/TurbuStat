@@ -26,12 +26,15 @@ class SCF(BaseStatisticMixIn):
     header :  FITS header, optional
         Header for the cube.
     size : int, optional
-        Total size of the lags used in one dimension.
-    roll_lags : `~numpy.ndarray`, optional
-        Pass a custom array of lag values. These will be the pixel size of the
-        lags used in each dimension. Ideally, these should have symmetric
-        positive and negative values.
-
+        The total size of the lags used in one dimension in pixels. The maximum
+        lag size will be (size - 1) / 2 in each direction.
+    roll_lags : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
+        Pass a custom array of lag values. An odd number of lags, centered at
+        0, must be given. If no units are given, it is
+        assumed that the lags are in pixels. The lags should have
+        symmetric positive and negative values (e.g., [-1, 0, 1]).
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
 
     Example
     -------
@@ -44,25 +47,40 @@ class SCF(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, size=11, roll_lags=None):
+    def __init__(self, cube, header=None, size=11, roll_lags=None,
+                 distance=None):
         super(SCF, self).__init__()
 
         # Set data and header
         self.input_data_header(cube, header)
+
+        if distance is not None:
+            self.distance = distance
 
         if roll_lags is None:
             if size % 2 == 0:
                 Warning("Size must be odd. Reducing size to next lowest odd"
                         " number.")
                 size = size - 1
-            self.roll_lags = np.arange(size) - size / 2
+            self.roll_lags = (np.arange(size) - size / 2) * u.pix
         else:
             if roll_lags.size % 2 == 0:
                 Warning("Size of roll_lags must be odd. Reducing size to next"
                         "lowest odd number.")
                 roll_lags = roll_lags[: -1]
 
+            if isinstance(roll_lags, u.Quantity):
+                pass
+            elif isinstance(roll_lags, np.ndarray):
+                roll_lags = roll_lags * u.pix
+            else:
+                raise TypeError("roll_lags must be an astropy.units.Quantity"
+                                " array or a numpy.ndarray.")
+
             self.roll_lags = roll_lags
+
+            # Make sure that we can convert the lags
+            self._to_pixel(self.roll_lags)
 
         self.size = self.roll_lags.size
 
@@ -116,8 +134,11 @@ class SCF(BaseStatisticMixIn):
 
         self._scf_surface = np.zeros((self.size, self.size))
 
-        dx = self.roll_lags.copy()
-        dy = self.roll_lags.copy()
+        # Convert the lags into pixel units.
+        pix_lags = self._to_pixel(self.roll_lags).value
+
+        dx = pix_lags.copy()
+        dy = pix_lags.copy()
 
         for i, x_shift in enumerate(dx):
             for j, y_shift in enumerate(dy):
@@ -142,6 +163,9 @@ class SCF(BaseStatisticMixIn):
                     tmp = shift_func(tmp, y_shift, axis=2)
 
                 if boundary is "cut":
+                    # Always round up to the nearest integer.
+                    x_shift = np.ceil(x_shift).astype(int)
+                    y_shift = np.ceil(y_shift).astype(int)
                     if x_shift < 0:
                         x_slice_data = slice(None, tmp.shape[1] + x_shift)
                         x_slice_tmp = slice(-x_shift, None)
@@ -207,7 +231,7 @@ class SCF(BaseStatisticMixIn):
 
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
-        self._lags = self._lags * roll_lag_diff * u.pix
+        self._lags = self._lags * roll_lag_diff * self.roll_lags.unit
 
     def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
         '''
@@ -215,10 +239,10 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-        xlow : float, optional
-            Lower lag value limit in log-scale to consider in the fit.
-        xhigh : float, optional
-            Upper lag value limit in log-scale to consider in the fit.
+        xlow : `~astropy.units.Quantity`, optional
+            Lower lag value limit to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper lag value limit to consider in the fit.
         verbose : bool, optional
             Show fit summary when enabled.
         '''
@@ -227,13 +251,24 @@ class SCF(BaseStatisticMixIn):
         y = np.log10(self.scf_spectrum)
 
         if xlow is not None:
-            lower_limit = x >= xlow
+            if not isinstance(xlow, u.Quantity):
+                raise TypeError("xlow must be an astropy.units.Quantity.")
+
+            # Convert xlow into the same units as the lags
+            xlow = self._spatial_unit_conversion(xlow, self.lags.unit)
+
+            lower_limit = x >= np.log10(xlow.value)
         else:
             lower_limit = \
                 np.ones_like(self.scf_spectrum, dtype=bool)
 
         if xhigh is not None:
-            upper_limit = x <= xhigh
+            if not isinstance(xhigh, u.Quantity):
+                raise TypeError("xlow must be an astropy.units.Quantity.")
+            # Convert xlow into the same units as the lags
+            xhigh = self._spatial_unit_conversion(xhigh, self.lags.unit)
+
+            upper_limit = x <= np.log10(xhigh.value)
         else:
             upper_limit = \
                 np.ones_like(self.scf_spectrum, dtype=bool)
@@ -285,13 +320,12 @@ class SCF(BaseStatisticMixIn):
 
     def fitted_model(self, xvals):
         '''
-        Computes the fitted power-law in log-log space using the
-        given x values.
+        Computes the modelled power-law using the given x values.
 
         Parameters
         ----------
-        xvals : `~numpy.ndarray`
-            Values of log(lags) to compute the model at (base 10 log).
+        xvals : `~astropy.Quantity`
+            Values of lags to compute the model at.
 
         Returns
         -------
@@ -299,6 +333,12 @@ class SCF(BaseStatisticMixIn):
             Values of the model at the given values. Equivalent to log values
             of the SCF spectrum.
         '''
+
+        if not isinstance(xvals, u.Quantity):
+            raise TypeError("xvals must be an astropy.units.Quantity.")
+
+        # Convert into the lag units used for the fit
+        xvals = self._spatial_unit_conversion(xvals, self.lags.unit).value
 
         model_values = self.fit.params[0] + self.fit.params[1] * xvals
 
@@ -361,7 +401,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, logspacing=False, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            verbose=False, ang_units=False, unit=u.deg, save_name=None):
+            verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
 
@@ -374,9 +414,9 @@ class SCF(BaseStatisticMixIn):
         boundary : {"continuous", "cut"}
             Treat the boundary as continuous (wrap-around) or cut values
             beyond the edge (i.e., for most observational data).
-        xlow : float, optional
+        xlow : `~astropy.Quantity`, optional
             See `~SCF.fit_plaw`.
-        xhigh : float, optional
+        xhigh : `~astropy.Quantity`, optional
             See `~SCF.fit_plaw`.
         save_results : bool, optional
             Pickle the results.
@@ -384,9 +424,7 @@ class SCF(BaseStatisticMixIn):
             Name of the outputted pickle file.
         verbose : bool, optional
             Enables plotting.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
+        xunit : `~astropy.units.Unit`, optional
             Choose the angular unit to convert to when ang_units is enabled.
         save_name : str,optional
             Save the figure when a file name is given.
@@ -413,11 +451,7 @@ class SCF(BaseStatisticMixIn):
             p.xlabel("SCF Value")
 
             ax = p.subplot(2, 2, 4)
-            if ang_units:
-                lags = \
-                    self.lags.to(unit, equivalencies=self.angular_equiv).value
-            else:
-                lags = self.lags.value
+            lags = self._spatial_unit_conversion(self.lags, xunit).value
 
             if self._stddev_flag:
                 ax.errorbar(lags, self.scf_spectrum,
@@ -441,10 +475,7 @@ class SCF(BaseStatisticMixIn):
 
             p.legend()
 
-            if ang_units:
-                ax.set_xlabel("Lag ({})".format(unit))
-            else:
-                ax.set_xlabel("Lag (pixels)")
+            ax.set_xlabel("Lag ({})".format(xunit))
 
             p.tight_layout()
 
@@ -484,7 +515,7 @@ class SCF_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, size=21, boundary='continuous',
+    def __init__(self, cube1, cube2, size=21 * u.pix, boundary='continuous',
                  fiducial_model=None, weighted=True):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
@@ -546,7 +577,7 @@ class SCF_Distance(object):
             Object or region name for cube2
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
+        unit : `~astropy.units.Unit`, optional
             Choose the angular unit to convert to when ang_units is enabled.
         save_name : str,optional
             Save the figure when a file name is given.
