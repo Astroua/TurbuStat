@@ -11,6 +11,7 @@ import numpy as np
 import numpy.testing as npt
 from scipy.ndimage import zoom
 import astropy.units as u
+import os
 
 from ..statistics import SCF, SCF_Distance
 from ._testing_data import \
@@ -26,6 +27,17 @@ def test_SCF_method():
                                   computed_data["scf_spectrum"])
     npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
 
+    # Test the save and load
+    tester.save_results(keep_data=False)
+    tester.load_results("scf_output.pkl")
+
+    # Remove the file
+    os.remove("scf_output.pkl")
+
+    assert np.allclose(tester.scf_surface, computed_data['scf_val'])
+    npt.assert_array_almost_equal(tester.scf_spectrum,
+                                  computed_data["scf_spectrum"])
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
 
 # NOTE: Remove xfail once physical unit conversion is added to the whole
 # package
