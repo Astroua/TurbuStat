@@ -7,6 +7,7 @@ Tests for Dendrogram statistics
 
 import numpy as np
 import numpy.testing as npt
+import os
 
 from ..statistics import Dendrogram_Stats, DendroDistance
 from ._testing_data import \
@@ -21,6 +22,17 @@ def test_DendroStat():
     tester = Dendrogram_Stats(dataset1["cube"],
                               min_deltas=min_deltas)
     tester.run(periodic_bounds=False)
+
+    npt.assert_allclose(tester.numfeatures,
+                        computed_data["dendrogram_val"])
+
+    # Test loading and saving
+    tester.save_results(keep_data=False)
+
+    tester.load_results("dendrogram_stats_output.pkl")
+
+    # Remove the file
+    os.remove("dendrogram_stats_output.pkl")
 
     npt.assert_allclose(tester.numfeatures,
                         computed_data["dendrogram_val"])
