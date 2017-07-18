@@ -196,7 +196,7 @@ class SCF(BaseStatisticMixIn):
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
                 self._scf_surface[i, j] = scf_value
 
-    def compute_spectrum(self, logspacing=False, return_stddev=True,
+    def compute_spectrum(self, return_stddev=True,
                          **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
@@ -206,8 +206,6 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins. Default is True.
         kwargs : passed to `turbustat.statistics.psds.pspec`
@@ -219,13 +217,13 @@ class SCF(BaseStatisticMixIn):
 
         if return_stddev:
             self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
-                pspec(self.scf_surface, logspacing=logspacing,
+                pspec(self.scf_surface, logspacing=False,
                       return_stddev=return_stddev, return_freqs=False,
                       **kwargs)
             self._stddev_flag = True
         else:
             self._lags, self._scf_spectrum = \
-                pspec(self.scf_surface, logspacing=logspacing,
+                pspec(self.scf_surface, logspacing=False,
                       return_freqs=False, **kwargs)
             self._stddev_flag = False
 
@@ -406,7 +404,7 @@ class SCF(BaseStatisticMixIn):
 
         return self
 
-    def run(self, logspacing=False, return_stddev=True, boundary='continuous',
+    def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
             verbose=False, xunit=u.pix, save_name=None):
         '''
@@ -414,8 +412,6 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
         boundary : {"continuous", "cut"}
