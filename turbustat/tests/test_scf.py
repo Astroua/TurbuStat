@@ -27,6 +27,17 @@ def test_SCF_method():
     npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
 
 
+# NOTE: Remove xfail once physical unit conversion is added to the whole
+# package
+@pytest.mark.xfail
+def test_SCF_method_fitlimits():
+    tester = SCF(dataset1["cube"], size=11)
+    tester.run(boundary='continuous', xlow=1.5 * u.pix,
+               xhigh=4.5 * u.pix)
+
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"])
+
+
 def test_SCF_method_noncont_boundary():
     tester = SCF(dataset1["cube"], size=11)
     tester.run(boundary='cut')
@@ -41,6 +52,29 @@ def test_SCF_noninteger_shift():
     tester_nonint = \
         SCF(dataset1["cube"], roll_lags=rolls)
     tester_nonint.run()
+
+
+def test_SCF_nonpixelunit_shift():
+    # Not testing against anything, just make sure it runs w/o issue.
+    rolls = np.array([-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5]) * u.pix
+
+    # Convert the rolls to angular units
+    ang_rolls = rolls.value * np.abs(dataset1['cube'][1]["CDELT2"]) * u.deg
+
+    tester_angroll = \
+        SCF(dataset1["cube"], roll_lags=ang_rolls)
+    tester_angroll.run()
+
+    # And one passing physical distances
+    dist = 250 * u.pc
+    phys_rolls = ang_rolls.to(u.rad).value * dist
+    tester_physroll = \
+        SCF(dataset1["cube"], roll_lags=phys_rolls, distance=dist)
+    tester_physroll.run()
+
+    # The SCF surfaces should be the same.
+    assert np.allclose(tester_angroll.scf_surface,
+                       tester_physroll.scf_surface)
 
 
 def test_SCF_distance():
