@@ -257,10 +257,13 @@ class SCF(BaseStatisticMixIn):
             # Convert xlow into the same units as the lags
             xlow = self._spatial_unit_conversion(xlow, self.lags.unit)
 
+            self._xlow = xlow
+
             lower_limit = x >= np.log10(xlow.value)
         else:
             lower_limit = \
                 np.ones_like(self.scf_spectrum, dtype=bool)
+            self._xlow = np.abs(self.lags).min()
 
         if xhigh is not None:
             if not isinstance(xhigh, u.Quantity):
@@ -268,10 +271,13 @@ class SCF(BaseStatisticMixIn):
             # Convert xhigh into the same units as the lags
             xhigh = self._spatial_unit_conversion(xhigh, self.lags.unit)
 
+            self._xhigh = xhigh
+
             upper_limit = x <= np.log10(xhigh.value)
         else:
             upper_limit = \
                 np.ones_like(self.scf_spectrum, dtype=bool)
+            self._xhigh = np.abs(self.lags).max()
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
@@ -473,6 +479,11 @@ class SCF(BaseStatisticMixIn):
                                 lags.max() * 1.05, 50) * xunit
             p.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
                      label='Fit')
+            # Show the fit limits
+            xlow = self._spatial_unit_conversion(self._xlow, xunit).value
+            xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
+            p.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+            p.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
 
             p.legend()
 
