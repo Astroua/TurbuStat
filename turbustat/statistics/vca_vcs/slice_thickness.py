@@ -2,51 +2,33 @@
 
 
 import numpy as np
+from astropy import units as u
+from spectral_cube import SpectralCube
+from astropy.convolution import Gaussian1DKernel
 
 
-def change_slice_thickness(cube, slice_thickness=1.0):
-    '''
+def spectral_regrid_cube(cube, channel_width):
 
-    Degrades the velocity resolution of a data cube. This is to avoid
-    shot noise by removing velocity fluctuations at small thicknesses.
+    fwhm_factor = np.sqrt(8 * np.log(2))
+    current_resolution = np.diff(cube.spectral_axis[:2])[0]
+    target_resolution = channel_width.to(current_resolution.unit)
+    diff_factor = np.abs(target_resolution / current_resolution).value
 
-    Parameters
-    ----------
-    cube : numpy.ndarray
-           3D data cube to degrade
-    slice_thickness : float, optional
-        Thicknesses of the new slices. Minimum is 1.0
-        Thickness must be integer multiple of the original cube size
+    pixel_scale = np.abs(current_resolution)
 
-    Returns
-    -------
-    degraded_cube : numpy.ndarray
-        Data cube degraded to new slice thickness
-    '''
+    gaussian_width = ((target_resolution**2 - current_resolution**2)**0.5 /
+                      pixel_scale / fwhm_factor)
+    kernel = Gaussian1DKernel(gaussian_width)
+    new_cube = cube.spectral_smooth(kernel)
 
-    assert isinstance(slice_thickness, float)
-    if slice_thickness < 1:
-        slice_thickness == 1
-        print "Slice Thickness must be at least 1.0. Returning original cube."
+    # Now define the new spectral axis at the new resolution
+    num_chan = int(np.floor_divide(cube.shape[0], diff_factor))
+    new_specaxis = np.linspace(cube.spectral_axis.min().value,
+                               cube.spectral_axis.max().value,
+                               num_chan) * current_resolution.unit
+    # Keep the same order (max to min or min to max)
+    if current_resolution.value < 0:
+        new_specaxis = new_specaxis[::-1]
 
-    if slice_thickness == 1:
-        return cube
-
-    if cube.shape[0] % slice_thickness != 0:
-        raise TypeError("Slice thickness must be integer multiple of dimension"
-                        " size % s" % (cube.shape[0]))
-
-    slice_thickness = int(slice_thickness)
-
-    # Want to average over velocity channels
-    new_channel_indices = np.arange(0, cube.shape[0] / slice_thickness)
-    degraded_cube = np.ones(
-        (cube.shape[0] / slice_thickness, cube.shape[1], cube.shape[2]))
-
-    for channel in new_channel_indices:
-        old_index = int(channel * slice_thickness)
-        channel = int(channel)
-        degraded_cube[channel, :, :] = \
-            np.nanmean(cube[old_index:old_index + slice_thickness], axis=0)
-
-    return degraded_cube
+    return new_cube.spectral_interpolate(new_specaxis,
+                                         suppress_smooth_warning=True)
