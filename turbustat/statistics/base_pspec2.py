@@ -82,7 +82,7 @@ class StatisticBase_PSpec2D(object):
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
-    def fit_pspec(self, brk=None, log_break=True, low_cut=None,
+    def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -98,7 +98,10 @@ class StatisticBase_PSpec2D(object):
             outside of the allowed range from the data, Lm_Seg will raise an
             error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
-            Sets whether the provided break estimates are log-ed values.
+            Sets whether the provided break estimates are log-ed (base 10)
+            values. This is disabled by default. When enabled, the brk must
+            be a unitless `~astropy.units.Quantity`
+            (`u.dimensionless_unscaled`).
         low_cut : `~astropy.units.Quantity`, optional
             Lowest frequency to consider in the fit.
         high_cut : `~astropy.units.Quantity`, optional
