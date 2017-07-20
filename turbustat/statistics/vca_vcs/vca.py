@@ -133,13 +133,10 @@ class VCA_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
+    def __init__(self, cube1, cube2, channel_width=None, breaks=None,
                  fiducial_model=None, logspacing=False, low_cut=None,
-                 high_cut=None):
+                 high_cut=None, distance=None):
         super(VCA_Distance, self).__init__()
-
-        if not isinstance(slice_size, float):
-            raise TypeError("slice_size must be a float.")
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
@@ -149,18 +146,17 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = \
-                VCA(cube1, slice_size=slice_size)
+            self.vca1 = VCA(cube1, channel_width=channel_width)
             self.vca1.run(brk=breaks[0], low_cut=low_cut[0],
                           high_cut=high_cut[0], logspacing=logspacing)
 
         self.vca2 = \
-            VCA(cube2, slice_size=slice_size)
+            VCA(cube2, channel_width=channel_width)
         self.vca2.run(brk=breaks[1], low_cut=low_cut[1], high_cut=high_cut[1],
                       logspacing=logspacing)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None,
+                        xunit=u.pix**-1, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -202,10 +198,10 @@ class VCA_Distance(object):
             import matplotlib.pyplot as p
 
             self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             p.legend(loc='upper right')
 
