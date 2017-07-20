@@ -9,12 +9,16 @@ from astropy.convolution import Gaussian1DKernel
 
 def spectral_regrid_cube(cube, channel_width):
     '''
-    Spectrally regrid a SpectralCube to a given channel width. Note that, in
-    order to ensure the regridded cube covers the same spectral range, the
-    smoothed cube may have channels that differ slightly from the given width.
-    The number of channels is chosen to be the next lowest integer when
-    dividing the original number of channels by the ratio of the new and old
-    channel widths.
+    Spectrally regrid a SpectralCube to a given channel width. The data are
+    first spectrally smoothed with a Gaussian kernel. The kernel width is
+    the target channel width deconvolved from the current channel width
+    (http://spectral-cube.readthedocs.io/en/latest/smoothing.html#spectral-smoothing).
+
+    Note that, in order to ensure the regridded cube covers the same spectral
+    range, the smoothed cube may have channels that differ slightly from the
+    given width. The number of channels is chosen to be the next lowest
+    integer when dividing the original number of channels by the ratio of the
+    new and old channel widths.
 
     Parameters
     ----------
