@@ -1,6 +1,7 @@
 # Licensed under an MIT open source license - see LICENSE
 
 from astropy.io.fits.hdu.image import _ImageBaseHDU
+from astropy.io import fits
 from spectral_cube import SpectralCube
 from spectral_cube.lower_dimensional_structures import LowerDimensionalObject
 import numpy as np
@@ -60,3 +61,13 @@ def input_data(data, no_header=False):
         return output_data[0]
 
     return output_data
+
+
+def to_spectral_cube(data, header):
+    '''
+    Convert the output from input_data into a SpectralCube.
+    '''
+
+    hdu = fits.PrimaryHDU(data, header)
+
+    return SpectralCube.read(hdu)
