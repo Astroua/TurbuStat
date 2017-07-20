@@ -9,7 +9,7 @@ import numpy as np
 
 common_types = ["numpy.ndarray", "astropy.io.fits.PrimaryHDU",
                 "astropy.io.fits.ImageHDU"]
-twod_types = ["spectral_cube.LowerDimensionalObject"]
+twod_types = ["spectral_cube.Projection", "spectral_cube.Slice"]
 threed_types = ["SpectralCube"]
 
 
@@ -20,9 +20,9 @@ def input_data(data, no_header=False):
 
     Parameters
     ----------
-    data : astropy.io.fits.PrimaryHDU, SpectralCube,
-           spectral_cube.LowerDimensionalObject, np.ndarray or a tuple/list
-           with the data and the header
+    data : astropy.io.fits.PrimaryHDU, spectral_cube.SpectralCube,
+           spectral_cube.Projection, spectral_cube.Slice, np.ndarray or a
+           tuple/listwith the data and the header
         Data to be used with a given statistic or distance metric. no_header
         must be enabled when passing only an array in.
     no_header : bool, optional
