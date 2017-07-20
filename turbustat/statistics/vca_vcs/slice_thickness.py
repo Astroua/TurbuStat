@@ -3,15 +3,52 @@
 
 import numpy as np
 from astropy import units as u
-from spectral_cube import SpectralCube
+from spectral_cube.spectral_cube import BaseSpectralCube
 from astropy.convolution import Gaussian1DKernel
 
 
 def spectral_regrid_cube(cube, channel_width):
+    '''
+    Spectrally regrid a SpectralCube to a given channel width. Note that, in
+    order to ensure the regridded cube covers the same spectral range, the
+    smoothed cube may have channels that differ slightly from the given width.
+    The number of channels is chosen to be the next lowest integer when
+    dividing the original number of channels by the ratio of the new and old
+    channel widths.
+
+    Parameters
+    ----------
+    cube : `~spectral_cube.SpectralCube`
+        Spectral cube to regrid.
+    channel_width : `~astropy.units.Quantity`
+        The width of the new channels. This should be given in equivalent
+        spectral units used in the cube, or in pixel units. For example,
+        downsampling by a factor of 2 for a cube with a channel width of
+        0.1 km/s can be achieved by setting `channel_width` to `2 * u.pix`
+        or `0.2 km /s`.
+
+    Returns
+    -------
+    regridded_cube : `spectral_cube.SpectralCube`
+        The smoothed and regridded cube.
+    '''
+
+    if not isinstance(cube, BaseSpectralCube):
+        raise TypeError("`cube` must be a SpectralCube object.")
 
     fwhm_factor = np.sqrt(8 * np.log(2))
+
+    pix_unit = channel_width.unit.is_equivalent(u.pix)
+
+    spec_width = np.diff(cube.spectral_axis[:2])[0]
+
     current_resolution = np.diff(cube.spectral_axis[:2])[0]
-    target_resolution = channel_width.to(current_resolution.unit)
+
+    if pix_unit:
+        target_resolution = channel_width.value * spec_width
+    else:
+        target_resolution = channel_width.to(current_resolution.unit)
+
     diff_factor = np.abs(target_resolution / current_resolution).value
 
     pixel_scale = np.abs(current_resolution)
