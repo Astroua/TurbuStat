@@ -25,6 +25,18 @@ def test_VCA_method():
                             decimal=3)
 
 
+def test_VCA_method_change_chanwidth():
+
+    orig_width = np.abs(dataset1['cube'][1]["CDELT3"]) * u.m / u.s
+
+    tester = VCA(dataset1["cube"], channel_width=2 * orig_width)
+
+    # Should have 250 channels now
+    assert tester.data.shape[0] == 250
+
+    tester.run()
+
+
 def test_VCA_distance():
     tester_dist = \
         VCA_Distance(dataset1["cube"],
