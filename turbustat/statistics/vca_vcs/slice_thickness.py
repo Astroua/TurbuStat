@@ -5,6 +5,7 @@ import numpy as np
 from astropy import units as u
 from spectral_cube.spectral_cube import BaseSpectralCube
 from astropy.convolution import Gaussian1DKernel
+from warnings import warn
 
 
 def spectral_regrid_cube(cube, channel_width):
@@ -54,6 +55,17 @@ def spectral_regrid_cube(cube, channel_width):
         target_resolution = channel_width.to(current_resolution.unit)
 
     diff_factor = np.abs(target_resolution / current_resolution).value
+
+    if diff_factor == 1:
+        warn("The requested channel width match the original channel width. "
+             "The original cube is returned.")
+        return cube
+
+    if diff_factor < 1:
+        raise ValueError("Only down-sampling the spectral grid is supported. "
+                         "The requested channel width of {0} is a factor {1} "
+                         "smaller than the original channel width."
+                         .format(target_resolution, diff_factor))
 
     pixel_scale = np.abs(current_resolution)
 
