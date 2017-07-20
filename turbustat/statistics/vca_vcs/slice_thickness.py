@@ -41,6 +41,9 @@ def spectral_regrid_cube(cube, channel_width):
     if not isinstance(cube, BaseSpectralCube):
         raise TypeError("`cube` must be a SpectralCube object.")
 
+    if not isinstance(channel_width, u.Quantity):
+        raise TypeError("channel_width must be an astropy.units.Quantity.")
+
     fwhm_factor = np.sqrt(8 * np.log(2))
 
     pix_unit = channel_width.unit.is_equivalent(u.pix)
