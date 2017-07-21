@@ -21,7 +21,7 @@ The correlation surface can be further simplified by computing an azimuthal aver
 Using
 -----
 
-**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
 Importing a few common packages:
 

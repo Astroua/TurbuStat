@@ -13,7 +13,7 @@ In general, dendrograms provide a hierarchical description of datasets, which ma
 Using
 -----
 
-**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
 **Requires the optional astrodendro package to be installed. See documentation** `here <http://dendrograms.org/>`_
 

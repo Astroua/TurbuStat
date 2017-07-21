@@ -10,11 +10,12 @@ Overview
 
 A major advantage of a spectral-line data cube, rather than an integrated two-dimensional image, is that it captures aspects of both the density and velocity fluctuations in the field of observation. :ref:`Lazarian & Pogosyan 2000 <_ref-lp00>` and :ref:`Lazarian & Pogosyan 2004 <_ref-lp04>` derived how the power spectrum from a cube depends on the statistics of the density and velocity fields for the 21-cm Hydrogen line, allowing for each their properties to be examined (provided the data has sufficient spectral resolution).
 
+XXX Thick vs thin regimes XXX
 
 Using
 -----
 
-**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
 We need to import the `~turbustat.statistics.VCA` class, along with a few other common packages:
 
