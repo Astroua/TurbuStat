@@ -10,7 +10,7 @@ Overview
 
 A major advantage of a spectral-line data cube, rather than an integrated two-dimensional image, is that it captures aspects of both the density and velocity fluctuations in the field of observation. :ref:`Lazarian & Pogosyan 2000 <_ref-lp00>` and :ref:`Lazarian & Pogosyan 2004 <_ref-lp04>` derived how the power spectrum from a cube depends on the statistics of the density and velocity fields for the 21-cm Hydrogen line, allowing for each their properties to be examined (provided the data has sufficient spectral resolution).
 
-XXX Thick vs thin regimes XXX
+The Lazarian & Pogosyan theory predicts two regimes based on the the power-spectrum slope: the *shallow* (:math:`n < -3`) and the *steep* (:math:`n < -3`) regimes. In the case of optically thick line emission, :ref:`Lazarian & Pogosyan 2004 <_ref-lp04>` show that the slope saturates to :math:`n = -3` (see :ref:`Burkhart et al. 2013 <_ref-burkhart2013>` as well). The VCA predictions in these different regimes are shown in Table 1 of :ref:`Chepurnov & Lazarian 2009 <_ref-chepurnov09>` (also see Table 3 in :ref:`Lazarian 2009 <_ref-lazarian09>`). The complementary :ref:`Velocity Coordinate Spectrum <vca_tutorial>` can be used in tandem with VCA.
 
 Using
 -----
@@ -187,3 +187,15 @@ References
 .. _ref-sl01:
 
 `Stanimirovic & Lazarian 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...551L..53S/abstract>`_
+
+.. _ref-burkhart2013:
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
+
+.. _ref-chepurnov09:
+
+`Chepurnov & Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_
+
+.. _ref-lazarian09:
+
+`Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009SSRv..143..357L/abstract>`_
