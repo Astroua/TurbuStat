@@ -28,6 +28,7 @@ Statistics
     statistics/scf_example
 
     statistics/vca_example
+    statistics/vcs_example
 
 Distance Metrics
 ================
