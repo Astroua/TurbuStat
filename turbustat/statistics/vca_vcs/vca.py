@@ -82,10 +82,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
