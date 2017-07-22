@@ -33,6 +33,8 @@ class StatMoments(BaseStatisticMixIn):
         pixel size.
     nbins : array or int, optional
         Number of bins to use in the histogram.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -429,11 +431,13 @@ class StatMoments_Distance(object):
         2D Image.
     image2 : %(dtypes)s
         2D Image.
-    radius : int, optional
-        Radius of circle to use when computing moments. This is the pixel size
-        applied to the coarsest grid (if the datasets are not on a common
-        grid). The radius for the finer grid is adjusted so the angular scales
-        match.
+    radius : `~astropy.units.Quantity`, optional
+        Radius of circle to use when computing moments. When given in pixel
+        units, the radius will be adjusted such that a common *angular* scale
+        is used between the two images, defined by whichever image has the
+        coarser spatial grid. *This assumes the pixels can be treated as square
+        in the celestial frame!* If an angular unit is given, there
+        is no adjustment made.
     weights1 : %(dtypes)s
         2D array of weights. Uniform weights are used if none are given.
     weights2 : %(dtypes)s
@@ -451,7 +455,8 @@ class StatMoments_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, image1, image2, radius=5, weights1=None, weights2=None,
+    def __init__(self, image1, image2, radius=5 * u.pix,
+                 weights1=None, weights2=None,
                  nbins=None, periodic1=False, periodic2=False,
                  fiducial_model=None):
         super(StatMoments_Distance, self).__init__()
@@ -460,17 +465,21 @@ class StatMoments_Distance(object):
         image2 = input_data(image2, no_header=False)
 
         # Compute the scale so the radius is common between the two datasets
-        scale = common_scale(WCS(image1[1]), WCS(image2[1]))
+        if radius.unit.is_equivalent(u.pix):
+            scale = common_scale(WCS(image1[1]), WCS(image2[1]))
 
-        if scale == 1.0:
-            radius1 = radius
-            radius2 = radius
-        elif scale > 1.0:
-            radius1 = int(np.round(scale * radius))
-            radius2 = radius
+            if scale == 1.0:
+                radius1 = radius
+                radius2 = radius
+            elif scale > 1.0:
+                radius1 = scale * radius
+                radius2 = radius
+            else:
+                radius1 = radius
+                radius2 = radius / float(scale)
         else:
             radius1 = radius
-            radius2 = int(np.round(radius / float(scale)))
+            radius2 = radius
 
         if nbins is None:
             self.nbins = _auto_nbins(image1[0].size, image2[0].size)
@@ -482,12 +491,12 @@ class StatMoments_Distance(object):
         else:
             self.moments1 = StatMoments(image1, radius=radius1,
                                         nbins=self.nbins,
-                                        periodic=periodic1, weights=weights1)
-            self.moments1.compute_spatial_distrib()
+                                        weights=weights1)
+            self.moments1.compute_spatial_distrib(periodic=periodic1)
 
         self.moments2 = StatMoments(image2, radius=radius2, nbins=self.nbins,
-                                    periodic=periodic2, weights=weights2)
-        self.moments2.compute_spatial_distrib()
+                                    weights=weights2)
+        self.moments2.compute_spatial_distrib(periodic=periodic2)
 
     def create_common_histograms(self, nbins=None):
         '''
