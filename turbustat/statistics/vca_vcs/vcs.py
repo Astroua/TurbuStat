@@ -10,6 +10,9 @@ from ..lm_seg import Lm_Seg
 from ..rfft_to_fft import rfft_to_fft
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
+from ...io.input_base import to_spectral_cube
+from ..fitting_utils import clip_func
+from slice_thickness import spectral_regrid_cube
 
 
 class VCS(BaseStatisticMixIn):
@@ -25,55 +28,63 @@ class VCS(BaseStatisticMixIn):
         Corresponding FITS header.
     vel_units : bool, optional
         Convert frequencies to the spectral unit in the header.
+    channel_width : `~astropy.units.Quantity`, optional
+        Set the width of channels to compute the VCA with. The channel width
+        in the data is used by default. Given widths will be used to
+        spectrally down-sample the data before calculating the VCA. Up-sampling
+        to smaller channel sizes than the original is not supported.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, vel_units=False):
+    def __init__(self, cube, header=None, channel_width=None):
         super(VCS, self).__init__()
 
         self.input_data_header(cube, header)
 
-        self.vel_units = vel_units
+        if channel_width is not None:
+            sc_cube = to_spectral_cube(self.data, self.header)
 
+            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
+
+            # Don't pass the header. It will read the new one in reg_cube
+            self.input_data_header(reg_cube, None)
+
+        self._has_nan_flag = False
         if np.isnan(self.data).any():
             self.data[np.isnan(self.data)] = 0
-            # Feel like this should be more specific
-            self.good_pixel_count = np.sum(self.data.max(axis=0) != 0)
-        else:
-            self.good_pixel_count = float(
-                self.data.shape[1] * self.data.shape[2])
-
-        if vel_units:
-            try:
-                spec_unit = u.Unit(self.header["CUNIT3"])
-                self.vel_to_pix = (np.abs(self.header["CDELT3"]) *
-                                   spec_unit).to(u.km / u.s).value
-            except (KeyError, u.UnitsError) as e:
-                print("Spectral unit not in the header or it cannot be parsed "
-                      "by astropy.units. Using pixel units.")
-                print(e)
-                self.vel_to_pix = 1.0
-        else:
-            self.vel_to_pix = 1.0
+            self._has_nan_flag = True
 
         self.vel_channels = np.arange(1, self.data.shape[0], 1)
 
-        self.vel_freqs = \
-            np.abs(fftfreq(self.data.shape[0])) / self.vel_to_pix
+        self.freqs = \
+            np.abs(fftfreq(self.data.shape[0])) / u.pix
 
     def compute_pspec(self):
         '''
-        Take the FFT of each spectrum in velocity dimension.
+        Take the FFT of each spectrum in the velocity dimension and average.
         '''
 
-        ps3D = np.power(rfft_to_fft(self.data), 2.)
-        self.ps1D = np.nansum(
-            np.nansum(ps3D, axis=2), axis=1) /\
-            self.good_pixel_count
+        if self._has_nan_flag:
+            # Is this the best way to be averaging the data?
+            good_pixel_count = np.sum(self.data.max(axis=0) != 0)
+        else:
+            good_pixel_count = \
+                float(self.data.shape[1] * self.data.shape[2])
 
-    def fit_pspec(self, breaks=None, log_break=True, lg_scale_cut=2,
-                  verbose=False):
+        ps3D = np.power(rfft_to_fft(self.data), 2.)
+        self._ps1D = np.nansum(ps3D, axis=(1, 2)) /\
+            good_pixel_count
+
+    @property
+    def ps1D(self):
+        '''
+        The 1D VCS spectrum.
+        '''
+        return self._ps1D
+
+    def fit_pspec(self, breaks=None, log_break=True, low_cut=None,
+                  high_cut=None, fit_verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -89,26 +100,51 @@ class VCS(BaseStatisticMixIn):
             error. If None, a spline is used to estimate the breaks.
         log_break : bool, optional
             Sets whether the provided break estimates are log-ed values.
-        lg_scale_cut : int, optional
-            Cuts off largest scales, which deviate from the powerlaw.
-        verbose : bool, optional
+        low_cut : `~astropy.units.Quantity`, optional
+            Lowest frequency to consider in the fit.
+        high_cut : `~astropy.units.Quantity`, optional
+            Highest frequency to consider in the fit.
+        fit_verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
+
+        # Make the data to fit to
+        if low_cut is None:
+            # Default to the largest frequency, since this is just 1 pixel
+            # But cut out fitting the total power point.
+            self.low_cut = 0.98 / (float(self.data.shape[0]) * u.pix)
+        else:
+            self.low_cut = \
+                self._spectral_freq_unit_conversion(low_cut, u.pix**-1)
+
+        if high_cut is None:
+            # Set to something larger than
+            self.high_cut = (self.freqs.max().value * 1.01) / u.pix
+        else:
+            self.high_cut = \
+                self._spectral_freq_unit_conversion(high_cut, u.pix**-1)
+
+        # We keep both the real and imag frequencies, but we only need the real
+        # component when fitting. We'll cut off the total power frequency too
+        # in case it causes an extra break point (which seems to happen).
+        shape = self.freqs.size
+        rfreqs = self.freqs[1:shape / 2].value
+
+        y = np.log10(self.ps1D[clip_func(rfreqs, self.low_cut.value,
+                                         self.high_cut.value)])
+        x = np.log10(rfreqs[clip_func(rfreqs, self.low_cut.value,
+                                      self.high_cut.value)])
 
         if breaks is None:
             from scipy.interpolate import UnivariateSpline
 
             # Need to order the points
-            shape = self.vel_freqs.size
-            spline_y = np.log10(self.ps1D[1:shape / 2])
-            spline_x = np.log10(self.vel_freqs[1:shape / 2])
-
-            spline = UnivariateSpline(spline_x, spline_y, k=1, s=1)
+            spline = UnivariateSpline(x, y, k=1, s=1)
 
             # The first and last are just the min and max of x
             breaks = spline.get_knots()[1:-1]
 
-            if verbose:
+            if fit_verbose:
                 print "Breaks found from spline are: " + str(breaks)
 
             # Take the number according to max_breaks starting at the
@@ -117,14 +153,11 @@ class VCS(BaseStatisticMixIn):
 
             # Ensure a break doesn't fall at the max or min.
             if breaks.size > 0:
-                if breaks[0] == spline_x.max():
+                if breaks[0] == x.max():
                     breaks = breaks[1:]
             if breaks.size > 0:
-                if breaks[-1] == spline_x.min():
+                if breaks[-1] == x.min():
                     breaks = breaks[:-1]
-
-            x = np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut])
-            y = np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut])
 
             if x.size <= 3 or y.size <= 3:
                 raise Warning("There are no points to fit to. Try lowering "
@@ -136,13 +169,13 @@ class VCS(BaseStatisticMixIn):
                 breaks = np.array([0.5 * (x_copy[-1] + x_copy[-3])])
 
             # Now try these breaks until a good fit including the break is
-            # found. If none are found, it accept that there wasn't a good
+            # found. If none are found, it accepts that there wasn't a good
             # break and continues on.
             i = 0
             while True:
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
-                self.fit.fit_model(verbose=verbose)
+                self.fit.fit_model(verbose=fit_verbose)
 
                 if self.fit.params.size == 5:
                     # Success!
@@ -158,28 +191,40 @@ class VCS(BaseStatisticMixIn):
         if not log_break:
             breaks = np.log10(breaks)
 
-        self.fit = \
-            Lm_Seg(np.log10(self.vel_freqs[lg_scale_cut + 1:-lg_scale_cut]),
-                   np.log10(self.ps1D[lg_scale_cut + 1:-lg_scale_cut]), breaks)
-        self.fit.fit_model(verbose=verbose)
+        # Fit the final model with whichever breaks were passed.
+        self.fit = Lm_Seg(x, y, breaks)
+        self.fit.fit_model(verbose=fit_verbose)
 
     @property
-    def slopes(self):
+    def slope(self):
+        '''
+        Power spectrum slope(s).
+        '''
         return self.fit.slopes
 
     @property
-    def slope_errs(self):
+    def slope_err(self):
+        '''
+        1-sigma error on the power spectrum slope(s).
+        '''
         return self.fit.slope_errs
 
     @property
     def brk(self):
+        '''
+        Fitted break point.
+        '''
         return self.fit.brk
 
     @property
     def brk_err(self):
+        '''
+        1-sigma on the break point.
+        '''
         return self.fit.brk_err
 
-    def run(self, verbose=False, save_name=None, breaks=None):
+    def run(self, verbose=False, save_name=None, xunit=u.pix**-1,
+            **fit_kwargs):
         '''
         Run the entire computation.
 
@@ -189,35 +234,50 @@ class VCS(BaseStatisticMixIn):
             Enables plotting.
         save_name : str,optional
             Save the figure when a file name is given.
-        breaks : float, optional
-            Specify where the break point is. If None, attempts to find using
-            spline.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis in the plot to.
+        fit_kwargs : Passed to `~VCS.fit_pspec`.
+
         '''
         self.compute_pspec()
-        self.fit_pspec(verbose=verbose, breaks=breaks)
+        self.fit_pspec(**fit_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
+            # Print the final fitted model when fit_verbose is not enabled.
+            if not fit_kwargs.get("fit_verbose"):
+                print(self.fit.fit.summary())
 
-            if self.vel_units:
-                xlab = \
-                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
-            else:
-                xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
+            import matplotlib.pyplot as plt
 
-            p.loglog(self.vel_freqs, self.ps1D, "bD", label='Data')
-            p.loglog(10**self.fit.x, 10**self.fit.model(self.fit.x), 'r',
-                     label='Fit', linewidth=2)
-            p.xlabel(xlab)
-            p.ylabel(r"log P$_{1}$(k$_{v}$)")
-            p.grid(True)
-            p.legend(loc='best')
+            xlab = r"log $\left( k_v / {} \right)$".format(xunit)
+
+            good_interval = clip_func(self.freqs.value, self.low_cut.value,
+                                      self.high_cut.value)
+
+            freq = self._spectral_freq_unit_conversion(self.freqs, xunit)
+
+            y_fit = \
+                10**self.fit.model(np.log10(self.freqs.value[good_interval]))
+
+            plt.loglog(freq, self.ps1D, "rD", label='Data', alpha=0.5)
+            plt.loglog(freq[good_interval], y_fit, 'r',
+                       label='Fit', linewidth=2)
+            plt.xlabel(xlab)
+            plt.ylabel(r"log P$_{1}$(k$_{v}$)")
+            plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
+                                                            xunit).value,
+                        linestyle="--", color='r', alpha=0.5)
+            plt.axvline(self._spectral_freq_unit_conversion(self.high_cut,
+                                                            xunit).value,
+                        linestyle="--", color='r', alpha=0.5)
+            plt.grid(True)
+            plt.legend(loc='best', frameon=True)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 
