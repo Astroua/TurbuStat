@@ -249,7 +249,7 @@ class VCS(BaseStatisticMixIn):
 
             import matplotlib.pyplot as plt
 
-            xlab = r"log $\left( k_v / {} \right)$".format(xunit)
+            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
 
             good_interval = clip_func(self.freqs.value, self.low_cut.value,
                                       self.high_cut.value)
@@ -303,17 +303,13 @@ class VCS_Distance(object):
         spline.
     fiducial_model : VCS
         Computed VCS object. use to avoid recomputing.
-    vel_units : bool, optional
-        Convert frequencies to the spectral unit in the headers.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, breaks=None, fiducial_model=None,
-                 vel_units=False):
+                 channel_width=None, **fit_kwargs):
         super(VCS_Distance, self).__init__()
-
-        self.vel_units = vel_units
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
@@ -322,13 +318,15 @@ class VCS_Distance(object):
             self.vcs1 = fiducial_model
         else:
             self.vcs1 = VCS(cube1,
-                            vel_units=vel_units).run(breaks=breaks[0])
+                            channel_width=channel_width).run(breaks=breaks[0],
+                                                             **fit_kwargs)
 
         self.vcs2 = VCS(cube2,
-                        vel_units=vel_units).run(breaks=breaks[1])
+                        channel_width=channel_width).run(breaks=breaks[1],
+                                                         **fit_kwargs)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        save_name=None):
+                        save_name=None, xunit=u.pix**-1):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -351,19 +349,19 @@ class VCS_Distance(object):
 
         # There should always be the velocity distance
         self.large_scale_distance = \
-            np.abs((self.vcs1.slopes[0] - self.vcs2.slopes[0]) /
-                   np.sqrt(self.vcs1.slope_errs[0]**2 +
-                           self.vcs2.slope_errs[0]**2))
+            np.abs((self.vcs1.slope[0] - self.vcs2.slope[0]) /
+                   np.sqrt(self.vcs1.slope_err[0]**2 +
+                           self.vcs2.slope_err[0]**2))
 
         # A density distance is only found if a break was found
-        if self.vcs1.slopes.size == 1 or self.vcs2.slopes.size == 1:
+        if self.vcs1.slope.size == 1 or self.vcs2.slope.size == 1:
             self.small_scale_distance = np.NaN
             self.break_distance = np.NaN
         else:
             self.small_scale_distance = \
-                np.abs((self.vcs1.slopes[1] - self.vcs2.slopes[1]) /
-                       np.sqrt(self.vcs1.slope_errs[1]**2 +
-                               self.vcs2.slope_errs[1]**2))
+                np.abs((self.vcs1.slope[1] - self.vcs2.slope[1]) /
+                       np.sqrt(self.vcs1.slope_err[1]**2 +
+                               self.vcs2.slope_err[1]**2))
 
             self.break_distance = \
                 np.abs((self.vcs1.brk - self.vcs2.brk) /
@@ -381,29 +379,25 @@ class VCS_Distance(object):
             print("Fit 2")
             print(self.vcs2.fit.fit.summary())
 
-            if self.vel_units:
-                xlab = \
-                    r"log $\left( k_v / (\mathrm{km}/\mathrm{s})^{-1} \right)$"
-            else:
-                xlab = r"log $\left( k_v / \mathrm{pixel}^{-1} \right)$"
+            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
-                   label=label1)
-            p.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
-                   label=label2)
-            p.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
-            p.grid(True)
-            p.legend()
-            p.xlabel(xlab)
-            p.ylabel(r"$P_{1}(k_v)$")
+            plt.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
+                     label=label1)
+            plt.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
+            plt.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
+                     label=label2)
+            plt.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
+            plt.grid(True)
+            plt.legend()
+            plt.xlabel(xlab)
+            plt.ylabel(r"$P_{1}(k_v)$")
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
