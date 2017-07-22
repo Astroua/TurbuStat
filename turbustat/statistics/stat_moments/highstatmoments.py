@@ -3,6 +3,7 @@
 
 import numpy as np
 from astropy.wcs import WCS
+import astropy.units as u
 
 from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
                            common_scale)
@@ -12,40 +13,45 @@ from ...io import common_types, twod_types, input_data
 
 class StatMoments(BaseStatisticMixIn):
     """
-    Statistical Moments of a given image are returned.
-    See Burkhart et al. (2010) for methods used.
+    Statistical Moments of an image. See Burkhart et al. (2010) for the methods
+    used. By specifying the radius of circular mask, the mean, variance,
+    skewness, and kurtosis are calculated within the circular mask for every
+    pixel in the image. The distributions of these moments can be compared
+    between data sets.
 
     Parameters
     ----------
     img : %(dtypes)s
-        2D Image.
+        2D image.
+    header : FITS header, optional
+        The image header. Needed for the pixel scale.
     weights : %(dtypes)s
         2D array of weights. Uniform weights are used if none are given.
-    radius : int, optional
-        Radius of circle to use when computing moments.
-    periodic : bool, optional
-        If the data is periodic (ie. from asimulation), wrap the data.
+    radius : `~astropy.units.Quantity`, optional
+        Radius of circle to use when computing moments. When angular or
+        physical units are given, they will be rounded *down* to the nearest
+        pixel size.
     nbins : array or int, optional
         Number of bins to use in the histogram.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, weights=None, radius=5, periodic=True, nbins=None):
+    def __init__(self, img, header=None, weights=None, radius=5 * u.pix,
+                 nbins=None, distance=None):
         super(StatMoments, self).__init__()
 
-        self.need_header_flag = False
-        self.header = None
-
-        self.data = input_data(img, no_header=True)
+        self.input_data_header(img, header)
 
         if weights is None:
             self.weights = np.ones_like(self.data)
         else:
             self.weights = input_data(weights, no_header=True)
 
+        if distance is not None:
+            self.distance = distance
+
         self.radius = radius
-        self.periodic_flag = periodic
 
         if nbins is None:
             self.nbins = np.sqrt(self.data.size)
@@ -54,14 +60,42 @@ class StatMoments(BaseStatisticMixIn):
 
         self.nbins = int(self.nbins)
 
+    @property
+    def radius(self):
+        return self._radius
+
+    @radius.setter
+    def radius(self, value):
+
+        if not isinstance(value, u.Quantity):
+            raise TypeError("radius must be an astropy.units.Quantity.")
+
+        # Must be convertible to pixel scales!
+        try:
+            pix_rad = self._to_pixel(value)
+        except Exception as e:
+            raise e
+
+        # The radius should be larger than a pixel
+        if pix_rad.value < 2:
+            raise ValueError("The chosen radius is smaller than two pixels. "
+                             "Increase the size of the radius.")
+
+        # Finally, limit the radius to a maximum of half the image size.
+        if pix_rad.value > min(self.data.shape):
+            raise ValueError("The chosen radius is larger than half the image "
+                             "size. Reduce the size of the radius.")
+
+        self._radius = value
+
     def array_moments(self):
         '''
         Moments over the entire image.
         '''
-        self.mean, self.variance, self.skewness, self.kurtosis =\
+        self.mean, self.variance, self.skewness, self.kurtosis = \
             compute_moments(self.data, self.weights)
 
-    def compute_spatial_distrib(self):
+    def compute_spatial_distrib(self, radius=None, periodic=True):
         '''
         Compute the moments over circular region with the specified radius.
         '''
@@ -71,32 +105,37 @@ class StatMoments(BaseStatisticMixIn):
         self._skewness_array = np.empty(self.data.shape)
         self._kurtosis_array = np.empty(self.data.shape)
 
-        if self.periodic_flag:
-            pad_img = np.pad(self.data, self.radius, mode="wrap")
-            pad_weights = np.pad(self.weights, self.radius, mode="wrap")
-        else:
-            pad_img = np.pad(self.data, self.radius, padwithnans)
-            pad_weights = np.pad(self.weights, self.radius, padwithnans)
+        # Use the new radius when another given
+        if radius is not None:
+            self.radius = radius
 
-        circle_mask = circular_region(self.radius)
+        # Convert to pixels. We need this to be an integer so round down to
+        # the nearest integer values
+        pix_rad = np.ceil(self._to_pixel(self.radius).value).astype(int)
+
+        if periodic:
+            pad_img = np.pad(self.data, pix_rad, mode="wrap")
+            pad_weights = np.pad(self.weights, pix_rad, mode="wrap")
+        else:
+            pad_img = np.pad(self.data, pix_rad, padwithnans)
+            pad_weights = np.pad(self.weights, pix_rad, padwithnans)
+
+        circle_mask = circular_region(pix_rad)
 
         # Loop through every point within the non-padded shape.
-        for i in range(self.radius, pad_img.shape[0] - self.radius):
-            for j in range(self.radius, pad_img.shape[1] - self.radius):
-                img_slice = pad_img[i - self.radius:i + self.radius + 1,
-                                    j - self.radius:j + self.radius + 1]
-                wgt_slice = pad_weights[i - self.radius:i + self.radius + 1,
-                                        j - self.radius:j + self.radius + 1]
+        for i in range(pix_rad, pad_img.shape[0] - pix_rad):
+            for j in range(pix_rad, pad_img.shape[1] - pix_rad):
+                img_slice = pad_img[i - pix_rad:i + pix_rad + 1,
+                                    j - pix_rad:j + pix_rad + 1]
+                wgt_slice = pad_weights[i - pix_rad:i + pix_rad + 1,
+                                        j - pix_rad:j + pix_rad + 1]
 
                 if np.isnan(img_slice).all() or np.isnan(wgt_slice).all():
-                    # Subtract off radius to account for padding.
-                    self.mean_array[i - self.radius, j - self.radius] = np.NaN
-                    self.variance_array[i - self.radius, j - self.radius] = \
-                        np.NaN
-                    self.skewness_array[i - self.radius, j - self.radius] = \
-                        np.NaN
-                    self.kurtosis_array[i - self.radius, j - self.radius] = \
-                        np.NaN
+                    # Subtract off pix_rad to account for padding.
+                    self.mean_array[i - pix_rad, j - pix_rad] = np.NaN
+                    self.variance_array[i - pix_rad, j - pix_rad] = np.NaN
+                    self.skewness_array[i - pix_rad, j - pix_rad] = np.NaN
+                    self.kurtosis_array[i - pix_rad, j - pix_rad] = np.NaN
 
                 else:
                     img_slice = img_slice * circle_mask
@@ -104,14 +143,10 @@ class StatMoments(BaseStatisticMixIn):
 
                     moments = compute_moments(img_slice, wgt_slice)
 
-                    self.mean_array[i - self.radius, j - self.radius] = \
-                        moments[0]
-                    self.variance_array[i - self.radius, j - self.radius] = \
-                        moments[1]
-                    self.skewness_array[i - self.radius, j - self.radius] = \
-                        moments[2]
-                    self.kurtosis_array[i - self.radius, j - self.radius] = \
-                        moments[3]
+                    self.mean_array[i - pix_rad, j - pix_rad] = moments[0]
+                    self.variance_array[i - pix_rad, j - pix_rad] = moments[1]
+                    self.skewness_array[i - pix_rad, j - pix_rad] = moments[2]
+                    self.kurtosis_array[i - pix_rad, j - pix_rad] = moments[3]
 
     @property
     def mean_array(self):
@@ -256,7 +291,8 @@ class StatMoments(BaseStatisticMixIn):
         '''
         return self._kurtosis_hist
 
-    def run(self, verbose=False, save_name=None, **kwargs):
+    def run(self, verbose=False, save_name=None, periodic=True, radius=None,
+            **hist_kwargs):
         '''
         Compute the entire method.
 
@@ -266,12 +302,16 @@ class StatMoments(BaseStatisticMixIn):
             Enables plotting.
         save_name : str,optional
             Save the figure when a file name is given.
-        kwargs : Passed to `~StatMoments.make_spatial_histograms`.
+        periodic : bool, optional
+            If the data is periodic (e.g. from a simulation), wrap the data.
+        radius : `~astropy.units.Quantity`, optional
+            Overrides the radius given to `~StatMoments`. See `~StatMoments`.
+        hist_kwargs : Passed to `~StatMoments.make_spatial_histograms`.
         '''
 
         self.array_moments()
-        self.compute_spatial_distrib()
-        self.make_spatial_histograms(**kwargs)
+        self.compute_spatial_distrib(periodic=periodic, radius=radius)
+        self.make_spatial_histograms(**hist_kwargs)
 
         if verbose:
             import matplotlib.pyplot as plt
@@ -281,25 +321,27 @@ class StatMoments(BaseStatisticMixIn):
                        origin="lower", interpolation="nearest")
             plt.title("Mean")
             plt.colorbar()
-            plt.contour(self.data)
+            plt.contour(self.data, cmap='viridis')
             plt.subplot(222)
             plt.imshow(self.variance_array, cmap="binary",
                        origin="lower", interpolation="nearest")
             plt.title("Variance")
             plt.colorbar()
-            plt.contour(self.data)
+            plt.contour(self.data, cmap='viridis')
             plt.subplot(223)
             plt.imshow(self.skewness_array, cmap="binary",
                        origin="lower", interpolation="nearest")
             plt.title("Skewness")
             plt.colorbar()
-            plt.contour(self.data)
+            plt.contour(self.data, cmap='viridis')
             plt.subplot(224)
             plt.imshow(self.kurtosis_array, cmap="binary",
                        origin="lower", interpolation="nearest")
             plt.title("Kurtosis")
             plt.colorbar()
-            plt.contour(self.data)
+            plt.contour(self.data, cmap='viridis')
+
+            plt.tight_layout()
 
             if save_name is not None:
                 plt.savefig(save_name)
