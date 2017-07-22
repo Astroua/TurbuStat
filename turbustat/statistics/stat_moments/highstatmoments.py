@@ -291,6 +291,65 @@ class StatMoments(BaseStatisticMixIn):
         '''
         return self._kurtosis_hist
 
+    def plot_histograms(self, new_figure=True, save_name=None):
+        '''
+        Plot the histograms of each moment.
+
+        Parameters
+        ----------
+        new_figure : bool, optional
+            Creates a new matplotlib figure.
+        save_name : str, optional
+            The filename to save the plot as. This enables saving of the plot.
+        '''
+
+        if not hasattr(self, "mean_hist"):
+            raise Exception("The histograms have not been computed. Run"
+                            " StatMoments.make_spatial_histograms first.")
+
+        import matplotlib.pyplot as plt
+
+        if new_figure:
+            plt.figure()
+
+        plt.subplot(221)
+        plt.plot(self.mean_hist[0],
+                 self.mean_hist[1], 'b')
+        plt.fill_between(self.mean_hist[0], 0,
+                         self.mean_hist[1], facecolor='b', alpha=0.5)
+        plt.xlabel("Mean")
+        plt.ylabel("PDF")
+
+        plt.subplot(222)
+        plt.plot(self.variance_hist[0],
+                 self.variance_hist[1], 'b')
+        plt.fill_between(self.variance_hist[0], 0,
+                         self.variance_hist[1], facecolor='b', alpha=0.5)
+        plt.xlabel("Variance")
+
+        plt.subplot(223)
+        plt.plot(self.skewness_hist[0],
+                 self.skewness_hist[1], 'b')
+        plt.fill_between(self.skewness_hist[0], 0,
+                         self.skewness_hist[1], facecolor='b', alpha=0.5)
+        plt.xlabel("Skewness")
+        plt.ylabel("PDF")
+
+        plt.subplot(224)
+        plt.plot(self.kurtosis_hist[0],
+                 self.kurtosis_hist[1], 'b')
+        plt.fill_between(self.kurtosis_hist[0], 0,
+                         self.kurtosis_hist[1], facecolor='b', alpha=0.5)
+        plt.xlabel("Kurtosis")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, periodic=True, radius=None,
             **hist_kwargs):
         '''
@@ -503,35 +562,35 @@ class StatMoments_Distance(object):
                              "Was given as " + str(metric))
 
         if verbose:
-            import matplotlib.pyplot as p
-            p.subplot(121)
-            p.plot(self.moments1.kurtosis_hist[0],
-                   self.moments1.kurtosis_hist[1], 'b', label=label1)
-            p.plot(self.moments2.kurtosis_hist[0],
-                   self.moments2.kurtosis_hist[1], 'g', label=label2)
-            p.fill(self.moments1.kurtosis_hist[0],
-                   self.moments1.kurtosis_hist[1], 'b',
-                   self.moments2.kurtosis_hist[0],
-                   self.moments2.kurtosis_hist[1], 'g', alpha=0.5)
-            p.xlabel("Kurtosis")
-            p.ylabel("PDF")
-            p.legend(loc='upper right')
-            p.subplot(122)
-            p.plot(self.moments1.skewness_hist[0],
-                   self.moments1.skewness_hist[1], 'b',
-                   self.moments2.skewness_hist[0],
-                   self.moments2.skewness_hist[1], 'g')
-            p.fill(self.moments1.skewness_hist[0],
-                   self.moments1.skewness_hist[1], 'b',
-                   self.moments2.skewness_hist[0],
-                   self.moments2.skewness_hist[1], 'g', alpha=0.5)
-            p.xlabel("Skewness")
+            import matplotlib.pyplot as plt
+            plt.subplot(121)
+            plt.plot(self.moments1.kurtosis_hist[0],
+                     self.moments1.kurtosis_hist[1], 'b', label=label1)
+            plt.plot(self.moments2.kurtosis_hist[0],
+                     self.moments2.kurtosis_hist[1], 'g', label=label2)
+            plt.fill(self.moments1.kurtosis_hist[0],
+                     self.moments1.kurtosis_hist[1], 'b',
+                     self.moments2.kurtosis_hist[0],
+                     self.moments2.kurtosis_hist[1], 'g', alpha=0.5)
+            plt.xlabel("Kurtosis")
+            plt.ylabel("PDF")
+            plt.legend(loc='upper right')
+            plt.subplot(122)
+            plt.plot(self.moments1.skewness_hist[0],
+                     self.moments1.skewness_hist[1], 'b',
+                     self.moments2.skewness_hist[0],
+                     self.moments2.skewness_hist[1], 'g')
+            plt.fill(self.moments1.skewness_hist[0],
+                     self.moments1.skewness_hist[1], 'b',
+                     self.moments2.skewness_hist[0],
+                     self.moments2.skewness_hist[1], 'g', alpha=0.5)
+            plt.xlabel("Skewness")
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
         return self
 
 
