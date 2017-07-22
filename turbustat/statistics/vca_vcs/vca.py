@@ -86,6 +86,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
+        fit_kwargs : Passed to `~VCA.fit_pspec`.
         '''
 
         self.compute_pspec()
