@@ -4,7 +4,7 @@
 Test functions for VCS
 '''
 
-from unittest import TestCase
+import pytest
 
 import numpy as np
 import numpy.testing as npt
@@ -14,21 +14,20 @@ from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
 
-class testVCS(TestCase):
+def test_VCS_method():
+    tester = VCS(dataset1["cube"]).run()
 
-    def setUp(self):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
+    npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
 
-    def test_VCS_method(self):
-        self.tester = VCS(dataset1["cube"]).run()
+    npt.assert_allclose(tester.slope, computed_data['vcs_slopes_val'])
 
-        npt.assert_allclose(self.tester.ps1D, computed_data['vcs_val'])
 
-    def test_VCS_distance(self):
-        self.tester_dist = \
-            VCS_Distance(dataset1["cube"], dataset2["cube"])
-        self.tester_dist = self.tester_dist.distance_metric()
+def test_VCS_distance():
+    tester_dist = \
+        VCS_Distance(dataset1["cube"], dataset2["cube"])
+    tester_dist = tester_dist.distance_metric()
 
-        npt.assert_almost_equal(self.tester_dist.distance,
-                                computed_distances['vcs_distance'])
+    npt.assert_almost_equal(tester_dist.distance,
+                            computed_distances['vcs_distance'])
+
+# Add tests for: VCS changing the spectral width, pixel and spectral units,
