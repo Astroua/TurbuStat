@@ -54,21 +54,6 @@ class StatMoments(BaseStatisticMixIn):
 
         self.nbins = int(self.nbins)
 
-        self.mean = None
-        self.variance = None
-        self.skewness = None
-        self.kurtosis = None
-
-        self.mean_array = np.empty(self.data.shape)
-        self.variance_array = np.empty(self.data.shape)
-        self.skewness_array = np.empty(self.data.shape)
-        self.kurtosis_array = np.empty(self.data.shape)
-
-        self.mean_hist = None
-        self.variance_hist = None
-        self.skewness_hist = None
-        self.kurtosis_hist = None
-
     def array_moments(self):
         '''
         Moments over the entire image.
@@ -81,6 +66,11 @@ class StatMoments(BaseStatisticMixIn):
         Compute the moments over circular region with the specified radius.
         '''
 
+        self._mean_array = np.empty(self.data.shape)
+        self._variance_array = np.empty(self.data.shape)
+        self._skewness_array = np.empty(self.data.shape)
+        self._kurtosis_array = np.empty(self.data.shape)
+
         if self.periodic_flag:
             pad_img = np.pad(self.data, self.radius, mode="wrap")
             pad_weights = np.pad(self.weights, self.radius, mode="wrap")
@@ -90,6 +80,7 @@ class StatMoments(BaseStatisticMixIn):
 
         circle_mask = circular_region(self.radius)
 
+        # Loop through every point within the non-padded shape.
         for i in range(self.radius, pad_img.shape[0] - self.radius):
             for j in range(self.radius, pad_img.shape[1] - self.radius):
                 img_slice = pad_img[i - self.radius:i + self.radius + 1,
@@ -123,36 +114,80 @@ class StatMoments(BaseStatisticMixIn):
                         moments[3]
 
     @property
+    def mean_array(self):
+        '''
+        The array of local means.
+        '''
+        return self._mean_array
+
+    @property
+    def variance_array(self):
+        '''
+        The array of local variances.
+        '''
+        return self._variance_array
+
+    @property
+    def skewness_array(self):
+        '''
+        The array of local skewnesss.
+        '''
+        return self._skewness_array
+
+    @property
+    def kurtosis_array(self):
+        '''
+        The array of local kurtosiss.
+        '''
+        return self._kurtosis_array
+
+    @property
     def mean_extrema(self):
+        '''
+        The extrema of the mean array.
+        '''
         return np.nanmin(self.mean_array), np.nanmax(self.mean_array)
 
     @property
     def variance_extrema(self):
+        '''
+        The extrema of the variance array.
+        '''
         return np.nanmin(self.variance_array), np.nanmax(self.variance_array)
 
     @property
     def skewness_extrema(self):
+        '''
+        The extrema of the skewness array.
+        '''
         return np.nanmin(self.skewness_array), np.nanmax(self.skewness_array)
 
     @property
     def kurtosis_extrema(self):
+        '''
+        The extrema of the kurtosis array.
+        '''
         return np.nanmin(self.kurtosis_array), np.nanmax(self.kurtosis_array)
 
     def make_spatial_histograms(self, mean_bins=None, variance_bins=None,
                                 skewness_bins=None, kurtosis_bins=None):
         '''
-        Create histograms of the moments.
+        Create histograms of the moments. If an optional set of bins is not
+        given, :math:`\sqrt{N}` equally-size bins will be created, where
+        :math:`N` is the number of elements in the array. The histogram
+        values are normalized so that the sum of the values in the bins,
+        multiplied by the bin width is 1.
 
         Parameters
         ----------
         mean_bins : array, optional
-            Bins to use for the histogram of the mean array
+            Bins to use for the histogram of the mean array.
         variance_bins : array, optional
-            Bins to use for the histogram of the variance array
+            Bins to use for the histogram of the variance array.
         skewness_bins : array, optional
-            Bins to use for the histogram of the skewness array
+            Bins to use for the histogram of the skewness array.
         kurtosis_bins : array, optional
-            Bins to use for the histogram of the kurtosis array
+            Bins to use for the histogram of the kurtosis array.
         '''
         # Mean
         if mean_bins is None:
@@ -161,7 +196,7 @@ class StatMoments(BaseStatisticMixIn):
             np.histogram(self.mean_array[~np.isnan(self.mean_array)],
                          mean_bins, density=True)
         mean_bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.mean_hist = [mean_bin_centres, mean_hist]
+        self._mean_hist = [mean_bin_centres, mean_hist]
 
         # Variance
         if variance_bins is None:
@@ -170,7 +205,7 @@ class StatMoments(BaseStatisticMixIn):
             np.histogram(self.variance_array[~np.isnan(self.variance_array)],
                          variance_bins, density=True)
         var_bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.variance_hist = [var_bin_centres, variance_hist]
+        self._variance_hist = [var_bin_centres, variance_hist]
 
         # Skewness
         if skewness_bins is None:
@@ -179,7 +214,7 @@ class StatMoments(BaseStatisticMixIn):
             np.histogram(self.skewness_array[~np.isnan(self.skewness_array)],
                          skewness_bins, density=True)
         skew_bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.skewness_hist = [skew_bin_centres, skewness_hist]
+        self._skewness_hist = [skew_bin_centres, skewness_hist]
         # Kurtosis
         if kurtosis_bins is None:
             kurtosis_bins = self.nbins
@@ -187,7 +222,39 @@ class StatMoments(BaseStatisticMixIn):
             np.histogram(self.kurtosis_array[~np.isnan(self.kurtosis_array)],
                          kurtosis_bins, density=True)
         kurt_bin_centres = (edges[:-1] + edges[1:]) / 2
-        self.kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
+        self._kurtosis_hist = [kurt_bin_centres, kurtosis_hist]
+
+    @property
+    def mean_hist(self):
+        '''
+        The histogram bins and values for the mean array. The first element is
+        the array of bins, and the second contains the values.
+        '''
+        return self._mean_hist
+
+    @property
+    def variance_hist(self):
+        '''
+        The histogram bins and values for the variance array. The first element
+        is the array of bins, and the second contains the values.
+        '''
+        return self._variance_hist
+
+    @property
+    def skewness_hist(self):
+        '''
+        The histogram bins and values for the skewness array. The first element
+        is the array of bins, and the second contains the values.
+        '''
+        return self._skewness_hist
+
+    @property
+    def kurtosis_hist(self):
+        '''
+        The histogram bins and values for the kurtosis array. The first element
+        is the array of bins, and the second contains the values.
+        '''
+        return self._kurtosis_hist
 
     def run(self, verbose=False, save_name=None, **kwargs):
         '''
@@ -207,38 +274,38 @@ class StatMoments(BaseStatisticMixIn):
         self.make_spatial_histograms(**kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.subplot(221)
-            p.imshow(self.mean_array, cmap="binary",
-                     origin="lower", interpolation="nearest")
-            p.title("Mean")
-            p.colorbar()
-            p.contour(self.data)
-            p.subplot(222)
-            p.imshow(self.variance_array, cmap="binary",
-                     origin="lower", interpolation="nearest")
-            p.title("Variance")
-            p.colorbar()
-            p.contour(self.data)
-            p.subplot(223)
-            p.imshow(self.skewness_array, cmap="binary",
-                     origin="lower", interpolation="nearest")
-            p.title("Skewness")
-            p.colorbar()
-            p.contour(self.data)
-            p.subplot(224)
-            p.imshow(self.kurtosis_array, cmap="binary",
-                     origin="lower", interpolation="nearest")
-            p.title("Kurtosis")
-            p.colorbar()
-            p.contour(self.data)
+            plt.subplot(221)
+            plt.imshow(self.mean_array, cmap="binary",
+                       origin="lower", interpolation="nearest")
+            plt.title("Mean")
+            plt.colorbar()
+            plt.contour(self.data)
+            plt.subplot(222)
+            plt.imshow(self.variance_array, cmap="binary",
+                       origin="lower", interpolation="nearest")
+            plt.title("Variance")
+            plt.colorbar()
+            plt.contour(self.data)
+            plt.subplot(223)
+            plt.imshow(self.skewness_array, cmap="binary",
+                       origin="lower", interpolation="nearest")
+            plt.title("Skewness")
+            plt.colorbar()
+            plt.contour(self.data)
+            plt.subplot(224)
+            plt.imshow(self.kurtosis_array, cmap="binary",
+                       origin="lower", interpolation="nearest")
+            plt.title("Kurtosis")
+            plt.colorbar()
+            plt.contour(self.data)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
         return self
 
 
