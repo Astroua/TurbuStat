@@ -9,7 +9,7 @@ import statsmodels.api as sm
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..stats_utils import common_scale, standardize
+from ..stats_utils import common_scale, padwithzeros
 from ..fitting_utils import check_fit_limits
 
 
@@ -427,15 +427,6 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
     kernel = 4 / (np.pi * lag**2 * (diam_ratio ** 2. - 1)) * (outer - inner)
 
     return kernel / np.sum(kernel)
-
-
-def padwithzeros(vector, pad_width, iaxis, kwargs):
-    '''
-    Pad array with zeros.
-    '''
-    vector[:pad_width[0]] = 0
-    vector[-pad_width[1]:] = 0
-    return vector
 
 
 class DeltaVariance_Distance(object):

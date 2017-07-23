@@ -6,7 +6,7 @@ from astropy.wcs import WCS
 import astropy.units as u
 
 from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
-                           common_scale)
+                           common_scale, padwithnans)
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 
@@ -651,12 +651,6 @@ def compute_moments(img, weights):
         np.nansum(weights) - 3
 
     return mean, variance, skewness, kurtosis
-
-
-def padwithnans(vector, pad_width, iaxis, kwargs):
-    vector[:pad_width[0]] = np.NaN
-    vector[-pad_width[1]:] = np.NaN
-    return vector
 
 
 def _auto_nbins(size1, size2):
