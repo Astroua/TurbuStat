@@ -1,4 +1,6 @@
 
+.. _statmoments_tutorial:
+
 *******************
 Statistical Moments
 *******************
