@@ -27,7 +27,7 @@ Statistics
     statistics/pspec_example
     statistics/scf_example
     statistics/statmoments_example.rst
-
+    statistics/tsallis_example.rst
     statistics/vca_example
     statistics/vcs_example
 
