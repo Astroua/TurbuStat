@@ -4,10 +4,12 @@
 import numpy as np
 from scipy.stats import chisquare
 from scipy.optimize import curve_fit
+import astropy.units as u
+from astropy.table import Table
 
-from ..stats_utils import standardize
+from ..stats_utils import standardize, padwithzeros
 from ..base_statistic import BaseStatisticMixIn
-from ...io import common_types, twod_types, input_data
+from ...io import common_types, twod_types
 
 
 class Tsallis(BaseStatisticMixIn):
@@ -18,61 +20,109 @@ class Tsallis(BaseStatisticMixIn):
     ----------
     img : %(dtypes)s
         2D image.
-    lags : numpy.ndarray or list
-        Lags to calculate at.
-    num_bins : int, optional
-        Number of bins to use in the histograms.
-    periodic : bool, optional
-        Sets whether the boundaries are periodic.
+    header : FITS header, optional
+        The image header. Needed for the pixel scale.
+    lags : `~astropy.units.Quantity`, optional
+        Give the spatial lag values to compute the distribution at. The
+        default lag sizes are powers of 2 up to half the image size (so for a
+        128 by 128 image, the lags will be [1, 2, 4, 8, 16, 32, 64]).
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, lags=None, num_bins=500, periodic=False):
-        '''
-        Parameters
-        ----------
+    def __init__(self, img, header=None, lags=None, distance=None):
 
-        periodic : bool, optional
-                   Use for simulations with periodic boundaries.
-        '''
+        self.input_data_header(img, header)
 
-        self.need_header_flag = False
-        self.header = None
-
-        self.data = input_data(img, no_header=True)
-        self.num_bins = num_bins
-        self.periodic = periodic
+        if distance is not None:
+            self.distance = distance
 
         if lags is None:
-            self.lags = [1, 2, 4, 8, 16, 32, 64]
+            # Find the next smallest power of 2 from the smallest axis
+            max_power = np.floor(np.log2(min(self.data.shape) / 2.))
+            self.lags = [2**i for i in range(1, max_power + 1)] * u.pix
         else:
             self.lags = lags
 
-        self.tsallis_arrays = np.empty(
-            (len(self.lags), self.data.shape[0], self.data.shape[1]))
-        self.tsallis_distrib = np.empty((len(self.lags), 2, num_bins))
-        self.tsallis_fits = np.empty((len(self.lags), 7))
+    @property
+    def lags(self):
+        '''
+        Lag values to calculate the statistics at.
+        '''
+        return self._lags
 
-    def make_tsallis(self):
+    @lags.setter
+    def lags(self, values):
+
+        if not isinstance(values, u.Quantity):
+            raise TypeError("lags must be given as a astropy.units.Quantity.")
+
+        # Now make sure that we can convert into pixels before setting.
+        try:
+            pix_rad = self._to_pixel(values)
+        except Exception as e:
+            raise e
+
+        # The radius should be larger than a pixel
+        if np.any(pix_rad.value < 1):
+            raise ValueError("One of the chosen lags is smaller than one "
+                             "pixel."
+                             " Ensure that all lag values are larger than one "
+                             "pixel.")
+
+        # Finally, limit the radius to a maximum of half the image size.
+        if np.any(pix_rad.value > min(self.data.shape)):
+            raise ValueError("At least one of the lags is larger than half of "
+                             "the image size (in the smallest dimension. "
+                             "Ensure that all lag values are smaller than "
+                             "this.")
+
+        self._lags = values
+
+    def make_tsallis(self, periodic=True, num_bins=None):
         '''
         Calculate the Tsallis distribution at each lag.
         We standardize each distribution such that it has a mean of zero and
-        variance of one.
+        variance of one before fitting.
+
+        If the lag values are fractions of a pixel when converted to pixel
+        units, the lag is rounded down to the next smallest integer value.
+
+        Parameters
+        ----------
+        periodic : bool, optional
+                   Use for simulations with periodic boundaries.
+        num_bins : int, optional
+            Number of bins to use in the histograms. Defaults to the
+            square-root of the number of finite points in the image.
+
         '''
 
-        for i, lag in enumerate(self.lags):
-            if self.periodic:
+        if num_bins is None:
+            num_bins = np.ceil(np.sqrt(np.isfinite(self.data).sum()))
+
+        self._lag_arrays = np.empty((len(self.lags),
+                                     self.data.shape[0],
+                                     self.data.shape[1]))
+        self._lag_distribs = np.empty((len(self.lags), 2, num_bins))
+
+        # Convert the lags into pixels
+        pix_lags = np.floor(self._to_pixel(self.lags).value).astype(int)
+
+        for i, lag in enumerate(pix_lags):
+            if periodic:
                 pad_img = self.data
             else:
                 pad_img = np.pad(self.data, lag, padwithzeros)
             rolls = np.roll(pad_img, lag, axis=0) +\
-                np.roll(pad_img, (-1) * lag, axis=0) +\
+                np.roll(pad_img, -lag, axis=0) +\
                 np.roll(pad_img, lag, axis=1) +\
-                np.roll(pad_img, (-1) * lag, axis=1)
+                np.roll(pad_img, -lag, axis=1)
 
             #  Remove the padding
-            if self.periodic:
+            if periodic:
                 clip_resulting = (rolls / 4.) - pad_img
             else:
                 clip_resulting = (rolls[lag:-lag, lag:-lag] / 4.) -\
@@ -82,14 +132,29 @@ class Tsallis(BaseStatisticMixIn):
 
             # Ignore nans for the histogram
             hist, bin_edges = np.histogram(data[~np.isnan(data)],
-                                           bins=self.num_bins)
+                                           bins=num_bins)
             bin_centres = (bin_edges[:-1] + bin_edges[1:]) / 2
             normlog_hist = np.log10(hist / np.sum(hist, dtype="float"))
 
             # Keep results
-            self.tsallis_arrays[i, :] = data
-            self.tsallis_distrib[i, 0, :] = bin_centres
-            self.tsallis_distrib[i, 1, :] = normlog_hist
+            self._lag_arrays[i, :] = data
+            self._lag_distribs[i, 0, :] = bin_centres
+            self._lag_distribs[i, 1, :] = normlog_hist
+
+    @property
+    def lag_arrays(self):
+        '''
+        Arrays of the image computed at different lags.
+        '''
+        return self._lag_arrays
+
+    @property
+    def lag_distribs(self):
+        '''
+        Histogram bins and values compute from `~Tsallis.lag_arrays`. The
+        histogram values are in log10.
+        '''
+        return self._lag_distribs
 
     def fit_tsallis(self, sigma_clip=2):
         '''
@@ -101,18 +166,66 @@ class Tsallis(BaseStatisticMixIn):
             Sets the sigma value to clip data at.
         '''
 
-        for i, dist in enumerate(self.tsallis_distrib):
+        if not hasattr(self, 'lag_distribs'):
+            raise Exception("Calculate the distributions first with "
+                            "Tsallis.make_tsallis.")
+
+        self._tsallis_params = np.empty((len(self.lags), 3))
+        self._tsallis_stderrs = np.empty((len(self.lags), 3))
+        self._tsallis_chisq = np.empty((len(self.lags), 1))
+
+        for i, dist in enumerate(self.lag_distribs):
             clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1],
                                      p0=(-np.max(clipped[1]), 1., 2.),
                                      maxfev=100 * len(dist[0]))
             fitted_vals = tsallis_function(clipped[0], *params)
-            self.tsallis_fits[i, :3] = params
-            self.tsallis_fits[i, 3:6] = np.diag(pcov)
-            self.tsallis_fits[i, 6] = chisquare(
-                np.exp(fitted_vals), f_exp=np.exp(clipped[1]), ddof=3)[0]
+            self._tsallis_params[i] = params
+            self._tsallis_stderrs[i] = np.diag(pcov)
+            self._tsallis_chisq[i] = chisquare(np.exp(fitted_vals),
+                                               f_exp=np.exp(clipped[1]),
+                                               ddof=3)[0]
 
-    def run(self, verbose=False, sigma_clip=2, save_name=None):
+    @property
+    def tsallis_params(self):
+        '''
+        Parameters of the Tsallis distribution fit at each lag value.
+        '''
+        return self._tsallis_params
+
+    @property
+    def tsallis_stderrs(self):
+        '''
+        Standard errors of the Tsallis distribution fit at each lag value.
+        '''
+        return self._tsallis_stderrs
+
+    @property
+    def tsallis_chisq(self):
+        '''
+        Reduced chi-squared values for the fit at each lag value.
+        '''
+        return self._tsallis_chisq
+
+    @property
+    def tsallis_table(self):
+        '''
+        Return the fit parameters, standard error, and chi-squared values as
+        an `~astropy.table.Table`.
+        '''
+
+        # hstack the params, stderrs, and chisqs
+        data = np.hstack([self.tsallis_params,
+                          self.tsallis_stderrs,
+                          self.tsallis_chisq])
+
+        names = ['logA', 'w2', 'q', 'logA_stderr', 'w2_stderr', 'q_stderr',
+                 'redchisq']
+
+        return Table(data, names=names)
+
+    def run(self, verbose=False, num_bins=None, periodic=True, sigma_clip=2,
+            save_name=None):
         '''
         Run all steps.
 
@@ -120,6 +233,12 @@ class Tsallis(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Enables plotting.
+        num_bins : int, optional
+            Sets the number of bins to use in the lag histograms. Passed
+            to `~Tsallis.make_tsallis`.
+        periodic : bool, optional
+            Treat periodic boundaries. Passed
+            to `~Tsallis.make_tsallis`. Enabled by default.
         sigma_clip : float
             Sets the sigma value to clip data at.
             Passed to :func:`fit_tsallis`.
@@ -127,7 +246,7 @@ class Tsallis(BaseStatisticMixIn):
             Save the figure when a file name is given.
         '''
 
-        self.make_tsallis()
+        self.make_tsallis(num_bins=num_bins, periodic=periodic)
         self.fit_tsallis(sigma_clip=sigma_clip)
 
         if verbose:
@@ -135,9 +254,9 @@ class Tsallis(BaseStatisticMixIn):
             num = len(self.lags)
 
             i = 1
-            for dist, arr, params in zip(self.tsallis_distrib,
-                                         self.tsallis_arrays,
-                                         self.tsallis_fits):
+            for dist, arr, params in zip(self.lag_distribs,
+                                         self.lag_arrays,
+                                         self.tsallis_params):
 
                 p.subplot(num, 2, i)
                 # This doesn't plot the last image
@@ -171,32 +290,32 @@ class Tsallis_Distance(object):
         2D datas.
     array2 : %(dtypes)s
         2D datas.
-    lags : numpy.ndarray or list
+    lags : `~astropy.units.Quantity`
         Lags to calculate at.
-    num_bins : int, optional
-        Number of bins to use in the histograms.
     fiducial_model : Tsallis
         Computed Tsallis object. use to avoid recomputing.
-    periodic : bool, optional
-        Sets whether the boundaries are periodic.
+    tsallis1_kwargs : dict, optional
+        Pass kwargs to `~Tsallis.run` for array1.
+    tsallis2_kwargs : dict, optional
+        Pass kwargs to `~Tsallis.run` for array2.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, array1, array2, lags=None, num_bins=500,
-                 fiducial_model=None, periodic=False):
+    def __init__(self, array1, array2, lags=None, tsallis1_kwargs={},
+                 tsallis2_kwargs={}, fiducial_model=None,):
         super(Tsallis_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.tsallis1 = fiducial_model
         else:
-            self.tsallis1 = Tsallis(
-                array1, lags=lags, num_bins=num_bins,
-                periodic=periodic).run(verbose=False)
+            self.tsallis1 = \
+                Tsallis(array1, lags=lags).run(verbose=False,
+                                               **tsallis1_kwargs)
 
-        self.tsallis2 = Tsallis(
-            array2, lags=lags, num_bins=num_bins,
-            periodic=periodic).run(verbose=False)
+        self.tsallis2 = \
+            Tsallis(array2, lags=lags).run(verbose=False,
+                                           **tsallis2_kwargs)
 
         self.distance = None
 
@@ -218,11 +337,11 @@ class Tsallis_Distance(object):
             Save the figure when a file name is given.
         '''
 
-        w1 = self.tsallis1.tsallis_fits[:, 1]
-        w2 = self.tsallis2.tsallis_fits[:, 1]
+        w1 = self.tsallis1.tsallis_params[:, 1]
+        w2 = self.tsallis2.tsallis_params[:, 1]
 
-        q1 = self.tsallis1.tsallis_fits[:, 2]
-        q2 = self.tsallis2.tsallis_fits[:, 2]
+        q1 = self.tsallis1.tsallis_params[:, 2]
+        q2 = self.tsallis2.tsallis_params[:, 2]
 
         # diff_a = (a1-a2)**2.
         diff_w = (w1 - w2) ** 2. / (w1 ** 2. + w2 ** 2.)
@@ -252,7 +371,8 @@ class Tsallis_Distance(object):
 def tsallis_function(x, *p):
     '''
     Tsallis distribution function as given in Tofflemire
-    Implemented in log form
+    Implemented in log form. The expected parameters are
+    log A, w^2, and q.
 
     Parameters
     ----------
@@ -287,7 +407,5 @@ def clip_to_sigma(x, y, sigma=2):
     return clip_x[np.isfinite(clip_y)], clip_y[np.isfinite(clip_y)]
 
 
-def padwithzeros(vector, pad_width, iaxis, kwargs):
-    vector[:pad_width[0]] = 0
-    vector[-pad_width[1]:] = 0
-    return vector
+def power_two(n):
+    return n.bit_length() - 1
