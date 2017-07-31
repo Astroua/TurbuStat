@@ -216,13 +216,10 @@ class Tsallis(BaseStatisticMixIn):
         an `~astropy.table.Table`.
         '''
 
-        # hstack the params, stderrs, and chisqs
-        data = np.hstack([self.lags,
-                          self.tsallis_params,
-                          self.tsallis_stderrs,
-                          self.tsallis_chisq])
+        data = [self.lags] + [col for col in self.tsallis_params.T] + \
+            [col for col in self.tsallis_stderrs.T] + [self.tsallis_chisq]
 
-        names = ['lags, ''logA', 'w2', 'q', 'logA_stderr', 'w2_stderr',
+        names = ['lags', 'logA', 'w2', 'q', 'logA_stderr', 'w2_stderr',
                  'q_stderr', 'redchisq']
 
         return Table(data, names=names)
