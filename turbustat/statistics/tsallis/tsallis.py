@@ -217,12 +217,13 @@ class Tsallis(BaseStatisticMixIn):
         '''
 
         # hstack the params, stderrs, and chisqs
-        data = np.hstack([self.tsallis_params,
+        data = np.hstack([self.lags,
+                          self.tsallis_params,
                           self.tsallis_stderrs,
                           self.tsallis_chisq])
 
-        names = ['logA', 'w2', 'q', 'logA_stderr', 'w2_stderr', 'q_stderr',
-                 'redchisq']
+        names = ['lags, ''logA', 'w2', 'q', 'logA_stderr', 'w2_stderr',
+                 'q_stderr', 'redchisq']
 
         return Table(data, names=names)
 
