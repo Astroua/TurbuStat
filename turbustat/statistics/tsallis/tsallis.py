@@ -250,31 +250,34 @@ class Tsallis(BaseStatisticMixIn):
         self.fit_tsallis(sigma_clip=sigma_clip)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
             num = len(self.lags)
+
+            # print the table of parameters
+            print(self.tsallis_table)
 
             i = 1
             for dist, arr, params in zip(self.lag_distribs,
                                          self.lag_arrays,
                                          self.tsallis_params):
 
-                p.subplot(num, 2, i)
+                plt.subplot(num, 2, i)
                 # This doesn't plot the last image
-                p.imshow(arr, origin="lower", interpolation="nearest")
-                p.colorbar()
-                p.subplot(num, 2, i + 1)
-                p.plot(dist[0], tsallis_function(dist[0], *params), "r")
-                p.plot(dist[0], dist[1], 'rD', label="".join(
+                plt.imshow(arr, origin="lower", interpolation="nearest")
+                plt.colorbar()
+                plt.subplot(num, 2, i + 1)
+                plt.plot(dist[0], tsallis_function(dist[0], *params), "r")
+                plt.plot(dist[0], dist[1], 'rD', label="".join(
                     ["Tsallis Distribution with Lag ", str(self.lags[i / 2])]))
-                p.legend(loc="best")
+                plt.legend(loc="best")
 
                 i += 2
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 
