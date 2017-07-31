@@ -84,7 +84,7 @@ class StatMoments(BaseStatisticMixIn):
                              "Increase the size of the radius.")
 
         # Finally, limit the radius to a maximum of half the image size.
-        if pix_rad.value > min(self.data.shape):
+        if pix_rad.value > min(self.data.shape) / 2.:
             raise ValueError("The chosen radius is larger than half the image "
                              "size. Reduce the size of the radius.")
 
