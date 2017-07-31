@@ -43,7 +43,7 @@ class Tsallis(BaseStatisticMixIn):
             # Find the next smallest power of 2 from the smallest axis
             max_power = \
                 np.floor(np.log2(min(self.data.shape) / 2.)).astype(int)
-            self.lags = [2**i for i in range(1, max_power + 1)] * u.pix
+            self.lags = [2**i for i in range(max_power + 1)] * u.pix
         else:
             self.lags = lags
 
@@ -263,17 +263,13 @@ class Tsallis(BaseStatisticMixIn):
                                          self.lag_arrays,
                                          self.tsallis_params):
 
-                plt.subplot(num, 2, i)
-                # This doesn't plot the last image
-                plt.imshow(arr, origin="lower", interpolation="nearest")
-                plt.colorbar()
-                plt.subplot(num, 2, i + 1)
+                plt.subplot(num, 1, i)
+                plt.plot(dist[0], dist[1], 'rD',
+                         label="Lag {}".format(self.lags[i - 1]), alpha=0.7)
                 plt.plot(dist[0], tsallis_function(dist[0], *params), "r")
-                plt.plot(dist[0], dist[1], 'rD', label="".join(
-                    ["Tsallis Distribution with Lag ", str(self.lags[i / 2])]))
-                plt.legend(loc="best")
+                plt.legend(frameon=True, loc='best')
 
-                i += 2
+                i += 1
 
             if save_name is not None:
                 plt.savefig(save_name)
