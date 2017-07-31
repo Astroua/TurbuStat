@@ -41,7 +41,8 @@ class Tsallis(BaseStatisticMixIn):
 
         if lags is None:
             # Find the next smallest power of 2 from the smallest axis
-            max_power = np.floor(np.log2(min(self.data.shape) / 2.))
+            max_power = \
+                np.floor(np.log2(min(self.data.shape) / 2.)).astype(int)
             self.lags = [2**i for i in range(1, max_power + 1)] * u.pix
         else:
             self.lags = lags
@@ -101,7 +102,8 @@ class Tsallis(BaseStatisticMixIn):
         '''
 
         if num_bins is None:
-            num_bins = np.ceil(np.sqrt(np.isfinite(self.data).sum()))
+            num_bins = \
+                np.ceil(np.sqrt(np.isfinite(self.data).sum())).astype(int)
 
         self._lag_arrays = np.empty((len(self.lags),
                                      self.data.shape[0],
