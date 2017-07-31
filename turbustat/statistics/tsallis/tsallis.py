@@ -224,6 +224,43 @@ class Tsallis(BaseStatisticMixIn):
 
         return Table(data, names=names)
 
+    def plot_parameters(self, save_name=None):
+        '''
+        Plot the fit parameters as a function of lag.
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        '''
+
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(3, 1, sharex=True)
+
+        ax1 = axes[0]
+        ax1.errorbar(self.lags.value, self.tsallis_table['logA'],
+                     yerr=self.tsallis_table['logA_stderr'])
+        ax1.set_ylabel(r"log A")
+        ax1.grid()
+
+        ax2 = axes[1]
+        ax2.errorbar(self.lags.value, self.tsallis_table['w2'],
+                     yerr=self.tsallis_table['w2_stderr'])
+        ax2.set_ylabel(r"$w^2$")
+        ax2.grid()
+
+        ax3 = axes[2]
+        ax3.errorbar(self.lags.value, self.tsallis_table['q'],
+                     yerr=self.tsallis_table['q_stderr'])
+        ax3.set_ylabel(r"q")
+        ax3.grid()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, num_bins=None, periodic=True, sigma_clip=2,
             save_name=None):
         '''
@@ -251,23 +288,27 @@ class Tsallis(BaseStatisticMixIn):
 
         if verbose:
             import matplotlib.pyplot as plt
-            num = len(self.lags)
 
             # print the table of parameters
             print(self.tsallis_table)
 
-            i = 1
-            for dist, arr, params in zip(self.lag_distribs,
-                                         self.lag_arrays,
-                                         self.tsallis_params):
+            fig, axes = plt.subplots(len(self.lags), 1, sharex=True)
 
-                plt.subplot(num, 1, i)
-                plt.plot(dist[0], dist[1], 'rD',
-                         label="Lag {}".format(self.lags[i - 1]), alpha=0.7)
-                plt.plot(dist[0], tsallis_function(dist[0], *params), "r")
-                plt.legend(frameon=True, loc='best')
+            for vals in zip(self.lags, self.lag_distribs,
+                            self.lag_arrays, self.tsallis_params,
+                            axes):
 
-                i += 1
+                lag, dist, arr, params, ax = vals
+
+                ax.plot(dist[0], dist[1], 'rD',
+                        label="Lag {}".format(lag), alpha=0.5)
+                ax.plot(dist[0], tsallis_function(dist[0], *params), "k")
+
+                # Indicate which data was used for the fits.
+                ax.axvline(sigma_clip, color='r', linestyle='--', alpha=0.7)
+                ax.axvline(-sigma_clip, color='r', linestyle='--', alpha=0.7)
+
+                ax.legend(frameon=True, loc='best')
 
             if save_name is not None:
                 plt.savefig(save_name)
