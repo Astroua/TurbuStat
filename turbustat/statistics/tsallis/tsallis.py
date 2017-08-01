@@ -428,7 +428,7 @@ def tsallis_function(x, *p):
 
 def clip_to_sigma(x, y, sigma=2):
     '''
-    Clip to values between -2 and 2 sigma.
+    Clip to values between +/- sigma.
 
     Parameters
     ----------
@@ -437,11 +437,7 @@ def clip_to_sigma(x, y, sigma=2):
     y : numpy.ndarray
         y-data
     '''
-    clip_mask = np.zeros(x.shape)
-    for i, val in enumerate(x):
-        if val < sigma or val > -sigma:
-            clip_mask[i] = 1
-    clip_x = x[np.where(clip_mask == 1)]
-    clip_y = y[np.where(clip_mask == 1)]
 
-    return clip_x[np.isfinite(clip_y)], clip_y[np.isfinite(clip_y)]
+    clip_mask = np.logical_and(y < sigma, y > -sigma)
+
+    return x[clip_mask], y[clip_mask]
