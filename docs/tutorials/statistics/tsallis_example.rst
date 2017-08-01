@@ -49,7 +49,7 @@ This returns an astropy table of the fits to each of the parameters, their stand
 
 A key to the works of `Esquivel & Lazarian 2010 <ref-Esquivel2010>`_ and `Tofflemire et al. 2011 <ref-Tofflemire2011>`_ is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
 
-    >>> tsallis.plot_parameters()
+    >>> tsallis.plot_parameters()  # doctest: +SKIP
 
 .. image:: images/design4_tsallis_params.png
 
@@ -59,8 +59,8 @@ The lags size were automatically determined in the previous example. The default
 
     >>> distance = 250 * u.pc
     >>> phys_lags = np.arange(0.025, 0.5, 0.05) * u.pc
-    >>> tsallis = Tsallis(moment0, lags=phys_lags, distance=distance)
-    >>> tsallis.run(verbose=True)
+    >>> tsallis = Tsallis(moment0, lags=phys_lags, distance=distance)  # doctest: +SKIP
+    >>> tsallis.run(verbose=True)  # doctest: +SKIP
      lags      logA            w2             q         logA_stderr       w2_stderr          q_stderr      redchisq [1]
       pc
     ----- -------------- -------------- ------------- ---------------- ---------------- ----------------- --------------
@@ -82,7 +82,7 @@ The lags given here correspond to pixel scales of 1 to about 21 pixels. Whenever
 
 Calculating the difference in the image at a given lag requires shuffling the data in different directions, and then taking its difference (similar to the :ref:`SCF <scf_tutorial>`). If the data is periodic in the spatial dimensions, like the example data used here, we want to keep the portion of the data that was rolled passed the edge. The periodic boundary handling is enabled by default. To disable treating the edges as periodic, `periodic=False` can be passed:
 
-    >>> tsallis_noper = Tsallis(moment0).run(verbose=True, periodic=False)
+    >>> tsallis_noper = Tsallis(moment0).run(verbose=True, periodic=False)  # doctest: +SKIP
     lags      logA             w2             q         logA_stderr       w2_stderr         q_stderr      redchisq [1]
     pix
     ---- -------------- --------------- ------------- ---------------- ---------------- ---------------- --------------
@@ -101,7 +101,7 @@ The histograms are quite different, partially because we are throwing out extra 
 
 Throughout these examples, the fitting has been limited to :math:`\pm 5` of the standard deviation, as indicated by the dashed red lines in the histogram plots. If the limits need to be changed, the `sigma_clip` keyword can be passed:
 
-    >>> tsallis = Tsallis(moment0).run(verbose=True, sigma_clip=3)  # doctest: +SKIP
+    >>> tsallis = Tsallis(moment0).run(verbose=True, sigma_clip=3)  # doctest: +SKIP  # doctest: +SKIP
     lags      logA            w2             q         logA_stderr       w2_stderr         q_stderr       redchisq [1]
     pix
     ---- -------------- -------------- ------------- ---------------- ---------------- ---------------- ---------------
