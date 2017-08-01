@@ -233,7 +233,7 @@ class Wavelet(BaseStatisticMixIn):
 
         return model_values
 
-    def plot_transform(self, unit=u.pix, show=True,
+    def plot_transform(self, xunit=u.pix, show=True,
                        color='b', symbol='D', label=None):
         '''
         Plot the transform and the fit.
@@ -241,12 +241,12 @@ class Wavelet(BaseStatisticMixIn):
 
         import matplotlib.pyplot as plt
 
-        scales = self._spatial_unit_conversion(self.scales, unit).value
+        scales = self._spatial_unit_conversion(self.scales, xunit).value
 
         plt.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
-        low_lim = self._spatial_unit_conversion(self._fit_range[0], unit)
-        high_lim = self._spatial_unit_conversion(self._fit_range[1], unit)
+        low_lim = self._spatial_unit_conversion(self._fit_range[0], xunit)
+        high_lim = self._spatial_unit_conversion(self._fit_range[1], xunit)
 
         plt.loglog(scales, 10**self.fitted_model(np.log10(scales)),
                    color + '--', linewidth=8, label='Fit', alpha=0.75)
@@ -255,7 +255,7 @@ class Wavelet(BaseStatisticMixIn):
         plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
 
         plt.ylabel(r"$T_g$")
-        plt.xlabel("Scales ({})".format(unit))
+        plt.xlabel("Scales ({})".format(xunit))
 
         if show:
             plt.show()
