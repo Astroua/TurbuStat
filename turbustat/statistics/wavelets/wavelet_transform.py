@@ -245,8 +245,10 @@ class Wavelet(BaseStatisticMixIn):
 
         plt.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
-        low_lim = self._spatial_unit_conversion(self._fit_range[0], xunit)
-        high_lim = self._spatial_unit_conversion(self._fit_range[1], xunit)
+        low_lim = \
+            self._spatial_unit_conversion(self._fit_range[0], xunit).value
+        high_lim = \
+            self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
         plt.loglog(scales, 10**self.fitted_model(np.log10(scales)),
                    color + '--', linewidth=8, label='Fit', alpha=0.75)
@@ -263,7 +265,8 @@ class Wavelet(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, xunit=u.pix,
-            xlow=None, xhigh=None, scale_normalization=True):
+            xlow=None, xhigh=None, scale_normalization=True,
+            save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
 
@@ -273,16 +276,31 @@ class Wavelet(BaseStatisticMixIn):
             Plot wavelet transform.
         xunit : u.Unit, optional
             Choose the unit to convert to when ang_units is enabled.
+        xlow : `~astropy.units.Quantity`, optional
+            Lower scale value to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper scale value to consider in the fit.
         scale_normalization: bool, optional
             Multiply the wavelet transform by the correct normalization
             factor.
+        save_name : str,optional
+            Save the figure when a file name is given.
+        plot_kwargs : Passed to `~Wavelet.plot_transform`.
         '''
         self.compute_transform(scale_normalization=scale_normalization)
         self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh)
 
         if verbose:
-            self.plot_transform(xunit=xunit, show=True)
+            import matplotlib.pyplot as plt
+
+            self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
+
+            if save_name is not None:
+                plt.savefig(save_name)
+                plt.close()
+            else:
+                plt.show()
 
         return self
 
