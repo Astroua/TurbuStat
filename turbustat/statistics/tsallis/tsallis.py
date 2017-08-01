@@ -445,7 +445,3 @@ def clip_to_sigma(x, y, sigma=2):
     clip_y = y[np.where(clip_mask == 1)]
 
     return clip_x[np.isfinite(clip_y)], clip_y[np.isfinite(clip_y)]
-
-
-def power_two(n):
-    return n.bit_length() - 1
