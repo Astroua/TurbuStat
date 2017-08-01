@@ -202,9 +202,9 @@ class DeltaVariance(BaseStatisticMixIn):
 
         Parameters
         ----------
-        xlow : float, optional
+        xlow : `~astropy.units.Quantity`, optional
             Lower lag value to consider in the fit.
-        xhigh : float, optional
+        xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
         verbose : bool, optional
             Show fit summary when enabled.
@@ -263,14 +263,23 @@ class DeltaVariance(BaseStatisticMixIn):
 
     @property
     def slope(self):
+        '''
+        Fitted slope.
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        Standard error on the fitted slope.
+        '''
         return self._slope_err
 
     @property
     def fit_range(self):
+        '''
+        Range of lags used in the fit.
+        '''
         return self._fit_range
 
     def fitted_model(self, xvals):
