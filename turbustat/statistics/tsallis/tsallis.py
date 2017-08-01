@@ -74,7 +74,7 @@ class Tsallis(BaseStatisticMixIn):
                              "pixel.")
 
         # Finally, limit the radius to a maximum of half the image size.
-        if np.any(pix_rad.value > min(self.data.shape)):
+        if np.any(pix_rad.value > min(self.data.shape) / 2.):
             raise ValueError("At least one of the lags is larger than half of "
                              "the image size (in the smallest dimension. "
                              "Ensure that all lag values are smaller than "

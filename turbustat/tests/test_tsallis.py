@@ -21,7 +21,7 @@ def test_Tsallis():
                      lags=[1, 2, 4, 8, 16] * u.pix)
     tester.run(num_bins=100, periodic=False)
     npt.assert_allclose(tester.tsallis_params,
-                        computed_data['tsallis_val'][:, :3], atol=0.01)
+                        computed_data['tsallis_val'], atol=0.01)
 
     # Ensure that the output table matched the right inputs by checking a
     # couple columns
