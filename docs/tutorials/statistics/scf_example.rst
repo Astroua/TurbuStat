@@ -1,4 +1,6 @@
 
+.. _scf_tutorial:
+
 ***********************************
 Spectral Correlation Function (SCF)
 ***********************************
