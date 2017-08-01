@@ -257,6 +257,8 @@ class Wavelet(BaseStatisticMixIn):
         plt.ylabel(r"$T_g$")
         plt.xlabel("Scales ({})".format(xunit))
 
+        plt.grid()
+
         if show:
             plt.show()
 
