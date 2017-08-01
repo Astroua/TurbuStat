@@ -158,7 +158,7 @@ class Tsallis(BaseStatisticMixIn):
         '''
         return self._lag_distribs
 
-    def fit_tsallis(self, sigma_clip=2):
+    def fit_tsallis(self, sigma_clip=5):
         '''
         Fit the Tsallis distributions.
 
@@ -261,7 +261,7 @@ class Tsallis(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, num_bins=None, periodic=True, sigma_clip=2,
+    def run(self, verbose=False, num_bins=None, periodic=True, sigma_clip=5,
             save_name=None):
         '''
         Run all steps.
