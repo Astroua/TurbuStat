@@ -295,8 +295,7 @@ class DeltaVariance(BaseStatisticMixIn):
         Returns
         -------
         model_values : `~numpy.ndarray`
-            Values of the model at the given values. Equivalent to log values
-            of the SCF spectrum.
+            Values of the model at the given values.
         '''
 
         model_values = self.fit.params[0] + self.fit.params[1] * xvals
