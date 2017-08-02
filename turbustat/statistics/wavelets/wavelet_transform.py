@@ -156,7 +156,8 @@ class Wavelet(BaseStatisticMixIn):
             Upper scale value to consider in the fit.
         '''
 
-        x = np.log10(self.scales.value)
+        pix_scales = self._to_pixel(self.scales)
+        x = np.log10(pix_scales.value)
         y = np.log10(self.values)
 
         if xlow is not None:
@@ -166,7 +167,7 @@ class Wavelet(BaseStatisticMixIn):
         else:
             lower_limit = \
                 np.ones_like(self.values, dtype=bool)
-            xlow = self.scales.min() * 0.99
+            xlow = pix_scales.min() * 0.99
 
         if xhigh is not None:
             xhigh = self._to_pixel(xhigh)
@@ -175,7 +176,7 @@ class Wavelet(BaseStatisticMixIn):
         else:
             upper_limit = \
                 np.ones_like(self.values, dtype=bool)
-            xhigh = self.scales.max() * 1.01
+            xhigh = pix_scales.max() * 1.01
 
         self._fit_range = [xlow, xhigh]
 
@@ -241,7 +242,8 @@ class Wavelet(BaseStatisticMixIn):
 
         import matplotlib.pyplot as plt
 
-        scales = self._spatial_unit_conversion(self.scales, xunit).value
+        pix_scales = self._to_pixel(self.scales)
+        scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
         plt.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
@@ -250,7 +252,7 @@ class Wavelet(BaseStatisticMixIn):
         high_lim = \
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-        plt.loglog(scales, 10**self.fitted_model(np.log10(scales)),
+        plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
                    color + '--', linewidth=8, label='Fit', alpha=0.75)
 
         plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
