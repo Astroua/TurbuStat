@@ -30,6 +30,7 @@ Statistics
     statistics/tsallis_example.rst
     statistics/vca_example
     statistics/vcs_example
+    statistics/wavelet_example
 
 Distance Metrics
 ================
