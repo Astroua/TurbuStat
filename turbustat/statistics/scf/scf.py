@@ -434,8 +434,7 @@ class SCF(BaseStatisticMixIn):
         '''
 
         self.compute_surface(boundary=boundary)
-        self.compute_spectrum(logspacing=logspacing,
-                              return_stddev=return_stddev)
+        self.compute_spectrum(return_stddev=return_stddev)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if save_results:
