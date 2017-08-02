@@ -292,6 +292,9 @@ class Wavelet(BaseStatisticMixIn):
         self.fit_transform(xlow=xlow, xhigh=xhigh)
 
         if verbose:
+
+            print(self.fit.summary())
+
             import matplotlib.pyplot as plt
 
             self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
