@@ -172,10 +172,10 @@ Alternatively, the fitting limits could be passed in units of `u.pc**-1`.
 References
 ----------
 
-.. _ref-miesch_bally1994::
+.. _ref-miesch_bally1994:
 
 `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_
 
-.. _ref-lazarian_esquivel_2003::
+.. _ref-lazarian_esquivel_2003:
 
 `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_

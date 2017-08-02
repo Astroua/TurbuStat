@@ -54,6 +54,8 @@ Again, the mean is just a smoothed version of the zeroth moment values. The vari
 
 .. image:: images/design4_statmoments_randweights.png
 
+And the associated histograms:
+
     >>> moments_weighted.plot_histograms()  # doctest: +SKIP
 
 .. image:: images/design4_statmoments_hists_randweights.png

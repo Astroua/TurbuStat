@@ -1,4 +1,7 @@
 
+.. _delvar_tutorial:
+
+
 **************
 Delta-Variance
 **************
@@ -23,6 +26,8 @@ where :math:`W_{\rm tot}(r) = W_{\rm core}(r)\,W_{\rm ann}(r)`.
 Since the kernel is separated into two components, the ratio between their widths can be set independently. :ref:`Ossenkopf et al. 2008a <ref-ossenkopf2008a>` find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.
 
 Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function. Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
+
+This technique shares many similarities to the :ref:`Wavelet transform <wavelet_tutorial>`.
 
 Using
 -----
