@@ -317,9 +317,9 @@ class DeltaVariance(BaseStatisticMixIn):
             See `~DeltaVariance.do_convolutions`.
         boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "cut" for non-periodic.
-        xlow : float, optional
+        xlow : `~astropy.units.Quantity`, optional
             Lower lag value to consider in the fit.
-        xhigh : float, optional
+        xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
         save_name : str,optional
             Save the figure when a file name is given.
