@@ -119,9 +119,7 @@ Third, we find the spectral widths:
     >>> for i, ax in zip(range(9), axes.ravel()):  # doctest: +SKIP
     >>>     ax.plot(x, autocorr_spec[:251, i])  # doctest: +SKIP
     >>>     ax.axhline(np.exp(-1), label='exp(-1)', color='r', linestyle='--')  # doctest: +SKIP
-    >>>     ax.axvline(pca.spectral_width[i].value / pca._spectral_size.value,  # doctest: +SKIP
-    >>>                label='Fitted Width',  # doctest: +SKIP
-    >>>                color='g', linestyle='-.')  # doctest: +SKIP
+    >>>     ax.axvline(pca.spectral_width[i].value / pca._spectral_size.value, label='Fitted Width', color='g', linestyle='-.')  # doctest: +SKIP
     >>>     # ax.set_yticks([])  # doctest: +SKIP
     >>>     ax.set_title("{}".format(i + 1))  # doctest: +SKIP
     >>>     ax.set_xlim([0, 50])  # doctest: +SKIP

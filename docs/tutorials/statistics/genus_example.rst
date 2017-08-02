@@ -48,8 +48,8 @@ Computing the curves is accomplished using `~turbustat.statistics.Genus.run`:
 
 If `min_value` and `max_value` are set instead:
 
-    >>> genus = Genus(moment0, min_value=137, max_value=353, numpts=100)
-    >>> genus.run(verbose=True, min_size=4)
+    >>> genus = Genus(moment0, min_value=137, max_value=353, numpts=100)  # doctest: +SKIP
+    >>> genus.run(verbose=True, min_size=4)  # doctest: +SKIP
 
 .. image:: images/genus_design4_minmaxval.png
 

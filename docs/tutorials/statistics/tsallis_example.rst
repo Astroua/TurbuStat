@@ -101,7 +101,7 @@ The histograms are quite different, partially because we are throwing out extra 
 
 Throughout these examples, the fitting has been limited to :math:`\pm 5` of the standard deviation, as indicated by the dashed red lines in the histogram plots. If the limits need to be changed, the `sigma_clip` keyword can be passed:
 
-    >>> tsallis = Tsallis(moment0).run(verbose=True, sigma_clip=3)  # doctest: +SKIP  # doctest: +SKIP
+    >>> tsallis = Tsallis(moment0).run(verbose=True, sigma_clip=3)  # doctest: +SKIP
     lags      logA            w2             q         logA_stderr       w2_stderr         q_stderr       redchisq [1]
     pix
     ---- -------------- -------------- ------------- ---------------- ---------------- ---------------- ---------------

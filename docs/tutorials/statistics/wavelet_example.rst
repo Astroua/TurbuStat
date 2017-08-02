@@ -20,6 +20,7 @@ Using
 
 We need to import the `~turbustat.statistics.Wavelet` class, along with a few other common packages:
 
+    >>> import numpy as np
     >>> from turbustat.statistics import Wavelet
     >>> from astropy.io import fits
     >>> import astropy.units as u

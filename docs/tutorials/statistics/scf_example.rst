@@ -103,11 +103,11 @@ Here the fit limits were given in pixel units, but angular units and physical un
 
 The slope of the model can be accessed with `scf.slope` and its standard error with `scf.slope_err`. The slope and intercept values are in `scf.fit.params`. `scf.fitted_model` can be used to evaluate the model at any given lag value. For example:
 
-    >>> scf.fitted_model(1 * u.pix)
+    >>> scf.fitted_model(1 * u.pix)  # doctest: +SKIP
     0.97659777310171636
-    >>> scf.fitted_model(u.Quantity([1, 10]) * u.pix)
+    >>> scf.fitted_model(u.Quantity([1, 10]) * u.pix)  # doctest: +SKIP
     array([ 0.97659777,  0.61242384])
-    >>> scf.fitted_model(u.Quantity([50, 100]) * u.arcsec)
+    >>> scf.fitted_model(u.Quantity([50, 100]) * u.arcsec)  # doctest: +SKIP
     array([ 0.44197356,  0.3840506 ])
 
 All values passed must have an attached unit. Physical units can be given when a distance has been given (see below).

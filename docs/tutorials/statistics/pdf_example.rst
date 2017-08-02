@@ -146,13 +146,13 @@ The MCMC fit finds the same parameter values (see the first example above) with 
 
 MCMC results shown **not** be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result. This can be checked by making a trace plot:
 
-    >>> pdf_mom0.trace_plot()
+    >>> pdf_mom0.trace_plot()  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0_mcmc_trace.png
 
 We can also look at the sample distributions for each fit parameter using a corner plot. This requires the `corner.py <https://corner.readthedocs.io/en/latest/>`_ package to be installed.
 
-    >>> pdf_mom0.corner_plot()
+    >>> pdf_mom0.corner_plot()  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0_mcmc_corner.png
 

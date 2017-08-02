@@ -125,7 +125,7 @@ By incorporating the break, we find a better quality fit to this portion of the 
 
 From the figure, this is where the curve deviates from the power-law on small scales. With our assigned distance, the break point corresponds to a physical scale of:
 
-    >>> vca._physical_size / vca.brk.value
+    >>> vca._physical_size / vca.brk.value  # doctest: +SKIP
     <Quantity 0.14082499334584425 pc>
 
 `vca._physical_size` is the spatial size of one pixel (assuming the spatial dimensions have square pixels in the celestial frame).

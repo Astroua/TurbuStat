@@ -20,6 +20,7 @@ Using
 
 Import a few packages that are needed and read-in the zeroth moment:
 
+    >>> import numpy as np
     >>> from astropy.io import fits
     >>> import astropy.units as u
     >>> from turbustat.statistics import StatMoments
