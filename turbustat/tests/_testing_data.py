@@ -66,12 +66,6 @@ dataset1 = props1.to_dict()
 moment0_hdu1 = fits.PrimaryHDU(dataset1["moment0"][0],
                                header=dataset1["moment0"][1])
 
-# Save moments for testing i/o loading
-try:
-    props1.to_fits(save_name="dataset1")
-except IOError:
-    warnings.warn("It looks like the moment arrays are already saved...")
-
 ##############################################################################
 
 path2 = os.path.join(turb_path, "data/dataset2.npz")
