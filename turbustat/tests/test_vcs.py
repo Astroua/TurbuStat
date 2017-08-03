@@ -8,6 +8,7 @@ import pytest
 
 import numpy as np
 import numpy.testing as npt
+import astropy.units as u
 
 from ..statistics import VCS, VCS_Distance
 from ._testing_data import \
@@ -19,7 +20,7 @@ def test_VCS_method():
 
     npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
 
-    npt.assert_allclose(tester.slope, computed_data['vcs_slopes_val'])
+    npt.assert_allclose(tester.slope, computed_data['vcs_slopes'])
 
 
 def test_VCS_distance():
@@ -30,4 +31,33 @@ def test_VCS_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['vcs_distance'])
 
-# Add tests for: VCS changing the spectral width, pixel and spectral units,
+
+def test_VCS_method_change_chanwidth():
+
+    orig_width = np.abs(dataset1['cube'][1]["CDELT3"]) * u.m / u.s
+
+    tester = VCS(dataset1["cube"], channel_width=2 * orig_width)
+
+    # Should have 250 channels now
+    assert tester.data.shape[0] == 250
+
+    tester.run()
+
+
+def test_VCS_method_fitlimits():
+
+    high_cut = 0.17 / u.pix
+    low_cut = 0.02 / u.pix
+
+    tester = VCS(dataset1["cube"])
+    tester.run(high_cut=high_cut, low_cut=low_cut)
+
+    # Convert to spectral units
+    high_cut = \
+        high_cut.value / np.abs(dataset1['cube'][1]['CDELT3'] * u.m / u.s)
+    low_cut = \
+        low_cut.value / np.abs(dataset1['cube'][1]['CDELT3'] * u.m / u.s)
+    tester2 = VCS(dataset1["cube"])
+    tester2.run(high_cut=high_cut, low_cut=low_cut)
+
+    npt.assert_allclose(tester.slope, tester2.slope)
