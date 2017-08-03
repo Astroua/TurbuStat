@@ -66,8 +66,8 @@ def test_SCF_method_fitlimits_units():
 
     npt.assert_almost_equal(tester2.slope, computed_data["scf_slope_wlimits"])
 
-    xlow = xlow.value * distance
-    xhigh = xhigh.value * distance
+    xlow = xlow.to(u.rad).value * distance
+    xhigh = xhigh.to(u.rad).value * distance
 
     tester3 = SCF(dataset1["cube"], size=11, distance=distance)
     tester3.run(boundary='continuous', xlow=xlow,

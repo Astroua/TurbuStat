@@ -19,7 +19,7 @@ from ._testing_data import \
 def test_Tsallis():
     tester = Tsallis(dataset1["moment0"],
                      lags=[1, 2, 4, 8, 16] * u.pix)
-    tester.run(num_bins=100, periodic=False)
+    tester.run(num_bins=100, periodic=True)
     npt.assert_allclose(tester.tsallis_params,
                         computed_data['tsallis_val'], atol=0.01)
 
@@ -29,6 +29,19 @@ def test_Tsallis():
                         computed_data['tsallis_val'][:, 0])
     npt.assert_allclose(tester.tsallis_table['logA_stderr'],
                         computed_data['tsallis_stderrs'][:, 0])
+
+
+def test_Tsallis_noper():
+    tester = Tsallis(dataset1["moment0"],
+                     lags=[1, 2, 4, 8, 16] * u.pix)
+    tester.run(num_bins=100, periodic=False)
+    npt.assert_allclose(tester.tsallis_params,
+                        computed_data['tsallis_val_noper'], atol=0.01)
+
+    # Ensure that the output table matched the right inputs by checking a
+    # couple columns
+    npt.assert_allclose(tester.tsallis_table['logA'],
+                        computed_data['tsallis_val_noper'][:, 0])
 
 
 def test_Tsallis_lagunits():
@@ -44,19 +57,19 @@ def test_Tsallis_lagunits():
 
     tester = Tsallis(dataset1["moment0"],
                      lags=ang_lags)
-    tester.run(num_bins=100, periodic=False)
+    tester.run(num_bins=100, periodic=True)
     npt.assert_allclose(tester.tsallis_params,
                         computed_data['tsallis_val'], atol=0.01)
 
     tester = Tsallis(dataset1["moment0"],
                      lags=phys_lags, distance=distance)
-    tester.run(num_bins=100, periodic=False)
+    tester.run(num_bins=100, periodic=True)
     npt.assert_allclose(tester.tsallis_params,
                         computed_data['tsallis_val'], atol=0.01)
 
 
 def test_Tsallis_distance():
-    kwarg_dict = dict(num_bins=100, periodic=False)
+    kwarg_dict = dict(num_bins=100, periodic=True)
     tester_dist = \
         Tsallis_Distance(dataset1["moment0"],
                          dataset2["moment0"],

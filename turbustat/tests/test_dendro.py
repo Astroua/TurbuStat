@@ -42,7 +42,7 @@ def test_DendroStat_periodic():
 
     tester = Dendrogram_Stats(dataset1["cube"],
                               min_deltas=min_deltas)
-    tester.run(periodic_bounds=False)
+    tester.run(periodic_bounds=True)
 
     npt.assert_allclose(tester.numfeatures,
                         computed_data["dendrogram_periodic_val"])
