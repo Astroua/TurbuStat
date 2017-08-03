@@ -12,7 +12,7 @@ limit.
 # Need to create the property arrays
 from ..data_reduction import Mask_and_Moments
 
-from spectral_cube import SpectralCube, LazyMask
+from spectral_cube import SpectralCube, LazyMask, Projection
 
 import os
 import warnings
@@ -65,6 +65,8 @@ dataset1 = props1.to_dict()
 
 moment0_hdu1 = fits.PrimaryHDU(dataset1["moment0"][0],
                                header=dataset1["moment0"][1])
+
+moment0_proj = Projection.from_hdu(moment0_hdu1)
 
 ##############################################################################
 
