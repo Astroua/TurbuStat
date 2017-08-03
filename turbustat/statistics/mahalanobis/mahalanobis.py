@@ -4,6 +4,7 @@ from scipy.spatial.distance import mahalanobis
 
 from ..threeD_to_twoD import _format_data
 from ..mantel import mantel_test
+from ..stats_warnings import TurbuStatTestingWarning
 
 
 class Mahalanobis(object):
@@ -17,6 +18,10 @@ class Mahalanobis(object):
     """
     def __init__(self, cube):
         super(Mahalanobis, self).__init__()
+
+        TurbuStatTestingWarning("Mahalanobis is an untested statistic. Its use"
+                                " is not yet recommended.")
+
         self.cube = cube
 
     def format_data(self, data_format='spectra', *args):
@@ -79,6 +84,9 @@ class Mahalanobis_Distance(object):
 
     def __init__(self, cube1, cube2):
         super(Mahalanobis_Distance, self).__init__()
+
+        TurbuStatTestingWarning("Mahalanobis_Distance is an untested metric. Its use"
+                                " is not yet recommended.")
 
         self.mahala1 = Mahalanobis(cube1)
         self.mahala2 = Mahalanobis(cube2)
