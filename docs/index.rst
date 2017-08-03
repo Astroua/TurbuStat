@@ -12,11 +12,11 @@ The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contri
 
 If you make use of this package in a publication, please cite our accompanying paper:
 ::
-   @ARTICLE{Koch2016,
+   @ARTICLE{Koch2017,
     author = {{Koch}, Eric~W. and {Ward}, Caleb~G. and {Offner}, Stella and {Loeppky}, Jason~L. and {Rosolowsky}, Erik~W.},
     title = {Tools for Critically Evaluating Simulations of Star Formation},
     journal = {MNRAS},
-    year = {submitted}
+    year = {accepted}
     }
 
 This package was developed by:
@@ -42,6 +42,7 @@ Papers using TurbuStat
 ----------------------
 
 * `Boyden et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJ...833..233B>`_
+* `Koch et al. (2017 <https://ui.adsabs.harvard.edu/#abs/2017arXiv170705415K/abstract>`_
 
 
 
