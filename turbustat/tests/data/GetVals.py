@@ -38,7 +38,8 @@ mvc_slope = mvc_distance.mvc1.slope
 
 # Spatial Power Spectrum/ Bispectrum
 
-from turbustat.statistics import PSpec_Distance, BiSpectrum_Distance
+from turbustat.statistics import (PSpec_Distance, BiSpectrum_Distance,
+                                  BiSpectrum)
 
 pspec_distance = \
     PSpec_Distance(dataset1["moment0"],
@@ -53,15 +54,25 @@ bispec_distance = \
 
 bispec_val = bispec_distance.bispec1.bicoherence
 
+bispec_meansub = BiSpectrum(dataset1['moment0'])
+bispec_meansub.run(mean_subtract=True)
+
+bispec_val_meansub = bispec_meansub.bicoherence
+
 # Genus
 
-from turbustat.statistics import GenusDistance
+from turbustat.statistics import GenusDistance, Genus
 
 genus_distance = \
     GenusDistance(dataset1["moment0"],
                   dataset2["moment0"]).distance_metric()
 
-genus_val = genus_distance.genus1.genus_stats
+# The distance method requires standardizing the data. Make a
+# separate version that isn't
+genus = Genus(dataset1['moment0'])
+genus.run()
+
+genus_val = genus.genus_stats
 
 # Delta-Variance
 
@@ -89,6 +100,7 @@ vcs_distance = VCS_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
 
 vcs_val = vcs_distance.vcs1.ps1D
+vcs_slopes = vcs_distance.vcs1.slope
 
 vca_distance = VCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
@@ -98,19 +110,29 @@ vca_slope = vca_distance.vca1.slope
 
 # Tsallis
 
-from turbustat.statistics import Tsallis_Distance
+from turbustat.statistics import Tsallis_Distance, Tsallis
+
+tsallis_kwargs = {"sigma_clip": 5, "num_bins": 100}
 
 tsallis_distance = \
     Tsallis_Distance(dataset1["moment0"],
                      dataset2["moment0"],
-                     lags=[1, 2, 4, 8, 16],
-                     num_bins=100).distance_metric()
+                     lags=[1, 2, 4, 8, 16] * u.pix,
+                     tsallis1_kwargs=tsallis_kwargs,
+                     tsallis2_kwargs=tsallis_kwargs).distance_metric()
 
-tsallis_val = tsallis_distance.tsallis1.tsallis_fits
+tsallis_val = tsallis_distance.tsallis1.tsallis_params
+tsallis_stderrs = tsallis_distance.tsallis1.tsallis_stderrs
+
+tsallis_noper = Tsallis(dataset1['moment0'],
+                        lags=[1, 2, 4, 8, 16] * u.pix)
+tsallis_noper.run(periodic=False, num_bins=100)
+
+tsallis_val_noper = tsallis_noper.tsallis_params
 
 # High-order stats
 
-from turbustat.statistics import StatMoments_Distance
+from turbustat.statistics import StatMoments_Distance, StatMoments
 
 moment_distance = \
     StatMoments_Distance(dataset1["moment0"],
@@ -119,6 +141,21 @@ moment_distance = \
 kurtosis_val = moment_distance.moments1.kurtosis_hist[1]
 skewness_val = moment_distance.moments1.skewness_hist[1]
 
+# Save a few from the non-distance version
+tester = StatMoments(dataset1["moment0"])
+tester.run()
+
+kurtosis_nondist_val = tester.kurtosis_hist[1]
+skewness_nondist_val = tester.skewness_hist[1]
+
+# Non-periodic
+tester = StatMoments(dataset1["moment0"])
+tester.run(periodic=False)
+
+kurtosis_nonper_val = tester.kurtosis_hist[1]
+skewness_nonper_val = tester.skewness_hist[1]
+
+
 # PCA
 
 from turbustat.statistics import PCA_Distance, PCA
@@ -126,7 +163,7 @@ pca_distance = PCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
 pca_val = pca_distance.pca1.eigvals
 
-pca = PCA(dataset1["cube"])
+pca = PCA(dataset1["cube"], distance=250 * u.pc)
 pca.run(mean_sub=True, n_eigs=50,
         spatial_method='contour',
         spectral_method='walk-down',
@@ -163,7 +200,7 @@ pca_fit_vals["n_eigs_proportion"] = pca.n_eigs
 
 # SCF
 
-from turbustat.statistics import SCF_Distance
+from turbustat.statistics import SCF_Distance, SCF
 
 scf_distance = SCF_Distance(dataset1["cube"],
                             dataset2["cube"], size=11).distance_metric()
@@ -176,6 +213,12 @@ scf_distance_cut_bound = SCF_Distance(dataset1["cube"],
                                       dataset2["cube"], size=11,
                                       boundary='cut').distance_metric()
 scf_val_noncon_bound = scf_distance_cut_bound.scf1.scf_surface
+
+scf_fitlims = SCF(dataset1['cube'], size=11)
+scf_fitlims.run(boundary='continuous', xlow=1.5 * u.pix,
+                xhigh=4.5 * u.pix)
+
+scf_slope_wlimits = scf_fitlims.slope
 
 # Cramer Statistic
 
@@ -190,7 +233,7 @@ cramer_val = cramer_distance.data_matrix1
 
 # Dendrograms
 
-from turbustat.statistics import DendroDistance
+from turbustat.statistics import DendroDistance, Dendrogram_Stats
 
 min_deltas = np.logspace(-1.5, 0.5, 40)
 
@@ -199,6 +242,12 @@ dendro_distance = DendroDistance(dataset1["cube"],
                                  min_deltas=min_deltas).distance_metric()
 
 dendrogram_val = dendro_distance.dendro1.numfeatures
+
+# With periodic boundaries
+dendro = Dendrogram_Stats(dataset1['cube'], min_deltas=min_deltas)
+dendro.run(periodic_bounds=True)
+
+dendrogram_periodic_val = dendro.numfeatures
 
 # PDF
 
@@ -239,23 +288,33 @@ np.savez_compressed('checkVals',
                     pspec_val=pspec_val,
                     pspec_slope=pspec_slope,
                     bispec_val=bispec_val,
+                    bispec_val_meansub=bispec_val_meansub,
                     genus_val=genus_val,
                     delvar_val=delvar_val,
                     delvar_slope=delvar_slope,
                     vcs_val=vcs_val,
+                    vcs_slopes=vcs_slopes,
                     vca_val=vca_val,
                     vca_slope=vca_slope,
                     tsallis_val=tsallis_val,
+                    tsallis_stderrs=tsallis_stderrs,
+                    tsallis_val_noper=tsallis_val_noper,
                     kurtosis_val=kurtosis_val,
                     skewness_val=skewness_val,
+                    kurtosis_nondist_val=kurtosis_nondist_val,
+                    skewness_nondist_val=skewness_nondist_val,
+                    kurtosis_nonper_val=kurtosis_nonper_val,
+                    skewness_nonper_val=skewness_nonper_val,
                     pca_val=pca_val,
                     pca_fit_vals=pca_fit_vals,
                     scf_val=scf_val,
+                    scf_slope_wlimits=scf_slope_wlimits,
                     scf_val_noncon_bound=scf_val_noncon_bound,
                     scf_spectrum=scf_spectrum,
                     scf_slope=scf_slope,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
+                    dendrogram_periodic_val=dendrogram_periodic_val,
                     pdf_val=pdf_val,
                     pdf_bins=pdf_bins,
                     pdf_ecdf=pdf_ecdf)
