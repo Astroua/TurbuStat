@@ -44,7 +44,7 @@ def test_DendroStat_periodic():
                               min_deltas=min_deltas)
     tester.run(periodic_bounds=False)
 
-    np.tassert_allclose(tester.numfeatures,
+    npt.assert_allclose(tester.numfeatures,
                         computed_data["dendrogram_periodic_val"])
 
 
