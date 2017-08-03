@@ -54,8 +54,7 @@ The key properties are shown when `verbose=True`: a summary of the results with 
 
 Since this data is simulated, this example does not account for a finite beam size. If it did, however, we would want to deconvolve the spatial widths with the beam. To see this effect, let us assume these data have a 20" circular beam:
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-                brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
     Index: 0.56 (0.53, 0.58)
     Gamma: 0.40 (0.36, 0.44)
@@ -67,8 +66,7 @@ Since the correction is not linear, the slope changes with the beam correction. 
 
 Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in :ref:`Brunt, C. & Heyer, M. 2002a <ref-brunt_heyer2002_i>` and :ref:`Brunt, C. & Heyer, M. 2002b <ref-brunt_heyer2002_ii>` is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-                brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec, mean_sub=True)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec, mean_sub=True)  # doctest: +SKIP
     Proportion of Variance kept: 0.999808532503
     Index: 0.76 (0.71, 0.81)
     Gamma: 0.68 (0.63, 0.73)
