@@ -86,6 +86,32 @@ class DeltaVariance(BaseStatisticMixIn):
         self.convolved_weights = []
 
     @property
+    def lags(self):
+        '''
+        Lag values.
+        '''
+        return self._lags
+
+    @lags.setter
+    def lags(self, values):
+
+        if not isinstance(values, u.Quantity):
+            raise TypeError("lags must be given as an astropy.units.Quantity.")
+
+        pix_lags = self._to_pixel(values)
+
+        if np.any(pix_lags.value < 1):
+            raise ValueError("At least one of the lags is smaller than one "
+                             "pixel. Remove these lags from the array.")
+
+        if np.any(pix_lags.value > min(self.data.shape) / 2.):
+            raise ValueError("At least one of the lags is larger than half of"
+                             " the image size. Remove these lags from the "
+                             "array.")
+
+        self._lags = values
+
+    @property
     def weights(self):
         '''
         Array of weights.
