@@ -245,7 +245,9 @@ class SCF(BaseStatisticMixIn):
             Show fit summary when enabled.
         '''
 
-        x = np.log10(self.lags.value)
+        pix_lags = self._to_pixel(self.lags)
+
+        x = np.log10(pix_lags.value)
         y = np.log10(self.scf_spectrum)
 
         if xlow is not None:
@@ -253,7 +255,7 @@ class SCF(BaseStatisticMixIn):
                 raise TypeError("xlow must be an astropy.units.Quantity.")
 
             # Convert xlow into the same units as the lags
-            xlow = self._spatial_unit_conversion(xlow, self.lags.unit)
+            xlow = self._to_pixel(xlow)
 
             self._xlow = xlow
 
@@ -267,7 +269,7 @@ class SCF(BaseStatisticMixIn):
             if not isinstance(xhigh, u.Quantity):
                 raise TypeError("xlow must be an astropy.units.Quantity.")
             # Convert xhigh into the same units as the lags
-            xhigh = self._spatial_unit_conversion(xhigh, self.lags.unit)
+            xhigh = self._to_pixel(xhigh)
 
             self._xhigh = xhigh
 
@@ -342,7 +344,7 @@ class SCF(BaseStatisticMixIn):
             raise TypeError("xvals must be an astropy.units.Quantity.")
 
         # Convert into the lag units used for the fit
-        xvals = self._spatial_unit_conversion(xvals, self.lags.unit).value
+        xvals = self._to_pixel(xvals).value
 
         model_values = \
             self.fit.params[0] + self.fit.params[1] * np.log10(xvals)
@@ -453,7 +455,8 @@ class SCF(BaseStatisticMixIn):
             p.xlabel("SCF Value")
 
             ax = p.subplot(2, 2, 4)
-            lags = self._spatial_unit_conversion(self.lags, xunit).value
+            pix_lags = self._to_pixel(self.lags)
+            lags = self._spatial_unit_conversion(pix_lags, xunit).value
 
             if self._stddev_flag:
                 ax.errorbar(lags, self.scf_spectrum,
