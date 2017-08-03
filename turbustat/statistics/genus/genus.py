@@ -127,13 +127,14 @@ class Genus(BaseStatisticMixIn):
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
         if smoothing_radii is None:
-            self._smoothing_radii = \
+            self.smoothing_radii = \
                 np.linspace(1.0, 0.1 * min(self.data.shape), 5)
         else:
             if isinstance(smoothing_radii, u.Quantity):
-                self._smoothing_radii = self._to_pixel(smoothing_radii).value
+                print(smoothing_radii)
+                self.smoothing_radii = self._to_pixel(smoothing_radii).value
             else:
-                self._smoothing_radii = smoothing_radii
+                self.smoothing_radii = smoothing_radii
 
     @property
     def thresholds(self):
@@ -148,6 +149,19 @@ class Genus(BaseStatisticMixIn):
         Pixel radii used to smooth the data.
         '''
         return self._smoothing_radii
+
+    @smoothing_radii.setter
+    def smoothing_radii(self, values):
+
+        if np.any(values < 1.0):
+            raise ValueError("All smoothing radii must be larger than one pixel.")
+
+        if np.any(values > 0.5 * min(self.data.shape)):
+            raise ValueError("All smoothing radii must be smaller than half of"
+                             " the image shape.")
+
+        self._smoothing_radii = values
+
 
     def make_smooth_arrays(self, **kwargs):
         '''
