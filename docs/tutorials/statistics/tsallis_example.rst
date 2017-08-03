@@ -24,6 +24,8 @@ We need to import the `~turbustat.statistics.Tsallis` code, along with a few oth
 
     >>> from turbustat.statistics import Tsallis
     >>> from astropy.io import fits
+    >>> import astropy.units as u
+    >>> import numpy as np
 
 And we load in the data:
 

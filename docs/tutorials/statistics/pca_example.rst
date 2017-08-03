@@ -41,8 +41,7 @@ If the distance is given, you will have the option to convert spatial widths to 
 
 The simplest way to run the entire process is using the `~turbustat.statistics.PCA.run` command:
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-                brunt_beamcorrect=False)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=False)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
     Index: 0.64 (0.62, 0.66)
     Gamma: 0.55 (0.51, 0.58)
@@ -120,7 +119,6 @@ Third, we find the spectral widths:
     >>>     ax.plot(x, autocorr_spec[:251, i])  # doctest: +SKIP
     >>>     ax.axhline(np.exp(-1), label='exp(-1)', color='r', linestyle='--')  # doctest: +SKIP
     >>>     ax.axvline(pca.spectral_width[i].value / pca._spectral_size.value, label='Fitted Width', color='g', linestyle='-.')  # doctest: +SKIP
-    >>>     # ax.set_yticks([])  # doctest: +SKIP
     >>>     ax.set_title("{}".format(i + 1))  # doctest: +SKIP
     >>>     ax.set_xlim([0, 50])  # doctest: +SKIP
     >>>     if i == 0:  # doctest: +SKIP
