@@ -46,13 +46,13 @@ def test_Tsallis_lagunits():
                      lags=ang_lags)
     tester.run(num_bins=100, periodic=False)
     npt.assert_allclose(tester.tsallis_params,
-                        computed_data['tsallis_val'][:, :3], atol=0.01)
+                        computed_data['tsallis_val'], atol=0.01)
 
     tester = Tsallis(dataset1["moment0"],
                      lags=phys_lags, distance=distance)
     tester.run(num_bins=100, periodic=False)
     npt.assert_allclose(tester.tsallis_params,
-                        computed_data['tsallis_val'][:, :3], atol=0.01)
+                        computed_data['tsallis_val'], atol=0.01)
 
 
 def test_Tsallis_distance():

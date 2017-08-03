@@ -37,6 +37,32 @@ def test_VCA_method_change_chanwidth():
     tester.run()
 
 
+def test_VCA_method_fitlimits():
+
+    distance = 250 * u.pc
+
+    low_cut = 0.02 / u.pix
+    high_cut = 0.1 / u.pix
+
+    tester = VCA(dataset1["cube"])
+    tester.run(low_cut=low_cut, high_cut=high_cut)
+
+    low_cut = low_cut.value / (dataset1['cube'][1]['CDELT2'] * u.deg)
+    high_cut = high_cut.value / (dataset1['cube'][1]['CDELT2'] * u.deg)
+
+    tester2 = VCA(dataset1["cube"])
+    tester2.run(low_cut=low_cut, high_cut=high_cut)
+
+    low_cut = low_cut.to(u.rad**-1).value / distance
+    high_cut = high_cut.to(u.rad**-1).value / distance
+
+    tester3 = VCA(dataset1["cube"], distance=distance)
+    tester3.run(low_cut=low_cut, high_cut=high_cut)
+
+    npt.assert_allclose(tester.slope, tester2.slope)
+    npt.assert_allclose(tester.slope, tester3.slope)
+
+
 def test_VCA_distance():
     tester_dist = \
         VCA_Distance(dataset1["cube"],

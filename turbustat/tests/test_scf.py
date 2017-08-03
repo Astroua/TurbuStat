@@ -1,10 +1,6 @@
 # Licensed under an MIT open source license - see LICENSE
 
 
-'''
-Test functions for SCF
-'''
-
 import pytest
 
 import numpy as np
@@ -39,15 +35,45 @@ def test_SCF_method():
                                   computed_data["scf_spectrum"])
     npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
 
-# NOTE: Remove xfail once physical unit conversion is added to the whole
-# package
-@pytest.mark.xfail
+
 def test_SCF_method_fitlimits():
     tester = SCF(dataset1["cube"], size=11)
     tester.run(boundary='continuous', xlow=1.5 * u.pix,
                xhigh=4.5 * u.pix)
 
     npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"])
+
+
+def test_SCF_method_fitlimits_units():
+
+    distance = 250 * u.pc
+
+    xlow = 1.5 * u.pix
+    xhigh = 4.5 * u.pix
+
+    tester = SCF(dataset1["cube"], size=11)
+    tester.run(boundary='continuous', xlow=xlow,
+               xhigh=xhigh)
+
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"])
+
+    xlow = xlow.value * dataset1['cube'][1]['CDELT2'] * u.deg
+    xhigh = xhigh.value * dataset1['cube'][1]['CDELT2'] * u.deg
+
+    tester2 = SCF(dataset1["cube"], size=11)
+    tester2.run(boundary='continuous', xlow=xlow,
+                xhigh=xhigh)
+
+    npt.assert_almost_equal(tester2.slope, computed_data["scf_slope_wlimits"])
+
+    xlow = xlow.value * distance
+    xhigh = xhigh.value * distance
+
+    tester3 = SCF(dataset1["cube"], size=11, distance=distance)
+    tester3.run(boundary='continuous', xlow=xlow,
+                xhigh=xhigh)
+
+    npt.assert_almost_equal(tester3.slope, computed_data["scf_slope_wlimits"])
 
 
 def test_SCF_method_noncont_boundary():

@@ -4,7 +4,6 @@
 Test functions for PCA
 '''
 
-from unittest import TestCase
 import pytest
 
 import numpy as np
@@ -26,7 +25,7 @@ from ._testing_data import (dataset1, dataset2, computed_data,
 
 
 def test_PCA_method():
-    tester = PCA(dataset1["cube"])
+    tester = PCA(dataset1["cube"], distance=250 * u.pc)
     tester.run(mean_sub=True, n_eigs=50,
                spatial_method='contour',
                spectral_method='walk-down',

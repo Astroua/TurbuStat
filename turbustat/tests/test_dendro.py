@@ -38,6 +38,16 @@ def test_DendroStat():
                         computed_data["dendrogram_val"])
 
 
+def test_DendroStat_periodic():
+
+    tester = Dendrogram_Stats(dataset1["cube"],
+                              min_deltas=min_deltas)
+    tester.run(periodic_bounds=False)
+
+    np.tassert_allclose(tester.numfeatures,
+                        computed_data["dendrogram_periodic_val"])
+
+
 def test_DendroDistance():
 
     tester_dist = \
