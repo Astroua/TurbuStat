@@ -164,7 +164,8 @@ pca_distance = PCA_Distance(dataset1["cube"],
 pca_val = pca_distance.pca1.eigvals
 
 pca = PCA(dataset1["cube"], distance=250 * u.pc)
-pca.run(mean_sub=True, n_eigs=50,
+pca.run(mean_sub=True, eigen_cut_method='proportion',
+        min_eigval=0.75,
         spatial_method='contour',
         spectral_method='walk-down',
         fit_method='odr', brunt_beamcorrect=False,
@@ -175,7 +176,8 @@ pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
                 "sonic_length": pca.sonic_length()[0]}
 
 # Now get those values using mcmc
-pca.run(mean_sub=True, n_eigs=50,
+pca.run(mean_sub=True, eigen_cut_method='proportion',
+        min_eigval=0.75,
         spatial_method='contour',
         spectral_method='walk-down',
         fit_method='bayes', brunt_beamcorrect=False,
@@ -269,7 +271,7 @@ pdf_val = pdf_distance.PDF1.pdf
 pdf_ecdf = pdf_distance.PDF1.ecdf
 pdf_bins = pdf_distance.bins
 
-# Do a fitted version of the PDF test
+# Do a fitted version of the PDF pca
 pdf_fit_distance = \
     PDF_Distance(dataset1["moment0"],
                  dataset2["moment0"],

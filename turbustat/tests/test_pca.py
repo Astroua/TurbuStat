@@ -26,7 +26,8 @@ from ._testing_data import (dataset1, dataset2, computed_data,
 
 def test_PCA_method():
     tester = PCA(dataset1["cube"], distance=250 * u.pc)
-    tester.run(mean_sub=True, n_eigs=50,
+    tester.run(mean_sub=True, eigen_cut_method='proportion',
+               min_eigval=0.75,
                spatial_method='contour',
                spectral_method='walk-down',
                fit_method='odr', brunt_beamcorrect=False,
@@ -51,7 +52,8 @@ def test_PCA_method():
 @pytest.mark.skipif("not EMCEE_INSTALLED")
 def test_PCA_method_w_bayes():
     tester = PCA(dataset1["cube"])
-    tester.run(mean_sub=True, n_eigs=50,
+    tester.run(mean_sub=True, eigen_cut_method='proportion',
+               min_eigval=0.75,
                spatial_method='contour',
                spectral_method='walk-down',
                fit_method='bayes', brunt_beamcorrect=False,
