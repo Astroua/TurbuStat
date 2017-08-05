@@ -7,6 +7,8 @@ TurbuStat
 
 *See the documentation at [http://turbustat.readthedocs.org/](http://turbustat.readthedocs.org/)*
 
+To be notified of future releases and updates to TurbuStat, please join the mailing list: https://groups.google.com/forum/#!forum/turbustat
+
 Statistics of Turbulence
 ------------------------
 
