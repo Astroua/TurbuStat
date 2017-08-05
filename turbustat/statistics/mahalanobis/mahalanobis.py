@@ -4,12 +4,24 @@ from scipy.spatial.distance import mahalanobis
 
 from ..threeD_to_twoD import _format_data
 from ..mantel import mantel_test
+from ..stats_warnings import TurbuStatTestingWarning
 
 
 class Mahalanobis(object):
-    """docstring for Mahalanobis"""
+    """
+    Calculate a distance matrix using the Mahalanobis distance.
+
+    .. warning::
+        Testing for this method has not been implemented. The output cannot be
+        trusted to be correct.
+
+    """
     def __init__(self, cube):
         super(Mahalanobis, self).__init__()
+
+        TurbuStatTestingWarning("Mahalanobis is an untested statistic. Its use"
+                                " is not yet recommended.")
+
         self.cube = cube
 
     def format_data(self, data_format='spectra', *args):
@@ -61,10 +73,20 @@ class Mahalanobis(object):
 
 class Mahalanobis_Distance(object):
 
-    """docstring for Mahalanobis_Distance"""
+    """
+    Compare distance matrices based on the Mahalanobis distance.
+
+    .. warning::
+        Testing for this method has not been implemented. The output cannot be
+        trusted to be correct.
+
+    """
 
     def __init__(self, cube1, cube2):
         super(Mahalanobis_Distance, self).__init__()
+
+        TurbuStatTestingWarning("Mahalanobis_Distance is an untested metric. Its use"
+                                " is not yet recommended.")
 
         self.mahala1 = Mahalanobis(cube1)
         self.mahala2 = Mahalanobis(cube2)

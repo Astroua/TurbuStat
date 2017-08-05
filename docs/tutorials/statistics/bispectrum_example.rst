@@ -13,7 +13,7 @@ The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier tran
 
 where :math:`\ast` denotes the complex conjugate, :math:`F` is the Fourier transform of some signal, and :math:`k_1,\,k_2` are wavenumbers.
 
-The bispectrum retains phase information which is lost in the power spectrum, and is therefore useful for investigating phase coherence and coupling.
+The bispectrum retains phase information which is lost in the :ref:`power spectrum <pspec_tutorial>`, and is therefore useful for investigating phase coherence and coupling.
 
 The use of the bispectrum in the ISM was introduced by :ref:`Burkhart et al. 2009 <ref-burkhart2009>`, and recently extended in :ref:`Burkhart et al. 2016 <ref-burkhart2016>`.
 
@@ -34,7 +34,7 @@ where :math:`L(R)` is the relevant averaged quantity calculated at different lag
 Using
 -----
 
-**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/57e55670a909a80001d301ae>`_.
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
 We need to import the `~turbustat.statistics.BiSpectrum` code, along with a few other common packages:
 
@@ -43,7 +43,7 @@ We need to import the `~turbustat.statistics.BiSpectrum` code, along with a few 
 
 And we load in the data:
 
-    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits")[0]  # doctest: +SKIP
+    >>> moment0 = fits.open("Design4_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
 
 While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation is performed on an integrated intensity or column density map.
 
@@ -53,19 +53,19 @@ First, the `~turbustat.statistics.BiSpectrum` class is initialized:
 
 The bispectrum requires only the image, not a header, so passing any arbitrary 2D array will work.
 
-The entire computation is performed through `~turbustat.statistics.BiSpectrum.run`:
+Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run!**
 
-    >>> bispec.run(verbose=True, nsamples=1.e3)  # doctest: +SKIP
+The computing the bispectrum and bicoherence maps is performed through `~turbustat.statistics.BiSpectrum.run`:
+
+    >>> bispec.run(verbose=True, nsamples=10000)  # doctest: +SKIP
 
 .. image:: images/bispectrum_design4.png
 
-Even in small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is already massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To minimize the computational time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and so different `nsamples` should be tested. In this, structure begins to become more apparent with around 1000, and improves beyond this (at the expense of time).
+`~turbustat.statistics.BiSpectrum.run` really only performs a single step: `~turbustat.statistics.BiSpectrum.compute_bispectrum`. For this, there are two optional inputs that may be set:
 
-`~turbustat.statistics.BiSpectrum.run` is really only hiding a single step: `~turbustat.statistics.BiSpectrum.compute_bispectrum`. There are two additional inputs which may be set:
+    >>> bispec.run(nsamples=10000, mean_subtract=True, seed=4242424)  # doctest: +SKIP
 
-    >>> bispec.run(nsamples=1.e3, mean_subtract=True, seed=4242424)  # doctest: +SKIP
-
-The two additional arguments here are `seed`, to set the random seed for sampling, and `mean_subtract`, which first removes the mean from the data before computing the bispectrum. The removes the "zero frequency" power defined based on the largest scale in the image and removes much the phase coupling along the :math:`k_1 = k_2` line, highlighting the non-linear mode interactions:
+`seed` sets the random seed for the sampling, and `mean_subtract` removes the mean from the data before computing the bispectrum. This removes the "zero frequency" power defined based on the largest scale in the image that provides gives the phase coupling along :math:`k_1 = k_2` line. Removing the mean highlights the non-linear mode interactions:
 
 .. image:: images/bispectrum_w_and_wo_meansub_coherence.png
 

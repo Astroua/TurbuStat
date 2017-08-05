@@ -3,6 +3,14 @@
 TurbuStat Tutorials
 *******************
 
+.. toctree::
+    :maxdepth: 2
+
+    accepted_input_formats
+    preparing_simulated_data
+    preprocessing_data
+    masking_and_moments
+
 Statistics
 ==========
 
@@ -17,6 +25,12 @@ Statistics
     statistics/pca_example
     statistics/pdf_example
     statistics/pspec_example
+    statistics/scf_example
+    statistics/statmoments_example.rst
+    statistics/tsallis_example.rst
+    statistics/vca_example
+    statistics/vcs_example
+    statistics/wavelet_example
 
 Distance Metrics
 ================

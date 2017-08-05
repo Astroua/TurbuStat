@@ -47,8 +47,8 @@ class Lm_Seg(object):
             raise ValueError("brk must be a finite value.")
 
         # Make sure the starting break point is in range of the data
-        if not (self.x > self.brk).any():
-            raise ValueError("brk is outside the range.")
+        if self.x.max() < self.brk or self.x.min() > self.brk:
+            raise ValueError("brk is outside the range in x.")
 
         # Check for nans, infs...
         if not np.isfinite(x).all():

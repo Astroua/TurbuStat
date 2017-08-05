@@ -395,7 +395,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                     bin_width = np.abs(bins[1] - bins[0])
                     ax2.bar(bins, vals, align="center",
                             width=bin_width, alpha=0.25)
-                    p.xlabel("Data Values")
+                    p.xlabel("Data Value")
 
             if save_name is not None:
                 p.savefig(save_name)

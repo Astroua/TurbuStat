@@ -2,51 +2,89 @@
 
 
 import numpy as np
+from astropy import units as u
+from spectral_cube.spectral_cube import BaseSpectralCube
+from astropy.convolution import Gaussian1DKernel
+from warnings import warn
 
 
-def change_slice_thickness(cube, slice_thickness=1.0):
+def spectral_regrid_cube(cube, channel_width):
     '''
+    Spectrally regrid a SpectralCube to a given channel width. The data are
+    first spectrally smoothed with a Gaussian kernel. The kernel width is
+    the target channel width deconvolved from the current channel width
+    (http://spectral-cube.readthedocs.io/en/latest/smoothing.html#spectral-smoothing).
 
-    Degrades the velocity resolution of a data cube. This is to avoid
-    shot noise by removing velocity fluctuations at small thicknesses.
+    Note that, in order to ensure the regridded cube covers the same spectral
+    range, the smoothed cube may have channels that differ slightly from the
+    given width. The number of channels is chosen to be the next lowest
+    integer when dividing the original number of channels by the ratio of the
+    new and old channel widths.
 
     Parameters
     ----------
-    cube : numpy.ndarray
-           3D data cube to degrade
-    slice_thickness : float, optional
-        Thicknesses of the new slices. Minimum is 1.0
-        Thickness must be integer multiple of the original cube size
+    cube : `~spectral_cube.SpectralCube`
+        Spectral cube to regrid.
+    channel_width : `~astropy.units.Quantity`
+        The width of the new channels. This should be given in equivalent
+        spectral units used in the cube, or in pixel units. For example,
+        downsampling by a factor of 2 for a cube with a channel width of
+        0.1 km/s can be achieved by setting `channel_width` to `2 * u.pix`
+        or `0.2 km /s`.
 
     Returns
     -------
-    degraded_cube : numpy.ndarray
-        Data cube degraded to new slice thickness
+    regridded_cube : `spectral_cube.SpectralCube`
+        The smoothed and regridded cube.
     '''
 
-    assert isinstance(slice_thickness, float)
-    if slice_thickness < 1:
-        slice_thickness == 1
-        print "Slice Thickness must be at least 1.0. Returning original cube."
+    if not isinstance(cube, BaseSpectralCube):
+        raise TypeError("`cube` must be a SpectralCube object.")
 
-    if slice_thickness == 1:
+    if not isinstance(channel_width, u.Quantity):
+        raise TypeError("channel_width must be an astropy.units.Quantity.")
+
+    fwhm_factor = np.sqrt(8 * np.log(2))
+
+    pix_unit = channel_width.unit.is_equivalent(u.pix)
+
+    spec_width = np.diff(cube.spectral_axis[:2])[0]
+
+    current_resolution = np.diff(cube.spectral_axis[:2])[0]
+
+    if pix_unit:
+        target_resolution = channel_width.value * spec_width
+    else:
+        target_resolution = channel_width.to(current_resolution.unit)
+
+    diff_factor = np.abs(target_resolution / current_resolution).value
+
+    if diff_factor == 1:
+        warn("The requested channel width match the original channel width. "
+             "The original cube is returned.")
         return cube
 
-    if cube.shape[0] % slice_thickness != 0:
-        raise TypeError("Slice thickness must be integer multiple of dimension"
-                        " size % s" % (cube.shape[0]))
+    if diff_factor < 1:
+        raise ValueError("Only down-sampling the spectral grid is supported. "
+                         "The requested channel width of {0} is a factor {1} "
+                         "smaller than the original channel width."
+                         .format(target_resolution, diff_factor))
 
-    slice_thickness = int(slice_thickness)
+    pixel_scale = np.abs(current_resolution)
 
-    # Want to average over velocity channels
-    new_channel_indices = np.arange(0, cube.shape[0] / slice_thickness)
-    degraded_cube = np.ones(
-        (cube.shape[0] / slice_thickness, cube.shape[1], cube.shape[2]))
+    gaussian_width = ((target_resolution**2 - current_resolution**2)**0.5 /
+                      pixel_scale / fwhm_factor)
+    kernel = Gaussian1DKernel(gaussian_width)
+    new_cube = cube.spectral_smooth(kernel)
 
-    for channel in new_channel_indices:
-        old_index = int(channel * slice_thickness)
-        channel = int(channel)
-        degraded_cube[channel, :, :] = \
-            np.nanmean(cube[old_index:old_index + slice_thickness], axis=0)
+    # Now define the new spectral axis at the new resolution
+    num_chan = int(np.floor_divide(cube.shape[0], diff_factor))
+    new_specaxis = np.linspace(cube.spectral_axis.min().value,
+                               cube.spectral_axis.max().value,
+                               num_chan) * current_resolution.unit
+    # Keep the same order (max to min or min to max)
+    if current_resolution.value < 0:
+        new_specaxis = new_specaxis[::-1]
 
-    return degraded_cube
+    return new_cube.spectral_interpolate(new_specaxis,
+                                         suppress_smooth_warning=True)

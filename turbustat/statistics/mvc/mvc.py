@@ -32,7 +32,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, centroid, moment0, linewidth, header=None):
+    def __init__(self, centroid, moment0, linewidth, header=None,
+                 distance=None):
 
         # data property not used here
         self.no_data_flag = True
@@ -50,6 +51,9 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         else:
             self._centroid = input_data(centroid, no_header=True)
             self.header = header
+
+        if distance is not None:
+            self.distance = distance
 
         self._moment0 = input_data(moment0, no_header=True)
         self._linewidth = input_data(linewidth, no_header=True)
@@ -117,8 +121,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._ps2D = np.abs(mvc_fft) ** 2.
 
     def run(self, verbose=False, save_name=None, logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=0.5,
-            ang_units=False, unit=u.deg, use_wavenumber=False, **kwargs):
+            return_stddev=True, low_cut=None, high_cut=None,
+            xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of MVC. For fitting parameters and radial binning
         options, see `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D`.
@@ -137,9 +141,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : float, optional
             High frequency cut off in frequencies used in the fitting.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
+        xunit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
@@ -150,14 +152,13 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
-        self.fit_pspec(low_cut=low_cut, high_cut=high_cut,
-                       large_scale=0.5, **kwargs)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
         if verbose:
             print(self.fit.summary())
 
-            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, save_name=save_name,
+            self.plot_fit(show=True, show_2D=True,
+                          xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
             if save_name is not None:
                 import matplotlib.pyplot as p
@@ -187,18 +188,18 @@ class MVC_Distance(object):
         When enabled, the property arrays are weighted by the inverse
         squared of the error arrays.
     low_cut : int or float, optional
-        Set the cut-off for low spatial frequencies. Visually, below ~2
-        deviates from the power law (for the simulation set).
+        The lower frequency fitting limit. An array with 2 elements can be
+        passed to give separate lower limits for the datasets.
     high_cut : int or float, optional
-        Set the cut-off for high spatial frequencies. Values beyond the
-        size of the root grid are found to have no meaningful contribution
+        The upper frequency fitting limit. See `low_cut` above. Defaults to
+        0.5.
     logspacing : bool, optional
         Use logarithmically spaced bins in the 1D power spectrum.
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
-                 weight_by_error=False, low_cut=None, high_cut=None,
-                 logspacing=False):
+                 weight_by_error=False, low_cut=None, high_cut=0.5 / u.pix,
+                 logspacing=False, phys_distance=None):
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -228,17 +229,17 @@ class MVC_Distance(object):
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
-                            data1["centroid"][1])
+                            data1["centroid"][1], distance=phys_distance)
             self.mvc1.run(logspacing=logspacing, high_cut=high_cut[0],
                           low_cut=low_cut[0])
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
-                        data2["centroid"][1])
+                        data2["centroid"][1], distance=phys_distance)
         self.mvc2.run(logspacing=logspacing, high_cut=high_cut[1],
                       low_cut=low_cut[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None,
+                        xunit=u.deg, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -278,10 +279,10 @@ class MVC_Distance(object):
             import matplotlib.pyplot as p
 
             self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             p.legend(loc='best')
 

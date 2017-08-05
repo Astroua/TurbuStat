@@ -26,14 +26,14 @@ class Wavelet(BaseStatisticMixIn):
         The scales where the transform is calculated.
     num : int, optional
         Number of scales to compute the transform at.
-    scale_normalization: bool, optional
-        Compute the transform with the correct scale-invariant normalization.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data, header=None, scales=None, num=50,
-                 scale_normalization=True):
+                 distance=None):
 
         self.input_data_header(data, header)
 
@@ -41,77 +41,144 @@ class Wavelet(BaseStatisticMixIn):
         # until the normalization for sum to zeros kernels is fixed!!!
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
+        if distance is not None:
+            self.distance = distance
+
         if scales is None:
             a_min = round((5. / 3.), 3)  # Smallest scale given by paper
             a_max = min(self.data.shape) / 2.
             # Log spaces scales up to half of the smallest size of the array
-            self.scales = \
-                np.logspace(np.log10(a_min), np.log10(a_max), num) * u.pix
-        else:
-            self.scales = self.to_pixel(scales)
+            scales = np.logspace(np.log10(a_min), np.log10(a_max), num) * u.pix
 
-        self.scale_normalization = scale_normalization
+        self.scales = scales
 
-        if not self.scale_normalization:
-            Warning("Transform values are only reliable with the proper scale"
-                    " normalization. When disabled, the slope of the transform"
-                    " CANNOT be used for physical interpretation.")
+    @property
+    def scales(self):
+        '''
+        Wavelet scales.
+        '''
+        return self._scales
 
-    def compute_transform(self):
+    @scales.setter
+    def scales(self, values):
+
+        if not isinstance(values, u.Quantity):
+            raise TypeError("scales must be given as a "
+                            "astropy.units.Quantity.")
+
+        # Now make sure that we can convert into pixels before setting.
+        try:
+            pix_scal = self._to_pixel(values)
+        except Exception as e:
+            raise e
+
+        # The radius should be larger than a pixel
+        if np.any(pix_scal.value < 1):
+            raise ValueError("One of the chosen lags is smaller than one "
+                             "pixel."
+                             " Ensure that all lag values are larger than one "
+                             "pixel.")
+
+        # Finally, limit the radius to a maximum of half the image size.
+        if np.any(pix_scal.value > min(self.data.shape) / 2.):
+            raise ValueError("At least one of the lags is larger than half of "
+                             "the image size (in the smallest dimension. "
+                             "Ensure that all lag values are smaller than "
+                             "this.")
+
+        self._scales = values
+
+    def compute_transform(self, scale_normalization=True):
         '''
         Compute the wavelet transform at each scale.
+
+        Parameters
+        ----------
+        scale_normalization: bool, optional
+            Compute the transform with the correct scale-invariant
+            normalization.
+
         '''
 
         n0, m0 = self.data.shape
         A = len(self.scales)
 
-        self.Wf = np.zeros((A, n0, m0), dtype=np.float)
+        self._Wf = np.zeros((A, n0, m0), dtype=np.float)
 
         factor = 2
-        if not self.scale_normalization:
+        if not scale_normalization:
             factor = 4
             Warning("Transform values are only reliable with the proper scale"
                     " normalization. When disabled, the slope of the transform"
                     " CANNOT be used for physical interpretation.")
 
-        for i, an in enumerate(self.scales.value):
+        pix_scales = self._to_pixel(self.scales).value
+
+        for i, an in enumerate(pix_scales):
             psi = MexicanHat2DKernel(an)
 
-            self.Wf[i] = \
+            self._Wf[i] = \
                 convolve_fft(self.data, psi).real * an**factor
+
+    @property
+    def Wf(self):
+        '''
+        The wavelet transforms of the image. Each plane is the transform at
+        different wavelet sizes.
+        '''
+        return self._Wf
 
     def make_1D_transform(self):
         '''
         Create the 1D transform.
         '''
 
-        self.values = np.empty_like(self.scales.value)
+        self._values = np.empty_like(self.scales.value)
         for i, plane in enumerate(self.Wf):
-            self.values[i] = (plane[plane > 0]).mean()
+            self._values[i] = (plane[plane > 0]).mean()
+
+    @property
+    def values(self):
+        '''
+        The 1-dimensional wavelet transform.
+        '''
+        return self._values
 
     def fit_transform(self, xlow=None, xhigh=None):
         '''
         Perform a fit to the transform in log-log space.
+
+        Parameters
+        ----------
+        xlow : `~astropy.units.Quantity`, optional
+            Lower scale value to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper scale value to consider in the fit.
         '''
 
-        x = np.log10(self.scales.value)
+        pix_scales = self._to_pixel(self.scales)
+        x = np.log10(pix_scales.value)
         y = np.log10(self.values)
 
         if xlow is not None:
-            lower_limit = x >= np.log10(xlow)
+            xlow = self._to_pixel(xlow)
+
+            lower_limit = x >= np.log10(xlow.value)
         else:
             lower_limit = \
-                np.ones_like(self.scales, dtype=bool).value
+                np.ones_like(self.values, dtype=bool)
+            xlow = pix_scales.min() * 0.99
 
         if xhigh is not None:
-            upper_limit = x <= np.log10(xhigh)
+            xhigh = self._to_pixel(xhigh)
+
+            upper_limit = x <= np.log10(xhigh.value)
         else:
             upper_limit = \
-                np.ones_like(self.scales, dtype=bool).value
+                np.ones_like(self.values, dtype=bool)
+            xhigh = pix_scales.max() * 1.01
 
-        self._fit_range = \
-            [xlow if xlow is not None else self.scales.min().value,
-             xhigh if xhigh is not None else self.scales.max().value]
+        self._fit_range = [xlow, xhigh]
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
@@ -128,62 +195,80 @@ class Wavelet(BaseStatisticMixIn):
 
     @property
     def slope(self):
+        '''
+        Fitted slope.
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        Standard error on the fitted slope.
+        '''
         return self._slope_err
 
-    def plot_transform(self, ang_units=False, unit=u.deg, show=True,
+    @property
+    def fit_range(self):
+        '''
+        Range of scales used in the fit.
+        '''
+        return self._fit_range
+
+    def fitted_model(self, xvals):
+        '''
+        Computes the fitted power-law in log-log space using the
+        given x values.
+
+        Parameters
+        ----------
+        xvals : `~numpy.ndarray`
+            Values of log(lags) to compute the model at (base 10 log).
+
+        Returns
+        -------
+        model_values : `~numpy.ndarray`
+            Values of the model at the given values.
+        '''
+
+        model_values = self.fit.params[0] + self.fit.params[1] * xvals
+
+        return model_values
+
+    def plot_transform(self, xunit=u.pix, show=True,
                        color='b', symbol='D', label=None):
         '''
         Plot the transform and the fit.
         '''
 
-        import matplotlib.pyplot as p
+        import matplotlib.pyplot as plt
 
-        if ang_units:
-            scales = \
-                self.scales.to(unit,
-                               equivalencies=self.angular_equiv).value
-        else:
-            scales = self.scales.value
+        pix_scales = self._to_pixel(self.scales)
+        scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        p.loglog(scales, self.values, color + symbol)
+        plt.loglog(scales, self.values, color + symbol)
         # Plot the fit within the fitting range.
-        low_lim = self._fit_range[0]
-        high_lim = self._fit_range[1]
-        if ang_units:
-            low_lim = (low_lim * self.scales.unit)
-            low_lim = low_lim.to(unit, equivalencies=self.angular_equiv)
-            low_lim = low_lim.value
+        low_lim = \
+            self._spatial_unit_conversion(self._fit_range[0], xunit).value
+        high_lim = \
+            self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-            high_lim = (high_lim * self.scales.unit)
-            high_lim = high_lim.to(unit, equivalencies=self.angular_equiv)
-            high_lim = high_lim.value
+        plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
+                   color + '--', linewidth=8, label='Fit', alpha=0.75)
 
-        within_limits = np.logical_and(scales >= low_lim,
-                                       scales <= high_lim)
+        plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
+        plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
 
-        p.loglog(scales[within_limits], 10**self.fit.fittedvalues,
-                 color + '--', label=label, linewidth=8, alpha=0.75)
+        plt.ylabel(r"$T_g$")
+        plt.xlabel("Scales ({})".format(xunit))
 
-        p.axvline(low_lim,
-                  color=color, alpha=0.5, linestyle='-')
-        p.axvline(high_lim,
-                  color=color, alpha=0.5, linestyle='-')
-
-        p.ylabel(r"$T_g$")
-        if ang_units:
-            p.xlabel("Scales (deg)")
-        else:
-            p.xlabel("Scales (pixels)")
+        plt.grid()
 
         if show:
-            p.show()
+            plt.show()
 
-    def run(self, verbose=False, ang_units=False, unit=u.deg,
-            xlow=None, xhigh=None):
+    def run(self, verbose=False, xunit=u.pix,
+            xlow=None, xhigh=None, scale_normalization=True,
+            save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
 
@@ -191,17 +276,36 @@ class Wavelet(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Plot wavelet transform.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert to when ang_units is enabled.
+        xlow : `~astropy.units.Quantity`, optional
+            Lower scale value to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper scale value to consider in the fit.
+        scale_normalization: bool, optional
+            Multiply the wavelet transform by the correct normalization
+            factor.
+        save_name : str,optional
+            Save the figure when a file name is given.
+        plot_kwargs : Passed to `~Wavelet.plot_transform`.
         '''
-        self.compute_transform()
+        self.compute_transform(scale_normalization=scale_normalization)
         self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh)
 
         if verbose:
-            self.plot_transform(ang_units=ang_units, unit=unit, show=True)
+
+            print(self.fit.summary())
+
+            import matplotlib.pyplot as plt
+
+            self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
+
+            if save_name is not None:
+                plt.savefig(save_name)
+                plt.close()
+            else:
+                plt.show()
 
         return self
 
@@ -225,10 +329,10 @@ class Wavelet_Distance(object):
         Number of scales to calculate the transform at.
     fiducial_model : wt2D
         Computed wt2D object. use to avoid recomputing.
-    xlow : float or np.ndarray, optional
+    xlow : `astropy.units.Quantity`, optional
         The lower lag fitting limit. An array with 2 elements can be passed to
         give separate lower limits for the datasets.
-    xhigh : float or np.ndarray, optional
+    xhigh : `astropy.units.Quantity`, optional
         The upper lag fitting limit. See `xlow` above.
 
     '''
@@ -252,7 +356,7 @@ class Wavelet_Distance(object):
         self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None, ang_units=False, unit=u.deg,
+                        label2=None, xunit=u.deg,
                         save_name=None):
         '''
         Implements the distance metric for 2 wavelet transforms.
@@ -285,18 +389,18 @@ class Wavelet_Distance(object):
             print(self.wt1.fit.summary())
             print(self.wt2.fit.summary())
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            self.wt1.plot_transform(ang_units=ang_units, unit=unit, show=False,
+            self.wt1.plot_transform(xunit=xunit, show=False,
                                     color='b', symbol='D', label=label1)
-            self.wt2.plot_transform(ang_units=ang_units, unit=unit, show=False,
+            self.wt2.plot_transform(xunit=xunit, show=False,
                                     color='g', symbol='o', label=label1)
-            p.legend(loc='best')
+            plt.legend(loc='best')
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self

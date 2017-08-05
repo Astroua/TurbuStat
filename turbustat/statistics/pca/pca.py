@@ -51,6 +51,11 @@ class PCA(BaseStatisticMixIn):
 
         _enforce_velocity_axis(self)
 
+        # We need to check for completely empty channels. These cause
+        # issues for the decomposition of the covariance matrix (eigenvectors
+        # will have significant imaginary components).
+        self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
+
         self.spectral_shape = self.data.shape[0]
 
         if n_eigs is not None:
@@ -168,6 +173,16 @@ class PCA(BaseStatisticMixIn):
         '''
         return self._eigvecs
 
+    def _valid_eigenvectors(self):
+        '''
+        Find the indices where the eigenvalues are above the machine precision
+        limit of self.data's dtype. This stops us from running into
+        eigenvectors with significant imaginary components (which we expect to
+        get for empty channels).
+        '''
+
+        return np.where(self.eigvals >= np.finfo(self.data.dtype).eps)[0]
+
     def eigimages(self, n_eigs=None):
         '''
         Create eigenimages up to the n_eigs.
@@ -191,7 +206,10 @@ class PCA(BaseStatisticMixIn):
         if n_eigs > 0:
             iterat = xrange(n_eigs)
         elif n_eigs < 0:
-            iterat = xrange(n_eigs, 0, 1)
+            # We're looking for the noisy components whenever n_eigs < 0
+            # Find where we have valid eigenvalues, and use the last
+            # n_eigs of those.
+            iterat = self._valid_eigenvectors()[n_eigs:]
 
         for ct, idx in enumerate(iterat):
             eigimg = np.zeros(self.data.shape[1:], dtype=float)
@@ -209,7 +227,11 @@ class PCA(BaseStatisticMixIn):
                 eigimgs = eigimg
             else:
                 eigimgs = np.dstack((eigimgs, eigimg))
-        return eigimgs.swapaxes(0, 2)
+
+        if eigimgs.ndim == 3:
+            return eigimgs.swapaxes(0, 2)
+        else:
+            return eigimgs
 
     def autocorr_images(self, n_eigs=None):
         '''
@@ -245,7 +267,10 @@ class PCA(BaseStatisticMixIn):
             else:
                 acors = np.dstack((acors, acor.real))
 
-        return acors.swapaxes(0, 2)
+        if acors.ndim == 3:
+            return acors.swapaxes(0, 2)
+        else:
+            return acors
 
     def autocorr_spec(self, n_eigs=None):
         '''
@@ -280,7 +305,15 @@ class PCA(BaseStatisticMixIn):
     def noise_ACF(self, n_eigs=-10):
         '''
         Create the noise autocorrelation function based off of the eigenvalues
-        beyond `PCA.n_eigs`.
+        beyond `PCA.n_eigs`. By default the final 10 eigenvectors **whose
+        eigenvalues are above the machine precision limit of the data cube's
+        dtype** are used.
+
+        Parameters
+        ----------
+        n_eigs : int, optional
+            The number of eigenvalues to use for estimating the noise ACF.
+            The default is to use the last 10 eigenvectors.
         '''
 
         if n_eigs is None:
@@ -294,7 +327,8 @@ class PCA(BaseStatisticMixIn):
 
     def find_spatial_widths(self, method='contour',
                             brunt_beamcorrect=True, beam_fwhm=None,
-                            physical_scales=True, distance=None):
+                            output_unit=u.pix, distance=None,
+                            diagnosticplots=False):
         '''
         Derive the spatial widths using the autocorrelation of the
         eigenimages.
@@ -316,12 +350,15 @@ class PCA(BaseStatisticMixIn):
         beam_fwhm : None of `~astropy.units.Quantity`, optional
             When beam correction is enabled, the FWHM beam size can be given
             here.
-        physical_scales : bool, optional
-            Attempts to convert spatial pixel scales into physical sizes. A
-            warning is raised if no distance is provided.
+        output_unit : `~astropy.units.Unit`, optional
+            Specify the units to convert the spatial widths to. Defaults to
+            pixel units.
         distance : `~astropy.units.Quantity`, optional
             Distance to object in physical units. The output spatial widths
             will be converted to the units given here.
+        diagnosticplots : bool, optional
+            Plot the first 9 autocorrelation images with the contour fits.
+            *Only implemented for* `method='contour'`.
 
         '''
         # Try reading beam width from the header is it is not given.
@@ -336,22 +373,20 @@ class PCA(BaseStatisticMixIn):
             WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method,
                             brunt_beamcorrect=brunt_beamcorrect,
                             beam_fwhm=beam_fwhm,
-                            spatial_cdelt=self.header['CDELT2'] * u.deg)
+                            spatial_cdelt=self.header['CDELT2'] * u.deg,
+                            diagnosticplots=diagnosticplots)
 
         self._spatial_width = self._spatial_width * u.pix
         self._spatial_width_error = self._spatial_width_error * u.pix
 
-        # If distance is given, convert to physical scale
-        if distance is not None:
-            self.distance = distance
-
-        if physical_scales:
-            if not hasattr(self, "_distance"):
-                warn("Distance must be given to use physical units")
-            else:
-                self._spatial_width = self.to_physical(self._spatial_width)
-                self._spatial_width_error = \
-                    self.to_physical(self._spatial_width_error)
+        # Convert into the unit given in `output_unit`
+        # If no distance has been given, the conversion will to physical units
+        # will fail.
+        self._spatial_width = \
+            self._spatial_unit_conversion(self._spatial_width, output_unit)
+        self._spatial_width_error = \
+            self._spatial_unit_conversion(self._spatial_width_error,
+                                          output_unit)
 
     @property
     def spatial_width(self):
@@ -369,7 +404,7 @@ class PCA(BaseStatisticMixIn):
         return self._spatial_width_error
 
     def find_spectral_widths(self, method='walk-down',
-                             physical_units=True):
+                             output_unit=u.pix):
         '''
         Derive the spectral widths using the autocorrelation of the
         eigenvectors.
@@ -382,10 +417,11 @@ class PCA(BaseStatisticMixIn):
             this is the method used by the Heyer & Brunt works). See
             `~turbustat.statistics.pca.WidthEstimate1D` for a description
             of all methods.
-        physical_units : bool, optional
-            Enable conversion into spectral units, as defined within the
-            header.
-
+        output_unit : `~astropy.units.Unit`, optional
+            Specify the units to convert the spectral widths to. Defaults to
+            pixel units. If specifying something other than pixels,
+            `output_unit` *MUST* be equivalent to the spectral unit attached
+            to the given data cube.
         '''
 
         acorr_spec = self.autocorr_spec(n_eigs=self.n_eigs)
@@ -396,11 +432,10 @@ class PCA(BaseStatisticMixIn):
         self._spectral_width = self._spectral_width * u.pix
         self._spectral_width_error = self._spectral_width_error * u.pix
 
-        if physical_units:
-            self._spectral_width = self._spectral_width.value * \
-                self.spectral_size
-            self._spectral_width_error = self._spectral_width_error.value * \
-                self.spectral_size
+        self._spectral_width = \
+            self._to_spectral(self._spectral_width, output_unit)
+        self._spectral_width_error = \
+            self._to_spectral(self._spectral_width_error, output_unit)
 
     @property
     def spectral_width(self):
@@ -553,7 +588,8 @@ class PCA(BaseStatisticMixIn):
         mu : float, optional
             Factor to multiply by m_H to account for He and metals.
         use_gamma : bool, optional
-            Toggle whether to use `~PCA.gamma` or `~PCA.index`.
+            Toggle whether to use `~PCA.gamma` or `~PCA.index`. See link given
+            in `~PCA.gamma`.
 
         Returns
         -------
@@ -574,9 +610,8 @@ class PCA(BaseStatisticMixIn):
 
         # Sound speed in m/s
         c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
-        # Convert to pixel units, if spectral_width not in physical units
-        c_s = c_s.to(self.spectral_width.unit,
-                     equivalencies=self.spectral_equiv)
+        # Convert to the same spectral unit
+        c_s = self._to_spectral(c_s, self.spectral_width.unit)
 
         if use_gamma:
             index = self.gamma
@@ -625,7 +660,8 @@ class PCA(BaseStatisticMixIn):
             decomp_only=False, n_eigs='auto', min_eigval=None,
             eigen_cut_method='value', spatial_method='contour',
             spectral_method='walk-down', fit_method='odr',
-            beam_fwhm=None, brunt_beamcorrect=True):
+            beam_fwhm=None, brunt_beamcorrect=True,
+            spatial_output_unit=u.pix, spectral_output_unit=u.pix):
         '''
         Run the decomposition and fitting in one step.
 
@@ -657,7 +693,14 @@ class PCA(BaseStatisticMixIn):
             See `~PCA.fit_spatial_widths`.
         brunt_beamcorrect : bool, optional
             See `~PCA.fit_spatial_widths`.
-
+        spatial_output_unit : `astropy.units.Unit`, optional
+            Pixel, anglular, or physical unit to convert the spatial sizes to.
+            Defaults to pixels. Physical unit conversion requires a distance
+            to be given.
+        spectral_output_unit : `astropy.units.Unit`, optional
+            Pixel or spectral unit to convert spectral sizes to. Defaults to
+            pixels. The spectral unit *MUST* match the spectral unit defined
+            in the data cube.
         '''
 
         self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
@@ -668,8 +711,10 @@ class PCA(BaseStatisticMixIn):
         if not decomp_only:
             self.find_spatial_widths(method=spatial_method,
                                      beam_fwhm=beam_fwhm,
-                                     brunt_beamcorrect=brunt_beamcorrect)
-            self.find_spectral_widths(method=spectral_method)
+                                     brunt_beamcorrect=brunt_beamcorrect,
+                                     output_unit=spatial_output_unit)
+            self.find_spectral_widths(method=spectral_method,
+                                      output_unit=spectral_output_unit)
             self.fit_plaw(fit_method=fit_method)
 
         if verbose:
@@ -918,7 +963,7 @@ def _enforce_velocity_axis(pca_obj):
     Enforce spectral_size be in velocity units.
     '''
 
-    if not pca_obj.spectral_size.unit.is_equivalent(u.m / u.s):
+    if not pca_obj._spectral_size.unit.is_equivalent(u.m / u.s):
         raise Warning("PCA requires the spectral axis to be in velocity units."
                       " If using a spectral cube, perform this conversion with"
                       " 'cube_vel = cube.with_spectral_unit(u.m / u.s, "

@@ -2,12 +2,17 @@
 
 import numpy.testing as npt
 import astropy.units as u
+import os
+from glob import glob
 
 from ..data_reduction import Mask_and_Moments
-from ._testing_data import dataset1, sc1
+from ._testing_data import dataset1, sc1, props1
 
 
 def test_loading():
+
+    # Save the files.
+    props1.to_fits(save_name="dataset1")
 
     # Try loading the files.
     # Set the scale to the assumed value.
@@ -26,3 +31,8 @@ def test_loading():
     npt.assert_allclose(test.linewidth_err, dataset1["linewidth_error"][0])
     npt.assert_allclose(test.intint_err,
                         dataset1["integrated_intensity_error"][0])
+
+    # Clean-up the saved files
+    moment_fits = glob("dataset1*.fits")
+    for file in moment_fits:
+        os.remove(file)

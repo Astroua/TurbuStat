@@ -59,6 +59,7 @@ MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils', "spectral_cube.cube_utils",
                 'spectral_cube.lower_dimensional_structures',
+                'spectral_cube.spectral_cube',
                 'emcee']
 
 for mod_name in MOCK_MODULES:

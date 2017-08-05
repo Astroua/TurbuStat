@@ -1,11 +1,8 @@
 # Licensed under an MIT open source license - see LICENSE
 
 
-'''
-Test functions for Delta Variance
-'''
-
 import numpy.testing as npt
+import astropy.units as u
 
 from ..statistics import DeltaVariance, DeltaVariance_Distance
 from ._testing_data import \
@@ -19,6 +16,32 @@ def test_DelVar_method():
     tester.run()
     npt.assert_allclose(tester.delta_var, computed_data['delvar_val'])
     npt.assert_almost_equal(tester.slope, computed_data['delvar_slope'])
+
+
+def test_DelVar_method_fitlimits():
+
+    distance = 250 * u.pc
+
+    xlow=4 * u.pix
+    xhigh=30 * u.pix
+
+    tester = DeltaVariance(dataset1["moment0"])
+    tester.run(xlow=xlow, xhigh=xhigh)
+
+    xlow = xlow.value * (dataset1['moment0'][1]['CDELT2'] * u.deg)
+    xhigh = xhigh.value * (dataset1['moment0'][1]['CDELT2'] * u.deg)
+
+    tester2 = DeltaVariance(dataset1["moment0"])
+    tester2.run(xlow=xlow, xhigh=xhigh)
+
+    xlow = xlow.to(u.rad).value * distance
+    xhigh = xhigh.to(u.rad).value * distance
+
+    tester3 = DeltaVariance(dataset1["moment0"], distance=distance)
+    tester3.run(xlow=xlow, xhigh=xhigh)
+
+    npt.assert_allclose(tester.slope, tester2.slope)
+    npt.assert_allclose(tester.slope, tester3.slope)
 
 
 def test_DelVar_distance():

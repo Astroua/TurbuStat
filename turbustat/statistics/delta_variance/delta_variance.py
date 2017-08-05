@@ -9,7 +9,7 @@ import statsmodels.api as sm
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..stats_utils import common_scale, standardize
+from ..stats_utils import common_scale, padwithzeros
 from ..fitting_utils import check_fit_limits
 
 
@@ -34,6 +34,8 @@ class DeltaVariance(BaseStatisticMixIn):
         The pixel scales to compute the delta-variance at.
     nlags : int, optional
         Number of lags to use.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
 
     Example
     -------
@@ -47,7 +49,7 @@ class DeltaVariance(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img, header=None, weights=None, diam_ratio=1.5,
-                 lags=None, nlags=25):
+                 lags=None, nlags=25, distance=None):
         super(DeltaVariance, self).__init__()
 
         # Set the data and perform checks
@@ -59,6 +61,9 @@ class DeltaVariance(BaseStatisticMixIn):
             self.weights = np.ones(self.data.shape)
         else:
             self.weights = input_data(weights, no_header=True)
+
+        if distance is not None:
+            self.distance = distance
 
         self.nanflag = False
         if np.isnan(self.data).any() or np.isnan(self.weights).any():
@@ -75,10 +80,36 @@ class DeltaVariance(BaseStatisticMixIn):
             if not hasattr(lags, "value"):
                 self.lags = lags * u.pix
             else:
-                self.lags = self.to_pixel(lags)
+                self.lags = self._to_pixel(lags)
 
         self.convolved_arrays = []
         self.convolved_weights = []
+
+    @property
+    def lags(self):
+        '''
+        Lag values.
+        '''
+        return self._lags
+
+    @lags.setter
+    def lags(self, values):
+
+        if not isinstance(values, u.Quantity):
+            raise TypeError("lags must be given as an astropy.units.Quantity.")
+
+        pix_lags = self._to_pixel(values)
+
+        if np.any(pix_lags.value < 1):
+            raise ValueError("At least one of the lags is smaller than one "
+                             "pixel. Remove these lags from the array.")
+
+        if np.any(pix_lags.value > min(self.data.shape) / 2.):
+            raise ValueError("At least one of the lags is larger than half of"
+                             " the image size. Remove these lags from the "
+                             "array.")
+
+        self._lags = values
 
     @property
     def weights(self):
@@ -197,9 +228,9 @@ class DeltaVariance(BaseStatisticMixIn):
 
         Parameters
         ----------
-        xlow : float, optional
+        xlow : `~astropy.units.Quantity`, optional
             Lower lag value to consider in the fit.
-        xhigh : float, optional
+        xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
         verbose : bool, optional
             Show fit summary when enabled.
@@ -209,16 +240,22 @@ class DeltaVariance(BaseStatisticMixIn):
         y = np.log10(self.delta_var)
 
         if xlow is not None:
-            lower_limit = x >= np.log10(xlow)
+            xlow = self._to_pixel(xlow)
+
+            lower_limit = x >= np.log10(xlow.value)
         else:
             lower_limit = \
                 np.ones_like(self.delta_var, dtype=bool)
+            xlow = self.lags.min() * 0.99
 
         if xhigh is not None:
-            upper_limit = x <= np.log10(xhigh)
+            xhigh = self._to_pixel(xhigh)
+
+            upper_limit = x <= np.log10(xhigh.value)
         else:
             upper_limit = \
                 np.ones_like(self.delta_var, dtype=bool)
+            xhigh = self.lags.max() * 1.01
 
         self._fit_range = [xlow, xhigh]
 
@@ -252,14 +289,23 @@ class DeltaVariance(BaseStatisticMixIn):
 
     @property
     def slope(self):
+        '''
+        Fitted slope.
+        '''
         return self._slope
 
     @property
     def slope_err(self):
+        '''
+        Standard error on the fitted slope.
+        '''
         return self._slope_err
 
     @property
     def fit_range(self):
+        '''
+        Range of lags used in the fit.
+        '''
         return self._fit_range
 
     def fitted_model(self, xvals):
@@ -275,17 +321,15 @@ class DeltaVariance(BaseStatisticMixIn):
         Returns
         -------
         model_values : `~numpy.ndarray`
-            Values of the model at the given values. Equivalent to log values
-            of the SCF spectrum.
+            Values of the model at the given values.
         '''
 
         model_values = self.fit.params[0] + self.fit.params[1] * xvals
 
         return model_values
 
-    def run(self, verbose=False, ang_units=False, unit=u.deg,
-            allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
-            save_name=None):
+    def run(self, verbose=False, xunit=u.pix, allow_huge=False,
+            boundary='wrap', xlow=None, xhigh=None, save_name=None):
         '''
         Compute the delta-variance.
 
@@ -293,17 +337,15 @@ class DeltaVariance(BaseStatisticMixIn):
         ----------
         verbose : bool, optional
             Plot delta-variance transform.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            The unit to show the x-axis in.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
         boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "cut" for non-periodic.
-        xlow : float, optional
+        xlow : `~astropy.units.Quantity`, optional
             Lower lag value to consider in the fit.
-        xhigh : float, optional
+        xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
         save_name : str,optional
             Save the figure when a file name is given.
@@ -318,11 +360,8 @@ class DeltaVariance(BaseStatisticMixIn):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            if ang_units:
-                lags = \
-                    self.lags.to(unit, equivalencies=self.angular_equiv).value
-            else:
-                lags = self.lags.value
+
+            lags = self._spatial_unit_conversion(self.lags, xunit).value
 
             # Check for NaNs
             fin_vals = np.logical_or(np.isfinite(self.delta_var),
@@ -330,19 +369,26 @@ class DeltaVariance(BaseStatisticMixIn):
             p.errorbar(lags, self.delta_var[fin_vals],
                        yerr=self.delta_var_error[fin_vals],
                        fmt="bD-", label="Data")
-            xvals = \
-                np.linspace(self.lags.min().value if xlow is None else xlow,
-                            self.lags.max().value if xhigh is None else xhigh,
-                            100)
-            p.plot(xvals, 10**self.fitted_model(np.log10(xvals)), 'r--',
-                   linewidth=2, label='Fit')
+
+            xvals = np.linspace(self._fit_range[0].value,
+                                self._fit_range[1].value,
+                                100) * self.lags.unit
+            xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
+
+            p.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
+                   'r--', linewidth=2, label='Fit')
+
+            xlow = \
+                self._spatial_unit_conversion(self._fit_range[0], xunit).value
+            xhigh = \
+                self._spatial_unit_conversion(self._fit_range[1], xunit).value
+            p.axvline(xlow, color="r", alpha=0.5, linestyle='-.')
+            p.axvline(xhigh, color="r", alpha=0.5, linestyle='-.')
+
             p.legend(loc='best')
             ax.grid(True)
 
-            if ang_units:
-                ax.set_xlabel("Lag ({})".format(unit))
-            else:
-                ax.set_xlabel("Lag (pixels)")
+            ax.set_xlabel("Lag ({})".format(xunit))
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
 
             if save_name is not None:
@@ -415,15 +461,6 @@ def annulus_kernel(lag, diam_ratio, x_size, y_size):
     kernel = 4 / (np.pi * lag**2 * (diam_ratio ** 2. - 1)) * (outer - inner)
 
     return kernel / np.sum(kernel)
-
-
-def padwithzeros(vector, pad_width, iaxis, kwargs):
-    '''
-    Pad array with zeros.
-    '''
-    vector[:pad_width[0]] = 0
-    vector[-pad_width[1]:] = 0
-    return vector
 
 
 class DeltaVariance_Distance(object):

@@ -63,3 +63,6 @@ docs/api
 
 turbustat/version.py
 turbustat/cython_version.py
+
+# Test data
+testingdata

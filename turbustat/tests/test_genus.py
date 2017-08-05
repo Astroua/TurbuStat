@@ -7,6 +7,7 @@ Test functions for Genus
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+from copy import copy
 
 from ..statistics import GenusDistance, Genus
 from ._testing_data import \
@@ -15,14 +16,7 @@ from ._testing_data import \
 
 def test_Genus_method():
 
-    # The test values were normalized for generating the unit test data
-    from ..statistics.stats_utils import standardize
-    from copy import copy
-
-    mom0 = copy(dataset1["moment0"])
-    mom0[0] = standardize(mom0[0])
-
-    tester = Genus(mom0, lowdens_percent=20)
+    tester = Genus(dataset1["moment0"])
     tester.run()
 
     assert np.allclose(tester.genus_stats,
@@ -31,12 +25,7 @@ def test_Genus_method():
 
 def test_Genus_method_headerbeam():
 
-    # The test values were normalized for generating the unit test data
-    from ..statistics.stats_utils import standardize
-    from copy import copy
-
     mom0 = copy(dataset1["moment0"])
-    mom0[0] = standardize(mom0[0])
     mom0[1]["BMAJ"] = 1.0
 
     # Just ensuring these run without issue.
@@ -44,8 +33,50 @@ def test_Genus_method_headerbeam():
     tester = Genus(mom0)
     tester.run(use_beam=True)
 
-    tester = Genus(mom0)
-    tester.run(use_beam=True, beam_area=1.0 * u.sr)
+    tester2 = Genus(mom0)
+    tester2.run(use_beam=True, beam_area=1.0 * u.deg**2)
+
+    npt.assert_allclose(tester.genus_stats, tester2.genus_stats)
+
+
+def test_Genus_method_value_vs_perc():
+
+    min_perc1 = 20
+    min_val1 = np.percentile(dataset1['moment0'][0], min_perc1)
+
+    max_perc1 = 90
+    max_val1 = np.percentile(dataset1['moment0'][0], max_perc1)
+
+    tester = Genus(dataset1['moment0'], lowdens_percent=min_perc1,
+                   highdens_percent=max_perc1)
+    tester.run()
+
+    tester2 = Genus(dataset1['moment0'], min_value=min_val1,
+                    max_value=max_val1)
+    tester2.run()
+
+    npt.assert_allclose(tester.genus_stats, tester2.genus_stats)
+
+
+def test_Genus_method_smoothunits():
+
+    distance = 250 * u.pc
+
+    radii = np.linspace(1.0, 0.1 * min(dataset1['moment0'][0].shape), 5) * u.pix
+    tester = Genus(dataset1["moment0"], smoothing_radii=radii)
+    tester.run()
+
+    radii = radii.value * dataset1['moment0'][1]['CDELT2'] * u.deg
+    tester2 = Genus(dataset1["moment0"], smoothing_radii=radii)
+    tester2.run()
+
+    radii = radii.to(u.rad).value * distance
+    tester3 = Genus(dataset1["moment0"], smoothing_radii=radii,
+                    distance=distance)
+    tester3.run()
+
+    npt.assert_allclose(tester.genus_stats, tester2.genus_stats)
+    npt.assert_allclose(tester.genus_stats, tester3.genus_stats)
 
 
 def test_Genus_distance():

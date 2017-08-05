@@ -7,10 +7,11 @@ from numpy.fft import fftshift
 import astropy.units as u
 
 from ..rfft_to_fft import rfft_to_fft
-from slice_thickness import change_slice_thickness
+from slice_thickness import spectral_regrid_cube
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
+from ...io.input_base import to_spectral_cube
 from ..fitting_utils import check_fit_limits
 
 
@@ -25,27 +26,34 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Data cube.
     header : FITS header, optional
         Corresponding FITS header.
-    slice_sizes : float or int, optional
-        Slices to degrade the cube to.
+    channel_width : `~astropy.units.Quantity`, optional
+        Set the width of channels to compute the VCA with. The channel width
+        in the data is used by default. Given widths will be used to
+        spectrally down-sample the data before calculating the VCA. Up-sampling
+        to smaller channel sizes than the original is not supported.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, slice_size=None):
+    def __init__(self, cube, header=None, channel_width=None, distance=None):
         super(VCA, self).__init__()
 
         self.input_data_header(cube, header)
 
+        # Regrid the data when channel_width is given
+        if channel_width is not None:
+            sc_cube = to_spectral_cube(self.data, self.header)
+
+            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
+
+            # Don't pass the header. It will read the new one in reg_cube
+            self.input_data_header(reg_cube, None)
+
         if np.isnan(self.data).any():
             self.data[np.isnan(self.data)] = 0
 
-        if slice_size is None:
-            self.slice_size = 1.0
-
-        if slice_size != 1.0:
-            self.data = \
-                change_slice_thickness(self.data,
-                                       slice_thickness=self.slice_size)
+        if distance is not None:
+            self.distance = distance
 
         self._ps1D_stddev = None
 
@@ -58,9 +66,9 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
 
-    def run(self, verbose=False, save_name=None, brk=None, return_stddev=True,
+    def run(self, verbose=False, save_name=None, return_stddev=True,
             logspacing=False, low_cut=None, high_cut=None,
-            ang_units=False, unit=u.deg, use_wavenumber=False):
+            xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of VCA.
 
@@ -70,32 +78,28 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Enables plotting.
         save_name : str,optional
             Save the figure when a file name is given.
-        brk : float, optional
-            Initial guess for the break point.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
+        fit_kwargs : Passed to `~VCA.fit_pspec`.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(return_stddev=return_stddev,
                                   logspacing=logspacing)
-        self.fit_pspec(brk=brk, low_cut=low_cut, high_cut=high_cut,
-                       large_scale=0.5)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
         if verbose:
 
             print(self.fit.summary())
 
-            self.plot_fit(show=True, show_2D=True, ang_units=ang_units,
-                          unit=unit, save_name=save_name,
+            self.plot_fit(show=True, show_2D=True,
+                          xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
             if save_name is not None:
                 import matplotlib.pyplot as p
@@ -128,13 +132,10 @@ class VCA_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, slice_size=1.0, breaks=None,
+    def __init__(self, cube1, cube2, channel_width=None, breaks=None,
                  fiducial_model=None, logspacing=False, low_cut=None,
-                 high_cut=None):
+                 high_cut=None, distance=None):
         super(VCA_Distance, self).__init__()
-
-        if not isinstance(slice_size, float):
-            raise TypeError("slice_size must be a float.")
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
@@ -144,18 +145,17 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = \
-                VCA(cube1, slice_size=slice_size)
+            self.vca1 = VCA(cube1, channel_width=channel_width)
             self.vca1.run(brk=breaks[0], low_cut=low_cut[0],
                           high_cut=high_cut[0], logspacing=logspacing)
 
         self.vca2 = \
-            VCA(cube2, slice_size=slice_size)
+            VCA(cube2, channel_width=channel_width)
         self.vca2.run(brk=breaks[1], low_cut=low_cut[1], high_cut=high_cut[1],
                       logspacing=logspacing)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None,
+                        xunit=u.pix**-1, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -197,10 +197,10 @@ class VCA_Distance(object):
             import matplotlib.pyplot as p
 
             self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               ang_units=ang_units, unit=unit,
+                               xunit=xunit,
                                use_wavenumber=use_wavenumber)
             p.legend(loc='upper right')
 

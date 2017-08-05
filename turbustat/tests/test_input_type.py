@@ -6,7 +6,7 @@ from astropy.io.fits.header import Header
 
 
 from ..io import input_data
-from ._testing_data import dataset1, sc1, moment0_hdu1
+from ._testing_data import dataset1, sc1, moment0_hdu1, moment0_proj
 
 
 @pytest.mark.parametrize(('data', 'no_header'),
@@ -15,7 +15,8 @@ from ._testing_data import dataset1, sc1, moment0_hdu1
                           (dataset1['cube'][0], True),
                           (dataset1["moment0"], False),
                           (list(dataset1["moment0"]), False),
-                          (moment0_hdu1, False)])
+                          (moment0_hdu1, False),
+                          (moment0_proj, False)])
 def test_input_data(data, no_header):
 
     output_data = input_data(data, no_header=no_header)

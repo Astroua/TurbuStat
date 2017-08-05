@@ -491,3 +491,18 @@ def pixel_shift(x, shift, axis=0):
         shift = int(shift)
 
     return np.roll(x, shift, axis=axis)
+
+
+def padwithzeros(vector, pad_width, iaxis, kwargs):
+    '''
+    Pad array with zeros.
+    '''
+    vector[:pad_width[0]] = 0
+    vector[-pad_width[1]:] = 0
+    return vector
+
+
+def padwithnans(vector, pad_width, iaxis, kwargs):
+    vector[:pad_width[0]] = np.NaN
+    vector[-pad_width[1]:] = np.NaN
+    return vector

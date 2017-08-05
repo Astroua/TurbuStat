@@ -2,18 +2,10 @@
 
 import numpy as np
 import scipy.ndimage as nd
-from scipy.stats import scoreatpercentile
 from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
-from operator import itemgetter
-from itertools import groupby
 from astropy.wcs import WCS
 import astropy.units as u
-
-try:
-    from scipy.fftpack import fft2
-except ImportError:
-    from numpy.fft import fft2
 
 from ..stats_utils import standardize, common_scale
 from ..base_statistic import BaseStatisticMixIn
@@ -31,14 +23,31 @@ class Genus(BaseStatisticMixIn):
 
     img : %(dtypes)s
         2D image.
+    min_value : `~astropy.units.Quantity` or float, optional
+        Minimum value in the data to consider. If None, the minimum is used.
+        When `img` has an attached brightness unit, `min_value` must have the
+        same units.
+    max_value : `~astropy.units.Quantity` or float, optional
+        Maximum value in the data to consider. If None, the maximum is used.
+        When `img` has an attached brightness unit, `min_value` must have the
+        same units.
     lowdens_percent : float, optional
-        Lower percentile of the data to use.
+        Lower percentile of the data to use. Defaults to the minimum value.
+        Overrides `min_value` when the value of this percentile is greater
+        than `min_value`.
     highdens_percent : float, optional
-        Upper percentile of the data to use.
+        Upper percentile of the data to use. Defaults to the maximum value.
+        Overrides `max_value` when the value of this percentile is lower than
+        `max_value`.
     numpts : int, optional
         Number of thresholds to calculate statistic at.
-    smoothing_radii : list, optional
-        Kernel radii to smooth data to.
+    smoothing_radii : np.ndarray or `astropy.units.Quantity`, optional
+        Kernel radii to smooth data to. If units are not attached, the radii
+        are assumed to be in pixels. If no radii are given, 5 smoothing radii
+        will be used ranging from 1 pixel to one-tenth the smallest dimension
+        size.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
 
     Example
     -------
@@ -54,8 +63,9 @@ class Genus(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, lowdens_percent=0, highdens_percent=100,
-                 numpts=100, smoothing_radii=None):
+    def __init__(self, img, min_value=None, max_value=None, lowdens_percent=0,
+                 highdens_percent=100, numpts=100, smoothing_radii=None,
+                 distance=None):
         super(Genus, self).__init__()
 
         if isinstance(img, np.ndarray):
@@ -70,25 +80,61 @@ class Genus(BaseStatisticMixIn):
         if np.isnan(self.data).any():
             self.nanflag = True
 
-        self.lowdens_percent = \
-            scoreatpercentile(self.data[~np.isnan(self.data)],
-                              lowdens_percent)
-        self.highdens_percent = \
-            scoreatpercentile(self.data[~np.isnan(self.data)],
-                              highdens_percent)
+        if distance is not None:
+            self.distance = distance
 
-        self._thresholds = np.linspace(
-            self.lowdens_percent, self.highdens_percent, numpts)
-
-        if smoothing_radii is not None:
-            try:
-                self._smoothing_radii = np.asarray(smoothing_radii)
-            except Exception:
-                raise TypeError("smoothing_radii must be convertible to a "
-                                "numpy array.")
+        if min_value is None:
+            min_value = np.nanmin(self.data)
         else:
-            self._smoothing_radii = \
+            if hasattr(self.data, 'unit'):
+                if not hasattr(min_value, 'unit'):
+                    raise TypeError("data has units of {}. 'min_value' must "
+                                    "have equivalent units."
+                                    .format(self.data.unit))
+                if not min_value.unit.is_equivalent(self.data.unit):
+                    raise u.UnitsError("min_value does not have an equivalent "
+                                       "units to the img unit.")
+
+                min_value = min_value.to(self.data.unit)
+
+        if max_value is None:
+            max_value = np.nanmax(self.data)
+        else:
+            if hasattr(self.data, 'unit'):
+                if not hasattr(max_value, 'unit'):
+                    raise TypeError("data has units of {}. 'max_value' must "
+                                    "have equivalent units."
+                                    .format(self.data.unit))
+                if not max_value.unit.is_equivalent(self.data.unit):
+                    raise u.UnitsError("max_value does not have an equivalent "
+                                       "units to the img unit.")
+
+                max_value = max_value.to(self.data.unit)
+
+        min_percent = \
+            np.percentile(self.data[~np.isnan(self.data)],
+                          lowdens_percent)
+        max_percent = \
+            np.percentile(self.data[~np.isnan(self.data)],
+                          highdens_percent)
+
+        if min_value is None or min_percent > min_value:
+            min_value = min_percent
+
+        if max_value is None or max_percent > max_value:
+            max_value = max_percent
+
+        self._thresholds = np.linspace(min_value, max_value, numpts)
+
+        if smoothing_radii is None:
+            self.smoothing_radii = \
                 np.linspace(1.0, 0.1 * min(self.data.shape), 5)
+        else:
+            if isinstance(smoothing_radii, u.Quantity):
+                print(smoothing_radii)
+                self.smoothing_radii = self._to_pixel(smoothing_radii).value
+            else:
+                self.smoothing_radii = smoothing_radii
 
     @property
     def thresholds(self):
@@ -103,6 +149,19 @@ class Genus(BaseStatisticMixIn):
         Pixel radii used to smooth the data.
         '''
         return self._smoothing_radii
+
+    @smoothing_radii.setter
+    def smoothing_radii(self, values):
+
+        if np.any(values < 1.0):
+            raise ValueError("All smoothing radii must be larger than one pixel.")
+
+        if np.any(values > 0.5 * min(self.data.shape)):
+            raise ValueError("All smoothing radii must be smaller than half of"
+                             " the image shape.")
+
+        self._smoothing_radii = values
+
 
     def make_smooth_arrays(self, **kwargs):
         '''
@@ -141,11 +200,11 @@ class Genus(BaseStatisticMixIn):
     #     self.fft_images = []
 
     #     for j, image in enumerate(self.smoothed_images):
-    #         self.fft_images.append(fft2(image))
+    #         self.fft_images.append(np.fft2(image))
 
     #     return self
 
-    def make_genus_curve(self, use_beam=False, beam_area=None, min_size=4,
+    def make_genus_curve(self, use_beam=False, min_size=4,
                          connectivity=1):
         '''
         Create the genus curve from the smoothed_images at the specified\
@@ -156,9 +215,7 @@ class Genus(BaseStatisticMixIn):
         use_beam : bool, optional
             When enabled, will use the given `beam_fwhm` or try to load it from
             the header. When disabled, the minimum size is set by `min_size`.
-        beam_area : `~astropy.units.Quantity`, optional
-            The angular area of the beam size. Requires a header to be given.
-        min_size : int, optional
+        min_size : int or `~astropy.units.Quantity`, optional
             Directly specify the number of pixels to be used as the minimum
             area a region must have to be counted.
         connectivity : {1, 2}, optional
@@ -166,27 +223,19 @@ class Genus(BaseStatisticMixIn):
         '''
 
         if use_beam:
-            if self.header is None:
-                raise TypeError("A header must be provided with the data to "
-                                "use the beam area.")
-
-            if beam_area is None:
-                major, minor = find_beam_properties(self.header)[:2]
-                major = major.to(u.pixel, equivalencies=self.angular_equiv)
-                minor = minor.to(u.pixel, equivalencies=self.angular_equiv)
-                pix_area = np.pi * major * minor
-            else:
-                if not beam_area.unit.is_equivalent(u.sr):
-                    raise u.UnitsError("beam_area must be in angular units "
-                                       "equivalent to solid angle. The given "
-                                       "units are {}".format(beam_area.unit))
-
-                # Can't use angular_equiv to do deg**2 to u.pix**2, so do sqrt
-                pix_area = \
-                    (np.sqrt(beam_area)
-                     .to(u.pix, equivalencies=self.angular_equiv)) ** 2
-
+            major, minor = find_beam_properties(self.header)[:2]
+            major = self._to_pixel(major)
+            minor = self._to_pixel(minor)
+            pix_area = np.pi * major * minor
             min_size = int(np.floor(pix_area.value))
+        else:
+            if isinstance(min_size, u.Quantity):
+                # Convert to pixel area
+                min_size = self._to_pixel_area(min_size)
+
+                min_size = int(np.floor(min_size.value))
+            else:
+                min_size = int(min_size)
 
         self._genus_stats = np.empty((len(self.smoothed_images),
                                       len(self.thresholds)))
@@ -225,7 +274,8 @@ class Genus(BaseStatisticMixIn):
         verbose : bool, optional
             Enables plotting.
         save_name : str,optional
-            Save the figure when a file name is given.
+            Save the figure when a file name is given. Must have `verbose`
+            enabled for plotting.
         use_beam : bool, optional
             See `~Genus.make_genus_curve`.
         beam_area : `~astropy.units.Quantity`, optional
@@ -237,8 +287,7 @@ class Genus(BaseStatisticMixIn):
 
         self.make_smooth_arrays(**kwargs)
         # self.clean_fft()
-        self.make_genus_curve(use_beam=use_beam, beam_area=beam_area,
-                              min_size=min_size)
+        self.make_genus_curve(use_beam=use_beam, min_size=min_size)
 
         if verbose:
             import matplotlib.pyplot as p

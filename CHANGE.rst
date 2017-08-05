@@ -1,6 +1,10 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #156 - Complete statistic tutorials; complete angular + physical unit handling; pass break kwargs for all power-spectrum methods; change several APIs to be consistent throughout the package; removed stats_wrapper; added tests to test all cases with a slope and unit conversions; reworked slice thickness choice for VCA and VCS; restrict VCS fitting to real frequencies only; default to periodic boundaries
+
+Version 0.2 (2017-07-03)
+-----------
 * #147 - Changed Cramer normalization to the spectral norm.
 * #146 - Allow weights to be passed in `StatsMoments`.
 * #144 - Fix the MVC: subtract mean velocity dispersion, not the array of dispersions.

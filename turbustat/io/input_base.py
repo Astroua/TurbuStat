@@ -1,13 +1,15 @@
 # Licensed under an MIT open source license - see LICENSE
 
-from astropy.io.fits import PrimaryHDU
+from astropy.io.fits.hdu.image import _ImageBaseHDU
+from astropy.io import fits
 from spectral_cube import SpectralCube
 from spectral_cube.lower_dimensional_structures import LowerDimensionalObject
 import numpy as np
 
 
-common_types = ["numpy.ndarray", "astropy.io.fits.PrimaryHDU"]
-twod_types = ["spectral_cube.LowerDimensionalObject"]
+common_types = ["numpy.ndarray", "astropy.io.fits.PrimaryHDU",
+                "astropy.io.fits.ImageHDU"]
+twod_types = ["spectral_cube.Projection", "spectral_cube.Slice"]
 threed_types = ["SpectralCube"]
 
 
@@ -18,9 +20,9 @@ def input_data(data, no_header=False):
 
     Parameters
     ----------
-    data : astropy.io.fits.PrimaryHDU, SpectralCube,
-           spectral_cube.LowerDimensionalObject, np.ndarray or a tuple/list
-           with the data and the header
+    data : astropy.io.fits.PrimaryHDU, spectral_cube.SpectralCube,
+           spectral_cube.Projection, spectral_cube.Slice, np.ndarray or a
+           tuple/listwith the data and the header
         Data to be used with a given statistic or distance metric. no_header
         must be enabled when passing only an array in.
     no_header : bool, optional
@@ -33,7 +35,7 @@ def input_data(data, no_header=False):
         is enabled.
     '''
 
-    if isinstance(data, PrimaryHDU):
+    if isinstance(data, _ImageBaseHDU):
         output_data = [data.data, data.header]
     elif isinstance(data, SpectralCube):
         output_data = [data.filled_data[:].value, data.header]
@@ -50,7 +52,8 @@ def input_data(data, no_header=False):
         output_data = [data]
     else:
         raise TypeError("Input data is not of an accepted form:"
-                        " astropy.io.fits.PrimaryHDU, SpectralCube,"
+                        " astropy.io.fits.PrimaryHDU, astropy.io.fits.ImageHDU,"
+                        " spectral_cube.SpectralCube,"
                         " spectral_cube.LowerDimensionalObject or a tuple or"
                         " list containing the data and header, in that order.")
 
@@ -58,3 +61,13 @@ def input_data(data, no_header=False):
         return output_data[0]
 
     return output_data
+
+
+def to_spectral_cube(data, header):
+    '''
+    Convert the output from input_data into a SpectralCube.
+    '''
+
+    hdu = fits.PrimaryHDU(data, header)
+
+    return SpectralCube.read(hdu)
