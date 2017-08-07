@@ -40,14 +40,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         within each of the bins.
     '''
 
-    y = np.arange(-np.floor(psd2.shape[0] / 2.).astype(int),
-                  psd2.shape[0] - np.floor(psd2.shape[0] / 2.).astype(int))
-    x = np.arange(-np.floor(psd2.shape[1] / 2.).astype(int),
-                  psd2.shape[1] - np.floor(psd2.shape[1] / 2.).astype(int))
-
-    yy, xx = np.meshgrid(y, x, indexing='ij')
-
-    dists = np.sqrt(yy**2 + xx**2)
+    dists = make_radii_array(psd2.shape)
 
     if nbins is None:
         nbins = int(np.round(dists.max() / binsize) + 1)
@@ -100,3 +93,17 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
                                        bins=bins,
                                        statistic=np.nanstd)[0]
         return bin_cents, ps1D, ps1D_stddev
+
+
+def make_radii_array(shape):
+
+    y = np.arange(-np.floor(shape[0] / 2.).astype(int),
+                  shape[0] - np.floor(shape[0] / 2.).astype(int))
+    x = np.arange(-np.floor(shape[1] / 2.).astype(int),
+                  shape[1] - np.floor(shape[1] / 2.).astype(int))
+
+    yy, xx = np.meshgrid(y, x, indexing='ij')
+
+    dists = np.sqrt(yy**2 + xx**2)
+
+    return dists
