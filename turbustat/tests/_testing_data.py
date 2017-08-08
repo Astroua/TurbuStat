@@ -174,3 +174,66 @@ def assert_between(value, lower, upper):
     else:
         raise AssertionError("{0} not within {1} and {2}".format(value, lower,
                                                                  upper))
+
+
+def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
+    '''
+    Adapted from https://github.com/keflavich/image_registration. Added ability
+    to make the power spectra elliptical.
+
+    Parameters
+    ----------
+    imsize : int
+        Array size.
+    imsize2 : int, optional
+        Array size in 2nd dimension.
+    powerlaw : float, optional
+        Powerlaw index.
+    theta : float, optional
+        Position angle of major axis in radians. Has no effect when ellip==1.
+    ellip : float, optional
+        Ratio of the minor to major axis. Must be > 0 and <= 1. Defaults to
+        the circular case (ellip=1).
+
+    Returns
+    -------
+    newmap : np.ndarray
+        Two-dimensional array with the given power-law properties.
+    '''
+    imsize = int(imsize)
+    if imsize2 is None:
+        imsize2 = imsize
+
+    if ellip > 1 or ellip <= 0:
+        raise ValueError("ellip must be > 0 and <= 1.")
+
+    yy, xx = np.indices((imsize2, imsize), dtype='float')
+    xcen = imsize / 2. - (1. - imsize % 2)
+    ycen = imsize2 / 2. - (1. - imsize2 % 2)
+    yy -= ycen
+    xx -= xcen
+
+    if ellip < 1:
+        # Apply a rotation and scale the x-axis (ellip).
+        costheta = np.cos(theta)
+        sintheta = np.sin(theta)
+
+        rr2 = xx**2 * (ellip**2 * costheta**2 + sintheta**2) + \
+            (1 - ellip**2) * 2 * xx * yy * sintheta * costheta + \
+            yy**2 * (ellip**2 * sintheta**2 + sintheta**2)
+
+        rr = rr2**0.5
+    else:
+        # Circular whenever ellip == 1
+        rr = (xx**2 + yy**2)**0.5
+
+    # flag out the bad point to avoid warnings
+    rr[rr == 0] = np.nan
+
+    powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw) +
+                np.random.randn(imsize2, imsize) * rr**(-powerlaw) * 1j)
+    powermap[powermap != powermap] = 0
+
+    newmap = np.abs(np.fft.fftshift(np.fft.fft2(powermap)))
+
+    return newmap
