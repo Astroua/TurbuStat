@@ -272,4 +272,4 @@ def check_fit_limits(xlow, xhigh):
 
 
 def clip_func(arr, low, high):
-    return np.logical_and(arr > low, arr < high)
+    return np.logical_and(arr >= low, arr <= high)
