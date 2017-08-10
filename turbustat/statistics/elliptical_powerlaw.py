@@ -5,6 +5,7 @@ from warnings import warn
 
 
 def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
+                            bootstrap=False, niters=100, alpha=0.6827,
                             debug=False):
     '''
     General function for fitting the 2D elliptical power-law model.
@@ -42,15 +43,42 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             fitter = fitter_f
             fit_model = fit_model_f
 
-        # Try extracting the covariance matrix
-        cov_matrix = fitter.fit_info.get('param_cov')
-        # cov_matrix = None
-        if cov_matrix is None:
-            warn("Covariance matrix calculation failed. Check results "
-                 "carefully.")
-            stderrs = np.zeros((4,)) * np.NaN
+        # Use bootstrap re-sampling of the model residuals to estimate
+        # 1-sigma CIs.
+        if bootstrap:
+            niters = int(niters)
+            params = np.empty((4, niters))
+
+            resid = values - fit_model(x, y)
+
+            for i in range(niters):
+                boot_fit = fitting.LevMarLSQFitter()
+
+                resamp_y = resid[np.random.permutation(resid.size)]
+
+                boot_model = boot_fit(fit_model, x, resamp_y, values)
+
+                params[:, i] = boot_model.parameters
+
+            percentiles = np.percentile(params,
+                                        [0.5 - alpha / 2., 0.5 + alpha / 2.],
+                                        axis=0)
+
+            stderrs = 0.5 * (percentiles[1] - percentiles[0])
+
+        # Otherwise use the covariance matrix to get standard errors.
+        # These WILL be underestimated! In many cases Lev-Marq won't return
+        # the covariance matrix at all (though the fit is usually correct).
         else:
-            stderrs = np.sqrt(np.abs(np.diag(cov_matrix)))
+            # Try extracting the covariance matrix
+            cov_matrix = fitter.fit_info.get('param_cov')
+            # cov_matrix = None
+            if cov_matrix is None:
+                warn("Covariance matrix calculation failed. Check results "
+                     "carefully.")
+                stderrs = np.zeros((4,)) * np.NaN
+            else:
+                stderrs = np.sqrt(np.abs(np.diag(cov_matrix)))
 
         params = fit_model.parameters
     else:
