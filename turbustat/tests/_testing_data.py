@@ -218,9 +218,10 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
 
-        rr2 = xx**2 * (ellip**2 * costheta**2 + sintheta**2) + \
-            (1 - ellip**2) * 2 * xx * yy * sintheta * costheta + \
-            yy**2 * (ellip**2 * sintheta**2 + sintheta**2)
+        xprime = ellip * (xx * costheta - yy * sintheta)
+        yprime = xx * sintheta + yy * costheta
+
+        rr2 = xprime**2 + yprime**2
 
         rr = rr2**0.5
     else:
@@ -230,8 +231,8 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
     # flag out the bad point to avoid warnings
     rr[rr == 0] = np.nan
 
-    powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw) +
-                np.random.randn(imsize2, imsize) * rr**(-powerlaw) * 1j)
+    powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) +
+                np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) * 1j)
     powermap[powermap != powermap] = 0
 
     newmap = np.abs(np.fft.fftshift(np.fft.fft2(powermap)))
