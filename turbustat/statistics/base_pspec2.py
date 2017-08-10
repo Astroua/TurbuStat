@@ -219,7 +219,7 @@ class StatisticBase_PSpec2D(object):
         return self._brk_err
 
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
-                    high_cut=None, bootstrap=True, niters=100, verbose=False):
+                    high_cut=None, bootstrap=True, niters=100):
         '''
         Model the 2D power-spectrum surface.
         '''
@@ -253,10 +253,10 @@ class StatisticBase_PSpec2D(object):
                 amp_guess = np.log10(np.nanmax(self.ps2D))
 
             # Use an initial guess pi / 2 for theta
-            theta_conv = np.pi / 2.
-            # For ellip = 1
+            theta = np.pi / 2.
+            # For ellip = 0.5
             ellip_conv = 0
-            p0 = (amp_guess, ellip_conv, theta_conv, slope_guess)
+            p0 = (amp_guess, ellip_conv, theta, slope_guess)
 
         params, stderrs, fit_2Dmodel, fitter = \
             fit_elliptical_powerlaw(np.log10(self.ps2D[mask]),
