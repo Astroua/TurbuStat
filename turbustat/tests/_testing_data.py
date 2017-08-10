@@ -176,7 +176,8 @@ def assert_between(value, lower, upper):
                                                                  upper))
 
 
-def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
+def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
+                  return_psd=False):
     '''
     Adapted from https://github.com/keflavich/image_registration. Added ability
     to make the power spectra elliptical.
@@ -194,6 +195,8 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
     ellip : float, optional
         Ratio of the minor to major axis. Must be > 0 and <= 1. Defaults to
         the circular case (ellip=1).
+    return_psd : bool, optional
+        Return the power-map instead of the image.
 
     Returns
     -------
@@ -234,6 +237,9 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.):
     powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) +
                 np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) * 1j)
     powermap[powermap != powermap] = 0
+
+    if return_psd:
+        return powermap
 
     newmap = np.abs(np.fft.fftshift(np.fft.fft2(powermap)))
 
