@@ -18,6 +18,10 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
 
     '''
 
+    # All values must be finite.
+    if not np.isfinite(values).all():
+        raise ValueError("values contains a non-finite value.")
+
     if fit_method == 'LevMarq':
 
         model = LogEllipticalPowerLaw2D(*p0)
@@ -54,15 +58,32 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             for i in range(niters):
                 boot_fit = fitting.LevMarLSQFitter()
 
-                resamp_y = resid[np.random.permutation(resid.size)]
+                resamp_y = y + resid[np.random.permutation(resid.size)]
 
                 boot_model = boot_fit(fit_model, x, resamp_y, values)
 
                 params[:, i] = boot_model.parameters
 
             percentiles = np.percentile(params,
-                                        [0.5 - alpha / 2., 0.5 + alpha / 2.],
-                                        axis=0)
+                                        [100 * (0.5 - alpha / 2.),
+                                         100 * (0.5 + alpha / 2.)],
+                                        axis=1)
+
+            if debug:
+                import matplotlib.pyplot as plt
+
+                plt.subplot(221)
+                _ = plt.hist(params[0], bins=10)
+                plt.axvline(fit_model.parameters[0])
+                plt.subplot(222)
+                _ = plt.hist(params[1], bins=10)
+                plt.axvline(fit_model.parameters[1])
+                plt.subplot(223)
+                _ = plt.hist(params[2], bins=10)
+                plt.axvline(fit_model.parameters[2])
+                plt.subplot(224)
+                _ = plt.hist(params[3], bins=10)
+                plt.axvline(fit_model.parameters[3])
 
             stderrs = 0.5 * (percentiles[1] - percentiles[0])
 
