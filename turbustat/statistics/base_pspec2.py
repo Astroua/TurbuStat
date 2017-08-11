@@ -262,6 +262,10 @@ class StatisticBase_PSpec2D(object):
 
         mask = clip_func(freqs_dist, self.low_cut.value, self.high_cut.value)
 
+        if not mask.any():
+            raise ValueError("Limits have removed all points to fit. "
+                             "Make low_cut and high_cut less restrictive.")
+
         if len(p0) == 0:
             if hasattr(self, 'slope'):
                 slope_guess = self.slope
