@@ -268,7 +268,10 @@ class StatisticBase_PSpec2D(object):
 
         if len(p0) == 0:
             if hasattr(self, 'slope'):
-                slope_guess = self.slope
+                if isinstance(self.slope, np.ndarray):
+                    slope_guess = self.slope[0]
+                else:
+                    slope_guess = self.slope
                 amp_guess = self.fit.params[0]
             else:
                 # Let's guess it's going to be ~ -2
