@@ -29,24 +29,32 @@ wavelet_slope = wavelet_distance.wt1.slope
 
 # MVC
 
-from turbustat.statistics import MVC_Distance
+from turbustat.statistics import MVC_Distance, MVC
 
 mvc_distance = MVC_Distance(dataset1, dataset2).distance_metric()
 
-mvc_val = mvc_distance.mvc1.ps1D
-mvc_slope = mvc_distance.mvc1.slope
+mvc = MVC(dataset1["centroid"], dataset1["moment0"], dataset1["linewidth"])
+mvc.run()
+
+mvc_val = mvc.ps1D
+mvc_slope = mvc.slope
+mvc_slope2D = mvc.slope2D
 
 # Spatial Power Spectrum/ Bispectrum
 
 from turbustat.statistics import (PSpec_Distance, BiSpectrum_Distance,
-                                  BiSpectrum)
+                                  BiSpectrum, PowerSpectrum)
 
 pspec_distance = \
     PSpec_Distance(dataset1["moment0"],
                    dataset2["moment0"]).distance_metric()
 
-pspec_val = pspec_distance.pspec1.ps1D
-pspec_slope = pspec_distance.pspec1.slope
+pspec = PowerSpectrum(dataset1['moment0'])
+pspec.run()
+
+pspec_val = pspec.ps1D
+pspec_slope = pspec.slope
+pspec_slope2D = pspec.slope2D
 
 bispec_distance = \
     BiSpectrum_Distance(dataset1["moment0"],
@@ -94,7 +102,7 @@ delvar_slope = delvar.slope
 
 # VCA/VCS
 
-from turbustat.statistics import VCA_Distance, VCS_Distance
+from turbustat.statistics import VCA_Distance, VCS_Distance, VCA
 
 vcs_distance = VCS_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
@@ -105,8 +113,12 @@ vcs_slopes = vcs_distance.vcs1.slope
 vca_distance = VCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
 
-vca_val = vca_distance.vca1.ps1D
-vca_slope = vca_distance.vca1.slope
+vca = VCA(dataset1['cube'])
+vca.run()
+
+vca_val = vca.ps1D
+vca_slope = vca.slope
+vca_slope2D = vca.slope2D
 
 # Tsallis
 
@@ -287,8 +299,10 @@ np.savez_compressed('checkVals',
                     wavelet_slope=wavelet_slope,
                     mvc_val=mvc_val,
                     mvc_slope=mvc_slope,
+                    mvc_slope2D=mvc_slope2D,
                     pspec_val=pspec_val,
                     pspec_slope=pspec_slope,
+                    pspec_slope2D=pspec_slope2D,
                     bispec_val=bispec_val,
                     bispec_val_meansub=bispec_val_meansub,
                     genus_val=genus_val,
@@ -298,6 +312,7 @@ np.savez_compressed('checkVals',
                     vcs_slopes=vcs_slopes,
                     vca_val=vca_val,
                     vca_slope=vca_slope,
+                    vca_slope2D=vca_slope2D,
                     tsallis_val=tsallis_val,
                     tsallis_stderrs=tsallis_stderrs,
                     tsallis_val_noper=tsallis_val_noper,
