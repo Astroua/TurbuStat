@@ -202,8 +202,8 @@ class VCA_Distance(object):
             Object or region name for cube2
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional

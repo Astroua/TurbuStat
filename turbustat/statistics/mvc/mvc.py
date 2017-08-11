@@ -258,7 +258,7 @@ class MVC_Distance(object):
                       low_cut=low_cut[1], brk=breaks[1], fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.deg, save_name=None,
+                        xunit=u.pix**-1, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -277,8 +277,8 @@ class MVC_Distance(object):
             Object or region name for dataset2
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
