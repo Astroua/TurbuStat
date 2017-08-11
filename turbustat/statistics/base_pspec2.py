@@ -221,7 +221,26 @@ class StatisticBase_PSpec2D(object):
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
                     high_cut=None, bootstrap=True, niters=100):
         '''
-        Model the 2D power-spectrum surface.
+        Model the 2D power-spectrum surface with an elliptical power-law model.
+
+        Parameters
+        ----------
+        fit_method : str, optional
+            The algorithm fitting to use. Only 'LevMarq' is currently
+            available.
+        p0 : tuple, optional
+            Initial parameters for fitting. If no values are given, the initial
+            parameters start from the 1D fit parameters.
+        low_cut : `~astropy.units.Quantity`, optional
+            Lowest frequency to consider in the fit.
+        high_cut : `~astropy.units.Quantity`, optional
+            Highest frequency to consider in the fit.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        niters : int, optional
+            Number of bootstrap iterations.
         '''
 
         # Make the data to fit to
