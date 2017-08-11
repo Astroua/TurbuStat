@@ -28,6 +28,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
     header : FITS header
         Header of any of the arrays. Used only to get the
         spatial scale.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -122,6 +124,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, save_name=None, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
+            fit_2D=True, fit_2D_kwargs={},
             xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of MVC. For fitting parameters and radial binning
@@ -137,22 +140,30 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        low_cut : float, optional
+        low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
-        high_cut : float, optional
+        high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `MVC.fit_2Dpspec`. Use the
+            `low_cut` and `high_cut` keywords to provide fit limits.
         xunit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
-        kwargs : Passed to
-            `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D.fit_pspec`.
+        fit_kwargs : Passed to `~MVC.fit_pspec`.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+
+        if fit_2D:
+            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
+                             **fit_2D_kwargs)
 
         if verbose:
             print(self.fit.summary())
@@ -187,19 +198,24 @@ class MVC_Distance(object):
     weight_by_error : bool, optional
         When enabled, the property arrays are weighted by the inverse
         squared of the error arrays.
-    low_cut : int or float, optional
+    low_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The lower frequency fitting limit. An array with 2 elements can be
         passed to give separate lower limits for the datasets.
-    high_cut : int or float, optional
+    high_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The upper frequency fitting limit. See `low_cut` above. Defaults to
         0.5.
+    breaks : `~astropy.units.Quantity`, list or array, optional
+        Specify where the break point is with appropriate units.
+        If none is given, no break point will be used in the fit.
     logspacing : bool, optional
         Use logarithmically spaced bins in the 1D power spectrum.
+    phys_distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     def __init__(self, data1, data2, fiducial_model=None,
                  weight_by_error=False, low_cut=None, high_cut=0.5 / u.pix,
-                 logspacing=False, phys_distance=None):
+                 breaks=None, logspacing=False, phys_distance=None):
 
         # Create weighted or non-weighted versions
         if weight_by_error:
@@ -225,21 +241,24 @@ class MVC_Distance(object):
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
+        if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
+            breaks = [breaks] * 2
+
         if fiducial_model is not None:
             self.mvc1 = fiducial_model
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1], distance=phys_distance)
             self.mvc1.run(logspacing=logspacing, high_cut=high_cut[0],
-                          low_cut=low_cut[0])
+                          low_cut=low_cut[0], brk=breaks[0], fit_2D=False)
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1], distance=phys_distance)
         self.mvc2.run(logspacing=logspacing, high_cut=high_cut[1],
-                      low_cut=low_cut[1])
+                      low_cut=low_cut[1], brk=breaks[1], fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.deg, save_name=None,
+                        xunit=u.pix**-1, save_name=None,
                         use_wavenumber=False):
         '''
 
@@ -258,8 +277,8 @@ class MVC_Distance(object):
             Object or region name for dataset2
         ang_units : bool, optional
             Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : u.Unit, optional
+            Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional

@@ -18,6 +18,8 @@ def test_PSpec_method():
         PowerSpectrum(dataset1["moment0"])
     tester.run()
     npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
+    npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
+    npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])
 
 
 def test_Pspec_method_fitlimits():
@@ -28,19 +30,19 @@ def test_Pspec_method_fitlimits():
     high_cut = 0.1 / u.pix
 
     tester = PowerSpectrum(dataset1["moment0"])
-    tester.run(low_cut=low_cut, high_cut=high_cut)
+    tester.run(low_cut=low_cut, high_cut=high_cut, fit_2D=False)
 
     low_cut = low_cut.value / (dataset1['moment0'][1]['CDELT2'] * u.deg)
     high_cut = high_cut.value / (dataset1['moment0'][1]['CDELT2'] * u.deg)
 
     tester2 = PowerSpectrum(dataset1["moment0"])
-    tester2.run(low_cut=low_cut, high_cut=high_cut)
+    tester2.run(low_cut=low_cut, high_cut=high_cut, fit_2D=False)
 
     low_cut = low_cut.to(u.rad**-1).value / distance
     high_cut = high_cut.to(u.rad**-1).value / distance
 
     tester3 = PowerSpectrum(dataset1["moment0"], distance=distance)
-    tester3.run(low_cut=low_cut, high_cut=high_cut)
+    tester3.run(low_cut=low_cut, high_cut=high_cut, fit_2D=False)
 
     npt.assert_allclose(tester.slope, tester2.slope)
     npt.assert_allclose(tester.slope, tester3.slope)
@@ -65,3 +67,4 @@ def test_pspec_nonequal_shape():
     test_T = PowerSpectrum((mom0_sliced.T, mom0_hdr)).run()
 
     npt.assert_almost_equal(test.slope, test_T.slope, decimal=7)
+    npt.assert_almost_equal(test.slope2D, test_T.slope2D, decimal=3)

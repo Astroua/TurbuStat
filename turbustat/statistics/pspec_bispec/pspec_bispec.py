@@ -66,6 +66,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
+            fit_2D=True, fit_2D_kwargs={},
             xunit=u.pix**-1, save_name=None,
             use_wavenumber=False, **fit_kwargs):
         '''
@@ -79,16 +80,22 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        low_cut : float, optional
+        low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
-        high_cut : float, optional
+        high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
+            `low_cut` and `high_cut` keywords to provide fit limits.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
+        fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
         '''
 
         self.compute_pspec()
@@ -96,6 +103,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                                   return_stddev=return_stddev)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+
+        if fit_2D:
+            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
+                             **fit_2D_kwargs)
 
         if verbose:
             print(self.fit.summary())
@@ -128,39 +139,49 @@ class PSpec_Distance(object):
         Weights to apply to data1
     weights2 : %(dtypes)s, optional
         Weights to apply to data2
+    breaks : `~astropy.units.Quantity`, list or array, optional
+        Specify where the break point is with appropriate units.
+        If none is given, no break point will be used in the fit.
     fiducial_model : PowerSpectrum
         Computed PowerSpectrum object. use to avoid recomputing.
-    low_cut : float or np.ndarray, optional
+    low_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The lower frequency fitting limit. An array with 2 elements can be
         passed to give separate lower limits for the datasets.
-    high_cut : float or np.ndarray, optional
+    high_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The upper frequency fitting limit. See `low_cut` above. Defaults to
         0.5.
     logspacing : bool, optional
         Enable to use logarithmically-spaced bins.
+    phys_distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, low_cut=None,
+                 breaks=None, fiducial_model=None, low_cut=None,
                  high_cut=0.5 / u.pix, logspacing=False, phys_distance=None):
         super(PSpec_Distance, self).__init__()
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
+        if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
+            breaks = [breaks] * 2
+
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1, weights=weights1,
                                         distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            logspacing=logspacing)
+                            logspacing=logspacing, brk=breaks[0],
+                            fit_2D=False)
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2, weights=weights2,
                                     distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        logspacing=logspacing)
+                        brk=breaks[1],
+                        logspacing=logspacing, fit_2D=False)
 
         self.results = None
         self.distance = None

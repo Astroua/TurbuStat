@@ -60,4 +60,4 @@ def test_VCS_method_fitlimits():
     tester2 = VCS(dataset1["cube"])
     tester2.run(high_cut=high_cut, low_cut=low_cut)
 
-    npt.assert_allclose(tester.slope, tester2.slope)
+    npt.assert_allclose(tester.slope, tester2.slope, atol=0.02)

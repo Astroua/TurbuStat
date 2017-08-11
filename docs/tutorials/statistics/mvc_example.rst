@@ -74,7 +74,9 @@ Calculating the power spectrum, radially averaging, and fitting a power-law are 
 
 .. image:: images/mvc_design4.png
 
-The fit here is not optimal since the spectrum deviates from being a single power-law. In this case, the deviation is caused by the limited inertial range in the simulation from which this spectral-line data cube was created. We can specify `low_cut` and `high_cut` in frequency units to limit the fitting to the inertial range:
+The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.MVC.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for a discussion of the two-dimensional fitting.
+
+The fit here is not very good since the spectrum deviates from a single power-law on small scales. In this case, the deviation is caused by the limited inertial range in the simulation from which this spectral-line data cube was created. We can specify `low_cut` and `high_cut` in frequency units to limit the fitting to the inertial range:
 
     >>> mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
@@ -104,9 +106,9 @@ The fit here is not optimal since the spectrum deviates from being a single powe
 
 Note the drastic change in the slope! Specifying the correct fit region for the data you're using is critical for interpreting the results of the method.
 
-Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
+Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False)  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.994
@@ -141,7 +143,7 @@ Many of the techniques in TurbuStat are derived from two-dimensional power spect
 Finally, the frequency units of the final plot (`xunit`) and the units of `low_cut` and `high_cut` can be given in angular units, as well as physical units when a distance is given. For example:
 
     >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.952

@@ -8,10 +8,14 @@ from astropy import units as u
 from astropy.wcs import WCS
 import statsmodels.api as sm
 
-from ..psds import pspec
+from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data
 from ..stats_utils import common_scale, fourier_shift, pixel_shift
+from ..fitting_utils import clip_func
+from ..elliptical_powerlaw import (fit_elliptical_powerlaw,
+                                   inverse_interval_transform,
+                                   inverse_interval_transform_stderr)
 
 
 class SCF(BaseStatisticMixIn):
@@ -324,6 +328,20 @@ class SCF(BaseStatisticMixIn):
         '''
         return self._slope_err
 
+    @property
+    def xlow(self):
+        '''
+        Lower limit for lags to consider in fits.
+        '''
+        return self._xlow
+
+    @property
+    def xhigh(self):
+        '''
+        Upper limit for lags to consider in fits.
+        '''
+        return self._xhigh
+
     def fitted_model(self, xvals):
         '''
         Computes the modelled power-law using the given x values.
@@ -350,6 +368,140 @@ class SCF(BaseStatisticMixIn):
             self.fit.params[0] + self.fit.params[1] * np.log10(xvals)
 
         return 10**model_values
+
+    def fit_2Dplaw(self, fit_method='LevMarq', p0=(), xlow=None,
+                   xhigh=None, bootstrap=True, niters=100):
+        '''
+        Model the 2D power-spectrum surface with an elliptical power-law model.
+
+        Parameters
+        ----------
+        fit_method : str, optional
+            The algorithm fitting to use. Only 'LevMarq' is currently
+            available.
+        p0 : tuple, optional
+            Initial parameters for fitting. If no values are given, the initial
+            parameters start from the 1D fit parameters.
+        xlow : `~astropy.units.Quantity`, optional
+            Lower lag value limit to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper lag value limit to consider in the fit.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        niters : int, optional
+            Number of bootstrap iterations.
+        '''
+
+        # Adjust the distance based on the separation of the lags
+        pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+
+        if xlow is not None:
+            # Convert xlow into the same units as the lags
+            xlow = self._to_pixel(xlow)
+            self._xlow = xlow
+        else:
+            self._xlow = np.abs(self.lags).min()
+
+        if xhigh is not None:
+            # Convert xhigh into the same units as the lags
+            xhigh = self._to_pixel(xhigh)
+            self._xhigh = xhigh
+        else:
+            self._xhigh = np.abs(self.lags).max()
+
+        xlow_pix = self._to_pixel(self.xlow).value
+        xhigh_pix = self._to_pixel(self.xhigh).value
+
+        yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+        dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+        mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+        if not mask.any():
+            raise ValueError("Limits have removed all lag values. Make xlow"
+                             " and xhigh less restrictive.")
+
+        if len(p0) == 0:
+            if hasattr(self, 'slope'):
+                slope_guess = self.slope
+                amp_guess = self.fit.params[0]
+            else:
+                # Let's guess it's going to be ~ -0.2
+                slope_guess = -0.2
+                amp_guess = 1.0
+
+            # Use an initial guess pi / 2 for theta
+            theta = np.pi / 2.
+            # For ellip = 0.5
+            ellip_conv = 0
+            p0 = (amp_guess, ellip_conv, theta, slope_guess)
+
+        params, stderrs, fit_2Dmodel, fitter = \
+            fit_elliptical_powerlaw(np.log10(self.scf_surface[mask]),
+                                    xx[mask],
+                                    yy[mask], p0,
+                                    fit_method=fit_method,
+                                    bootstrap=bootstrap,
+                                    niters=niters)
+
+        self.fit2D = fit_2Dmodel
+        self._fitter = fitter
+
+        self._slope2D = params[3]
+        self._slope2D_err = stderrs[3]
+
+        self._theta2D = params[2] % np.pi
+        self._theta2D_err = stderrs[2]
+
+        # Apply transforms to convert back to the [0, 1) ellipticity range
+        self._ellip2D = inverse_interval_transform(params[1], 0, 1)
+        self._ellip2D_err = \
+            inverse_interval_transform_stderr(stderrs[1], params[1], 0, 1)
+
+    @property
+    def slope2D(self):
+        '''
+        Fitted slope of the 2D power-law.
+        '''
+        return self._slope2D
+
+    @property
+    def slope2D_err(self):
+        '''
+        Slope standard error of the 2D power-law.
+        '''
+        return self._slope2D_err
+
+    @property
+    def theta2D(self):
+        '''
+        Fitted position angle of the 2D power-law.
+        '''
+        return self._theta2D
+
+    @property
+    def theta2D_err(self):
+        '''
+        Position angle standard error of the 2D power-law.
+        '''
+        return self._theta2D_err
+
+    @property
+    def ellip2D(self):
+        '''
+        Fitted ellipticity of the 2D power-law.
+        '''
+        return self._ellip2D
+
+    @property
+    def ellip2D_err(self):
+        '''
+        Ellipticity standard error of the 2D power-law.
+        '''
+        return self._ellip2D_err
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -408,6 +560,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
+            fit_2D=True, fit_2D_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
@@ -439,22 +592,43 @@ class SCF(BaseStatisticMixIn):
         self.compute_spectrum(return_stddev=return_stddev)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
+        if fit_2D:
+            self.fit_2Dplaw(xlow=xlow, xhigh=xhigh,
+                            **fit_2D_kwargs)
+
         if save_results:
             self.save_results(output_name=output_name)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.subplot(1, 2, 1)
-            p.imshow(self.scf_surface, origin="lower", interpolation="nearest")
-            cb = p.colorbar()
+            plt.subplot(1, 2, 1)
+            plt.imshow(self.scf_surface, origin="lower",
+                       interpolation="nearest")
+            cb = plt.colorbar()
             cb.set_label("SCF Value")
 
-            p.subplot(2, 2, 2)
-            p.hist(self.scf_surface.ravel())
-            p.xlabel("SCF Value")
+            if fit_2D and hasattr(self, 'fit2D'):
 
-            ax = p.subplot(2, 2, 4)
+                yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+                pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+                dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+                xlow_pix = self._to_pixel(self.xlow).value
+                xhigh_pix = self._to_pixel(self.xhigh).value
+
+                mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+                plt.contour(self.fit2D(xx, yy), cmap='viridis')
+
+                plt.contour(mask, colors='b', linestyles='-.')
+
+            plt.subplot(2, 2, 2)
+            plt.hist(self.scf_surface.ravel())
+            plt.xlabel("SCF Value")
+
+            ax = plt.subplot(2, 2, 4)
             pix_lags = self._to_pixel(self.lags)
             lags = self._spatial_unit_conversion(pix_lags, xunit).value
 
@@ -465,8 +639,8 @@ class SCF(BaseStatisticMixIn):
                 ax.set_xscale("log", nonposy='clip')
                 ax.set_yscale("log", nonposy='clip')
             else:
-                p.loglog(self.lags, self.scf_spectrum, 'kD',
-                         markersize=5, label="Data")
+                plt.loglog(self.lags, self.scf_spectrum, 'kD',
+                           markersize=5, label="Data")
 
             ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
             ax.set_ylim(self.scf_spectrum.min() * 0.75,
@@ -475,25 +649,25 @@ class SCF(BaseStatisticMixIn):
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,
                                 lags.max() * 1.05, 50) * xunit
-            p.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
-                     label='Fit')
+            plt.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
+                       label='Fit')
             # Show the fit limits
             xlow = self._spatial_unit_conversion(self._xlow, xunit).value
             xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
-            p.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
-            p.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
+            plt.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+            plt.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
 
-            p.legend()
+            plt.legend()
 
             ax.set_xlabel("Lag ({})".format(xunit))
 
-            p.tight_layout()
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
         return self
 
 
@@ -510,7 +684,7 @@ class SCF_Distance(object):
         Data cube.
     cube2 : %(dtypes)s
         Data cube.
-    size : int, optional
+    size : `~astropy.units.Quantity`, optional
         Maximum size roll over which SCF will be calculated.
     boundary : {"continuous", "cut"}
         Treat the boundary as continuous (wrap-around) or cut values
@@ -521,12 +695,14 @@ class SCF_Distance(object):
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
         Sets whether to apply the 1/r^2 weighting to the distance.
+    phys_distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=21 * u.pix, boundary='continuous',
-                 fiducial_model=None, weighted=True):
+                 fiducial_model=None, weighted=True, phys_distance=None):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
 
@@ -566,11 +742,15 @@ class SCF_Distance(object):
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True, boundary=boundary[0])
+            self.scf1 = SCF(cube1, roll_lags=roll_lags1,
+                            distance=phys_distance)
+            self.scf1.run(return_stddev=True, boundary=boundary[0],
+                          fit_2D=False)
 
-        self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True, boundary=boundary[1])
+        self.scf2 = SCF(cube2, roll_lags=roll_lags2,
+                        distance=phys_distance)
+        self.scf2.run(return_stddev=True, boundary=boundary[1],
+                      fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg, save_name=None):
@@ -635,11 +815,9 @@ class SCF_Distance(object):
             ax = p.subplot(2, 2, 4)
             if ang_units:
                 lags1 = \
-                    self.scf1.lags.to(unit,
-                                      equivalencies=self.scf1.angular_equiv).value
+                    self.scf1.lags.to(unit, self.scf1.angular_equiv).value
                 lags2 = \
-                    self.scf2.lags.to(unit,
-                                      equivalencies=self.scf2.angular_equiv).value
+                    self.scf2.lags.to(unit, self.scf2.angular_equiv).value
             else:
                 lags1 = self.scf1.lags.value
                 lags2 = self.scf2.lags.value

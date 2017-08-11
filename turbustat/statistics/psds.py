@@ -40,12 +40,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         within each of the bins.
     '''
 
-    y = np.arange(-np.floor(psd2.shape[0] / 2.).astype(int),
-                  psd2.shape[0] - np.floor(psd2.shape[0] / 2.).astype(int))
-    x = np.arange(-np.floor(psd2.shape[1] / 2.).astype(int),
-                  psd2.shape[1] - np.floor(psd2.shape[1] / 2.).astype(int))
-
-    yy, xx = np.meshgrid(y, x, indexing='ij')
+    yy, xx = make_radial_arrays(psd2.shape)
 
     dists = np.sqrt(yy**2 + xx**2)
 
@@ -53,10 +48,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         nbins = int(np.round(dists.max() / binsize) + 1)
 
     if return_freqs:
-        yfreqs = np.fft.fftshift(np.fft.fftfreq(psd2.shape[0]))
-        xfreqs = np.fft.fftshift(np.fft.fftfreq(psd2.shape[1]))
-
-        yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
+        yy_freq, xx_freq = make_radial_freq_arrays(psd2.shape)
 
         freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
@@ -100,3 +92,25 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
                                        bins=bins,
                                        statistic=np.nanstd)[0]
         return bin_cents, ps1D, ps1D_stddev
+
+
+def make_radial_arrays(shape):
+
+    y = np.arange(-np.floor(shape[0] / 2.).astype(int),
+                  shape[0] - np.floor(shape[0] / 2.).astype(int))
+    x = np.arange(-np.floor(shape[1] / 2.).astype(int),
+                  shape[1] - np.floor(shape[1] / 2.).astype(int))
+
+    yy, xx = np.meshgrid(y, x, indexing='ij')
+
+    return yy, xx
+
+
+def make_radial_freq_arrays(shape):
+
+    yfreqs = np.fft.fftshift(np.fft.fftfreq(shape[0]))
+    xfreqs = np.fft.fftshift(np.fft.fftfreq(shape[1]))
+
+    yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
+
+    return yy_freq, xx_freq

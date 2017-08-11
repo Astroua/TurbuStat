@@ -7,8 +7,11 @@ import warnings
 import astropy.units as u
 
 from .lm_seg import Lm_Seg
-from .psds import pspec
+from .psds import pspec, make_radial_freq_arrays
 from .fitting_utils import clip_func
+from .elliptical_powerlaw import (fit_elliptical_powerlaw,
+                                  inverse_interval_transform,
+                                  inverse_interval_transform_stderr)
 
 
 class StatisticBase_PSpec2D(object):
@@ -122,7 +125,7 @@ class StatisticBase_PSpec2D(object):
             self.low_cut = self._to_pixel_freq(low_cut)
 
         if high_cut is None:
-            self.high_cut = (self.freqs.max().value + 1) / u.pix
+            self.high_cut = self.freqs.max().value / u.pix
         else:
             self.high_cut = self._to_pixel_freq(high_cut)
 
@@ -215,6 +218,136 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._brk_err
 
+    def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
+                    high_cut=None, bootstrap=True, niters=100):
+        '''
+        Model the 2D power-spectrum surface with an elliptical power-law model.
+
+        Parameters
+        ----------
+        fit_method : str, optional
+            The algorithm fitting to use. Only 'LevMarq' is currently
+            available.
+        p0 : tuple, optional
+            Initial parameters for fitting. If no values are given, the initial
+            parameters start from the 1D fit parameters.
+        low_cut : `~astropy.units.Quantity`, optional
+            Lowest frequency to consider in the fit.
+        high_cut : `~astropy.units.Quantity`, optional
+            Highest frequency to consider in the fit.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        niters : int, optional
+            Number of bootstrap iterations.
+        '''
+
+        # Make the data to fit to
+        if low_cut is None:
+            # Default to the largest frequency, since this is just 1 pixel
+            # in the 2D PSpec.
+            self.low_cut = 1. / (0.5 * float(max(self.ps2D.shape)) * u.pix)
+        else:
+            self.low_cut = self._to_pixel_freq(low_cut)
+
+        if high_cut is None:
+            self.high_cut = self.freqs.max().value / u.pix
+        else:
+            self.high_cut = self._to_pixel_freq(high_cut)
+
+        yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
+
+        freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
+
+        mask = clip_func(freqs_dist, self.low_cut.value, self.high_cut.value)
+
+        if not mask.any():
+            raise ValueError("Limits have removed all points to fit. "
+                             "Make low_cut and high_cut less restrictive.")
+
+        if len(p0) == 0:
+            if hasattr(self, 'slope'):
+                if isinstance(self.slope, np.ndarray):
+                    slope_guess = self.slope[0]
+                else:
+                    slope_guess = self.slope
+                amp_guess = self.fit.params[0]
+            else:
+                # Let's guess it's going to be ~ -2
+                slope_guess = -2.
+                amp_guess = np.log10(np.nanmax(self.ps2D))
+
+            # Use an initial guess pi / 2 for theta
+            theta = np.pi / 2.
+            # For ellip = 0.5
+            ellip_conv = 0
+            p0 = (amp_guess, ellip_conv, theta, slope_guess)
+
+        params, stderrs, fit_2Dmodel, fitter = \
+            fit_elliptical_powerlaw(np.log10(self.ps2D[mask]),
+                                    xx_freq[mask],
+                                    yy_freq[mask], p0,
+                                    fit_method=fit_method,
+                                    bootstrap=bootstrap,
+                                    niters=niters)
+
+        self.fit2D = fit_2Dmodel
+        self._fitter = fitter
+
+        self._slope2D = params[3]
+        self._slope2D_err = stderrs[3]
+
+        self._theta2D = params[2] % np.pi
+        self._theta2D_err = stderrs[2]
+
+        # Apply transforms to convert back to the [0, 1) ellipticity range
+        self._ellip2D = inverse_interval_transform(params[1], 0, 1)
+        self._ellip2D_err = \
+            inverse_interval_transform_stderr(stderrs[1], params[1], 0, 1)
+
+    @property
+    def slope2D(self):
+        '''
+        Fitted slope of the 2D power spectrum.
+        '''
+        return self._slope2D
+
+    @property
+    def slope2D_err(self):
+        '''
+        Slope standard error of the 2D power spectrum.
+        '''
+        return self._slope2D_err
+
+    @property
+    def theta2D(self):
+        '''
+        Fitted position angle of the 2D power spectrum.
+        '''
+        return self._theta2D
+
+    @property
+    def theta2D_err(self):
+        '''
+        Position angle standard error of the 2D power spectrum.
+        '''
+        return self._theta2D_err
+
+    @property
+    def ellip2D(self):
+        '''
+        Fitted ellipticity of the 2D power spectrum.
+        '''
+        return self._ellip2D
+
+    @property
+    def ellip2D_err(self):
+        '''
+        Ellipticity standard error of the 2D power spectrum.
+        '''
+        return self._ellip2D_err
+
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
                  symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
@@ -235,6 +368,19 @@ class StatisticBase_PSpec2D(object):
             p.imshow(np.log10(self.ps2D), interpolation="nearest",
                      origin="lower")
             p.colorbar()
+
+            # Plot fit contours
+            if hasattr(self, 'fit2D'):
+                yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
+
+                freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
+
+                mask = np.logical_and(freqs_dist >= self.low_cut.value,
+                                      freqs_dist <= self.high_cut.value)
+
+                p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
+
+                p.contour(mask, colors='r', linestyles='--')
 
             ax = p.subplot(121)
         else:
@@ -268,7 +414,7 @@ class StatisticBase_PSpec2D(object):
             ax.set_ylabel(r"log P$_2(K)$")
 
         else:
-            ax.loglog(self.xvals[fit_index], 10**y_fit, color + '-',
+            ax.loglog(self.xvals, 10**y_fit, color + '-',
                       label=label, linewidth=2)
 
             ax.loglog(self.xvals, self.ps1D, color + symbol, alpha=0.5,
