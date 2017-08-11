@@ -66,6 +66,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
+            fit_2D=True, fit_2D_kwargs={},
             xunit=u.pix**-1, save_name=None,
             use_wavenumber=False, **fit_kwargs):
         '''
@@ -83,12 +84,18 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : float, optional
             High frequency cut off in frequencies used in the fitting.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
+            `low_cut` and `high_cut` keywords to provide fit limits.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
+        fit_kwargs : Passed to `PowerSpectrum.fit_pspec`.
         '''
 
         self.compute_pspec()
@@ -96,6 +103,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                                   return_stddev=return_stddev)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+
+        if fit_2D:
+            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
+                             **fit_2D_kwargs)
 
         if verbose:
             print(self.fit.summary())
