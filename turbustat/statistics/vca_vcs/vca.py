@@ -68,6 +68,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, save_name=None, return_stddev=True,
             logspacing=False, low_cut=None, high_cut=None,
+            fit_2D=True, fit_2D_kwargs={},
             xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of VCA.
@@ -82,6 +83,15 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
+        low_cut : `~astropy.units.Quantity`, optional
+            Low frequency cut off in frequencies used in the fitting.
+        high_cut : `~astropy.units.Quantity`, optional
+            High frequency cut off in frequencies used in the fitting.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `~VCA.fit_2Dpspec`. Use the
+            `low_cut` and `high_cut` keywords to provide fit limits.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
@@ -93,6 +103,10 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self.compute_radial_pspec(return_stddev=return_stddev,
                                   logspacing=logspacing)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+
+        if fit_2D:
+            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
+                             **fit_2D_kwargs)
 
         if verbose:
 
@@ -121,12 +135,12 @@ class VCA_Distance(object):
         Data cube.
     cube2 : %(dtypes)s
         Data cube.
-    slice_size : float, optional
+    slice_size : `~astropy.units.Quantity`, optional
         Slice to degrade the cube to.
     breaks : float, list or array, optional
         Specify where the break point is. If None, attempts to find using
         spline. If not specified, no break point will be used.
-    fiducial_model : VCA
+    fiducial_model : `~turbustat.statistics.VCA`
         Computed VCA object. use to avoid recomputing.
     '''
 
@@ -134,7 +148,7 @@ class VCA_Distance(object):
 
     def __init__(self, cube1, cube2, channel_width=None, breaks=None,
                  fiducial_model=None, logspacing=False, low_cut=None,
-                 high_cut=None, distance=None):
+                 high_cut=None, phys_distance=None):
         super(VCA_Distance, self).__init__()
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
@@ -145,14 +159,17 @@ class VCA_Distance(object):
         if fiducial_model is not None:
             self.vca1 = fiducial_model
         else:
-            self.vca1 = VCA(cube1, channel_width=channel_width)
+            self.vca1 = VCA(cube1, channel_width=channel_width,
+                            distance=phys_distance)
             self.vca1.run(brk=breaks[0], low_cut=low_cut[0],
-                          high_cut=high_cut[0], logspacing=logspacing)
+                          high_cut=high_cut[0], logspacing=logspacing,
+                          fit_2D=False)
 
-        self.vca2 = \
-            VCA(cube2, channel_width=channel_width)
+        self.vca2 = VCA(cube2, channel_width=channel_width,
+                        distance=phys_distance)
+
         self.vca2.run(brk=breaks[1], low_cut=low_cut[1], high_cut=high_cut[1],
-                      logspacing=logspacing)
+                      logspacing=logspacing, fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         xunit=u.pix**-1, save_name=None,

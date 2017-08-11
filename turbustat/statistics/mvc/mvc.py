@@ -122,6 +122,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, save_name=None, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
+            fit_2D=True, fit_2D_kwargs={},
             xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
         '''
         Full computation of MVC. For fitting parameters and radial binning
@@ -137,22 +138,30 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        low_cut : float, optional
+        low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
-        high_cut : float, optional
+        high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `MVC.fit_2Dpspec`. Use the
+            `low_cut` and `high_cut` keywords to provide fit limits.
         xunit : u.Unit, optional
             Choose the angular unit to convert to when ang_units is enabled.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
-        kwargs : Passed to
-            `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D.fit_pspec`.
+        fit_kwargs : Passed to `~MVC.fit_pspec`.
         '''
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+
+        if fit_2D:
+            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
+                             **fit_2D_kwargs)
 
         if verbose:
             print(self.fit.summary())

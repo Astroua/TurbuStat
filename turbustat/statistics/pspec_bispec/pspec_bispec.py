@@ -80,9 +80,9 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Return logarithmically spaced bins for the lags.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
-        low_cut : float, optional
+        low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
-        high_cut : float, optional
+        high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D power spectrum.
@@ -95,7 +95,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
-        fit_kwargs : Passed to `PowerSpectrum.fit_pspec`.
+        fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
         '''
 
         self.compute_pspec()
@@ -154,7 +154,7 @@ class PSpec_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, low_cut=None,
+                 breaks=None, fiducial_model=None, low_cut=None,
                  high_cut=0.5 / u.pix, logspacing=False, phys_distance=None):
         super(PSpec_Distance, self).__init__()
 
@@ -164,14 +164,14 @@ class PSpec_Distance(object):
             self.pspec1 = PowerSpectrum(data1, weights=weights1,
                                         distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            logspacing=logspacing)
+                            logspacing=logspacing, fit_2D=False)
         else:
             self.pspec1 = fiducial_model
 
         self.pspec2 = PowerSpectrum(data2, weights=weights2,
                                     distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        logspacing=logspacing)
+                        logspacing=logspacing, fit_2D=False)
 
         self.results = None
         self.distance = None
