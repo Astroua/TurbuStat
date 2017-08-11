@@ -615,7 +615,10 @@ class SCF(BaseStatisticMixIn):
                 pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
                 dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
-                mask = clip_func(dists, self.xlow.value, self.xhigh.value)
+                xlow_pix = self._to_pixel(self.xlow).value
+                xhigh_pix = self._to_pixel(self.xhigh).value
+
+                mask = clip_func(dists, xlow_pix, xhigh_pix)
 
                 plt.contour(self.fit2D(xx, yy), cmap='viridis')
 
