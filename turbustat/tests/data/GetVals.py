@@ -218,9 +218,13 @@ from turbustat.statistics import SCF_Distance, SCF
 
 scf_distance = SCF_Distance(dataset1["cube"],
                             dataset2["cube"], size=11).distance_metric()
-scf_val = scf_distance.scf1.scf_surface
-scf_spectrum = scf_distance.scf1.scf_spectrum
-scf_slope = scf_distance.scf1.slope
+
+scf = SCF(dataset1['cube'], size=11).run()
+
+scf_val = scf.scf_surface
+scf_spectrum = scf.scf_spectrum
+scf_slope = scf.slope
+scf_slope2D = scf.slope2D
 
 # Now run the SCF when the boundaries aren't continuous
 scf_distance_cut_bound = SCF_Distance(dataset1["cube"],
@@ -233,6 +237,7 @@ scf_fitlims.run(boundary='continuous', xlow=1.5 * u.pix,
                 xhigh=4.5 * u.pix)
 
 scf_slope_wlimits = scf_fitlims.slope
+scf_slope_wlimits_2D = scf_fitlims.slope2D
 
 # Cramer Statistic
 
@@ -326,9 +331,11 @@ np.savez_compressed('checkVals',
                     pca_fit_vals=pca_fit_vals,
                     scf_val=scf_val,
                     scf_slope_wlimits=scf_slope_wlimits,
+                    scf_slope_wlimits_2D=scf_slope_wlimits_2D,
                     scf_val_noncon_bound=scf_val_noncon_bound,
                     scf_spectrum=scf_spectrum,
                     scf_slope=scf_slope,
+                    scf_slope2D=scf_slope2D,
                     cramer_val=cramer_val,
                     dendrogram_val=dendrogram_val,
                     dendrogram_periodic_val=dendrogram_periodic_val,
