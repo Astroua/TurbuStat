@@ -678,7 +678,7 @@ class SCF_Distance(object):
         Data cube.
     cube2 : %(dtypes)s
         Data cube.
-    size : int, optional
+    size : `~astropy.units.Quantity`, optional
         Maximum size roll over which SCF will be calculated.
     boundary : {"continuous", "cut"}
         Treat the boundary as continuous (wrap-around) or cut values
@@ -689,12 +689,14 @@ class SCF_Distance(object):
         Computed SCF object. Use to avoid recomputing.
     weighted : bool, optional
         Sets whether to apply the 1/r^2 weighting to the distance.
+    phys_distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=21 * u.pix, boundary='continuous',
-                 fiducial_model=None, weighted=True):
+                 fiducial_model=None, weighted=True, phys_distance=None):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
 
@@ -734,11 +736,15 @@ class SCF_Distance(object):
         if fiducial_model is not None:
             self.scf1 = fiducial_model
         else:
-            self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            self.scf1.run(return_stddev=True, boundary=boundary[0])
+            self.scf1 = SCF(cube1, roll_lags=roll_lags1,
+                            distance=phys_distance)
+            self.scf1.run(return_stddev=True, boundary=boundary[0],
+                          fit_2D=False)
 
-        self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-        self.scf2.run(return_stddev=True, boundary=boundary[1])
+        self.scf2 = SCF(cube2, roll_lags=roll_lags2,
+                        distance=phys_distance)
+        self.scf2.run(return_stddev=True, boundary=boundary[1],
+                      fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         ang_units=False, unit=u.deg, save_name=None):
@@ -803,11 +809,9 @@ class SCF_Distance(object):
             ax = p.subplot(2, 2, 4)
             if ang_units:
                 lags1 = \
-                    self.scf1.lags.to(unit,
-                                      equivalencies=self.scf1.angular_equiv).value
+                    self.scf1.lags.to(unit, self.scf1.angular_equiv).value
                 lags2 = \
-                    self.scf2.lags.to(unit,
-                                      equivalencies=self.scf2.angular_equiv).value
+                    self.scf2.lags.to(unit, self.scf2.angular_equiv).value
             else:
                 lags1 = self.scf1.lags.value
                 lags2 = self.scf2.lags.value
