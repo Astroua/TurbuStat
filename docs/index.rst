@@ -15,12 +15,23 @@ To be notified of future releases and updates to TurbuStat, please join the mail
 If you make use of this package in a publication, please cite our accompanying paper:
 ::
    @ARTICLE{Koch2017,
-    author = {{Koch}, Eric~W. and {Ward}, Caleb~G. and {Offner}, Stella and {Loeppky}, Jason~L. and {Rosolowsky}, Erik~W.},
-    title = {Tools for Critically Evaluating Simulations of Star Formation},
-    journal = {MNRAS},
-    doi = {10.1093/mnras/stx1671},
-    year = {2017; in press}
-    }
+      author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and 
+	   {Rosolowsky}, E.~W.},
+      title = "{Identifying tools for comparing simulations and observations of spectral-line data cubes}",
+      journal = {\mnras},
+      archivePrefix = "arXiv",
+      eprint = {1707.05415},
+      keywords = {methods: statistical, ISM: clouds, radio lines: ISM},
+      year = 2017,
+      month = oct,
+      volume = 471,
+      pages = {1506-1530},
+      doi = {10.1093/mnras/stx1671},
+      adsurl = {http://adsabs.harvard.edu/abs/2017MNRAS.471.1506K},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+      }
+Citation courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
+
 
 This package was developed by:
 
