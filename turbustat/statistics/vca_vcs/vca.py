@@ -31,6 +31,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         in the data is used by default. Given widths will be used to
         spectrally down-sample the data before calculating the VCA. Up-sampling
         to smaller channel sizes than the original is not supported.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -137,11 +139,21 @@ class VCA_Distance(object):
         Data cube.
     slice_size : `~astropy.units.Quantity`, optional
         Slice to degrade the cube to.
-    breaks : float, list or array, optional
-        Specify where the break point is. If None, attempts to find using
-        spline. If not specified, no break point will be used.
+    breaks : `~astropy.units.Quantity`, list or array, optional
+        Specify where the break point is with appropriate units.
+        If none is given, no break point will be used in the fit.
     fiducial_model : `~turbustat.statistics.VCA`
         Computed VCA object. use to avoid recomputing.
+    logspacing : bool, optional
+        Enable to use logarithmically-spaced bins.
+    low_cut : `~astropy.units.Quantity` or np.ndarray, optional
+        The lower frequency fitting limit. An array with 2 elements can be
+        passed to give separate lower limits for the datasets.
+    high_cut : `~astropy.units.Quantity` or np.ndarray, optional
+        The upper frequency fitting limit. See `low_cut` above. Defaults to
+        0.5.
+    phys_distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
