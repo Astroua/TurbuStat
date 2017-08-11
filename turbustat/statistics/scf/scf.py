@@ -8,10 +8,14 @@ from astropy import units as u
 from astropy.wcs import WCS
 import statsmodels.api as sm
 
-from ..psds import pspec
+from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data
 from ..stats_utils import common_scale, fourier_shift, pixel_shift
+from ..fitting_utils import clip_func
+from ..elliptical_powerlaw import (fit_elliptical_powerlaw,
+                                   inverse_interval_transform,
+                                   inverse_interval_transform_stderr)
 
 
 class SCF(BaseStatisticMixIn):
@@ -324,6 +328,20 @@ class SCF(BaseStatisticMixIn):
         '''
         return self._slope_err
 
+    @property
+    def xlow(self):
+        '''
+        Lower limit for lags to consider in fits.
+        '''
+        return self._xlow
+
+    @property
+    def xhigh(self):
+        '''
+        Upper limit for lags to consider in fits.
+        '''
+        return self._xhigh
+
     def fitted_model(self, xvals):
         '''
         Computes the modelled power-law using the given x values.
@@ -350,6 +368,137 @@ class SCF(BaseStatisticMixIn):
             self.fit.params[0] + self.fit.params[1] * np.log10(xvals)
 
         return 10**model_values
+
+    def fit_2Dplaw(self, fit_method='LevMarq', p0=(), xlow=None,
+                   xhigh=None, bootstrap=True, niters=100):
+        '''
+        Model the 2D power-spectrum surface with an elliptical power-law model.
+
+        Parameters
+        ----------
+        fit_method : str, optional
+            The algorithm fitting to use. Only 'LevMarq' is currently
+            available.
+        p0 : tuple, optional
+            Initial parameters for fitting. If no values are given, the initial
+            parameters start from the 1D fit parameters.
+        xlow : `~astropy.units.Quantity`, optional
+            Lower lag value limit to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper lag value limit to consider in the fit.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        niters : int, optional
+            Number of bootstrap iterations.
+        '''
+
+        # Adjust the distance based on the separation of the lags
+        pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+
+        if xlow is not None:
+            # Convert xlow into the same units as the lags
+            xlow = self._to_pixel(xlow)
+            self._xlow = xlow
+        else:
+            self._xlow = np.abs(self.lags).min()
+
+        if xhigh is not None:
+            # Convert xhigh into the same units as the lags
+            xhigh = self._to_pixel(xhigh)
+            self._xhigh = xhigh
+        else:
+            self._xhigh = np.abs(self.lags).max()
+
+        yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+        dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+        mask = clip_func(dists, self.xlow.value, self.xhigh.value)
+
+        if not mask.any():
+            raise ValueError("Limits have removed all lag values. Make xlow"
+                             " and xhigh less restrictive.")
+
+        if len(p0) == 0:
+            if hasattr(self, 'slope'):
+                slope_guess = self.slope
+                amp_guess = self.fit.params[0]
+            else:
+                # Let's guess it's going to be ~ -0.2
+                slope_guess = -0.2
+                amp_guess = 1.0
+
+            # Use an initial guess pi / 2 for theta
+            theta = np.pi / 2.
+            # For ellip = 0.5
+            ellip_conv = 0
+            p0 = (amp_guess, ellip_conv, theta, slope_guess)
+
+        params, stderrs, fit_2Dmodel, fitter = \
+            fit_elliptical_powerlaw(np.log10(self.scf_surface[mask]),
+                                    xx[mask],
+                                    yy[mask], p0,
+                                    fit_method=fit_method,
+                                    bootstrap=bootstrap,
+                                    niters=niters)
+
+        self.fit2D = fit_2Dmodel
+        self._fitter = fitter
+
+        self._slope2D = params[3]
+        self._slope2D_err = stderrs[3]
+
+        self._theta2D = params[2] % np.pi
+        self._theta2D_err = stderrs[2]
+
+        # Apply transforms to convert back to the [0, 1) ellipticity range
+        self._ellip2D = inverse_interval_transform(params[1], 0, 1)
+        self._ellip2D_err = \
+            inverse_interval_transform_stderr(stderrs[1], params[1], 0, 1)
+
+    @property
+    def slope2D(self):
+        '''
+        Fitted slope of the 2D power-law.
+        '''
+        return self._slope2D
+
+    @property
+    def slope2D_err(self):
+        '''
+        Slope standard error of the 2D power-law.
+        '''
+        return self._slope2D_err
+
+    @property
+    def theta2D(self):
+        '''
+        Fitted position angle of the 2D power-law.
+        '''
+        return self._theta2D
+
+    @property
+    def theta2D_err(self):
+        '''
+        Position angle standard error of the 2D power-law.
+        '''
+        return self._theta2D_err
+
+    @property
+    def ellip2D(self):
+        '''
+        Fitted ellipticity of the 2D power-law.
+        '''
+        return self._ellip2D
+
+    @property
+    def ellip2D_err(self):
+        '''
+        Ellipticity standard error of the 2D power-law.
+        '''
+        return self._ellip2D_err
 
     def save_results(self, output_name=None, keep_data=False):
         '''
@@ -408,6 +557,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
+            fit_2D=True, fit_2D_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
@@ -438,6 +588,10 @@ class SCF(BaseStatisticMixIn):
         self.compute_surface(boundary=boundary)
         self.compute_spectrum(return_stddev=return_stddev)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
+
+        if fit_2D:
+            self.fit_2Dplaw(xlow=xlow, xhigh=xhigh,
+                            **fit_2D_kwargs)
 
         if save_results:
             self.save_results(output_name=output_name)
