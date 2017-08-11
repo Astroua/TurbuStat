@@ -55,7 +55,9 @@ The VCA spectrum is computed using:
 
 .. image:: images/design4_vca.png
 
-The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, which is steeper than the power spectrum we found using the zeroth moment (:ref:`PowerSpectrum tutorial <pspec_tutorial>`). However, as was the case for the power-spectrum of the zeroth moment, there are deviation from a single power-law on small scales due to the inertial range in the simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. In this case, we will limit the fitting between frequencies of `0.02 / pix` and `0.1 / pix` (where the conversion so pixel scales in the simulation is just `1 / freq`):
+The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.VCA.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for a discussion of the two-dimensional fitting.
+
+The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, which is steeper than the power spectrum we found using the zeroth moment (:ref:`PowerSpectrum tutorial <pspec_tutorial>`). However, as was the case for the power-spectrum of the zeroth moment, there are deviation from a single power-law on small scales due to the inertial range in the simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. In this case, we will limit the fitting between frequencies of `0.02 / pix` and `0.1 / pix` (where the conversion to pixel scales in the simulation is just `1 / freq`):
 
     >>> vca.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
@@ -85,10 +87,10 @@ The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, wh
 
 With the fitting limited to the valid region, we find a shallower slope of :math:`-3.1\pm0.1` and a better fit to the model. `low_cut` and `high_cut` can also be given as spatial frequencies in angular units (e.g., `u.deg**-1`). When a distance is given, the `low_cut` and `high_cut` can also be given in physical frequency units (e.g., `u.pc**-1`).
 
-Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `VCA` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`; see the description given in the :ref:`PowerSpectrum tutorial <pspec_tutorial>`). In this example, we will assume a distance of 250 pc in order to show the power spectrum in physical units:
+Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `VCA` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`; see the description given in the :ref:`PowerSpectrum tutorial <pspec_tutorial>`). The 2D fitting is disabled for this section as it does handle fitting break points. In this example, we will assume a distance of 250 pc in order to show the power spectrum in physical units:
 
     >>> vca = VCA(cube, distance=250 * u.pc)  # doctest: +SKIP
-    >>> vca.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False)  # doctest: +SKIP
+    >>> vca.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.998
@@ -142,7 +144,7 @@ The slope above the break point is within the uncertainty of the slope we found 
 The Lazarian & Pogosyan theory predicts that the VCA power-spectrum depends on the size of the velocity slices in the data cube (e.g., :ref:`Stanimirovic & Lazarian 2001 <ref-sl01>`). `~turbustat.statistics.VCA` allows for the velocity channel thickness to be changed with `channel_width`. This runs a routine that spectrally smooths the cube with a Gaussian kernel, whose width matched the target `channel_width`, then interpolates the data onto a new grid at the new `channel_width`. The example data used here has spectral channels of :math:`\sim 40` m / s. We can re-run VCA on this data with a channel width of :math:`\sim 400` m / s, and compare to the original slope:
 
     >>> vca_thicker_channel = VCA(cube, distance=250 * u.pc, channel_width=400 * u.m / u.s)  # doctest: +SKIP
-    >>> vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False)  # doctest: +SKIP
+    >>> vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
                            OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.998

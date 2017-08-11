@@ -69,7 +69,19 @@ To compute the SCF, we run:
 
 .. image:: images/design4_scf.png
 
-The summary plot shows the correlation surface, a histogram of correlation values, and the 1D spectrum from the azimuthal average, plotted with the power-law fit. A weighted least-squares fit is used to find the slope of the SCF spectrum, where the inverse squared standard deviation from the azimuthal average are used as the weights.
+The summary plot shows the correlation surface, a histogram of correlation values, and the 1D spectrum from the azimuthal average, plotted with the power-law fit. A weighted least-squares fit is used to find the slope of the SCF spectrum, where the inverse squared standard deviation from the azimuthal average are used as the weights. The solid contours on the SCF surface are from the 2D fit to the surface, while the blue dot-dashed lines are the extents of the data used in the fit (and match the 1D spectrum limits). See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for a more thorough discussion of the two-dimensional fitting.
+
+The 2D model parameters are not shown in the above summary. Instead, the parameters can be accessed with:
+
+    >>> print(scf.slope2D, scf.slope2D_err)  # doctest: +SKIP
+    (-0.21648274416050342, 7.8586198274582797e-05)
+    >>> print(scf.ellip2D, scf.ellip2D_err)  # doctest: +SKIP
+    (0.89100428375797669, 0.00022227119552445208)
+    >>> print(scf.theta2D, scf.theta2D_err)  # doctest: +SKIP
+    (1.901971529507771, 0.00098767168667635019)
+
+Since each value in the SCF surface is an average over the whole cube, it is less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
+
 
 Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh` to limit which scales are used in the fit.
 

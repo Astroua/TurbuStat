@@ -53,7 +53,9 @@ The power spectrum is computed using:
 
 .. image:: images/design4_pspec.png
 
-The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a power-law on small scales. This is due to the the limited inertial range in this simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
+The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.PowerSpectrum.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits.
+
+The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the limited inertial range in this simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
 
     >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
@@ -83,9 +85,23 @@ The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the
 
 When limiting the fit to the inertial range, the slope is :math:`-2.7\pm0.2`. `low_cut` and `high_cut` can also be given as spatial frequencies in angular units (e.g., `u.deg**-1`). And since a distance was specified, the `low_cut` and `high_cut` can also be given in physical frequency units (e.g., `u.pc**-1`).
 
+The fit to the two-dimensional power-spectrum has also changed. These parameters aren't included in the fit summary for the 1D fit. Instead, they can be accessed through:
+
+    >>> print(pspec.slope2D, pspec.slope2D_err)  # doctest: +SKIP
+    (-3.0568257229644442, 0.42962017690271243)
+    >>> print(pspec.ellip2D, pspec.ellip2D_err)  # doctest: +SKIP
+    (0.726886399420131, 2.2978314267268547)
+    >>> print(pspec.theta2D, pspec.theta2D_err)  # doctest: +SKIP
+    (1.1528218999604305, 6.9282582013852014)
+
+The slope is consistent with the 1D model, but the uncertainty is much larger. This is due to the very limited range of the data used for the fit. By default, the parameter uncertainties for the 2D model are determined by a bootstrap. After fitting the model, the residuals are added back to the data, and re-fit some number of times. The bootstrap estimation is enabled by the `bootstrap` keyword in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec` and the number of iterations is set with `niters` (the default is 100). These can be set in `~turbustat.statistics.PowerSpectrum.run` by passing a keyword dictionary to `fit_2D_kwargs` (e.g., `fit_2D_kwargs={'bootstrap': False}`). The other parameters are the ellipticity, which is bounded between 0 and 1 (with 1 being circular), and theta, the angle between the x-axis and the semi-major axis of the ellipse. Theta is bounded between 0 and :math:`\pi`.
+
+*Why are the errors so large?* For this example, the errors on the latter two parameters are larger than the ranges they are defined over! Why? Theta is left unbounded during the fit, and when unconstrained, both it and the error will be large. For the ellipticity, the fit uses a transformed version of the ellipticity that makes it defined over the real line. This has a massive effect on stabilizing the fits. The down-side is that the error becomes large when it is not well-constrained. In order to constrain these parameters, the model needs to be fit over a larger range of frequencies.
+
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
 
-    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False)  # doctest: +SKIP
+    >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.994
@@ -114,6 +130,8 @@ Breaks in the power-law behaviour in observations (and higher-resolution simulat
 .. image:: images/design4_pspec_breakfit.png
 
 `brk` is the initial guess at where the break point is. Here I've set it to the extent of the inertial range of the simulation. `log_break` should be enabled if the given `brk` is already the log (base-10) value (since the fitting is done in log-space). The segmented linear model iteratively optimizes the location of the break point, trying to minimize the gap between the different components. This is the `x3` parameter above. The slopes of the components are `x1` and `x2`, but the second slope is defined *relative to the first slope* (i.e., if `x2=0`, the slopes of the components would be the same). The true slopes can be accessed through `pspec.slope` and `pspec.slope_err`. The location of the fitted break point is given by `pspec.brk`, and its uncertainty `pspec.brk_err`. If the fit does not find a good break point, it will revert to a linear fit without the break.
+
+Note that the 2D fitting was disabled in this last example. The 2D model cannot fit a break point, and will instead try to fit a single power-law for the between `low_cut` and `high_cut`, which we know already know is the wrong model. Thus, it has been disabled to avoid confusion. A strategy for fitting the 2D model when the spectrum shows a break is to first fit the 1D model, find the break point, and then fit the 2D spectrum independently using the break point as the `high_cut` in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec`.
 
 References
 ----------

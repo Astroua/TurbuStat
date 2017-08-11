@@ -160,15 +160,16 @@ if run_mvc:
             save_name=osjoin(fig_path, 'mvc_design4_limitedfreq.png'))
 
     # With a break
+    mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)
     mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix,
             high_cut=0.4 / u.pix,
-            brk=0.1 / u.pix, log_break=False,
+            brk=0.1 / u.pix, log_break=False, fit_2D=False,
             save_name=osjoin(fig_path, "mvc_design4_breakfit.png"))
 
     # With phys units
     mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)
     mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
-            high_cut=0.1 / u.pix,
+            high_cut=0.1 / u.pix, fit_2D=False,
             save_name=osjoin(fig_path, 'mvc_design4_physunits.png'))
 
 # PCA
@@ -317,10 +318,15 @@ if run_pspec:
               low_cut=0.02 / u.pix, high_cut=0.1 / u.pix,
               save_name=osjoin(fig_path, "design4_pspec_limitedfreq.png"))
 
+    print(pspec.slope2D, pspec.slope2D_err)
+    print(pspec.ellip2D, pspec.ellip2D_err)
+    print(pspec.theta2D, pspec.theta2D_err)
+
     # How about fitting a break?
+    pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
               low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
-              brk=0.1 / u.pix, log_break=False,
+              brk=0.1 / u.pix, log_break=False, fit_2D=False,
               save_name=osjoin(fig_path, "design4_pspec_breakfit.png"))
 
 # SCF
@@ -333,6 +339,10 @@ if run_scf:
     scf = SCF(cube, size=11)
     scf.run(verbose=True,
             save_name=osjoin(fig_path, "design4_scf.png"))
+
+    print(scf.slope2D, scf.slope2D_err)
+    print(scf.ellip2D, scf.ellip2D_err)
+    print(scf.theta2D, scf.theta2D_err)
 
     # With fit limits
     scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
@@ -434,12 +444,12 @@ if run_vca:
 
     vca = VCA(cube, distance=250 * u.pc)
     vca.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
-            brk=0.1 / u.pix, log_break=False,
+            brk=0.1 / u.pix, log_break=False, fit_2D=False,
             save_name=osjoin(fig_path, "design4_vca_breakfit.png"))
 
     vca_thicker = VCA(cube, distance=250 * u.pc, channel_width=400 * u.m / u.s)
     vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
-                    brk=0.1 / u.pix,
+                    brk=0.1 / u.pix, fit_2D=False,
                     save_name=osjoin(fig_path, "design4_vca_400ms_channels.png"))
 
 
