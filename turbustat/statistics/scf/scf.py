@@ -597,18 +597,32 @@ class SCF(BaseStatisticMixIn):
             self.save_results(output_name=output_name)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.subplot(1, 2, 1)
-            p.imshow(self.scf_surface, origin="lower", interpolation="nearest")
-            cb = p.colorbar()
+            plt.subplot(1, 2, 1)
+            plt.imshow(self.scf_surface, origin="lower",
+                       interpolation="nearest")
+            cb = plt.colorbar()
             cb.set_label("SCF Value")
 
-            p.subplot(2, 2, 2)
-            p.hist(self.scf_surface.ravel())
-            p.xlabel("SCF Value")
+            if fit_2D and hasattr(self, 'fit2D'):
 
-            ax = p.subplot(2, 2, 4)
+                yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+                pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+                dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+                mask = clip_func(dists, self.xlow.value, self.xhigh.value)
+
+                plt.contour(self.fit2D(xx, yy), cmap='viridis')
+
+                plt.contour(mask, colors='b', linestyles='-.')
+
+            plt.subplot(2, 2, 2)
+            plt.hist(self.scf_surface.ravel())
+            plt.xlabel("SCF Value")
+
+            ax = plt.subplot(2, 2, 4)
             pix_lags = self._to_pixel(self.lags)
             lags = self._spatial_unit_conversion(pix_lags, xunit).value
 
@@ -619,8 +633,8 @@ class SCF(BaseStatisticMixIn):
                 ax.set_xscale("log", nonposy='clip')
                 ax.set_yscale("log", nonposy='clip')
             else:
-                p.loglog(self.lags, self.scf_spectrum, 'kD',
-                         markersize=5, label="Data")
+                plt.loglog(self.lags, self.scf_spectrum, 'kD',
+                           markersize=5, label="Data")
 
             ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
             ax.set_ylim(self.scf_spectrum.min() * 0.75,
@@ -629,25 +643,25 @@ class SCF(BaseStatisticMixIn):
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,
                                 lags.max() * 1.05, 50) * xunit
-            p.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
-                     label='Fit')
+            plt.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
+                       label='Fit')
             # Show the fit limits
             xlow = self._spatial_unit_conversion(self._xlow, xunit).value
             xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
-            p.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
-            p.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
+            plt.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+            plt.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
 
-            p.legend()
+            plt.legend()
 
             ax.set_xlabel("Lag ({})".format(xunit))
 
-            p.tight_layout()
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
         return self
 
 
