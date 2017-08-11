@@ -411,11 +411,14 @@ class SCF(BaseStatisticMixIn):
         else:
             self._xhigh = np.abs(self.lags).max()
 
+        xlow_pix = self._to_pixel(self.xlow).value
+        xhigh_pix = self._to_pixel(self.xhigh).value
+
         yy, xx = make_radial_arrays(self.scf_surface.shape)
 
         dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
-        mask = clip_func(dists, self.xlow.value, self.xhigh.value)
+        mask = clip_func(dists, xlow_pix, xhigh_pix)
 
         if not mask.any():
             raise ValueError("Limits have removed all lag values. Make xlow"
