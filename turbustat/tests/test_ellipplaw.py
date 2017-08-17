@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 import pytest
 
@@ -68,7 +70,7 @@ def test_simple_ellipplaw_2D(plaw, ellip, theta):
 
     # Don't fit the 0, 0 point. It isn't defined by the model.
     valids = np.ones_like(yy, dtype=bool)
-    valids[imsize / 2 - 1, imsize / 2 - 1] = False
+    valids[imsize // 2 - 1, imsize // 2 - 1] = False
 
     assert np.isfinite(psd[valids]).all()
 

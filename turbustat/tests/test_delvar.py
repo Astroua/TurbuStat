@@ -1,4 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 
 import numpy.testing as npt
@@ -22,8 +23,8 @@ def test_DelVar_method_fitlimits():
 
     distance = 250 * u.pc
 
-    xlow=4 * u.pix
-    xhigh=30 * u.pix
+    xlow = 4 * u.pix
+    xhigh = 30 * u.pix
 
     tester = DeltaVariance(dataset1["moment0"])
     tester.run(xlow=xlow, xhigh=xhigh)
