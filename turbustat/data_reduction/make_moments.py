@@ -24,7 +24,7 @@ except ImportError:
     Warning("signal-id is not installed. Disabling associated functionality.")
     signal_id_flag = False
 
-from _moment_errs import (moment0_error, moment1_error, linewidth_sigma_err)
+from ._moment_errs import (moment0_error, moment1_error, linewidth_sigma_err)
 
 
 class Mask_and_Moments(object):
@@ -439,7 +439,7 @@ class Mask_and_Moments(object):
             except IOError as e:
                 self._moment0 = None
                 self._moment0_err = None
-                print e
+                print(e)
                 print("Moment 0 fits file not found.")
 
         if centroid is not None:
@@ -455,7 +455,7 @@ class Mask_and_Moments(object):
             except IOError as e:
                 self._moment1 = None
                 self._moment1_err = None
-                print e
+                print(e)
                 print("Centroid fits file not found.")
 
         if linewidth is not None:
@@ -474,7 +474,7 @@ class Mask_and_Moments(object):
             except IOError as e:
                 self._linewidth = None
                 self._linewidth_err = None
-                print e
+                print(e)
                 print("Linewidth fits file not found.")
 
         if intint is not None:
@@ -490,7 +490,7 @@ class Mask_and_Moments(object):
             except IOError as e:
                 self._intint = None
                 self._intint_err = None
-                print e
+                print(e)
                 print("Integrated intensity fits file not found.")
 
         return self
@@ -605,8 +605,8 @@ def longestSequence(data):
     longest = []
 
     sequences = []
-    for k, g in it.groupby(enumerate(data), lambda(i, y): i-y):
-        sequences.append(map(op.itemgetter(1), g))
+    for k, g in it.groupby(enumerate(data), lambda y: y[0] - y[1]):
+        sequences.append(list(map(op.itemgetter(1), g)))
 
     longest = max(sequences, key=len)
 
