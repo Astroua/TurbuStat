@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 from warnings import warn
 import numpy as np

@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 '''
 
@@ -757,7 +757,7 @@ def std_window(y, size=5, return_results=False):
         position of the break is returned.
     '''
 
-    half_size = (size - 1) / 2
+    half_size = (size - 1) // 2
 
     shape = max(y.shape)
 

@@ -1,5 +1,5 @@
-
-from __future__ import print_function, division
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from astropy.modeling import Fittable2DModel, Parameter, fitting

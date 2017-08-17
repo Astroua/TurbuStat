@@ -1,4 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 from astropy.io.fits.hdu.image import _ImageBaseHDU
 from astropy.io import fits
