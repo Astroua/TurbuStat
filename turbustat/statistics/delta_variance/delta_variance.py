@@ -1,4 +1,6 @@
 # Licensed under an MIT open source license - see LICENSE
+from __future__ import (print_function, absolute_import, division,
+                        unicode_literals)
 
 import numpy as np
 from astropy.convolution import convolve_fft
@@ -6,6 +8,7 @@ from astropy import units as u
 from astropy.wcs import WCS
 from copy import copy
 import statsmodels.api as sm
+from astropy.extern.six import string_types
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -537,7 +540,7 @@ class DeltaVariance_Distance(object):
         xlow, xhigh = check_fit_limits(xlow, xhigh)
 
         # Allow separate boundary conditions to be passed
-        if isinstance(boundary, basestring):
+        if isinstance(boundary, string_types):
             boundary = [boundary] * 2
         else:
             if not len(boundary) == 2:
@@ -718,7 +721,7 @@ def _delvar(array, weight, lag):
     # Take width to be 1/2 FWHM. Note that lag is defined as 2*sigma.
     # So 2ln(2) sigma^2 = ln(2)/2 * lag^2
     kern_area = np.ceil(0.5 * np.pi * np.log(2) * lag**2).astype(int)
-    nindep = np.sqrt(np.isfinite(arr_cent).sum() / kern_area)
+    nindep = np.sqrt(np.isfinite(arr_cent).sum() // kern_area)
 
     val_err = np.sqrt((np.nansum(arr_cent ** 4. * weight) /
                        np.nansum(weight)) - val**2) / nindep
