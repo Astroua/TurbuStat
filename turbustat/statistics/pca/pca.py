@@ -1,4 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, division
 
 
 import numpy as np
@@ -204,7 +205,7 @@ class PCA(BaseStatisticMixIn):
             n_eigs = self.n_eigs
 
         if n_eigs > 0:
-            iterat = xrange(n_eigs)
+            iterat = range(n_eigs)
         elif n_eigs < 0:
             # We're looking for the noisy components whenever n_eigs < 0
             # Find where we have valid eigenvalues, and use the last
