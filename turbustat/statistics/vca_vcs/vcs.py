@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
@@ -12,7 +12,7 @@ from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
 from ...io.input_base import to_spectral_cube
 from ..fitting_utils import clip_func
-from slice_thickness import spectral_regrid_cube
+from .slice_thickness import spectral_regrid_cube
 
 
 class VCS(BaseStatisticMixIn):
@@ -128,7 +128,7 @@ class VCS(BaseStatisticMixIn):
         # component when fitting. We'll cut off the total power frequency too
         # in case it causes an extra break point (which seems to happen).
         shape = self.freqs.size
-        rfreqs = self.freqs[1:shape / 2].value
+        rfreqs = self.freqs[1:shape // 2].value
 
         y = np.log10(self.ps1D[clip_func(rfreqs, self.low_cut.value,
                                          self.high_cut.value)])
@@ -145,7 +145,7 @@ class VCS(BaseStatisticMixIn):
             breaks = spline.get_knots()[1:-1]
 
             if fit_verbose:
-                print "Breaks found from spline are: " + str(breaks)
+                print("Breaks found from spline are: " + str(breaks))
 
             # Take the number according to max_breaks starting at the
             # largest x.

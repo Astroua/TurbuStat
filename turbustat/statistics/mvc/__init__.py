@@ -1,2 +1,2 @@
 
-from mvc import MVC, MVC_Distance
+from .mvc import MVC, MVC_Distance

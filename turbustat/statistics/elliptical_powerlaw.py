@@ -1,4 +1,6 @@
 
+from __future__ import print_function, division
+
 import numpy as np
 from astropy.modeling import Fittable2DModel, Parameter, fitting
 from warnings import warn

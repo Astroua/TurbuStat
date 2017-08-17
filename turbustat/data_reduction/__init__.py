@@ -1,1 +1,1 @@
-from make_moments import Mask_and_Moments
+from .make_moments import Mask_and_Moments

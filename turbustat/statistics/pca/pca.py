@@ -865,8 +865,8 @@ class PCA_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            print "Proportions of total variance: 1 - %0.3f, 2 - %0.3f" % \
-                (self.pca1.var_proportion, self.pca2.var_proportion)
+            print("Proportions of total variance: 1 - %0.3f, 2 - %0.3f" %
+                  (self.pca1.var_proportion, self.pca2.var_proportion))
 
             p.subplot(2, 2, 1)
             p.imshow(

@@ -2,11 +2,16 @@
 
 
 import numpy as np
-import cPickle as pickle
 from copy import deepcopy
 from astropy import units as u
 from astropy.wcs import WCS
 import statsmodels.api as sm
+import sys
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
