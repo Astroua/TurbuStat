@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from scipy.spatial.distance import mahalanobis
+import warnings
 
 from ..threeD_to_twoD import _format_data
 from ..mantel import mantel_test
@@ -21,8 +22,8 @@ class Mahalanobis(object):
     def __init__(self, cube):
         super(Mahalanobis, self).__init__()
 
-        TurbuStatTestingWarning("Mahalanobis is an untested statistic. Its use"
-                                " is not yet recommended.")
+        warnings.warn("Mahalanobis is an untested statistic. Its use"
+                      " is not yet recommended.", TurbuStatTestingWarning)
 
         self.cube = cube
 
@@ -87,8 +88,8 @@ class Mahalanobis_Distance(object):
     def __init__(self, cube1, cube2):
         super(Mahalanobis_Distance, self).__init__()
 
-        TurbuStatTestingWarning("Mahalanobis_Distance is an untested metric. Its use"
-                                " is not yet recommended.")
+        warnings.warn("Mahalanobis_Distance is an untested metric. Its use"
+                      " is not yet recommended.", TurbuStatTestingWarning)
 
         self.mahala1 = Mahalanobis(cube1)
         self.mahala2 = Mahalanobis(cube2)
