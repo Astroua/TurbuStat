@@ -129,9 +129,10 @@ class VCS(BaseStatisticMixIn):
         # in case it causes an extra break point (which seems to happen).
         shape = self.freqs.size
         rfreqs = self.freqs[1:shape // 2].value
+        ps1D = self.ps1D[1:shape // 2]
 
-        y = np.log10(self.ps1D[clip_func(rfreqs, self.low_cut.value,
-                                         self.high_cut.value)])
+        y = np.log10(ps1D[clip_func(rfreqs, self.low_cut.value,
+                                    self.high_cut.value)])
         x = np.log10(rfreqs[clip_func(rfreqs, self.low_cut.value,
                                       self.high_cut.value)])
 
