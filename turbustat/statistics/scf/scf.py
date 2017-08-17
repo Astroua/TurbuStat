@@ -5,6 +5,7 @@ import numpy as np
 from copy import deepcopy
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.extern.six import string_types
 import statsmodels.api as sm
 import sys
 
@@ -721,7 +722,7 @@ class SCF_Distance(object):
             size = size - 1
 
         self.size = size
-        roll_lags = np.arange(size) - size / 2
+        roll_lags = np.arange(size) - size // 2
 
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
@@ -737,7 +738,9 @@ class SCF_Distance(object):
             roll_lags1 = roll_lags
             roll_lags2 = roll_lags / float(scale)
 
-        if not isinstance(boundary, basestring):
+        print(roll_lags1, roll_lags2)
+
+        if not isinstance(boundary, string_types):
             if len(boundary) != 2:
                 raise ValueError("If boundary is not a string, it must be a "
                                  "list or array of 2 string elements.")
@@ -781,8 +784,8 @@ class SCF_Distance(object):
         # Since the angular scales are matched, we can assume that they will
         # have the same weights. So just use the shape of the lags to create
         # the weight surface.
-        dx = np.arange(self.size) - self.size / 2
-        dy = np.arange(self.size) - self.size / 2
+        dx = np.arange(self.size) - self.size // 2
+        dy = np.arange(self.size) - self.size // 2
 
         a, b = np.meshgrid(dx, dy)
         if self.weighted:
