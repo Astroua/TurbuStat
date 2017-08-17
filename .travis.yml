@@ -102,3 +102,6 @@ install:
 
 script:
    - $MAIN_CMD $SETUP_CMD
+
+after_success:
+    - if [[ $SETUP_CMD == *coverage* ]]; then coveralls --rcfile='turbustat/tests/coveragerc'; fi
