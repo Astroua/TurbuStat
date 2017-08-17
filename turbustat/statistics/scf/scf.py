@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from copy import deepcopy
@@ -71,7 +71,7 @@ class SCF(BaseStatisticMixIn):
                 Warning("Size must be odd. Reducing size to next lowest odd"
                         " number.")
                 size = size - 1
-            self.roll_lags = (np.arange(size) - size / 2) * u.pix
+            self.roll_lags = (np.arange(size) - size // 2) * u.pix
         else:
             if roll_lags.size % 2 == 0:
                 Warning("Size of roll_lags must be odd. Reducing size to next"
