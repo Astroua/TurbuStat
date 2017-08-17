@@ -184,8 +184,8 @@ pca.run(mean_sub=True, eigen_cut_method='proportion',
         spectral_output_unit=u.m / u.s)
 
 pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
-                "intercept": pca.intercept,
-                "sonic_length": pca.sonic_length()[0]}
+                "intercept": pca.intercept.value,
+                "sonic_length": pca.sonic_length()[0].value}
 
 # Now get those values using mcmc
 pca.run(mean_sub=True, eigen_cut_method='proportion',
@@ -197,8 +197,8 @@ pca.run(mean_sub=True, eigen_cut_method='proportion',
 
 pca_fit_vals["index_bayes"] = pca.index
 pca_fit_vals["gamma_bayes"] = pca.gamma
-pca_fit_vals["intercept_bayes"] = pca.intercept
-pca_fit_vals["sonic_length_bayes"] = pca.sonic_length()[0]
+pca_fit_vals["intercept_bayes"] = pca.intercept.value
+pca_fit_vals["sonic_length_bayes"] = pca.sonic_length()[0].value
 
 # Record the number of eigenvalues kept by the auto method
 pca.run(mean_sub=True, n_eigs='auto', min_eigval=0.001,
