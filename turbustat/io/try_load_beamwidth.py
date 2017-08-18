@@ -3,9 +3,9 @@ from __future__ import print_function, absolute_import, division
 
 try:
     from radio_beam import Beam
-    RADIO_BEAM_INSTALL = False
-except ImportError:
     RADIO_BEAM_INSTALL = True
+except ImportError:
+    RADIO_BEAM_INSTALL = False
 
 from astropy.io import fits
 from astropy import units as u
