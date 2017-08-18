@@ -81,11 +81,11 @@ matrix:
         # With optional dependencies
         # With radio_beam
         - os: linux
-          env: PIP_DEPENDENCIES='git+https://github.com/radio-astro-tools/radio_beam.git'
+          env: PIP_DEPENDENCIES='git+https://github.com/radio-astro-tools/radio_beam.git git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
 
         # With emcee
         - os: linux
-          env: PIP_DEPENDENCIES='emcee'
+          env: PIP_DEPENDENCIES='emcee git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
 
 
 before_install:
