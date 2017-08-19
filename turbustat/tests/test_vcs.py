@@ -13,7 +13,8 @@ from ._testing_data import \
 
 
 def test_VCS_method():
-    tester = VCS(dataset1["cube"]).run()
+    tester = VCS(dataset1["cube"]).run(high_cut=0.3 / u.pix,
+                                       low_cut=3e-2 / u.pix)
 
     npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
 
@@ -22,7 +23,9 @@ def test_VCS_method():
 
 def test_VCS_distance():
     tester_dist = \
-        VCS_Distance(dataset1["cube"], dataset2["cube"])
+        VCS_Distance(dataset1["cube"], dataset2["cube"],
+                     high_cut=0.3 / u.pix,
+                     low_cut=3e-2 / u.pix)
     tester_dist = tester_dist.distance_metric()
 
     npt.assert_almost_equal(tester_dist.distance,

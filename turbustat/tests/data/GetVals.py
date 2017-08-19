@@ -105,7 +105,9 @@ delvar_slope = delvar.slope
 from turbustat.statistics import VCA_Distance, VCS_Distance, VCA
 
 vcs_distance = VCS_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric()
+                            dataset2["cube"],
+                            high_cut=0.3 / u.pix,
+                            low_cut=3e-2 / u.pix).distance_metric()
 
 vcs_val = vcs_distance.vcs1.ps1D
 vcs_slopes = vcs_distance.vcs1.slope
