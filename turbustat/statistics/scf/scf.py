@@ -738,8 +738,6 @@ class SCF_Distance(object):
             roll_lags1 = roll_lags
             roll_lags2 = roll_lags / float(scale)
 
-        print(roll_lags1, roll_lags2)
-
         if not isinstance(boundary, string_types):
             if len(boundary) != 2:
                 raise ValueError("If boundary is not a string, it must be a "
