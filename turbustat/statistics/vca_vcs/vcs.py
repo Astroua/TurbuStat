@@ -250,20 +250,26 @@ class VCS(BaseStatisticMixIn):
 
             import matplotlib.pyplot as plt
 
-            xlab = r"log $( k_v / ($" + str(xunit**-1) + \
-                "$)^{-1})$"
+            xlab = r"log $( k_v / $" + str(xunit**-1) + \
+                "$^{-1})$"
 
-            good_interval = clip_func(self.freqs.value, self.low_cut.value,
+            shape = self.freqs.size
+            rfreqs = self.freqs[1:shape // 2]
+            ps1D = self.ps1D[1:shape // 2]
+
+            good_interval = clip_func(rfreqs.value, self.low_cut.value,
                                       self.high_cut.value)
 
-            freq = self._spectral_freq_unit_conversion(self.freqs, xunit)
+            freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
 
             y_fit = \
-                10**self.fit.model(np.log10(self.freqs.value[good_interval]))
+                10**self.fit.model(np.log10(rfreqs.value[good_interval]))
 
-            plt.loglog(freq, self.ps1D, "rD", label='Data', alpha=0.5)
+            # Points in dark red
+            plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
+                       color='#8B0000')
             plt.loglog(freq[good_interval], y_fit, 'r',
-                       label='Fit', linewidth=2)
+                       label='Fit', linewidth=4)
             plt.xlabel(xlab)
             plt.ylabel(r"log P$_{1}$(k$_{v}$)")
             plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
@@ -381,7 +387,8 @@ class VCS_Distance(object):
             print("Fit 2")
             print(self.vcs2.fit.fit.summary())
 
-            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
+            xlab = r"log $( k_v / $" + str(xunit**-1) + \
+                "$^{-1})$"
 
             import matplotlib.pyplot as plt
 
