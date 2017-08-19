@@ -36,8 +36,8 @@ def find_beam_properties(hdr):
     if RADIO_BEAM_INSTALL:
         beam = Beam.from_fits_header(hdr)
         bmaj = beam.major.to(u.deg)
-        bmaj = beam.minor.to(u.deg)
-        bmaj = beam.pa.to(u.deg)
+        bmin = beam.minor.to(u.deg)
+        bpa = beam.pa.to(u.deg)
     else:
         if not isinstance(hdr, fits.Header):
             raise TypeError("Header is not a FITS header.")
@@ -61,7 +61,7 @@ def find_beam_properties(hdr):
             warn("Cannot find 'BPA' in the header. Assuming PA of 0.")
             bpa = 0 * u.deg
 
-        return bmaj, bmin, bpa
+    return bmaj, bmin, bpa
 
 
 def find_beam_width(hdr):
