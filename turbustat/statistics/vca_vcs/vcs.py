@@ -250,7 +250,8 @@ class VCS(BaseStatisticMixIn):
 
             import matplotlib.pyplot as plt
 
-            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
+            xlab = r"log $( k_v / ($" + str(xunit**-1) + \
+                "$)^{-1})$"
 
             good_interval = clip_func(self.freqs.value, self.low_cut.value,
                                       self.high_cut.value)
