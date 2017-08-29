@@ -118,7 +118,8 @@ class Wavelet(BaseStatisticMixIn):
             psi = MexicanHat2DKernel(an)
 
             self._Wf[i] = \
-                convolve_fft(self.data, psi).real * an**factor
+                convolve_fft(self.data, psi, normalize_kernel=False).real * \
+                an**factor
 
     @property
     def Wf(self):
