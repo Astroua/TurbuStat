@@ -3,17 +3,21 @@ from __future__ import (print_function, absolute_import, division,
                         unicode_literals)
 
 import numpy as np
-from astropy.convolution import convolve_fft
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.convolution import convolve_fft
+from astropy.version import version as astro_version
 from copy import copy
 import statsmodels.api as sm
 from astropy.extern.six import string_types
+from warnings import warn
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..stats_utils import common_scale, padwithzeros
 from ..fitting_utils import check_fit_limits
+from .kernels import core_kernel, annulus_kernel
+from ..stats_warnings import TurbuStatMetricWarning
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -160,26 +164,22 @@ class DeltaVariance(BaseStatisticMixIn):
                 raise ValueError("boundary must be 'wrap' or 'fill'. "
                                  "Given {}".format(boundary))
 
-            img_core = convolve_fft(
-                pad_img, core, normalize_kernel=True,
-                interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge,
-                boundary=boundary)
-            img_annulus = convolve_fft(
-                pad_img, annulus, normalize_kernel=True,
-                interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge,
-                boundary=boundary)
-            weights_core = convolve_fft(
-                pad_weights, core, normalize_kernel=True,
-                interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge,
-                boundary=boundary)
-            weights_annulus = convolve_fft(
-                pad_weights, annulus, normalize_kernel=True,
-                interpolate_nan=self.nanflag,
-                ignore_edge_zeros=True, allow_huge=allow_huge,
-                boundary=boundary)
+            img_core = \
+                convolution_wrapper(pad_img, core, boundary=boundary,
+                                    fill_value=np.NaN,
+                                    allow_huge=allow_huge,)
+            img_annulus = \
+                convolution_wrapper(pad_img, annulus,
+                                    boundary=boundary, fill_value=np.NaN,
+                                    allow_huge=allow_huge)
+            weights_core = \
+                convolution_wrapper(pad_weights, core,
+                                    boundary='fill', fill_value=np.NaN,
+                                    allow_huge=allow_huge)
+            weights_annulus = \
+                convolution_wrapper(pad_weights, annulus,
+                                    boundary='fill', fill_value=np.NaN,
+                                    allow_huge=allow_huge)
 
             weights_core[np.where(weights_core == 0)] = np.NaN
             weights_annulus[np.where(weights_annulus == 0)] = np.NaN
@@ -403,69 +403,6 @@ class DeltaVariance(BaseStatisticMixIn):
         return self
 
 
-def core_kernel(lag, x_size, y_size):
-    '''
-    Core Kernel for convolution.
-
-    Parameters
-    ----------
-
-    lag : int
-        Size of the lag. Set the kernel size.
-    x_size : int
-        Grid size to use in the x direction
-    y_size_size : int
-        Grid size to use in the y_size direction
-
-    Returns
-    -------
-
-    kernel : numpy.ndarray
-        Normalized kernel.
-    '''
-
-    x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
-                       np.arange(-y_size / 2, y_size / 2 + 1, 1))
-    kernel = ((4 / np.pi * lag**2)) * \
-        np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
-
-    return kernel / np.sum(kernel)
-
-
-def annulus_kernel(lag, diam_ratio, x_size, y_size):
-    '''
-
-    Annulus Kernel for convolution.
-
-    Parameters
-    ----------
-    lag : int
-        Size of the lag. Set the kernel size.
-    diam_ratio : float
-                 Ratio between kernel diameters.
-    x_size : int
-        Grid size to use in the x direction
-    y_size_size : int
-        Grid size to use in the y_size direction
-
-    Returns
-    -------
-
-    kernel : numpy.ndarray
-        Normalized kernel.
-    '''
-
-    x, y = np.meshgrid(np.arange(-x_size / 2, x_size / 2 + 1, 1),
-                       np.arange(-y_size / 2, y_size / 2 + 1, 1))
-
-    inner = np.exp(-(x ** 2. + y ** 2.) / (lag / 2.) ** 2.)
-    outer = np.exp(-(x ** 2. + y ** 2.) / (diam_ratio * lag / 2.) ** 2.)
-
-    kernel = 4 / (np.pi * lag**2 * (diam_ratio ** 2. - 1)) * (outer - inner)
-
-    return kernel / np.sum(kernel)
-
-
 class DeltaVariance_Distance(object):
 
     """
@@ -576,7 +513,7 @@ class DeltaVariance_Distance(object):
         self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary[1])
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None):
+                        xunit=u.pix, save_name=None):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -604,14 +541,39 @@ class DeltaVariance_Distance(object):
 
         all_nans = np.logical_or(nans1, nans2)
 
-        deltavar1_sum = np.sum(self.delvar1.delta_var[~all_nans])
-        deltavar1 = np.log10(self.delvar1.delta_var[~all_nans] / deltavar1_sum)
+        # Cut the curves at the specified xlow and xhigh points
+        fit_range1 = self.delvar1.fit_range
+        fit_range2 = self.delvar1.fit_range
 
-        deltavar2_sum = np.sum(self.delvar2.delta_var[~all_nans])
-        deltavar2 = np.log10(self.delvar2.delta_var[~all_nans] / deltavar2_sum)
+        # The curve metric only makes sense if the same range is used for both
+        if fit_range1[0] == fit_range2[0] and fit_range1[1] == fit_range2[1]:
 
-        # Distance between two normalized curves
-        self.curve_distance = np.linalg.norm(deltavar1 - deltavar2)
+            # Lags are always in pixels. As are the limits
+            cuts1 = np.logical_and(self.delvar1.lags >= fit_range1[0],
+                                   self.delvar1.lags <= fit_range1[1])
+            cuts2 = np.logical_and(self.delvar2.lags >= fit_range2[0],
+                                   self.delvar2.lags <= fit_range2[1])
+
+            valids1 = np.logical_and(cuts1, ~all_nans)
+            valids2 = np.logical_and(cuts2, ~all_nans)
+
+            deltavar1_sum = np.sum(self.delvar1.delta_var[valids1])
+            deltavar1 = \
+                np.log10(self.delvar1.delta_var[valids1] / deltavar1_sum)
+
+            deltavar2_sum = np.sum(self.delvar2.delta_var[valids2])
+            deltavar2 = \
+                np.log10(self.delvar2.delta_var[valids2] / deltavar2_sum)
+
+            # Distance between two normalized curves
+            self.curve_distance = np.linalg.norm(deltavar1 - deltavar2)
+        else:
+
+            warn("The curve distance is only defined when the fit "
+                 "range and lags for both datasets are equal. "
+                 "Setting curve_distance to NaN.", TurbuStatMetricWarning)
+
+            self.curve_distance = np.NaN
 
         # Distance between the fitted slopes (combined t-statistic)
         self.slope_distance = \
@@ -624,17 +586,11 @@ class DeltaVariance_Distance(object):
             ax = p.subplot(111)
             ax.set_xscale("log", nonposx="clip")
             ax.set_yscale("log", nonposx="clip")
-            if ang_units:
-                ang_equiv1 = self.delvar1.angular_equiv
-                ang_equiv2 = self.delvar2.angular_equiv
-                lags1 = \
-                    self.delvar1.lags.to(unit, equivalencies=ang_equiv1).value
-                lags2 = \
-                    self.delvar2.lags.to(unit, equivalencies=ang_equiv2).value
-            else:
-                lags1 = self.delvar1.lags.value
-                lags2 = self.delvar2.lags.value
 
+            lags1 = self.delvar1._spatial_unit_conversion(self.delvar1.lags,
+                                                          xunit).value
+            lags2 = self.delvar2._spatial_unit_conversion(self.delvar2.lags,
+                                                          xunit).value
             lags1 = lags1[~all_nans]
             lags2 = lags2[~all_nans]
 
@@ -644,58 +600,57 @@ class DeltaVariance_Distance(object):
             deltavar2_err = \
                 self.delvar2.delta_var_error[~all_nans] / deltavar2_sum
 
-            p.errorbar(lags1, 10**deltavar1,
+            p.errorbar(lags1, self.delvar1.delta_var[~all_nans] / deltavar1_sum,
                        yerr=deltavar1_err, fmt="bD-",
                        label=label1)
-            p.errorbar(lags2, 10**deltavar2,
+            p.errorbar(lags2, self.delvar2.delta_var[~all_nans] / deltavar2_sum,
                        yerr=deltavar2_err, fmt="go-",
                        label=label2)
 
-            lims1 = self.delvar1.fit_range
-            xvals1 = \
-                np.linspace(self.delvar1.lags.min().value if lims1[0] is None
-                            else lims1[0],
-                            self.delvar1.lags.max().value if lims1[1] is None
-                            else lims1[1],
-                            100)
-            lims2 = self.delvar2.fit_range
-            xvals2 = \
-                np.linspace(self.delvar2.lags.min().value if lims2[0] is None
-                            else lims2[0],
-                            self.delvar2.lags.max().value if lims2[1] is None
-                            else lims2[1],
-                            100)
-            if ang_units:
-                xvals1_conv = xvals1.to(unit, equivalencies=ang_equiv1).value
-                xvals2_conv = xvals2.to(unit, equivalencies=ang_equiv2).value
-            else:
-                xvals1_conv = xvals1
-                xvals2_conv = xvals2
+            xvals1 = np.linspace(self.delvar1.fit_range[0].value,
+                                 self.delvar1.fit_range[1].value,
+                                 100) * self.delvar1.lags.unit
+            xvals_conv1 = \
+                self.delvar1._spatial_unit_conversion(xvals1, xunit).value
 
-            p.plot(xvals1_conv,
-                   10**self.delvar1.fitted_model(np.log10(xvals1)) / deltavar1_sum,
+            xvals2 = np.linspace(self.delvar2.fit_range[0].value,
+                                 self.delvar2.fit_range[1].value,
+                                 100) * self.delvar2.lags.unit
+            xvals_conv2 = \
+                self.delvar2._spatial_unit_conversion(xvals2, xunit).value
+
+            p.plot(xvals_conv1,
+                   10**self.delvar1.fitted_model(np.log10(xvals1.value)) /
+                   deltavar1_sum,
                    'b--', linewidth=8, alpha=0.75)
-            p.plot(xvals2_conv,
-                   10**self.delvar2.fitted_model(np.log10(xvals2)) / deltavar2_sum,
+            p.plot(xvals_conv2,
+                   10**self.delvar2.fitted_model(np.log10(xvals2.value)) /
+                   deltavar2_sum,
                    'g--', linewidth=8, alpha=0.75)
 
             # Vertical lines to indicate fit region
-            p.axvline(self.delvar1.lags.min().value if lims1[0] is None
-                      else lims1[0], color='b', alpha=0.5, linestyle='-')
-            p.axvline(self.delvar1.lags.max().value if lims1[1] is None
-                      else lims1[1], color='b', alpha=0.5, linestyle='-')
+            xlow1 = \
+                self.delvar1._spatial_unit_conversion(fit_range1[0],
+                                                      xunit).value
+            xhigh1 = \
+                self.delvar1._spatial_unit_conversion(fit_range1[1],
+                                                      xunit).value
+            fit_range2 = self.delvar2.fit_range
+            xlow2 = \
+                self.delvar2._spatial_unit_conversion(fit_range2[0],
+                                                      xunit).value
+            xhigh2 = \
+                self.delvar2._spatial_unit_conversion(fit_range2[1],
+                                                      xunit).value
+            p.axvline(xlow1, color="b", alpha=0.5, linestyle='-.')
+            p.axvline(xhigh1, color="b", alpha=0.5, linestyle='-.')
 
-            p.axvline(self.delvar2.lags.min().value if lims2[0] is None
-                      else lims2[0], color='g', alpha=0.5, linestyle='-')
-            p.axvline(self.delvar2.lags.max().value if lims2[1] is None
-                      else lims2[1], color='g', alpha=0.5, linestyle='-')
+            p.axvline(xlow2, color="g", alpha=0.5, linestyle='-.')
+            p.axvline(xhigh2, color="g", alpha=0.5, linestyle='-.')
 
             ax.legend(loc='best')
             ax.grid(True)
-            if ang_units:
-                ax.set_xlabel("Lag ({})".format(unit))
-            else:
-                ax.set_xlabel("Lag (pixels)")
+            ax.set_xlabel("Lag ({})".format(xunit))
             ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
 
             if save_name is not None:
@@ -727,3 +682,24 @@ def _delvar(array, weight, lag):
                        np.nansum(weight)) - val**2) / nindep
 
     return val, val_err
+
+
+def convolution_wrapper(img, kernel, **kwargs):
+    '''
+    Adjust parameter setting to be consistent with astropy <2 and >=2.
+    '''
+
+    if int(astro_version[0]) >= 2:
+        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
+                                nan_treatment='interpolate',
+                                **kwargs)
+    else:
+        # in astropy >= v2, fill_value can be a NaN. ignore_edge_zeros gives
+        # the same behaviour in older versions.
+        if kwargs.get('fill_value'):
+            kwargs.pop('fill_value')
+        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
+                                interpolate_nan=True,
+                                ignore_edge_zeros=True, **kwargs)
+
+    return conv_img
