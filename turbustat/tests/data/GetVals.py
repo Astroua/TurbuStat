@@ -90,15 +90,26 @@ delvar_distance = \
     DeltaVariance_Distance(dataset1["moment0"],
                            dataset2["moment0"],
                            weights1=dataset1["moment0_error"][0],
-                           weights2=dataset2["moment0_error"][0])
+                           weights2=dataset2["moment0_error"][0],
+                           xhigh=11 * u.pix)
 
 delvar_distance.distance_metric()
 
 delvar = DeltaVariance(dataset1["moment0"],
-                       weights=dataset1['moment0_error'][0]).run()
+                       weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix)
 
 delvar_val = delvar.delta_var
 delvar_slope = delvar.slope
+
+# Change boundary conditions
+
+delvar_fill = \
+    DeltaVariance(dataset1["moment0"],
+                  weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix,
+                                                            boundary='fill')
+
+delvar_fill_val = delvar_fill.delta_var
+delvar_fill_slope = delvar_fill.slope
 
 # VCA/VCS
 
@@ -315,6 +326,8 @@ np.savez_compressed('checkVals',
                     genus_val=genus_val,
                     delvar_val=delvar_val,
                     delvar_slope=delvar_slope,
+                    delvar_fill_val=delvar_fill_val,
+                    delvar_fill_slope=delvar_fill_slope,
                     vcs_val=vcs_val,
                     vcs_slopes=vcs_slopes,
                     vca_val=vca_val,
