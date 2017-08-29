@@ -6,3 +6,9 @@ class TurbuStatTestingWarning(Warning):
     '''
     Turbustat.statistics warning for untested methods.
     '''
+
+
+class TurbuStatMetricWarning(Warning):
+    '''
+    Turbustat.statistics warning for misusing a distance metric.
+    '''
