@@ -20,7 +20,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
     Estimate spatial widths from a set of autocorrelation images.
 
     .. warning:: Error estimation is not implemented for `interpolate` or
-    `xinterpolate`.
+      `xinterpolate`.
 
     Parameters
     ----------
@@ -277,11 +277,11 @@ def WidthEstimate1D(inList, method='walk-down'):
     occurs.
 
     .. note:: If the spectral dimension is small in the given eigenvectors
-    (i.e., their length), the 1/e level might not be reached. If this is the
-    case, try padding the initial data cube with zeros in the spectral
-    dimension. The effect on the results should be minimal, as the additional
-    eigenvalues from the padding will be zero. This is especially important
-    when using `walk-down`.
+      (i.e., their length), the 1/e level might not be reached. If this is the
+      case, try padding the initial data cube with zeros in the spectral
+      dimension. The effect on the results should be minimal, as the additional
+      eigenvalues from the padding will be zero. This is especially important
+      when using `walk-down`.
 
     .. warning:: Error estimation is not implemented for `interpolate`.
 

@@ -15,7 +15,7 @@ Using
 
 **The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
-**Requires the optional astrodendro package to be installed. See documentation** `here <http://dendrograms.org/>`_
+**Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
 
 Importing the dendrograms code, along with a few other common packages:
 

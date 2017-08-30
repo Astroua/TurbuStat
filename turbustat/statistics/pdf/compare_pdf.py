@@ -26,14 +26,11 @@ class PDF(BaseStatisticMixIn):
         Bins to compute the PDF from.
     weights : %(dtypes)s, optional
         Weights to apply to the image. Must have the same shape as the image.
-    use_standardized : bool, optional
-        Enable to standardize the data before computing the PDF and ECDF.
-    normalization_type : {"standardize", "center", "normalize",
-                          "normalize_by_mean"}, optional
+    normalization_type : {"standardize", "center", "normalize", "normalize_by_mean"}, optional
         See `~turbustat.statistics.stat_utils.data_normalization`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import PDF
     >>> from astropy.io import fits
     >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits")[0]  # doctest: +SKIP
