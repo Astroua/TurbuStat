@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #161 - python 3 support; use ci-helpers; updated astropy-helpers; consistent convolution results with astropy 2.x; new delta-variance regression test values after convolution updates; DeltaVariance_Distance.curve_distance now restricts to the region between xlow and xhigh
 * #159 - Add an elliptical power-law model for fitting 2D power-spectra. Added 2D fitting for PowerSpectrum, MVC, VCA, and SCF, along with tests for each. Unit test values updated to include the 2D slopes. Also updated the tutorials of those 4 methods to demonstrate the new fitting procedure.
 * #156 - Complete statistic tutorials; complete angular + physical unit handling; pass break kwargs for all power-spectrum methods; change several APIs to be consistent throughout the package; removed stats_wrapper; added tests to test all cases with a slope and unit conversions; reworked slice thickness choice for VCA and VCS; restrict VCS fitting to real frequencies only; default to periodic boundaries
 
