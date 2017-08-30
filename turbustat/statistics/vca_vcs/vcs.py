@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
@@ -12,7 +12,7 @@ from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
 from ...io.input_base import to_spectral_cube
 from ..fitting_utils import clip_func
-from slice_thickness import spectral_regrid_cube
+from .slice_thickness import spectral_regrid_cube
 
 
 class VCS(BaseStatisticMixIn):
@@ -128,10 +128,11 @@ class VCS(BaseStatisticMixIn):
         # component when fitting. We'll cut off the total power frequency too
         # in case it causes an extra break point (which seems to happen).
         shape = self.freqs.size
-        rfreqs = self.freqs[1:shape / 2].value
+        rfreqs = self.freqs[1:shape // 2].value
+        ps1D = self.ps1D[1:shape // 2]
 
-        y = np.log10(self.ps1D[clip_func(rfreqs, self.low_cut.value,
-                                         self.high_cut.value)])
+        y = np.log10(ps1D[clip_func(rfreqs, self.low_cut.value,
+                                    self.high_cut.value)])
         x = np.log10(rfreqs[clip_func(rfreqs, self.low_cut.value,
                                       self.high_cut.value)])
 
@@ -145,7 +146,7 @@ class VCS(BaseStatisticMixIn):
             breaks = spline.get_knots()[1:-1]
 
             if fit_verbose:
-                print "Breaks found from spline are: " + str(breaks)
+                print("Breaks found from spline are: " + str(breaks))
 
             # Take the number according to max_breaks starting at the
             # largest x.
@@ -249,19 +250,26 @@ class VCS(BaseStatisticMixIn):
 
             import matplotlib.pyplot as plt
 
-            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
+            xlab = r"log $( k_v / $" + str(xunit**-1) + \
+                "$^{-1})$"
 
-            good_interval = clip_func(self.freqs.value, self.low_cut.value,
+            shape = self.freqs.size
+            rfreqs = self.freqs[1:shape // 2]
+            ps1D = self.ps1D[1:shape // 2]
+
+            good_interval = clip_func(rfreqs.value, self.low_cut.value,
                                       self.high_cut.value)
 
-            freq = self._spectral_freq_unit_conversion(self.freqs, xunit)
+            freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
 
             y_fit = \
-                10**self.fit.model(np.log10(self.freqs.value[good_interval]))
+                10**self.fit.model(np.log10(rfreqs.value[good_interval]))
 
-            plt.loglog(freq, self.ps1D, "rD", label='Data', alpha=0.5)
+            # Points in dark red
+            plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
+                       color='#8B0000')
             plt.loglog(freq[good_interval], y_fit, 'r',
-                       label='Fit', linewidth=2)
+                       label='Fit', linewidth=4)
             plt.xlabel(xlab)
             plt.ylabel(r"log P$_{1}$(k$_{v}$)")
             plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
@@ -379,7 +387,8 @@ class VCS_Distance(object):
             print("Fit 2")
             print(self.vcs2.fit.fit.summary())
 
-            xlab = r"log $\left( k_v / ({})^{-1} \right)$".format(1 / xunit)
+            xlab = r"log $( k_v / $" + str(xunit**-1) + \
+                "$^{-1})$"
 
             import matplotlib.pyplot as plt
 

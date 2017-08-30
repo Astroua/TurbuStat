@@ -135,6 +135,7 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
     ==============================================================================
 
 .. image:: images/delvar_design4_physunits.png
+
 Since the Delta-variance is based on a series of convolutions, there is a choice for how the boundaries should be treated. This is set by the `boundary` keyword in `~turbustat.statistics.DeltaVariance.run`. By default, `boundary='wrap'` as is appropriate for simulated data in a periodic box. If the data is *not* periodic in the spatial dimensions, `boundary='fill'` should be used. This mode pads the edges of the data based on the size of the convolution kernel used.
 
 

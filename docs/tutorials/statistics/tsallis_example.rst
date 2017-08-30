@@ -49,7 +49,7 @@ With default values, the Tsallis distribution fits are calculated using:
 
 This returns an astropy table of the fits to each of the parameters, their standard errors, and the reduced :math:`\chi^2` values (`~turbustat.statistics.Tsallis.tsallis_table`). The figure shows the histograms at each lag and their respective fits. The solid black line is the fit and the dashed red lines indicated which data was used to fit the distribution. The x-axis shows the standardized values of the difference maps at each lag, such that the mean is zero and the standard deviation is one. Because of this, there is no mean parameter fit in the Tsallis distribution. Examining the histograms and the fits is useful for showing where the histograms deviate significantly from the model, something that is difficult to determine from the reduced :math:`\chi^2` values alone.
 
-A key to the works of `Esquivel & Lazarian 2010 <ref-Esquivel2010>`_ and `Tofflemire et al. 2011 <ref-Tofflemire2011>`_ is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
+A key to the works of :ref:`Esquivel & Lazarian 2010 <ref-Esquivel2010>` and :ref:`Tofflemire et al. 2011 <ref-Tofflemire2011>` is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
 
     >>> tsallis.plot_parameters()  # doctest: +SKIP
 

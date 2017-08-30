@@ -1,1 +1,1 @@
-from mahalanobis import Mahalanobis, Mahalanobis_Distance
+from .mahalanobis import Mahalanobis, Mahalanobis_Distance

@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
@@ -7,7 +7,7 @@ from numpy.fft import fftshift
 import astropy.units as u
 
 from ..rfft_to_fft import rfft_to_fft
-from slice_thickness import spectral_regrid_cube
+from .slice_thickness import spectral_regrid_cube
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types

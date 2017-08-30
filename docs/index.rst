@@ -12,24 +12,24 @@ The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contri
 
 To be notified of future releases and updates to TurbuStat, please join the mailing list: https://groups.google.com/forum/#!forum/turbustat
 
-If you make use of this package in a publication, please cite our accompanying paper:
-::
-   @ARTICLE{Koch2017,
-      author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and 
-	   {Rosolowsky}, E.~W.},
-      title = "{Identifying tools for comparing simulations and observations of spectral-line data cubes}",
-      journal = {\mnras},
-      archivePrefix = "arXiv",
-      eprint = {1707.05415},
-      keywords = {methods: statistical, ISM: clouds, radio lines: ISM},
-      year = 2017,
-      month = oct,
-      volume = 471,
-      pages = {1506-1530},
-      doi = {10.1093/mnras/stx1671},
-      adsurl = {http://adsabs.harvard.edu/abs/2017MNRAS.471.1506K},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
-      }
+If you make use of this package in a publication, please cite our accompanying paper::
+
+    @ARTICLE{Koch2017,
+     author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and {Rosolowsky}, E.~W.},
+     title = "{Identifying tools for comparing simulations and observations of spectral-line data cubes}",
+     journal = {\mnras},
+     archivePrefix = "arXiv",
+     eprint = {1707.05415},
+     keywords = {methods: statistical, ISM: clouds, radio lines: ISM},
+     year = 2017,
+     month = oct,
+     volume = 471,
+     pages = {1506-1530},
+     doi = {10.1093/mnras/stx1671},
+     adsurl = {http://adsabs.harvard.edu/abs/2017MNRAS.471.1506K},
+     adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
+
 Citation courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
 
 
@@ -51,6 +51,7 @@ Contents:
    cube_tools.rst
    statistics.rst
    helper_scripts.rst
+   contributing.rst
 
 Papers using TurbuStat
 ----------------------

@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 '''
 Routines for transforming data cubes to 2D representations

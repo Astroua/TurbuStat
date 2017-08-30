@@ -1,9 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
-
-'''
-Test functions for MVC
-'''
+from __future__ import print_function, absolute_import, division
 
 import numpy.testing as npt
 import astropy.units as u

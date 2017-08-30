@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 import pytest
 import astropy.units as u
@@ -43,7 +45,7 @@ def test_load_beam_props(major, minor, pa):
         assert bpa == pa * u.deg
 
 
-@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.xfail(raises=(ValueError, TypeError))
 def test_load_beam_fail():
 
     find_beam_width(header)

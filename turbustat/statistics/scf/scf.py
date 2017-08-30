@@ -1,12 +1,18 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
-import cPickle as pickle
 from copy import deepcopy
 from astropy import units as u
 from astropy.wcs import WCS
+from astropy.extern.six import string_types
 import statsmodels.api as sm
+import sys
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
@@ -66,7 +72,7 @@ class SCF(BaseStatisticMixIn):
                 Warning("Size must be odd. Reducing size to next lowest odd"
                         " number.")
                 size = size - 1
-            self.roll_lags = (np.arange(size) - size / 2) * u.pix
+            self.roll_lags = (np.arange(size) - size // 2) * u.pix
         else:
             if roll_lags.size % 2 == 0:
                 Warning("Size of roll_lags must be odd. Reducing size to next"
@@ -716,7 +722,7 @@ class SCF_Distance(object):
             size = size - 1
 
         self.size = size
-        roll_lags = np.arange(size) - size / 2
+        roll_lags = np.arange(size) - size // 2
 
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
@@ -732,7 +738,7 @@ class SCF_Distance(object):
             roll_lags1 = roll_lags
             roll_lags2 = roll_lags / float(scale)
 
-        if not isinstance(boundary, basestring):
+        if not isinstance(boundary, string_types):
             if len(boundary) != 2:
                 raise ValueError("If boundary is not a string, it must be a "
                                  "list or array of 2 string elements.")
@@ -776,8 +782,8 @@ class SCF_Distance(object):
         # Since the angular scales are matched, we can assume that they will
         # have the same weights. So just use the shape of the lags to create
         # the weight surface.
-        dx = np.arange(self.size) - self.size / 2
-        dy = np.arange(self.size) - self.size / 2
+        dx = np.arange(self.size) - self.size // 2
+        dy = np.arange(self.size) - self.size // 2
 
         a, b = np.meshgrid(dx, dy)
         if self.weighted:

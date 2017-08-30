@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 '''
 
@@ -14,10 +14,15 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 
 import numpy as np
 from copy import deepcopy
-import cPickle as pickle
 from warnings import warn
 import statsmodels.api as sm
-from mecdf import mecdf
+import sys
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
+
 
 try:
     from astrodendro import Dendrogram, periodic_neighbours
@@ -29,6 +34,7 @@ except ImportError:
 from ..stats_utils import hellinger, common_histogram_bins, standardize
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, twod_types
+from .mecdf import mecdf
 
 
 class Dendrogram_Stats(BaseStatisticMixIn):
@@ -142,7 +148,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         if len(self.min_deltas) > 1:
             for i, delta in enumerate(self.min_deltas[1:]):
                 if verbose:
-                    print "On %s of %s" % (i + 1, len(self.min_deltas[1:]))
+                    print("On %s of %s" % (i + 1, len(self.min_deltas[1:])))
                 d.prune(min_delta=delta)
                 self._numfeatures[i + 1] = len(d)
                 self._values.append(np.array([struct.vmax for struct in
@@ -239,7 +245,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         self._model = sm.OLS(self.fitvals[1], x).fit()
 
         if verbose:
-            print self.model.summary()
+            print(self.model.summary())
 
         errors = self.model.bse
 
@@ -751,7 +757,7 @@ def std_window(y, size=5, return_results=False):
         position of the break is returned.
     '''
 
-    half_size = (size - 1) / 2
+    half_size = (size - 1) // 2
 
     shape = max(y.shape)
 

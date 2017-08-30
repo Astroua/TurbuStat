@@ -1,3 +1,5 @@
+# Licensed under an MIT open source license - see LICENSE
+from __future__ import print_function, absolute_import, division
 
 '''
 Port of the R seg.lm.fit function.
@@ -75,7 +77,7 @@ class Lm_Seg(object):
         init_lm = model.fit()
 
         if verbose:
-            print init_lm.summary()
+            print(init_lm.summary())
 
         epsil = epsil_0
 
@@ -144,10 +146,10 @@ class Lm_Seg(object):
             dev_0 = dev_1
 
             if verbose:
-                print "Iteration: %s/%s" % (it + 1, iter_max)
-                print fit.summary()
-                print "Break Point: " + str(self.brk)
-                print "Epsilon: " + str(epsil)
+                print("Iteration: %s/%s" % (it + 1, iter_max))
+                print(fit.summary())
+                print("Break Point: " + str(self.brk))
+                print("Epsilon: " + str(epsil))
 
             it += 1
 

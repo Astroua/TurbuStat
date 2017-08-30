@@ -1,1 +1,1 @@
-from cramer import Cramer_Distance
+from .cramer import Cramer_Distance

@@ -1,8 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
-'''
-Test functions for VCA
-'''
+from __future__ import print_function, absolute_import, division
 
 import pytest
 

@@ -1,8 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
-'''
-Test functions for PCA
-'''
+from __future__ import print_function, absolute_import, division
 
 import pytest
 
@@ -41,10 +38,10 @@ def test_PCA_method():
                    tester.index_error_range[1])
     assert_between(fit_values["gamma"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
-    assert_between(fit_values["intercept"].value,
+    assert_between(fit_values["intercept"],
                    tester.intercept_error_range[0].value,
                    tester.intercept_error_range[1].value)
-    assert_between(fit_values["sonic_length"].value,
+    assert_between(fit_values["sonic_length"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
 
@@ -67,10 +64,10 @@ def test_PCA_method_w_bayes():
                    tester.index_error_range[1])
     assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
-    assert_between(fit_values["intercept_bayes"].value,
+    assert_between(fit_values["intercept_bayes"],
                    tester.intercept_error_range[0].value,
                    tester.intercept_error_range[1].value)
-    assert_between(fit_values["sonic_length_bayes"].value,
+    assert_between(fit_values["sonic_length_bayes"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
 

@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import astropy.units as u
@@ -204,7 +204,7 @@ class PCA(BaseStatisticMixIn):
             n_eigs = self.n_eigs
 
         if n_eigs > 0:
-            iterat = xrange(n_eigs)
+            iterat = range(n_eigs)
         elif n_eigs < 0:
             # We're looking for the noisy components whenever n_eigs < 0
             # Find where we have valid eigenvalues, and use the last
@@ -865,8 +865,8 @@ class PCA_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            print "Proportions of total variance: 1 - %0.3f, 2 - %0.3f" % \
-                (self.pca1.var_proportion, self.pca2.var_proportion)
+            print("Proportions of total variance: 1 - %0.3f, 2 - %0.3f" %
+                  (self.pca1.var_proportion, self.pca2.var_proportion))
 
             p.subplot(2, 2, 1)
             p.imshow(

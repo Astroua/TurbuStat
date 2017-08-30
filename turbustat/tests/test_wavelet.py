@@ -1,9 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
-
-'''
-Test function for Wavelet
-'''
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import numpy.testing as npt

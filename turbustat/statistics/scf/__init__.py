@@ -1,1 +1,1 @@
-from scf import SCF, SCF_Distance
+from .scf import SCF, SCF_Distance

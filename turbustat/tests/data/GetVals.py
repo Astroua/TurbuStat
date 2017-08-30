@@ -90,22 +90,35 @@ delvar_distance = \
     DeltaVariance_Distance(dataset1["moment0"],
                            dataset2["moment0"],
                            weights1=dataset1["moment0_error"][0],
-                           weights2=dataset2["moment0_error"][0])
+                           weights2=dataset2["moment0_error"][0],
+                           xhigh=11 * u.pix)
 
 delvar_distance.distance_metric()
 
 delvar = DeltaVariance(dataset1["moment0"],
-                       weights=dataset1['moment0_error'][0]).run()
+                       weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix)
 
 delvar_val = delvar.delta_var
 delvar_slope = delvar.slope
+
+# Change boundary conditions
+
+delvar_fill = \
+    DeltaVariance(dataset1["moment0"],
+                  weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix,
+                                                            boundary='fill')
+
+delvar_fill_val = delvar_fill.delta_var
+delvar_fill_slope = delvar_fill.slope
 
 # VCA/VCS
 
 from turbustat.statistics import VCA_Distance, VCS_Distance, VCA
 
 vcs_distance = VCS_Distance(dataset1["cube"],
-                            dataset2["cube"]).distance_metric()
+                            dataset2["cube"],
+                            high_cut=0.3 / u.pix,
+                            low_cut=3e-2 / u.pix).distance_metric()
 
 vcs_val = vcs_distance.vcs1.ps1D
 vcs_slopes = vcs_distance.vcs1.slope
@@ -184,8 +197,8 @@ pca.run(mean_sub=True, eigen_cut_method='proportion',
         spectral_output_unit=u.m / u.s)
 
 pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
-                "intercept": pca.intercept,
-                "sonic_length": pca.sonic_length()[0]}
+                "intercept": pca.intercept.value,
+                "sonic_length": pca.sonic_length()[0].value}
 
 # Now get those values using mcmc
 pca.run(mean_sub=True, eigen_cut_method='proportion',
@@ -197,8 +210,8 @@ pca.run(mean_sub=True, eigen_cut_method='proportion',
 
 pca_fit_vals["index_bayes"] = pca.index
 pca_fit_vals["gamma_bayes"] = pca.gamma
-pca_fit_vals["intercept_bayes"] = pca.intercept
-pca_fit_vals["sonic_length_bayes"] = pca.sonic_length()[0]
+pca_fit_vals["intercept_bayes"] = pca.intercept.value
+pca_fit_vals["sonic_length_bayes"] = pca.sonic_length()[0].value
 
 # Record the number of eigenvalues kept by the auto method
 pca.run(mean_sub=True, n_eigs='auto', min_eigval=0.001,
@@ -313,6 +326,8 @@ np.savez_compressed('checkVals',
                     genus_val=genus_val,
                     delvar_val=delvar_val,
                     delvar_slope=delvar_slope,
+                    delvar_fill_val=delvar_fill_val,
+                    delvar_fill_slope=delvar_fill_slope,
                     vcs_val=vcs_val,
                     vcs_slopes=vcs_slopes,
                     vca_val=vca_val,

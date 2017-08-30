@@ -1,2 +1,2 @@
 
-from wavelet_transform import Wavelet_Distance, Wavelet
+from .wavelet_transform import Wavelet_Distance, Wavelet

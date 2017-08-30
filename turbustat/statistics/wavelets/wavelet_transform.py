@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-
+from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
@@ -118,7 +118,8 @@ class Wavelet(BaseStatisticMixIn):
             psi = MexicanHat2DKernel(an)
 
             self._Wf[i] = \
-                convolve_fft(self.data, psi).real * an**factor
+                convolve_fft(self.data, psi, normalize_kernel=False).real * \
+                an**factor
 
     @property
     def Wf(self):
