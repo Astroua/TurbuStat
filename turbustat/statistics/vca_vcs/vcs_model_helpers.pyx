@@ -151,6 +151,14 @@ def Int4(double r, double k1, double alphae):
     return value, err
 
 
+def Int5(double k, double k0, double alphae):
+    '''
+    Integral of F_eps^2. Needed for the normalization of C_eps
+    '''
+
+    return = 0.5 * k0**(0.5 * (1 - alphae)) * gamma(0.5 * (alphae - 1))
+
+
 # Window functions
 
 def gaussian_beam(double theta, double theta_0):
