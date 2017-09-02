@@ -22,17 +22,17 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
         # Eq. B2
         Int = Int3(r, k_cut, alphae)[0]
 
-        return 1 - 4 * pi * Int / norm_factor
+        return 1 + 4 * pi * r**(alphae - 3) * Int / norm_factor
     elif alphae == 3:
         # No density dependence.
-        return 1. / norm_factor
+        return 1.
     # Shallow
     elif alphae > 1:
         # For alphae between 1 and 3
 
         Int = Int4(r, k_cut, alphae)[0]
 
-        return 1 - 4 * pi * Int / norm_factor
+        return 1 + 4 * pi * r**(alphae - 3) * Int / norm_factor
 
     else:
         raise ValueError("Solution not defined for alphae <= 1.")
