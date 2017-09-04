@@ -1,5 +1,5 @@
 # Licensed under an MIT open source license - see LICENSE
-from __future__ import print_function, absolute_import, division
+
 
 import numpy as np
 import astropy.units as u
@@ -108,17 +108,18 @@ class PCA(BaseStatisticMixIn):
 
         '''
 
+        if n_eigs == 'auto' and min_eigval is None:
+            raise ValueError("min_eigval must be given when using "
+                             "n_eigs='auto'.")
+
         self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
 
-        all_eigsvals, eigvecs = np.linalg.eig(self.cov_matrix)
+        all_eigsvals, eigvecs = np.linalg.eigh(self.cov_matrix)
         all_eigsvals = np.real_if_close(all_eigsvals)
         eigvecs = eigvecs[:, np.argsort(all_eigsvals)[::-1]]
         all_eigsvals = np.sort(all_eigsvals)[::-1]  # Sort by maximum
 
         if n_eigs == 'auto':
-            if min_eigval is None:
-                raise ValueError("min_eigval must be given when using "
-                                 "n_eigs='auto'.")
             self.n_eigs = set_n_eigs(all_eigsvals, min_eigval,
                                      method=eigen_cut_method)
         elif n_eigs == -1:
@@ -204,7 +205,7 @@ class PCA(BaseStatisticMixIn):
             n_eigs = self.n_eigs
 
         if n_eigs > 0:
-            iterat = range(n_eigs)
+            iterat = xrange(n_eigs)
         elif n_eigs < 0:
             # We're looking for the noisy components whenever n_eigs < 0
             # Find where we have valid eigenvalues, and use the last
@@ -865,8 +866,8 @@ class PCA_Distance(object):
         if verbose:
             import matplotlib.pyplot as p
 
-            print("Proportions of total variance: 1 - %0.3f, 2 - %0.3f" %
-                  (self.pca1.var_proportion, self.pca2.var_proportion))
+            print "Proportions of total variance: 1 - %0.3f, 2 - %0.3f" % \
+                (self.pca1.var_proportion, self.pca2.var_proportion)
 
             p.subplot(2, 2, 1)
             p.imshow(
