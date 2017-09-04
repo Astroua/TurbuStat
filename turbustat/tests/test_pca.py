@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
-
+import astropy.constants as const
 
 try:
     import emcee
@@ -33,43 +33,60 @@ def test_PCA_method():
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
 
-    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    assert_between(fit_values["index"], tester.index_error_range[0],
-                   tester.index_error_range[1])
-    assert_between(fit_values["gamma"], tester.gamma_error_range[0],
-                   tester.gamma_error_range[1])
-    assert_between(fit_values["intercept"],
-                   tester.intercept_error_range[0].value,
-                   tester.intercept_error_range[1].value)
-    assert_between(fit_values["sonic_length"],
-                   tester.sonic_length()[1][0].value,
-                   tester.sonic_length()[1][1].value)
+    npt.assert_allclose(tester.spatial_width.value,
+                        computed_data['pca_spatial_widths'])
+    npt.assert_allclose(tester.spectral_width.value,
+                        computed_data['pca_spectral_widths'])
+
+    # Use synthetic data in the test below. The lack of real data in the data
+    # used for unit tests causes slight variations in the results.
+
+    # fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+    # assert_between(fit_values["index"], tester.index_error_range[0],
+    #                tester.index_error_range[1])
+    # assert_between(fit_values["gamma"], tester.gamma_error_range[0],
+    #                tester.gamma_error_range[1])
+    # assert_between(fit_values["intercept"],
+    #                tester.intercept_error_range[0].value,
+    #                tester.intercept_error_range[1].value)
+    # assert_between(fit_values["sonic_length"],
+    #                tester.sonic_length()[1][0].value,
+    #                tester.sonic_length()[1][1].value)
 
 
+@pytest.mark.parametrize("method", ['odr', 'bayes'])
 @pytest.mark.skipif("not EMCEE_INSTALLED")
-def test_PCA_method_w_bayes():
-    tester = PCA(dataset1["cube"])
-    tester.run(mean_sub=True, eigen_cut_method='proportion',
-               min_eigval=0.75,
-               spatial_method='contour',
-               spectral_method='walk-down',
-               fit_method='bayes', brunt_beamcorrect=False,
-               spectral_output_unit=u.m / u.s)
-    slice_used = slice(0, tester.n_eigs)
-    npt.assert_allclose(tester.eigvals[slice_used],
-                        computed_data['pca_val'][slice_used])
+def test_PCA_fitting(method):
 
-    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    assert_between(fit_values["index_bayes"], tester.index_error_range[0],
-                   tester.index_error_range[1])
-    assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
-                   tester.gamma_error_range[1])
-    assert_between(fit_values["intercept_bayes"],
-                   tester.intercept_error_range[0].value,
-                   tester.intercept_error_range[1].value)
-    assert_between(fit_values["sonic_length_bayes"],
-                   tester.sonic_length()[1][0].value,
-                   tester.sonic_length()[1][1].value)
+    tester = PCA(dataset1["cube"])
+
+    index = 2.
+    intercept = 1.
+    err = 0.02
+
+    tester._spectral_width = (intercept * np.arange(10)**index +
+                              err * np.random.random(10)) * u.m / u.s
+    tester._spectral_width_error = np.array([err] * 10) * u.m / u.s
+    tester._spatial_width = (np.arange(10) + err * np.random.random(10)) * \
+        u.pix
+    tester._spatial_width_error = np.array([err] * 10) * u.pix
+
+    tester.fit_plaw(fit_method=method)
+
+    npt.assert_allclose(tester.index, index, atol=0.05)
+    npt.assert_allclose(tester.intercept.value, 1, atol=0.05)
+    npt.assert_allclose(tester.gamma, (index - 0.03) / 1.07, atol=0.05)
+
+    # Check the sonic length
+    T_k = 10 * u.K
+    mu = 1.36
+    c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
+    c_s = c_s.to(u.m / u.s)
+    l_s = np.power(c_s / 1., 1. / index)
+
+    npt.assert_allclose(l_s.value,
+                        tester.sonic_length(use_gamma=False)[0].value,
+                        atol=0.05)
 
 
 @pytest.mark.parametrize(("method", "min_eigval"),

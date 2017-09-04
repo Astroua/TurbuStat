@@ -186,7 +186,6 @@ skewness_nonper_val = tester.skewness_hist[1]
 from turbustat.statistics import PCA_Distance, PCA
 pca_distance = PCA_Distance(dataset1["cube"],
                             dataset2["cube"]).distance_metric()
-pca_val = pca_distance.pca1.eigvals
 
 pca = PCA(dataset1["cube"], distance=250 * u.pc)
 pca.run(mean_sub=True, eigen_cut_method='proportion',
@@ -195,6 +194,10 @@ pca.run(mean_sub=True, eigen_cut_method='proportion',
         spectral_method='walk-down',
         fit_method='odr', brunt_beamcorrect=False,
         spectral_output_unit=u.m / u.s)
+
+pca_val = pca.eigvals
+pca_spectral_widths = pca.spectral_width.value
+pca_spatial_widths = pca.spatial_width.value
 
 pca_fit_vals = {"index": pca.index, "gamma": pca.gamma,
                 "intercept": pca.intercept.value,
@@ -344,6 +347,8 @@ np.savez_compressed('checkVals',
                     skewness_nonper_val=skewness_nonper_val,
                     pca_val=pca_val,
                     pca_fit_vals=pca_fit_vals,
+                    pca_spectral_widths=pca_spectral_widths,
+                    pca_spatial_widths=pca_spatial_widths,
                     scf_val=scf_val,
                     scf_slope_wlimits=scf_slope_wlimits,
                     scf_slope_wlimits_2D=scf_slope_wlimits_2D,
