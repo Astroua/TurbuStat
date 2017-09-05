@@ -44,8 +44,8 @@ The simplest way to run the entire process is using the `~turbustat.statistics.P
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=False)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
     Index: 0.64 (0.62, 0.66)
-    Gamma: 0.55 (0.51, 0.58)
-    Sonic length: 1.446e-01 (1.358e-01, 1.534e-01) pc at 10.0 K
+    Gamma: 0.55 (0.51, 0.59)
+    Sonic length: 1.449e-01 (1.360e-01, 1.538e-01) pc at 10.0 K
 
 .. image:: images/pca_design4_default.png
 
@@ -56,9 +56,9 @@ Since this data is simulated, this example does not account for a finite beam si
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
-    Index: 0.56 (0.53, 0.58)
-    Gamma: 0.40 (0.36, 0.44)
-    Sonic length: 9.161e-02 (8.171e-02, 1.015e-01) pc at 10.0 K
+    Index: 0.54 (0.51, 0.57)
+    Gamma: 0.37 (0.33, 0.42)
+    Sonic length: 8.739e-02 (7.589e-02, 9.888e-01) pc at 10.0 K
 
 .. image:: images/pca_design4_beamcorr.png
 
@@ -68,9 +68,9 @@ Both of the PCA runs above do *not* subtract the mean of the data before creatin
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec, mean_sub=True)  # doctest: +SKIP
     Proportion of Variance kept: 0.999808532503
-    Index: 0.76 (0.71, 0.81)
-    Gamma: 0.68 (0.63, 0.73)
-    Sonic length: 9.121e-02 (8.437e-02, 9.805e-02) pc at 10.0 K
+    Index: 0.70 (0.67, 0.74)
+    Gamma: 0.63 (0.59, 0.66)
+    Sonic length: 1.004e-01 (9.384e-02, 1.070e-01) pc at 10.0 K
 
 .. image:: images/pca_design4_beamcorr.png
 
@@ -150,9 +150,9 @@ Additional arguments for setting the chain properties can be passed as well. See
 The interesting outputs from this analysis are estimates of the slopes of the size-line width relation (:math:`\gamma`) and the sonic length:
 
     >>> pca.gamma  # doctest: +SKIP
-    0.426
+    0.389
     >>> pca.sonic_length(T_k=10 * u.K, mu=1.36)  # doctest: +SKIP
-    (<Quantity 0.09733363769819545 pc>, <Quantity [ 0.06626515, 0.14449371] pc>)
+    (<Quantity 0.09127872189128151 pc>, <Quantity [ 0.04895106, 0.15262456] pc>)
 
 Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 
