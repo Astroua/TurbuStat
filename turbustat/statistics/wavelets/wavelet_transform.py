@@ -219,9 +219,9 @@ class Wavelet(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk / u.pix
+                    self._brk = 10**model.brk * u.pix
                     self._brk_err = np.log(10) * self.brk.value * \
-                        model.brk_err / u.pix
+                        model.brk_err * u.pix
 
                     self._slope = model.slopes
                     self._slope_err = model.slope_errs
