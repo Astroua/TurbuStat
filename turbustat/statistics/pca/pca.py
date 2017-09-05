@@ -329,7 +329,7 @@ class PCA(BaseStatisticMixIn):
     def find_spatial_widths(self, method='contour',
                             brunt_beamcorrect=True, beam_fwhm=None,
                             output_unit=u.pix, distance=None,
-                            diagnosticplots=False):
+                            diagnosticplots=False, **fit_kwargs):
         '''
         Derive the spatial widths using the autocorrelation of the
         eigenimages.
@@ -360,6 +360,9 @@ class PCA(BaseStatisticMixIn):
         diagnosticplots : bool, optional
             Plot the first 9 autocorrelation images with the contour fits.
             *Only implemented for* `method='contour'`.
+        fit_kwargs : dict, optional
+            Used when method is 'contour'. Passed to
+            `turbustat.statistics.stats_utils.EllipseModel.estimate_stderrs`.
 
         '''
         # Try reading beam width from the header is it is not given.
@@ -375,7 +378,8 @@ class PCA(BaseStatisticMixIn):
                             brunt_beamcorrect=brunt_beamcorrect,
                             beam_fwhm=beam_fwhm,
                             spatial_cdelt=self.header['CDELT2'] * u.deg,
-                            diagnosticplots=diagnosticplots)
+                            diagnosticplots=diagnosticplots,
+                            **fit_kwargs)
 
         self._spatial_width = self._spatial_width * u.pix
         self._spatial_width_error = self._spatial_width_error * u.pix
