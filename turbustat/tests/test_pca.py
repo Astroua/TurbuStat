@@ -38,20 +38,48 @@ def test_PCA_method():
     npt.assert_allclose(tester.spectral_width.value,
                         computed_data['pca_spectral_widths'])
 
-    # Use synthetic data in the test below. The lack of real data in the data
-    # used for unit tests causes slight variations in the results.
+    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+    assert_between(fit_values["index"], tester.index_error_range[0],
+                   tester.index_error_range[1])
+    assert_between(fit_values["gamma"], tester.gamma_error_range[0],
+                   tester.gamma_error_range[1])
+    assert_between(fit_values["intercept"],
+                   tester.intercept_error_range[0].value,
+                   tester.intercept_error_range[1].value)
+    assert_between(fit_values["sonic_length"],
+                   tester.sonic_length()[1][0].value,
+                   tester.sonic_length()[1][1].value)
 
-    # fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
-    # assert_between(fit_values["index"], tester.index_error_range[0],
-    #                tester.index_error_range[1])
-    # assert_between(fit_values["gamma"], tester.gamma_error_range[0],
-    #                tester.gamma_error_range[1])
-    # assert_between(fit_values["intercept"],
-    #                tester.intercept_error_range[0].value,
-    #                tester.intercept_error_range[1].value)
-    # assert_between(fit_values["sonic_length"],
-    #                tester.sonic_length()[1][0].value,
-    #                tester.sonic_length()[1][1].value)
+
+@pytest.mark.skipif("not EMCEE_INSTALLED")
+def test_PCA_method_w_bayes():
+    tester = PCA(dataset1["cube"])
+    tester.run(mean_sub=True, eigen_cut_method='proportion',
+               min_eigval=0.75,
+               spatial_method='contour',
+               spectral_method='walk-down',
+               fit_method='bayes', brunt_beamcorrect=False,
+               spectral_output_unit=u.m / u.s)
+    slice_used = slice(0, tester.n_eigs)
+    npt.assert_allclose(tester.eigvals[slice_used],
+                        computed_data['pca_val'][slice_used])
+
+    npt.assert_allclose(tester.spatial_width.value,
+                        computed_data['pca_spatial_widths'])
+    npt.assert_allclose(tester.spectral_width.value,
+                        computed_data['pca_spectral_widths'])
+
+    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+    assert_between(fit_values["index_bayes"], tester.index_error_range[0],
+                   tester.index_error_range[1])
+    assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
+                   tester.gamma_error_range[1])
+    assert_between(fit_values["intercept_bayes"],
+                   tester.intercept_error_range[0].value,
+                   tester.intercept_error_range[1].value)
+    assert_between(fit_values["sonic_length_bayes"],
+                   tester.sonic_length()[1][0].value,
+                   tester.sonic_length()[1][1].value)
 
 
 @pytest.mark.parametrize("method", ['odr', 'bayes'])
