@@ -220,11 +220,11 @@ def bayes_linear(x, y, x_err, y_err, nWalkers=10, nBurn=100, nSample=1000,
         p.ylim([y.min() - y_range / 4, y.max() + y_range / 4])
         p.xlim([x.min() - x_range / 4, x.max() + x_range / 4])
 
-        print("Slope: {0} ({1}, {2})").format(slope, error_intervals[0, 0],
-                                              error_intervals[0, 1])
-        print("Intercept: {0} ({1}, {2})").format(intercept,
-                                                  error_intervals[1, 0],
-                                                  error_intervals[1, 1])
+        print("Slope: {0} ({1}, {2})".format(slope, error_intervals[0, 0],
+                                             error_intervals[0, 1]))
+        print("Intercept: {0} ({1}, {2})".format(intercept,
+                                                 error_intervals[1, 0],
+                                                 error_intervals[1, 1]))
 
         p.tight_layout()
         p.show()
