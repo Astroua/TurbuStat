@@ -303,8 +303,7 @@ class EllipseModel(object):
         if a > c:
             phi += 0.5 * np.pi
 
-        self.params = np.nan_to_num([x0, y0, width, height, phi]).tolist()
-        self.params = np.array([float(np.real(x)) for x in self.params])
+        self.params = np.nan_to_num([x0, y0, width, height, phi])
 
         return True
 
