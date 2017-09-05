@@ -15,7 +15,7 @@ import astropy.units as u
 
 def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                     diagnosticplots=False, brunt_beamcorrect=True,
-                    beam_fwhm=None, spatial_cdelt=None):
+                    beam_fwhm=None, spatial_cdelt=None, **fit_kwargs):
     """
     Estimate spatial widths from a set of autocorrelation images.
 
@@ -49,6 +49,9 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
     spatial_cdelt : {None, astropy.units.Quantity}, optional
         The angular scale of a pixel in the given data. Must be given when
         using brunt_beamcorrect.
+    fit_kwargs : dict, optional
+        Used when method is 'contour'. Passed to
+        `turbustat.statistics.stats_utils.EllipseModel.estimate_stderrs`.
 
     Returns
     -------
@@ -173,7 +176,7 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 if pidx.shape[0] > 0:
                     good_path = paths[pidx[0]]
 
-                    output = fit_2D_ellipse(good_path.vertices)
+                    output = fit_2D_ellipse(good_path.vertices, **fit_kwargs)
                     (y_scales[idx], x_scales[idx], y_scale_errors[idx],
                      x_scale_errors[idx], ellip) = output
 
@@ -372,13 +375,14 @@ def WidthEstimate1D(inList, method='walk-down'):
     return scales, scale_errors
 
 
-def fit_2D_ellipse(pts):
+def fit_2D_ellipse(pts, **bootstrap_kwargs):
     '''
     Return ellipse widths
     '''
 
     ellip = EllipseModel()
     ellip.estimate(pts)
+    ellip.estimate_stderrs(pts, **bootstrap_kwargs)
 
     xwidth = ellip.params[2] / np.sqrt(2)
     ywidth = ellip.params[3] / np.sqrt(2)
