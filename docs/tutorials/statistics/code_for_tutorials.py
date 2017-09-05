@@ -27,7 +27,7 @@ run_delvar = False
 run_dendro = False
 run_genus = False
 run_mvc = False
-run_pca = False
+run_pca = True
 run_pdf = False
 run_pspec = False
 run_scf = False
@@ -191,7 +191,7 @@ if run_pca:
             beam_fwhm=20 * u.arcsec, brunt_beamcorrect=True,
             save_name=osjoin(fig_path, "pca_design4_beamcorr.png"))
 
-    # Without mean_sub
+    # With mean_sub
     pca_ms = PCA(cube, distance=250. * u.pc)
     pca_ms.run(verbose=True, mean_sub=True,
                min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,

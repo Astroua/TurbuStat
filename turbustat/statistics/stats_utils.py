@@ -2,6 +2,7 @@
 from __future__ import print_function, absolute_import, division
 
 import numpy as np
+import math
 from scipy.optimize import leastsq
 import astropy.wcs as wcs
 
@@ -152,34 +153,36 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
     return bins
 
 
-class EllipseModel():
-
-    """
-
-    From scikit-image (https://github.com/scikit-image/scikit-image). A copy
-    of the license is below.
-
-    Total least squares estimator for 2D ellipses.
+class EllipseModel(object):
+    """Total least squares estimator for 2D ellipses.
     The functional model of the ellipse is::
         xt = xc + a*cos(theta)*cos(t) - b*sin(theta)*sin(t)
         yt = yc + a*sin(theta)*cos(t) + b*cos(theta)*sin(t)
         d = sqrt((x - xt)**2 + (y - yt)**2)
     where ``(xt, yt)`` is the closest point on the ellipse to ``(x, y)``. Thus
     d is the shortest distance from the point to the ellipse.
-    This estimator minimizes the squared distances from all points to the
-    ellipse::
-        min{ sum(d_i**2) } = min{ sum((x_i - xt)**2 + (y_i - yt)**2) }
-    Thus you have ``2 * N`` equations (x_i, y_i) for ``N + 5`` unknowns (t_i,
-    xc, yc, a, b, theta), which gives you an effective redundancy of ``N - 5``.
+    The estimator is based on a least squares minimization. The optimal
+    solution is computed directly, no iterations are required. This leads
+    to a simple, stable and robust fitting method.
     The ``params`` attribute contains the parameters in the following order::
         xc, yc, a, b, theta
-    A minimum number of 5 points is required to solve for the parameters.
-
     Attributes
     ----------
     params : tuple
-        Ellipse model parameters in the following order `xc`, `yc`, `a`,
-        `b`, `theta`.
+        Ellipse model parameters in the following order `xc`, `yc`, `a`, `b`,
+        `theta`.
+    Examples
+    --------
+    >>> xy = EllipseModel().predict_xy(np.linspace(0, 2 * np.pi, 25),
+    ...                                params=(10, 15, 4, 8, np.deg2rad(30)))
+    >>> ellipse = EllipseModel()
+    >>> ellipse.estimate(xy)
+    True
+    >>> np.round(ellipse.params, 2)
+    array([ 10.  ,  15.  ,   4.  ,   8.  ,   0.52])
+    >>> np.round(abs(ellipse.residuals(xy)), 5)
+    array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+            0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
 
     Copyright (C) 2011, the scikit-image team
     All rights reserved.
@@ -224,87 +227,91 @@ class EllipseModel():
         -------
         success : bool
             True, if model estimation succeeds.
+        References
+        ----------
+        .. [1] Halir, R.; Flusser, J. "Numerically stable direct least squares
+               fitting of ellipses". In Proc. 6th International Conference in
+               Central Europe on Computer Graphics and Visualization.
+               WSCG (Vol. 98, pp. 125-132).
         """
-
-        if data.ndim != 2 or data.shape[1] != 2:
-                raise ValueError('Input data must have shape (N, 2).')
+        # Original Implementation: Ben Hammel, Nick Sullivan-Molina
+        # another REFERENCE: [2] http://mathworld.wolfram.com/Ellipse.html
+        # _check_data_dim(data, dim=2)
 
         x = data[:, 0]
         y = data[:, 1]
 
-        N = data.shape[0]
+        # Quadratic part of design matrix [eqn. 15] from [1]
+        D1 = np.vstack([x ** 2, x * y, y ** 2]).T
+        # Linear part of design matrix [eqn. 16] from [1]
+        D2 = np.vstack([x, y, np.ones(len(x))]).T
 
-        # pre-allocate jacobian for all iterations
-        A = np.zeros((N + 5, 2 * N), dtype=np.double)
-        # same for all iterations: xc, yc
-        A[0, :N] = -1
-        A[1, N:] = -1
+        # forming scatter matrix [eqn. 17] from [1]
+        S1 = np.dot(D1.T, D1)
+        S2 = np.dot(D1.T, D2)
+        S3 = np.dot(D2.T, D2)
 
-        diag_idxs = np.diag_indices(N)
+        # Constraint matrix [eqn. 18]
+        C1 = np.array([[0., 0., 2.], [0., -1., 0.], [2., 0., 0.]])
 
-        def fun(params):
-            xyt = self.predict_xy(params[5:], params[:5])
-            fx = x - xyt[:, 0]
-            fy = y - xyt[:, 1]
-            return np.append(fx, fy)
+        try:
+            # Reduced scatter matrix [eqn. 29]
+            M = np.linalg.inv(C1).dot(
+                S1 - np.dot(S2, np.linalg.inv(S3)).dot(S2.T))
+        except np.linalg.LinAlgError:  # LinAlgError: Singular matrix
+            return False
 
-        def Dfun(params):
-            xc, yc, a, b, theta = params[:5]
-            t = params[5:]
+        # M*|a b c >=l|a b c >. Find eigenvalues and eigenvectors
+        # from this equation [eqn. 28]
+        eig_vals, eig_vecs = np.linalg.eig(M)
 
-            ct = np.cos(t)
-            st = np.sin(t)
-            ctheta = np.cos(theta)
-            stheta = np.sin(theta)
+        # eigenvector must meet constraint 4ac - b^2 to be valid.
+        cond = 4 * np.multiply(eig_vecs[0, :], eig_vecs[2, :]) \
+               - np.power(eig_vecs[1, :], 2)
+        a1 = eig_vecs[:, (cond > 0)]
+        # seeks for empty matrix
+        if 0 in a1.shape or len(a1.ravel()) != 3:
+            return False
+        a, b, c = a1.ravel()
 
-            # derivatives for fx, fy in the following order:
-            #       xc, yc, a, b, theta, t_i
+        # |d f g> = -S3^(-1)*S2^(T)*|a b c> [eqn. 24]
+        a2 = np.dot(-np.linalg.inv(S3), S2.T).dot(a1)
+        d, f, g = a2.ravel()
 
-            # fx
-            A[2, :N] = - ctheta * ct
-            A[3, :N] = stheta * st
-            A[4, :N] = a * stheta * ct + b * ctheta * st
-            A[5:, :N][diag_idxs] = a * ctheta * st + b * stheta * ct
-            # fy
-            A[2, N:] = - stheta * ct
-            A[3, N:] = - ctheta * st
-            A[4, N:] = - a * ctheta * ct + b * stheta * st
-            A[5:, N:][diag_idxs] = a * stheta * st - b * ctheta * ct
+        # eigenvectors are the coefficients of an ellipse in general form
+        # a*x^2 + 2*b*x*y + c*y^2 + 2*d*x + 2*f*y + g = 0 (eqn. 15) from [2]
+        b /= 2.
+        d /= 2.
+        f /= 2.
 
-            return A
+        # finding center of ellipse [eqn.19 and 20] from [2]
+        x0 = (c * d - b * f) / (b ** 2. - a * c)
+        y0 = (a * f - b * d) / (b ** 2. - a * c)
 
-        # initial guess of parameters using a circle model
-        params0 = np.empty((N + 5, ), dtype=np.double)
-        xc0 = x.mean()
-        yc0 = y.mean()
-        r0 = np.sqrt((x - xc0)**2 + (y - yc0)**2).mean()
-        params0[:5] = (xc0, yc0, r0, 0, 0)
-        params0[5:] = np.arctan2(y - yc0, x - xc0)
+        # Find the semi-axes lengths [eqn. 21 and 22] from [2]
+        numerator = a * f ** 2 + c * d ** 2 + g * b ** 2 \
+                    - 2 * b * d * f - a * c * g
+        term = np.sqrt((a - c) ** 2 + 4 * b ** 2)
+        denominator1 = (b ** 2 - a * c) * (term - (a + c))
+        denominator2 = (b ** 2 - a * c) * (- term - (a + c))
+        width = np.sqrt(2 * numerator / denominator1)
+        height = np.sqrt(2 * numerator / denominator2)
 
-        params, pcov = leastsq(fun, params0, Dfun=Dfun, col_deriv=True,
-                               full_output=True)[:2]
+        # angle of counterclockwise rotation of major-axis of ellipse
+        # to x-axis [eqn. 23] from [2].
+        phi = 0.5 * np.arctan((2. * b) / (a - c))
+        if a > c:
+            phi += 0.5 * np.pi
 
-        self.params = params[:5]
-
-        resids = self.residuals(data)
-
-        dof = N - 5
-
-        if dof > 0 and pcov is not None:
-            s_sq = (resids**2).sum() / dof
-            pcov = pcov * s_sq
-        else:
-            pcov = np.zeros((5, 5)) * np.NaN
-
-        errors = np.sqrt(np.abs(pcov.diagonal()))
-
-        self.param_errs = errors
+        self.params = np.nan_to_num([x0, y0, width, height, phi])
 
         return True
 
     def residuals(self, data):
-        """Determine residuals of data to model.
+        """
+        Determine residuals of data to model.
         For each point the shortest distance to the ellipse is returned.
+
         Parameters
         ----------
         data : (N, 2) array
@@ -315,13 +322,12 @@ class EllipseModel():
             Residual for each data point.
         """
 
-        if data.ndim != 2 or data.shape[1] != 2:
-                raise ValueError('Input data must have shape (N, 2).')
+        # _check_data_dim(data, dim=2)
 
         xc, yc, a, b, theta = self.params
 
-        ctheta = np.cos(theta)
-        stheta = np.sin(theta)
+        ctheta = math.cos(theta)
+        stheta = math.sin(theta)
 
         x = data[:, 0]
         y = data[:, 1]
@@ -329,11 +335,22 @@ class EllipseModel():
         N = data.shape[0]
 
         def fun(t, xi, yi):
-            ct = np.cos(t)
-            st = np.sin(t)
+            ct = math.cos(t)
+            st = math.sin(t)
             xt = xc + a * ctheta * ct - b * stheta * st
             yt = yc + a * stheta * ct + b * ctheta * st
-            return (xi - xt)**2 + (yi - yt)**2
+            return (xi - xt) ** 2 + (yi - yt) ** 2
+
+        # def Dfun(t, xi, yi):
+        #     ct = math.cos(t)
+        #     st = math.sin(t)
+        #     xt = xc + a * ctheta * ct - b * stheta * st
+        #     yt = yc + a * stheta * ct + b * ctheta * st
+        #     dfx_t = - 2 * (xi - xt) * (- a * ctheta * st
+        #                                - b * stheta * ct)
+        #     dfy_t = - 2 * (yi - yt) * (- a * stheta * st
+        #                                + b * ctheta * ct)
+        #     return [dfx_t + dfy_t]
 
         residuals = np.empty((N, ), dtype=np.double)
 
@@ -367,17 +384,96 @@ class EllipseModel():
 
         if params is None:
             params = self.params
+
         xc, yc, a, b, theta = params
 
         ct = np.cos(t)
         st = np.sin(t)
-        ctheta = np.cos(theta)
-        stheta = np.sin(theta)
+        ctheta = math.cos(theta)
+        stheta = math.sin(theta)
 
         x = xc + a * ctheta * ct - b * stheta * st
         y = yc + a * stheta * ct + b * ctheta * st
 
         return np.concatenate((x[..., None], y[..., None]), axis=t.ndim)
+
+    def estimate_stderrs(self, data, niters=100, alpha=0.6827, debug=False):
+        '''
+        Use residual bootstrapping to estimate the uncertainty on each
+        parameter. *Not part of scikit-image.*
+
+        Parameters
+        ----------
+        data : (N, 2) array
+            N points with ``(x, y)`` coordinates, respectively.
+        niters : int, optional
+            Number of bootstrap iterations. Defaults to 100.
+        alpha : float, optional
+
+        '''
+
+        if not hasattr(self, "params"):
+            raise AttributeError("Run EllipseModel.estimate first.")
+
+        if alpha < 0 or alpha >= 1.:
+            raise ValueError("alpha must be between 0 and 1.")
+
+        niters = int(niters)
+        params = np.empty((5, niters))
+
+        resid = self.residuals(data)
+
+        for i in range(niters):
+            boot_fit = EllipseModel()
+
+            resamp_resid = resid[np.random.permutation(resid.size)]
+
+            # Now we need to add the residuals to the x and y values.
+            # The residuals themselves are distances from the ellipse
+            # Assume a dirichlet prior of equal weight when adding the
+            # residuals to the x and y data, which will preserve the overall
+            # residual distance
+            prior_weights = np.random.dirichlet((1, 1), size=resid.size)
+            # We also need to randomly sample to add or subtract that distance
+            prior_dirn = np.random.choice([-1, 1], size=(resid.size, 2))
+
+            resamp_resid = np.tile(resamp_resid, (2, 1)).T * prior_weights * \
+                prior_dirn
+
+            resamp_y = data + resamp_resid
+
+            boot_fit.estimate(resamp_y)
+
+            params[:, i] = boot_fit.params
+
+        if debug:
+            import matplotlib.pyplot as plt
+
+            plt.subplot(231)
+            _ = plt.hist(params[0], bins=10)
+            plt.axvline(self.params[0])
+            plt.subplot(232)
+            _ = plt.hist(params[1], bins=10)
+            plt.axvline(self.params[1])
+            plt.subplot(233)
+            _ = plt.hist(params[2], bins=10)
+            plt.axvline(self.params[2])
+            plt.subplot(234)
+            _ = plt.hist(params[3], bins=10)
+            plt.axvline(self.params[3])
+            plt.subplot(235)
+            _ = plt.hist(params[4], bins=10)
+            plt.axvline(self.params[4])
+
+        self.percentiles = np.percentile(params,
+                                         [100 * (0.5 - alpha / 2.),
+                                          100 * (0.5 + alpha / 2.)],
+                                         axis=1)
+
+        # We're going to ASSUME the percentile regions are symmetric enough
+        # to do this. Testing on a number of data sets shows this isn't a bad
+        # assumption.
+        self.param_errs = 0.5 * (self.percentiles[1] - self.percentiles[0])
 
 
 def common_scale(wcs1, wcs2, tol=1e-5):
