@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #164 - Add segmented linear fitting for the wavelet transform; updated unit test values to include segmented fitting slopes for wavelets
 * #163 - Use Hermitian eigenvalue decomposition for PCA (fixes getting imaginary components); Update the ellipse contour fitting to use the robust fitter from skimage (fixes previous PCA test failures); updated unit test values for the change in PCA
 * #161 - python 3 support; use ci-helpers; updated astropy-helpers; consistent convolution results with astropy 2.x; new delta-variance regression test values after convolution updates; DeltaVariance_Distance.curve_distance now restricts to the region between xlow and xhigh
 * #159 - Add an elliptical power-law model for fitting 2D power-spectra. Added 2D fitting for PowerSpectrum, MVC, VCA, and SCF, along with tests for each. Unit test values updated to include the 2D slopes. Also updated the tutorials of those 4 methods to demonstrate the new fitting procedure.

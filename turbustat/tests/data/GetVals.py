@@ -18,7 +18,7 @@ from turbustat.tests._testing_data import dataset1, dataset2
 
 # Wavelet Transform
 
-from turbustat.statistics import Wavelet_Distance
+from turbustat.statistics import Wavelet_Distance, Wavelet
 
 wavelet_distance = \
     Wavelet_Distance(dataset1["moment0"],
@@ -26,6 +26,12 @@ wavelet_distance = \
 
 wavelet_val = wavelet_distance.wt1.values
 wavelet_slope = wavelet_distance.wt1.slope
+
+# Wavelet with a break
+wave_break = Wavelet(dataset1['moment0']).run(xhigh=7 * u.pix, brk=5.5 * u.pix)
+
+wavelet_slope_wbrk = wave_break.slope
+wavelet_brk_wbrk = wave_break.brk.value
 
 # MVC
 
@@ -318,6 +324,8 @@ pdf_fit_distance.distance_metric()
 np.savez_compressed('checkVals',
                     wavelet_val=wavelet_val,
                     wavelet_slope=wavelet_slope,
+                    wavelet_slope_wbrk=wavelet_slope_wbrk,
+                    wavelet_brk_wbrk=wavelet_brk_wbrk,
                     mvc_val=mvc_val,
                     mvc_slope=mvc_slope,
                     mvc_slope2D=mvc_slope2D,
