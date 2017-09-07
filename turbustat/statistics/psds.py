@@ -3,10 +3,13 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from scipy.stats import binned_statistic
+import astropy.units as u
+from astropy.coordinates import Angle
 
 
 def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
-          logspacing=True, max_bin=None, min_bin=None, return_freqs=True):
+          logspacing=True, max_bin=None, min_bin=None, return_freqs=True,
+          theta_0=None, delta_theta=None):
     '''
     Calculate the radial profile using scipy.stats.binned_statistic.
 
@@ -30,6 +33,8 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         Give the minimum value to bin to.
     return_freqs : bool, optional
         Return spatial frequencies.
+    theta_0 : list of two angles, optional
+        Provide azimuthal constraints to the averaging.
 
     Returns
     -------
@@ -45,6 +50,21 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     yy, xx = make_radial_arrays(psd2.shape)
 
     dists = np.sqrt(yy**2 + xx**2)
+    if theta_0 is not None:
+
+        if delta_theta is None:
+            raise ValueError("Must give delta_theta.")
+
+        theta_0 = theta_0.to(u.rad)
+        delta_theta = delta_theta.to(u.rad)
+
+        theta_limits = Angle([theta_0 - delta_theta, theta_0 + delta_theta])
+
+        # Define theta array
+        thetas = Angle(np.arctan2(yy, xx) * u.rad)
+
+        # Wrap around pi
+        theta_limits = theta_limits.wrap_at(np.pi * u.rad)
 
     if nbins is None:
         nbins = int(np.round(dists.max() / binsize) + 1)
@@ -79,8 +99,28 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     else:
         dist_arr = dists
 
-    ps1D, bin_edge, cts = binned_statistic(dist_arr.ravel(),
-                                           psd2.ravel(),
+    if theta_limits is not None:
+        if theta_limits[0] < theta_limits[1]:
+            azim_mask = np.logical_and(thetas >= theta_limits[0],
+                                       thetas <= theta_limits[1])
+        else:
+            azim_mask = np.logical_or(thetas >= theta_limits[0],
+                                      thetas <= theta_limits[1])
+
+        azim_mask = np.logical_or(azim_mask, azim_mask[::-1, ::-1])
+
+        # Fill in the middle angles
+        ny = np.floor(psd2.shape[0] / 2.).astype(int)
+        nx = np.floor(psd2.shape[1] / 2.).astype(int)
+
+        azim_mask[ny - 2:ny + 2, nx - 2:nx + 2] = True
+    else:
+        azim_mask = None
+
+    return azim_mask
+
+    ps1D, bin_edge, cts = binned_statistic(dist_arr[azim_mask].ravel(),
+                                           psd2[azim_mask].ravel(),
                                            bins=bins,
                                            statistic=np.nanmean)
 
@@ -89,8 +129,8 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     if not return_stddev:
         return bin_cents, ps1D
     else:
-        ps1D_stddev = binned_statistic(dist_arr.ravel(),
-                                       psd2.ravel(),
+        ps1D_stddev = binned_statistic(dist_arr[azim_mask].ravel(),
+                                       psd2[azim_mask].ravel(),
                                        bins=bins,
                                        statistic=np.nanstd)[0]
         return bin_cents, ps1D, ps1D_stddev
