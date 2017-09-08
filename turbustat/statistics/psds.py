@@ -113,7 +113,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         ny = np.floor(psd2.shape[0] / 2.).astype(int)
         nx = np.floor(psd2.shape[1] / 2.).astype(int)
 
-        azim_mask[ny - 2:ny + 2, nx - 2:nx + 2] = True
+        azim_mask[ny - 1:ny + 1, nx - 1:nx + 1] = True
     else:
         azim_mask = None
 
