@@ -71,16 +71,26 @@ class StatisticBase_PSpec2D(object):
         kwargs : passed to `~turbustat.statistics.psds.pspec`.
         '''
 
-        if return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, max_bin=max_bin, **kwargs)
-            self._stddev_flag = True
+        # Check if azimuthal constraints are given
+        if kwargs.get("theta_0"):
+            azim_constraint_flag = True
         else:
-            self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_stddev=return_stddev, max_bin=max_bin,
-                      **kwargs)
-            self._stddev_flag = False
+            azim_constraint_flag = False
+
+        out = pspec(self.ps2D, return_stddev=return_stddev,
+                    logspacing=logspacing, max_bin=max_bin, **kwargs)
+
+        self._stddev_flag = return_stddev
+        self._azim_constraint_flag = azim_constraint_flag
+
+        if return_stddev and azim_constraint_flag:
+            self._freqs, self._ps1D, self._ps1D_stddev, self._azim_mask = out
+        elif return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = out
+        elif azim_constraint_flag:
+            self._freqs, self._ps1D, self._azim_mask = out
+        else:
+            self._freqs, self._ps1D = out
 
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
