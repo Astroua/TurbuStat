@@ -38,7 +38,7 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
         raise ValueError("Solution not defined for alphae <= 1.")
 
 
-def Dz(double r, double theta, double V0, double k0, double alphav):
+def Dz(double R, double z, double V0, double k0, double alphav):
     '''
     Eq. A3 to A5.
 
@@ -47,7 +47,9 @@ def Dz(double r, double theta, double V0, double k0, double alphav):
     and can be easily included here. Do they need to be?
     '''
 
-    cdef double intone, inttwo, I_C, I_S
+    cdef double intone, inttwo, I_C, I_S, costheta, sintheta, r
+
+    r = np.sqrt(R**2 + z**2)
 
     intone = Int1(r, k0, alphav)[0]
     inttwo = Int2(r, k0, alphav)[0]
@@ -55,8 +57,11 @@ def Dz(double r, double theta, double V0, double k0, double alphav):
     I_C = (4 / 3.) * intone
     I_S = 2 * (inttwo - intone / 3.)
 
+    costheta = z / r
+    sintheta = R / r
+
     return 4 * pi * V0**2 * r**(alphav - 3) * \
-        (I_C * cos(theta)**2 + I_S * sin(theta)**2)
+        (I_C * costheta**2 + I_S * sintheta**2)
 
 
 def F_eps_norm(double alphae, double k_cut):
@@ -121,10 +126,9 @@ def Int3(double r, double k0, double alphae):
     Eq. B2 (w/o 4pi constant)
     '''
 
-    def integrand(double k):
+    def integrand(double q):
         cdef double out
-        out = k**(1 - alphae) * exp(-(k0 / k)**2) * \
-            (sin(k * r) / r)
+        out = q**(1 - alphae) * exp(-(k0 * r / q)**2) * sin(q)
         return out
 
     cdef double value, err
@@ -137,6 +141,7 @@ def Int3(double r, double k0, double alphae):
 def Int4(double r, double k1, double alphae):
     '''
     Eq. B7
+
     '''
 
     def integrand(double q):
@@ -206,6 +211,8 @@ def slab_autocorr(double z, double z_0, double z_1):
     if z >= z_0 and z <= z_1:
         out = (z_1 - z_0)**2
         return out
+    else:
+        return 0.0
 
 
 def pencil_beam_gaussian_z(double z, double sigma_z):
@@ -293,7 +300,7 @@ def gaussian_beam_gaussian_z_parallel(double R, double z, double z_0,
     cdef double w_eps_a, w_b_a
 
     # See form above. Equal to 2 * sigma_z for "theta_0"
-    w_eps_a = gaussian_beam(z, 2 * sigma_z)
+    w_eps_a = exp(-(0.25 * (z - z_0) / sigma_z)**2) / sqrt(4 * pi * sigma_z**2)
 
     w_b_a = gaussian_autocorr(R, z_0, theta0)
 
