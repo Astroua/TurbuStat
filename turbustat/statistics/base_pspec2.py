@@ -392,6 +392,9 @@ class StatisticBase_PSpec2D(object):
 
                 p.contour(mask, colors='r', linestyles='--')
 
+            if hasattr(self, "_azim_mask"):
+                p.contour(self._azim_mask, colors='r', linestyles='--')
+
             ax = p.subplot(121)
         else:
             ax = p.subplot(111)
