@@ -566,7 +566,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            fit_2D=True, fit_2D_kwargs={},
+            fit_2D=True, fit_2D_kwargs={}, radialavg_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
@@ -586,6 +586,13 @@ class SCF(BaseStatisticMixIn):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `SCF.fit_plaw`. Use the
+            `xlow` and `xhigh` keywords to provide fit limits.
+        radialavg_kwargs : dict, optional
+            Passed to `~SCF.compute_spectrum`.
         verbose : bool, optional
             Enables plotting.
         xunit : `~astropy.units.Unit`, optional
@@ -595,7 +602,8 @@ class SCF(BaseStatisticMixIn):
         '''
 
         self.compute_surface(boundary=boundary)
-        self.compute_spectrum(return_stddev=return_stddev)
+        self.compute_spectrum(return_stddev=return_stddev,
+                              **radialavg_kwargs)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if fit_2D:

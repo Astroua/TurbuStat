@@ -66,7 +66,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     def run(self, verbose=False, logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={},
+            fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
             xunit=u.pix**-1, save_name=None,
             use_wavenumber=False, **fit_kwargs):
         '''
@@ -89,6 +89,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         fit_2D_kwargs : dict, optional
             Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
+        radial_pspec_kwargs : dict, optional
+            Passed to `~PowerSpectrum.compute_radial_pspec`.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
@@ -100,7 +102,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self.compute_pspec()
         self.compute_radial_pspec(logspacing=logspacing,
-                                  return_stddev=return_stddev)
+                                  return_stddev=return_stddev,
+                                  **radial_pspec_kwargs)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
