@@ -229,7 +229,8 @@ class StatisticBase_PSpec2D(object):
         return self._brk_err
 
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
-                    high_cut=None, bootstrap=True, niters=100):
+                    high_cut=None, bootstrap=True, niters=100,
+                    use_azimmask=False):
         '''
         Model the 2D power-spectrum surface with an elliptical power-law model.
 
@@ -251,6 +252,9 @@ class StatisticBase_PSpec2D(object):
             the covariance matrix.
         niters : int, optional
             Number of bootstrap iterations.
+        use_azimmask : bool, optional
+            Use the azimuthal mask defined for the 1D spectrum, when azimuthal
+            limit have been given.
         '''
 
         # Make the data to fit to
@@ -271,6 +275,9 @@ class StatisticBase_PSpec2D(object):
         freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
         mask = clip_func(freqs_dist, self.low_cut.value, self.high_cut.value)
+
+        if hasattr(self, "_azim_mask") and use_azimmask:
+            mask = np.logical_and(mask, self._azim_mask)
 
         if not mask.any():
             raise ValueError("Limits have removed all points to fit. "
