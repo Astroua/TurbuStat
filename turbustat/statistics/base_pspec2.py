@@ -96,7 +96,8 @@ class StatisticBase_PSpec2D(object):
         self._freqs = self.freqs / u.pix
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
-                  high_cut=None, min_fits_pts=10, verbose=False):
+                  high_cut=None, min_fits_pts=10, weighted_fit=False,
+                  verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -122,6 +123,10 @@ class StatisticBase_PSpec2D(object):
         min_fits_pts : int, optional
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
+        weighted_fit : bool, optional
+            Fit using weighted least-squares. Requires `return_stddev` to be
+            enabled when computing the radial power-spectrum. The weights are
+            the inverse-squared standard deviations in each radial bin.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
@@ -143,6 +148,21 @@ class StatisticBase_PSpec2D(object):
                                           self.high_cut.value)].value)
         y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut.value,
                                          self.high_cut.value)])
+
+        if weighted_fit:
+
+            if brk is not None:
+                raise ValueError("Weighted least-squares fitting cannot be "
+                                 "used when fitting a break-point.")
+
+            if not self._stddev_flag:
+                raise ValueError("'return_stddev' must be enabled when "
+                                 "computing the radial power spectrum. "
+                                 "The WLS fit requires uncertainties.")
+
+            y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
+                                                        self.low_cut.value,
+                                                        self.high_cut.value)])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -193,7 +213,10 @@ class StatisticBase_PSpec2D(object):
         if self.brk is None:
             x = sm.add_constant(x)
 
-            model = sm.OLS(y, x, missing='drop')
+            if weighted_fit:
+                model = sm.WLS(y, x, missing='drop', weights=1 / y_err**2)
+            else:
+                model = sm.OLS(y, x, missing='drop')
 
             self.fit = model.fit()
 
