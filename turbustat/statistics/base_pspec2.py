@@ -409,18 +409,18 @@ class StatisticBase_PSpec2D(object):
                      origin="lower")
             p.colorbar()
 
+            yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
+
+            freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
+
+            mask = np.logical_and(freqs_dist >= self.low_cut.value,
+                                  freqs_dist <= self.high_cut.value)
+
+            p.contour(mask, colors='r', linestyles='--')
+
             # Plot fit contours
             if hasattr(self, 'fit2D'):
-                yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
-
-                freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
-
-                mask = np.logical_and(freqs_dist >= self.low_cut.value,
-                                      freqs_dist <= self.high_cut.value)
-
                 p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
-
-                p.contour(mask, colors='r', linestyles='--')
 
             if hasattr(self, "_azim_mask"):
                 p.contour(self._azim_mask, colors='r', linestyles='--')
