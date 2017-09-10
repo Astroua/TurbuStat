@@ -99,7 +99,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     else:
         dist_arr = dists
 
-    if theta_limits is not None:
+    if theta_0 is not None:
         if theta_limits[0] < theta_limits[1]:
             azim_mask = np.logical_and(thetas >= theta_limits[0],
                                        thetas <= theta_limits[1])
@@ -117,8 +117,6 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     else:
         azim_mask = None
 
-    return azim_mask
-
     ps1D, bin_edge, cts = binned_statistic(dist_arr[azim_mask].ravel(),
                                            psd2[azim_mask].ravel(),
                                            bins=bins,
@@ -127,13 +125,19 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
 
     if not return_stddev:
-        return bin_cents, ps1D
+        if theta_0 is not None:
+            return bin_cents, ps1D, azim_mask
+        else:
+            return bin_cents, ps1D
     else:
         ps1D_stddev = binned_statistic(dist_arr[azim_mask].ravel(),
                                        psd2[azim_mask].ravel(),
                                        bins=bins,
                                        statistic=np.nanstd)[0]
-        return bin_cents, ps1D, ps1D_stddev
+        if theta_0 is not None:
+            return bin_cents, ps1D, ps1D_stddev, azim_mask
+        else:
+            return bin_cents, ps1D, ps1D_stddev
 
 
 def make_radial_arrays(shape):
