@@ -1,12 +1,14 @@
 # Licensed under an MIT open source license - see LICENSE
 from __future__ import print_function, absolute_import, division
 
+import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+from astropy.io import fits
 
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances
+    dataset1, dataset2, computed_data, computed_distances, make_extended
 
 
 def test_PSpec_method():
@@ -64,3 +66,35 @@ def test_pspec_nonequal_shape():
 
     npt.assert_almost_equal(test.slope, test_T.slope, decimal=7)
     npt.assert_almost_equal(test.slope2D, test_T.slope2D, decimal=3)
+
+
+def test_pspec_azimlimits():
+
+    imsize = 256
+    plaw = 3.0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=0.5, theta=0.,
+                        return_psd=False)
+
+    test = PowerSpectrum(fits.PrimaryHDU(img))
+    test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
+                                  "delta_theta": 10 * u.deg},
+             fit_2D=False, weighted_fit=True)
+
+    test2 = PowerSpectrum(fits.PrimaryHDU(img))
+    test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
+                                   "delta_theta": 10 * u.deg},
+              fit_2D=False, weighted_fit=True)
+
+    test3 = PowerSpectrum(fits.PrimaryHDU(img))
+    test3.run(radial_pspec_kwargs={},
+              fit_2D=False, weighted_fit=True)
+
+    # Ensure slopes are consistent to within 2 sigma
+    npt.assert_allclose(-plaw, test3.slope, rtol=.05)
+    npt.assert_allclose(-plaw, test2.slope, rtol=.05)
+
+    # The aligned slope need not be consistent with the given plaw
+    # It should be flatter.
+    assert test.slope > test2.slope
