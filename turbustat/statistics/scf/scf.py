@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 from astropy.extern.six import string_types
 import statsmodels.api as sm
 import sys
+from warnings import warn
 
 if sys.version_info[0] >= 3:
     import _pickle as pickle
@@ -22,6 +23,7 @@ from ..fitting_utils import clip_func
 from ..elliptical_powerlaw import (fit_elliptical_powerlaw,
                                    inverse_interval_transform,
                                    inverse_interval_transform_stderr)
+from ..stats_warnings import TurbuStatMetricWarning
 
 
 class SCF(BaseStatisticMixIn):
@@ -225,17 +227,31 @@ class SCF(BaseStatisticMixIn):
         if self.scf_surface is None:
             self.compute_surface()
 
-        if return_stddev:
-            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
-                pspec(self.scf_surface, logspacing=False,
-                      return_stddev=return_stddev, return_freqs=False,
-                      **kwargs)
-            self._stddev_flag = True
+        if kwargs.get("logspacing"):
+            warn("Disabled log-spaced bins. This does not work well for the"
+                 " SCF.", TurbuStatMetricWarning)
+            kwargs.pop('logspacing')
+
+        if kwargs.get("theta_0"):
+            azim_constraint_flag = True
         else:
-            self._lags, self._scf_spectrum = \
-                pspec(self.scf_surface, logspacing=False,
-                      return_freqs=False, **kwargs)
-            self._stddev_flag = False
+            azim_constraint_flag = False
+
+        out = pspec(self.scf_surface, return_stddev=return_stddev,
+                    logspacing=False, return_freqs=False, **kwargs)
+
+        self._stddev_flag = return_stddev
+        self._azim_constraint_flag = azim_constraint_flag
+
+        if return_stddev and azim_constraint_flag:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev, \
+                self._azim_mask = out
+        elif return_stddev:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = out
+        elif azim_constraint_flag:
+            self._lags, self._scf_spectrum, self._azim_mask = out
+        else:
+            self._lags, self._scf_spectrum = out
 
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
@@ -637,6 +653,9 @@ class SCF(BaseStatisticMixIn):
                 plt.contour(self.fit2D(xx, yy), cmap='viridis')
 
                 plt.contour(mask, colors='b', linestyles='-.')
+
+            if self._azim_constraint_flag:
+                plt.contour(self._azim_mask, 'b', linestyles='-.')
 
             plt.subplot(2, 2, 2)
             plt.hist(self.scf_surface.ravel())
