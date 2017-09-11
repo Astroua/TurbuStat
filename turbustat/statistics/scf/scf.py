@@ -392,7 +392,7 @@ class SCF(BaseStatisticMixIn):
         return 10**model_values
 
     def fit_2Dplaw(self, fit_method='LevMarq', p0=(), xlow=None,
-                   xhigh=None, bootstrap=True, niters=100):
+                   xhigh=None, bootstrap=True, niters=100, use_azimmask=False):
         '''
         Model the 2D power-spectrum surface with an elliptical power-law model.
 
@@ -414,6 +414,9 @@ class SCF(BaseStatisticMixIn):
             the covariance matrix.
         niters : int, optional
             Number of bootstrap iterations.
+        use_azimmask : bool, optional
+            Use the azimuthal mask defined for the 1D spectrum, when azimuthal
+            limit have been given.
         '''
 
         # Adjust the distance based on the separation of the lags
@@ -441,6 +444,9 @@ class SCF(BaseStatisticMixIn):
         dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
         mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+        if hasattr(self, "_azim_mask") and use_azimmask:
+            mask = np.logical_and(mask, self._azim_mask)
 
         if not mask.any():
             raise ValueError("Limits have removed all lag values. Make xlow"
