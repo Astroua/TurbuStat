@@ -42,11 +42,11 @@ def rfft_to_fft(image, use_pyfftw=True, **pyfftw_kwargs):
     last_dim = image.shape[-1]
 
     if use_pyfftw:
-        if not PYFFTW_FLAG:
+        if PYFFTW_FLAG:
+            fft_abs = np.abs(rfftn(image, **pyfftw_kwargs)())
+        else:
             use_pyfftw = False
             warn("pyfftw is not installed")
-
-        fft_abs = np.abs(rfftn(image, **pyfftw_kwargs)())
 
     if not use_pyfftw:
         fft_abs = np.abs(np.fft.rfftn(image))
