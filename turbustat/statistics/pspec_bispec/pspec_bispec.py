@@ -55,12 +55,22 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self):
+    def compute_pspec(self, use_pyfftw=True, **pyfft_kwargs):
         '''
         Compute the 2D power spectrum.
+
+        Parameters
+        ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
 
-        fft = fftshift(rfft_to_fft(self.weighted_data))
+        fft = fftshift(rfft_to_fft(self.weighted_data, use_pyfftw=use_pyfftw,
+                                   **pyfft_kwargs))
 
         self._ps2D = np.power(fft, 2.)
 
