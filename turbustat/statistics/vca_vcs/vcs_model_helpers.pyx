@@ -2,6 +2,8 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.special import gamma, erf, erfc, hyp1f1
+from mpmath import hyper
+
 cimport cython
 
 from libc.math cimport sqrt, exp, sin, cos, atan
@@ -23,12 +25,13 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
 
     '''
 
-    cdef double Int
+    cdef double Int, kr, nu
 
     # Steep
     if alphae > 3:
         # Eq. B2
-        Int = Int3(r, k_cut, alphae)[0]
+        # Int = Int3(r, k_cut, alphae)[0]
+        Int = Int3_analytic(r, k_cut, alphae)
 
         return 1 + 4 * pi * r**(alphae - 3) * Int / norm_factor
     elif alphae == 3:
@@ -39,12 +42,10 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
         # For alphae between 1 and 3. See full solution above and in B7.
         # The form is simplified here for efficiency
 
-        cdef double kr, nu
-
         nu = 3 - alphae
-        kr = k1 * r
+        kr = k_cut * r
 
-        return 1 + 2 * pi * k1**nu * gamma(0.5 * nu) * \
+        return 1 + 2 * pi * k_cut**nu * gamma(0.5 * nu) * \
             hyp1f1(0.5 * nu, 1.5, -0.25 * kr**2) / norm_factor
     else:
         raise ValueError("Solution not defined for alphae <= 1.")
@@ -159,6 +160,23 @@ def Int3(double r, double k0, double alphae):
     return value, err
 
 
+def Int3_analytic(double r, double k0, double alphae):
+    '''
+
+    Analytic solution for Eq. B2
+
+    '''
+
+    cdef double term1, term2, nu, kr2
+
+    nu = 3 - alphae
+    kr2 = (k0 * r)**2
+
+    term1 = 0.5 * (k0 * r)**nu * gamma(- 0.5 * nu) * float(hyper([], [1.5, 2.5 - 0.5 * alphae], 0.25 * kr2))
+    term2 = gamma(2 - alphae) * float(hyper([], [0.5 * (- 1 + alphae), 0.5 * alphae], 0.25 * kr2)) * sin(0.5 * alphae * pi)
+
+    return term1 + term2
+
 def Int4(double r, double k1, double alphae):
     '''
     Analytic solution to Eq. B7,
@@ -166,6 +184,8 @@ def Int4(double r, double k1, double alphae):
     :math:`\int_0^\inf q^{1 - \alpha_e} \sin(q) \exp[-q^2/(k_1 r)^2]`
 
     :math:`0.5 (k_1 r)^{3 - \alpha_e} \Gamma(0.5 * (3 - alpha_e) {\rm F1}(0.5 (3 - alphae), 3/2, -0.25 (k_1 r)^2))`
+
+    Verified against mathematica numerical integration.
 
     '''
 
