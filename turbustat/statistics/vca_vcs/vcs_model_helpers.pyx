@@ -1,7 +1,7 @@
 
 import numpy as np
 from scipy.integrate import quad
-from scipy.special import gamma, erf, erfc
+from scipy.special import gamma, erf, erfc, hyp1f1
 cimport cython
 
 from libc.math cimport sqrt, exp, sin, cos, atan
@@ -13,6 +13,14 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
     '''
 
     k_cut is k0 for alphae > 3 and k1 for alphae<3
+
+
+    When alphae<3, this uses the analytic solution to Eq. B7,
+
+    :math:`\int_0^\inf q^{1 - \alpha_e} \sin(q) \exp[-q^2/(k_1 r)^2]`
+
+    :math:`0.5 (k_1 r)^{3 - \alpha_e} \Gamma(0.5 * (3 - alpha_e) {\rm F1}(0.5 (3 - alphae), 3/2, -0.25 (k_1 r)^2))`
+
     '''
 
     cdef double Int
@@ -28,18 +36,16 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
         return 1.
     # Shallow
     elif alphae > 1:
-        # For alphae between 1 and 3
+        # For alphae between 1 and 3. See full solution above and in B7.
+        # The form is simplified here for efficiency
 
-        # Don't use b/c there's a small jump vs. the numerical integration
-        # (But the numerical integration's error contains the actual value)
-        # Use the Inf approximation on large scales.
-        # if r >= 1 / k_cut:
-        #     Int = Int4_inf(k_cut, alphae)
-        # else:
-        Int = Int4(r, k_cut, alphae)[0]
+        cdef double kr, nu
 
-        return 1 + 4 * pi * r**(alphae - 3) * Int / norm_factor
+        nu = 3 - alphae
+        kr = k1 * r
 
+        return 1 + 2 * pi * k1**nu * gamma(0.5 * nu) * \
+            hyp1f1(0.5 * nu, 1.5, -0.25 * kr**2) / norm_factor
     else:
         raise ValueError("Solution not defined for alphae <= 1.")
 
@@ -155,20 +161,21 @@ def Int3(double r, double k0, double alphae):
 
 def Int4(double r, double k1, double alphae):
     '''
-    Eq. B7
+    Analytic solution to Eq. B7,
+
+    :math:`\int_0^\inf q^{1 - \alpha_e} \sin(q) \exp[-q^2/(k_1 r)^2]`
+
+    :math:`0.5 (k_1 r)^{3 - \alpha_e} \Gamma(0.5 * (3 - alpha_e) {\rm F1}(0.5 (3 - alphae), 3/2, -0.25 (k_1 r)^2))`
 
     '''
 
-    def integrand(double q):
-        cdef double out
-        out = q**(1 - alphae) * exp(-(q / (k1 * r))**2) * sin(q)
-        return out
+    cdef double nu, kr
 
-    cdef double value, err
+    nu = 3 - alphae
+    kr = k1 * r
 
-    value, err = quad(integrand, 0, np.inf)
+    return 0.5 * kr**nu * gamma(0.5 * nu) * hyp1f1(0.5 * nu, 1.5, -0.25 * kr**2)
 
-    return value, err
 
 def Int4_inf(double k1, double alphae):
     '''
@@ -180,7 +187,6 @@ def Int4_inf(double k1, double alphae):
     '''
 
     return gamma(2 - alphae) * sin(alphae * pi * 0.5)
-
 
 # Window functions
 
