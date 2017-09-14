@@ -30,6 +30,12 @@ def C_eps(double r, double k_cut, double alphae, double norm_factor):
     elif alphae > 1:
         # For alphae between 1 and 3
 
+        # Don't use b/c there's a small jump vs. the numerical integration
+        # (But the numerical integration's error contains the actual value)
+        # Use the Inf approximation on large scales.
+        # if r >= 1 / k_cut:
+        #     Int = Int4_inf(k_cut, alphae)
+        # else:
         Int = Int4(r, k_cut, alphae)[0]
 
         return 1 + 4 * pi * r**(alphae - 3) * Int / norm_factor
@@ -64,6 +70,15 @@ def Dz(double R, double z, double V0, double k0, double alphav):
         (I_C * costheta**2 + I_S * sintheta**2)
 
 
+def Dz_simp(double R, double z, double V0, double k0, double alphav):
+
+    cdef double costheta, sintheta, r
+
+    r = np.sqrt(R**2 + z**2)
+
+    return 4 * pi * V0**2 * r**(alphav - 3) / (r**(alphav - 3) + k0**(3 - alphav))
+
+
 def F_eps_norm(double alphae, double k_cut):
     '''
     Normalization for F_eps.
@@ -93,7 +108,7 @@ def Int1(double r, double k0, double alphav):
     def integrand(double q):
         cdef double out
         out = q**(2 - alphav) * exp(-(k0 * r / q)**2) * \
-            (1 - (3 / q**2) * (sin(q) / q - cos(q)))
+            (1 - (3 / q**2) * ((sin(q) / q) - cos(q)))
         return out
 
     cdef double value, err
@@ -111,7 +126,7 @@ def Int2(double r, double k0, double alphav):
     def integrand(double q):
         cdef double out
         out = q**(2 - alphav) * exp(-(k0 * r / q)**2) * \
-            (1 - sin(q) / q)
+            (1 - (sin(q) / q))
         return out
 
     cdef double value, err
@@ -155,6 +170,18 @@ def Int4(double r, double k1, double alphae):
 
     return value, err
 
+def Int4_inf(double k1, double alphae):
+    '''
+    Analytical form for Eq. B9
+
+    Use for r >> 1 / k1.
+
+    Valid for alphae > 1, alphae < 3.
+    '''
+
+    return gamma(2 - alphae) * sin(alphae * pi * 0.5)
+
+
 # Window functions
 
 def gaussian_beam(double theta, double theta_0):
@@ -175,7 +202,7 @@ def gaussian_autocorr(double R, double z_0, double theta_0):
     Eq. 32.
 
     For W_b:
-    :math:`-\frac{e^{-\frac{R^2}{2 \theta ^2 z^2}} \left(\sqrt{\pi } R e^{\frac{R^2}{4 \theta ^2 z^2}} \text{erfc}\left(\frac{R}{2 \theta  z}\right)-2 \theta  z\right)}{4 \theta  z^3}`
+    :math:`\frac{1}{2 \pi z_0^2 \theta_0^2} \exp^{-R^2 / 2 \theta_0^2 z_0^2}`
 
     w_b was solved for using Mathematica. My by-hand solution had the same
     asymptotic behaviour, but looked so much worse than the compacter form
@@ -183,17 +210,12 @@ def gaussian_autocorr(double R, double z_0, double theta_0):
 
     '''
 
-    cdef double ratio_term, exp_term
+    cdef double ratio_term
 
-    ratio_term = R / (theta_0 * z_0)
-    exp_term = ratio_term**2
+    ratio_term = R / (2 * theta_0 * z_0)
 
-    term1 = - 1. / (4 * theta_0 * z_0**3)
-    term2 = sqrt(pi) * R * exp(- 0.25 * exp_term) * \
-        erfc(0.5 * ratio_term)
-    term3 = 2 * theta_0 * z_0 * exp(- 0.5 * exp_term)
-
-    return term1 * (term2 - term3)
+    return 0.5 * np.exp(- ratio_term**2) / (z_0 * theta_0)**2
+    # return 0.5 * np.exp(-0.25 * ratio_term**2)
 
 
 def slab_autocorr(double z, double z_0, double z_1):
@@ -292,15 +314,12 @@ def gaussian_beam_gaussian_z_parallel(double R, double z, double z_0,
     definition. The autocorrelation function is for the object thickness along
     the LOS, and so should be independent of distance.
 
-    For W_b:
-    :math:`-\frac{e^{-\frac{R^2}{2 \theta ^2 z^2}} \left(\sqrt{\pi } R e^{\frac{R^2}{4 \theta ^2 z^2}} \text{erfc}\left(\frac{R}{2 \theta  z}\right)-2 \theta  z\right)}{4 \theta  z^3}`
-
     '''
 
     cdef double w_eps_a, w_b_a
 
     # See form above. Equal to 2 * sigma_z for "theta_0"
-    w_eps_a = exp(-(0.25 * (z - z_0) / sigma_z)**2) / sqrt(4 * pi * sigma_z**2)
+    w_eps_a = gaussian_beam(z, 2 * sigma_z)
 
     w_b_a = gaussian_autocorr(R, z_0, theta0)
 
