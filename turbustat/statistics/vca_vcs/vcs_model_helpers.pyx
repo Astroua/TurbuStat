@@ -71,7 +71,7 @@ def Dz(double R, double z, double V0, double k0, double alphav):
     and can be easily included here. Do they need to be?
     '''
 
-    cdef double intone, inttwo, I_C, I_S, costheta, sintheta, r
+    cdef double intone, inttwo, I_C, I_S, r
 
     r = np.sqrt(R**2 + z**2)
 
@@ -84,11 +84,13 @@ def Dz(double R, double z, double V0, double k0, double alphav):
     I_C = (4 / 3.) * intone
     I_S = 2 * (inttwo - intone / 3.)
 
-    costheta = z / r
-    sintheta = R / r
-
-    return 4 * pi * V0**2 * r**(alphav - 3) * \
-        (I_C * costheta**2 + I_S * sintheta**2)
+    # Equation looks like:
+    # 4 * pi * V0**2 * r**(alphav - 3) * \
+    #     (I_C * costheta**2 + I_S * sintheta**2)
+    # Since costheta = z /r and sintheta = R/r, can
+    # pull 1/r^2 out of brackets to get:
+    return 4 * pi * V0**2 * r**(alphav - 5) * \
+        (I_C * z**2 + I_S * R**2)
 
 
 def Dz_simp(double R, double z, double V0, double k0, double alphav):
@@ -286,10 +288,6 @@ def gaussian_autocorr(double R, double z_0, double theta_0):
     For W_b:
     :math:`\frac{1}{2 \pi z_0^2 \theta_0^2} \exp^{-R^2 / 2 \theta_0^2 z_0^2}`
 
-    w_b was solved for using Mathematica. My by-hand solution had the same
-    asymptotic behaviour, but looked so much worse than the compacter form
-    above.
-
     '''
 
     cdef double ratio_term
@@ -297,7 +295,6 @@ def gaussian_autocorr(double R, double z_0, double theta_0):
     ratio_term = R / (2 * theta_0 * z_0)
 
     return 0.5 * np.exp(- ratio_term**2) / (z_0 * theta_0)**2
-    # return 0.5 * np.exp(-0.25 * ratio_term**2)
 
 
 def slab_autocorr(double z, double z_0, double z_1):
