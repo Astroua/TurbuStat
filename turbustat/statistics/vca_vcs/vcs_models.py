@@ -17,7 +17,8 @@ from vcs_model_helpers import (Dz, C_eps, F_eps_norm, pencil_beam_slab_z,
                                pencil_beam_gaussian_z,
                                gaussian_beam_slab_z_parallel,
                                gaussian_beam_slab_z_crossing,
-                               gaussian_beam_gaussian_z_parallel)
+                               gaussian_beam_gaussian_z_parallel,
+                               Dz_simp)
 
 
 def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
@@ -28,7 +29,10 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
     VCS model.
     '''
 
-    fk2 = f_k(kv, T)**2
+    if T > 0:
+        fk2 = f_k(kv, T)**2
+    else:
+        fk2 = 1.
 
     window = partial(window_function, beam_type=beam_type,
                      object_type=object_type, los_type=los_type,
@@ -36,19 +40,24 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
     # Set bounds based on the inputs
     if object_type == "gaussian":
-        z_bounds = [max(z0 - 5 * sigma_z, 0), z0 + 5 * sigma_z]
+        z_bounds = [0, 1 / k0]
     else:
         # Only consider values within the slab
         z_bounds = [z0, z1]
 
-    if beam_type == "gaussian":
+    if beam_type == "gaussian" or beam_type == 'none':
         # becomes highly attenuated near the beam size
-        r_bounds = [0, 1.5 * theta0 * z0]
+        R_bounds = [0, 1.5 * theta0 * z0]
+
+    elif beam_type == 'none':
+        R_bounds = [0, 1 / k0]
     else:
         # Pencil beam
+        # TODO: In this case, you only need to integrate over z. R's contribution
+        # is a delta-fcn
         raise NotImplementedError("A reasonable bound for R still needs to be"
                                   " implemented!")
-        r_bounds = [0, ]
+        R_bounds = [0, ]
 
     if alphae == 3:
 
@@ -95,7 +104,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
     if integration_type == "quad":
         # Integration order is from the last to first arguments
         # So z, theta, then r
-        value, error = dblquad(integrand, 0, r_bounds[1],
+        value, error = dblquad(integrand, 0, R_bounds[1],
                                lambda r: z_bounds[0],
                                lambda r: z_bounds[1],
                                **integration_kwargs)
@@ -104,7 +113,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
             raise ImportError("Monte Carlo integration require the vegas "
                               "package.")
         integ = vegas.Integrator([z_bounds,
-                                  r_bounds])
+                                  R_bounds])
 
         def wrap_integrand(vals):
             z, R = vals
@@ -115,7 +124,6 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
         error = np.sqrt(result.var)
 
     return P0 * fk2 * value, P0 * fk2 * error
-    # return P0 * value, P0 * error
 
 
 k_B = const.k_B.to(u.J / u.K).value
@@ -127,6 +135,8 @@ def f_k(kv, T):
 
 
 # Window functions and related
+def no_window(*args, **kwargs):
+    return 1.
 
 
 def window_function(R, z, beam_type, object_type, los_type, sigma_z=None,
@@ -135,7 +145,7 @@ def window_function(R, z, beam_type, object_type, los_type, sigma_z=None,
     Return the window auto-correlation function for a variety of cases.
     '''
 
-    beam_types = ['pencil', 'gaussian']
+    beam_types = ['pencil', 'gaussian', 'none']
     object_types = ['slab', 'gaussian']
     los_types = ['parallel', 'crossing']
 
@@ -147,6 +157,8 @@ def window_function(R, z, beam_type, object_type, los_type, sigma_z=None,
     if los_type not in los_types:
         raise ValueError("los_type must be one of {}".format(los_types))
 
+    if beam_type == 'none':
+        return no_window(R, z)
     if beam_type == 'pencil':
         # los_type has no effect hasa
         if object_type == 'slab':
