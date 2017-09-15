@@ -2,7 +2,18 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.special import gamma, erf, erfc, hyp1f1
-from mpmath import hyper
+
+
+import flint
+hyper = flint.arb.hypgeom
+
+# ImportError = Exception
+
+# try:
+#     import flint
+#     hyper = flint.arb.hypergeom
+# except ImportError:
+#     from mpmath import hyper
 
 cimport cython
 
@@ -64,8 +75,11 @@ def Dz(double R, double z, double V0, double k0, double alphav):
 
     r = np.sqrt(R**2 + z**2)
 
-    intone = Int1(r, k0, alphav)[0]
-    inttwo = Int2(r, k0, alphav)[0]
+    # intone = Int1(r, k0, alphav)[0]
+    # inttwo = Int2(r, k0, alphav)[0]
+
+    intone = Int1_analytic(r, k0, alphav)
+    inttwo = Int2_analytic(r, k0, alphav)
 
     I_C = (4 / 3.) * intone
     I_S = 2 * (inttwo - intone / 3.)
@@ -125,6 +139,28 @@ def Int1(double r, double k0, double alphav):
     return value, err
 
 
+def Int1_analytic(double r, double k0, double alphav):
+    '''
+    Analytical solution to Eq. A4
+    '''
+
+    cdef double kr, kr2, nu, term1, term2, term3, term4, terma, termb
+
+    kr2 = (k0 * r)**2
+    kr = k0 * r
+    nu = alphav - 3
+
+    term1 = 3 * nu * float(hyper([], [0.5, 1.5 - 0.5 * alphav], 0.25 * kr2))
+    term2 = 3 * nu * float(hyper([], [1.5, 1.5 - 0.5 * alphav], 0.25 * kr2))
+    terma = 0.25 * kr**(1 - alphav) * gamma(0.5 * nu) * (2 * kr2 + term1 - term2)
+
+    term3 = float(hyper([], [0.5 * (1 + alphav), 1 + 0.5 * alphav], 0.25 * kr2))
+    term4 = alphav * float(hyper([], [0.5 * (1 + alphav), 0.5 * alphav], 0.25 * kr2))
+    termb = 3 * gamma(-alphav) * sin(alphav * pi * 0.5) * (term3 - term4)
+
+    return terma + termb
+
+
 def Int2(double r, double k0, double alphav):
     '''
     First integral in Eq. A5
@@ -141,6 +177,26 @@ def Int2(double r, double k0, double alphav):
     value, err = quad(integrand, 0, np.inf)
 
     return value, err
+
+
+def Int2_analytic(double r, double k0, double alphav):
+    '''
+    Analytical solution to first integral in Eq. A5
+    '''
+
+    cdef double kr, kr3, kr2, term1, term2, term3, nu
+
+    kr3 = (k0 * r)**3
+    kr2 = (k0 * r)**2
+    kr = k0 * r
+    nu = alphav - 3
+
+
+    term1 = - kr3 * gamma(0.5 * nu)
+    term2 = kr3 * gamma(0.5 * nu) * float(hyper([], [1.5, 2.5 - 0.5 * alphav], 0.25 * kr2))
+    term3 = 2 * kr**alphav * gamma(2 - alphav) * float(hyper([], [0.5 * (alphav - 1), 0.5 * alphav], 0.25 * kr2)) * sin(alphav * pi * 0.5)
+
+    return -0.5 * kr**-alphav * (term1 + term2 + term3)
 
 
 def Int3(double r, double k0, double alphae):
