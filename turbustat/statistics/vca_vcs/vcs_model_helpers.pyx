@@ -304,7 +304,7 @@ def gaussian_autocorr(double R, double z_0, double theta_0):
 
     ratio_term = R / (2 * theta_0 * z_0)
 
-    return 0.5 * np.exp(- ratio_term**2) / (z_0 * theta_0)**2
+    return 0.5 * np.exp(- ratio_term**2) / (pi * (z_0 * theta_0)**2)
 
 
 def slab_autocorr(double z, double z_0, double z_1):
