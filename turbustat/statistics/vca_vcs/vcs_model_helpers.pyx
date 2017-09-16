@@ -1,11 +1,12 @@
 
 import numpy as np
 from scipy.integrate import quad
-from scipy.special import gamma, erf, erfc, hyp1f1
+from scipy.special import gamma, erf, erfc  # , hyp1f1
 
 
 import flint
 hyper = flint.arb.hypgeom
+hyp1f1 = flint.arb.hypgeom_1f1
 
 # ImportError = Exception
 
@@ -95,11 +96,20 @@ def Dz(double R, double z, double V0, double k0, double alphav):
 
 def Dz_simp(double R, double z, double V0, double k0, double alphav):
 
-    cdef double costheta, sintheta, r
+    cdef double r
 
     r = np.sqrt(R**2 + z**2)
 
-    return 4 * pi * V0**2 * r**(alphav - 3) / (r**(alphav - 3) + k0**(3 - alphav))
+    return V0**2 * r**(alphav - 3) / (r**(alphav - 3) + k0**(3 - alphav))
+
+
+def Dz_simp2(double R, double z, double V0, double k0, double alphav):
+
+    cdef double m
+
+    m = alphav - 3
+
+    return V0**2  * (R**2 + z**2)**(0.5 * m - 1) * ((1 + 0.5 * m) * R**2 + z**2)
 
 
 def F_eps_norm(double alphae, double k_cut):
