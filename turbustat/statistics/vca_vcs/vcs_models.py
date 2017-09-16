@@ -18,7 +18,7 @@ from vcs_model_helpers import (Dz, C_eps, F_eps_norm, pencil_beam_slab_z,
                                gaussian_beam_slab_z_parallel,
                                gaussian_beam_slab_z_crossing,
                                gaussian_beam_gaussian_z_parallel,
-                               Dz_simp)
+                               Dz_simp, Dz_simp2)
 
 
 def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
@@ -40,14 +40,14 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
     # Set bounds based on the inputs
     if object_type == "gaussian":
-        z_bounds = [0, 1 / k0]
+        z_bounds = [0, max(2 / float(k0), 3 * sigma_z)]
     else:
         # Only consider values within the slab
         z_bounds = [z0, z1]
 
-    if beam_type == "gaussian" or beam_type == 'none':
+    if beam_type == "gaussian":
         # becomes highly attenuated near the beam size
-        R_bounds = [0, 1.5 * theta0 * z0]
+        R_bounds = [0, max(5. * theta0 * z0, 1 / k0)]
 
     elif beam_type == 'none':
         R_bounds = [0, 1 / k0]
@@ -67,7 +67,10 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
             # No density contribution
 
             return 2 * np.pi * R * window(R, z) * \
-                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
+
+            # return 2 * np.pi * R * window(R, z) * \
+            #     math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
                        # 1.0j * kv * b * z) * r
 
     elif alphae > 3:
@@ -83,7 +86,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
             return 2 * np.pi * R * window(R, z) * \
                 C_eps(r, k0, alphae, norm_factor) * \
-                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
                        # 1.0j * kv * b * z) * r
     else:
 
@@ -98,7 +101,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
             return 2 * np.pi * R * window(R, z) * \
                 C_eps(r, k1, alphae, norm_factor) * \
-                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
                        # 1.0j * kv * b * z) * r
 
     if integration_type == "quad":
@@ -135,8 +138,11 @@ def f_k(kv, T):
 
 
 # Window functions and related
-def no_window(*args, **kwargs):
-    return 1.
+def no_window(R, z, sigma_z, z0, theta0):
+    '''
+    Only normalized for gaussian windows in R and z!
+    '''
+    return 1. / (4 * np.sqrt(np.pi) * sigma_z * z0**2 * theta0**2)
 
 
 def window_function(R, z, beam_type, object_type, los_type, sigma_z=None,
@@ -158,7 +164,7 @@ def window_function(R, z, beam_type, object_type, los_type, sigma_z=None,
         raise ValueError("los_type must be one of {}".format(los_types))
 
     if beam_type == 'none':
-        return no_window(R, z)
+        return no_window(R, z, sigma_z, z0, theta0)
     if beam_type == 'pencil':
         # los_type has no effect hasa
         if object_type == 'slab':
