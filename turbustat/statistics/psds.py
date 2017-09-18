@@ -58,7 +58,8 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         theta_0 = theta_0.to(u.rad)
         delta_theta = delta_theta.to(u.rad)
 
-        theta_limits = Angle([theta_0 - delta_theta, theta_0 + delta_theta])
+        theta_limits = Angle([theta_0 - 0.5 * delta_theta,
+                              theta_0 + 0.5 * delta_theta])
 
         # Define theta array
         thetas = Angle(np.arctan2(yy, xx) * u.rad)
