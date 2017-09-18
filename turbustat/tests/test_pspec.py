@@ -72,6 +72,11 @@ def test_pspec_nonequal_shape():
                          [(plaw, ellip) for plaw in [3, 4]
                           for ellip in [0.2, 0.5, 0.75, 0.9, 1.0]])
 def test_pspec_azimlimits(plaw, ellip):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
 
     imsize = 256
     theta = 0

@@ -6,12 +6,13 @@ import pytest
 import numpy.testing as npt
 import numpy as np
 import astropy.units as u
+from astropy.io import fits
 
 from ..statistics import VCA, VCA_Distance
 from ..statistics.vca_vcs.slice_thickness import spectral_regrid_cube
 from ..io.input_base import to_spectral_cube
-from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances
+from ._testing_data import (dataset1, dataset2, computed_data,
+                            computed_distances, make_extended, assert_between)
 
 
 def test_VCA_method():
@@ -96,3 +97,44 @@ def test_spectral_regrid(channel_width):
 
     npt.assert_allclose(sc_pix_regrid.header['CDELT3'],
                         sc_spec_regrid.header["CDELT3"])
+
+
+@pytest.mark.parametrize(('plaw', 'ellip'),
+                         [(plaw, ellip) for plaw in [3, 4]
+                          for ellip in [0.2, 0.5, 0.75, 0.9, 1.0]])
+def test_vca_azimlimits(plaw, ellip):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 256
+    theta = 0
+
+    nchans = 10
+    # Generate a red noise model cube
+    cube = np.empty((nchans, imsize, imsize))
+    for i in range(nchans):
+        cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                                theta=theta,
+                                return_psd=False)
+
+    test = VCA(fits.PrimaryHDU(cube))
+    test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
+                                  "delta_theta": 30 * u.deg},
+             fit_2D=False, weighted_fit=True)
+
+    test2 = VCA(fits.PrimaryHDU(cube))
+    test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
+                                   "delta_theta": 30 * u.deg},
+              fit_2D=False, weighted_fit=True)
+
+    test3 = VCA(fits.PrimaryHDU(cube))
+    test3.run(radial_pspec_kwargs={},
+              fit_2D=False, weighted_fit=True)
+
+    # Ensure slopes are consistent to within 5%
+    assert_between(test3.slope, - 1.05 * plaw, - 0.95 * plaw)
+    assert_between(test2.slope, - 1.05 * plaw, - 0.95 * plaw)
+    assert_between(test.slope, - 1.05 * plaw, - 0.95 * plaw)

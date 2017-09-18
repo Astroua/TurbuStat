@@ -3,10 +3,13 @@ from __future__ import print_function, absolute_import, division
 
 import numpy.testing as npt
 import astropy.units as u
+from astropy.io import fits
+import pytest
+import numpy as np
 
 from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances
+    dataset1, dataset2, computed_data, computed_distances, make_extended, assert_between
 
 
 def test_MVC_method():
@@ -61,3 +64,45 @@ def test_MVC_distance():
         MVC_Distance(dataset1, dataset2).distance_metric()
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['mvc_distance'])
+
+
+@pytest.mark.parametrize(('plaw', 'ellip'),
+                         [(plaw, ellip) for plaw in [3, 4]
+                          for ellip in [0.2, 0.5, 0.75, 0.9, 1.0]])
+def test_mvc_azimlimits(plaw, ellip):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 256
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_psd=False)
+
+    ones = np.ones_like(img)
+
+    test = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
+               fits.PrimaryHDU(ones))
+    test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
+                                  "delta_theta": 30 * u.deg},
+             fit_2D=False, weighted_fit=True)
+
+    test2 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
+                fits.PrimaryHDU(ones))
+    test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
+                                   "delta_theta": 30 * u.deg},
+              fit_2D=False, weighted_fit=True)
+
+    test3 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
+                fits.PrimaryHDU(ones))
+    test3.run(radial_pspec_kwargs={},
+              fit_2D=False, weighted_fit=True)
+
+    # Ensure slopes are consistent to within 5%
+    assert_between(test3.slope, - 1.05 * plaw, - 0.95 * plaw)
+    assert_between(test2.slope, - 1.05 * plaw, - 0.95 * plaw)
+    assert_between(test.slope, - 1.05 * plaw, - 0.95 * plaw)
