@@ -122,12 +122,12 @@ def test_vca_azimlimits(plaw, ellip):
 
     test = VCA(fits.PrimaryHDU(cube))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
-                                  "delta_theta": 30 * u.deg},
+                                  "delta_theta": 40 * u.deg},
              fit_2D=False, weighted_fit=True)
 
     test2 = VCA(fits.PrimaryHDU(cube))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
-                                   "delta_theta": 30 * u.deg},
+                                   "delta_theta": 40 * u.deg},
               fit_2D=False, weighted_fit=True)
 
     test3 = VCA(fits.PrimaryHDU(cube))

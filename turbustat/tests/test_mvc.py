@@ -88,13 +88,13 @@ def test_mvc_azimlimits(plaw, ellip):
     test = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                fits.PrimaryHDU(ones))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
-                                  "delta_theta": 30 * u.deg},
+                                  "delta_theta": 40 * u.deg},
              fit_2D=False, weighted_fit=True)
 
     test2 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                 fits.PrimaryHDU(ones))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
-                                   "delta_theta": 30 * u.deg},
+                                   "delta_theta": 40 * u.deg},
               fit_2D=False, weighted_fit=True)
 
     test3 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),

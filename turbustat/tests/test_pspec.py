@@ -87,12 +87,12 @@ def test_pspec_azimlimits(plaw, ellip):
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
-                                  "delta_theta": 30 * u.deg},
+                                  "delta_theta": 40 * u.deg},
              fit_2D=False, weighted_fit=True)
 
     test2 = PowerSpectrum(fits.PrimaryHDU(img))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
-                                   "delta_theta": 30 * u.deg},
+                                   "delta_theta": 40 * u.deg},
               fit_2D=False, weighted_fit=True)
 
     test3 = PowerSpectrum(fits.PrimaryHDU(img))
