@@ -67,7 +67,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
             # No density contribution
 
             return 2 * np.pi * R * window(R, z) * \
-                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
 
             # return 2 * np.pi * R * window(R, z) * \
             #     math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
@@ -86,7 +86,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
             return 2 * np.pi * R * window(R, z) * \
                 C_eps(r, k0, alphae, norm_factor) * \
-                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
                        # 1.0j * kv * b * z) * r
     else:
 
@@ -101,7 +101,7 @@ def P1(kv, alphav, alphae, P0, k0, V0, T, b=0,
 
             return 2 * np.pi * R * window(R, z) * \
                 C_eps(r, k1, alphae, norm_factor) * \
-                math.exp(-0.5 * kv**2 * Dz_simp(R, z, V0, k0, alphav))  # -
+                math.exp(-0.5 * kv**2 * Dz(R, z, V0, k0, alphav))  # -
                        # 1.0j * kv * b * z) * r
 
     if integration_type == "quad":
@@ -133,8 +133,8 @@ k_B = const.k_B.to(u.J / u.K).value
 m_p = const.m_p.to(u.kg).value
 
 
-def f_k(kv, T):
-    return np.exp(- 0.5 * k_B * T * kv**2 / m_p)
+def f_k(kv, T, mu=1.3):
+    return np.exp(- 0.5 * k_B * T * kv**2 / (mu * m_p))
 
 
 # Window functions and related
