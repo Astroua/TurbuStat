@@ -8,10 +8,11 @@ import numpy.testing as npt
 from scipy.ndimage import zoom
 import astropy.units as u
 import os
+from astropy.io import fits
 
 from ..statistics import SCF, SCF_Distance
-from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances
+from ._testing_data import (dataset1, dataset2, computed_data,
+                            computed_distances, make_extended, assert_between)
 
 
 def test_SCF_method():
@@ -141,3 +142,29 @@ def test_SCF_regrid_distance():
     fid_dist = 0.02
 
     assert tester_dist_zoom.distance < fid_dist
+
+
+def test_SCF_azimlimits():
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    test = SCF(dataset1["cube"], size=11)
+    test.run(boundary='continuous',
+             radialavg_kwargs={"theta_0": 0 * u.deg,
+                               "delta_theta": 40 * u.deg})
+
+    test2 = SCF(dataset1["cube"], size=11)
+    test2.run(boundary='continuous',
+              radialavg_kwargs={"theta_0": 90 * u.deg,
+                                "delta_theta": 40 * u.deg})
+
+    test3 = SCF(dataset1["cube"], size=11)
+    test3.run(boundary='continuous',
+              radialavg_kwargs={})
+
+    # Ensure slopes are consistent to within 5%
+    npt.assert_allclose(test3.slope, test.slope, atol=5e-3)
+    npt.assert_allclose(test3.slope, test2.slope, atol=5e-3)
