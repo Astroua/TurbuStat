@@ -1,1 +1,2 @@
-from .pspec_bispec import PowerSpectrum, PSpec_Distance, BiSpectrum, BiSpectrum_Distance
+from .pspec import PowerSpectrum, PSpec_Distance
+from .bispec import BiSpectrum, BiSpectrum_Distance
