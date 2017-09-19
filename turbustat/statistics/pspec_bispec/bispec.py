@@ -3,11 +3,10 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import numpy.random as ra
-from numpy.fft import fftshift
 import astropy.units as u
+from scipy.stats import binned_statistic
 
 from ..rfft_to_fft import rfft_to_fft
-from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..fitting_utils import check_fit_limits
@@ -130,7 +129,7 @@ class BiSpectrum(BaseStatisticMixIn):
         return self._bispectrum
 
     @property
-    def bispectrum_amp(self):
+    def bispectrum_logamp(self):
         '''
         log amplitudes of the bispectrum.
         '''
@@ -150,9 +149,11 @@ class BiSpectrum(BaseStatisticMixIn):
         '''
         return self._tracker
 
-    def radial_slice(self, radii, delta_radii):
+    def azimuthal_slice(self, radii, delta_radii, bin_width=5. * u.deg,
+                        value='bispectrum'):
         '''
-        Create a radial slice of the bispectrum (or bicoherence) plane.
+        Create an azimuthal slice of the bispectrum or bicoherence
+        surfaces.
 
         Parameters
         ----------
@@ -162,27 +163,162 @@ class BiSpectrum(BaseStatisticMixIn):
         delta_radii : float or np.ndarray
             The width around the radii in the bispectrum plane. If multiple
             radii are given, `delta_radii` must match the length of `radii`.
+        bin_width : `~astropy.units.Quantity`, optional
+            The angular size of the bins used to create the slice.
+        value : str, optional
+            Which surface to create a profile from. Can be "bispectrum"
+            (default), "bispectrum_logamp", or "bicoherence".
         '''
 
+        if value == "bispectrum":
+            value_arr = self.bispectrum
+        elif value == "bispectrum_logamp":
+            value_arr = self.bispectrum_logamp
+        elif value == "bicoherence":
+            value_arr = self.bicoherence
+        else:
+            raise TypeError("value must be 'bispectrum'"
+                            ", 'bispectrum_logamp', or 'bicoherence'")
 
-        kky, kkx = np.mgrid[0:self.bispectrum.shape[0],
-                            0:self.bispectrum.shape[1]]
+        if isinstance(radii, np.ndarray):
+            if not isinstance(delta_radii, np.ndarray):
+                delta_radii = np.array([delta_radii] * len(radii))
+            if len(radii) != len(delta_radii):
+                raise ValueError("Length of radii and delta_radii must match.")
+        else:
+            radii = np.array([radii])
 
-    def azimuthal_slice(self, thetas, delta_thetas):
+        if not isinstance(delta_radii, np.ndarray):
+            delta_radii = np.array([delta_radii])
+
+        if not hasattr(bin_width, "unit"):
+            raise TypeError("bin_width must have an attached angular unit.")
+        elif not bin_width.unit.is_equivalent(u.rad):
+            raise TypeError("bin_width must have an attached angular unit.")
+        else:
+            bin_width = bin_width.to(u.rad).value
+
+        kky, kkx = make_radial_arrays(self.bispectrum.shape, y_center=0,
+                                      x_center=0)
+
+        dist = np.sqrt(kky**2 + kkx**2)
+        theta = np.arctan2(kky, kkx)
+
+        nbins = np.floor(np.pi / bin_width).astype(int)
+        bins = np.linspace(0, np.pi, nbins)
+
+        azimuthal_slices = {}
+
+        for rad, del_rad in zip(radii, delta_radii):
+
+            # Create the mask of the radii to extract the profile at.
+            mask = np.logical_and(dist >= rad - del_rad / 2.,
+                                  dist <= rad + del_rad / 2.)
+
+            vals, bin_edge, cts = binned_statistic(theta[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanmean)
+
+            stds, bin_edge, cts = binned_statistic(theta[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanstd)
+
+            bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
+
+            azimuthal_slices[rad] = np.array([bin_cents, vals, stds])
+
+        return azimuthal_slices
+
+    def radial_slice(self, thetas, delta_thetas, bin_width=1.,
+                     value='bispectrum'):
         '''
-        Create an azimuthal slice of the bispectrum or bicoherence
-        surfaces.
+        Create a radial slice of the bispectrum (or bicoherence) plane.
 
         Parameters
         ----------
-        thetas : float or np.ndarray
+        thetas : `~astropy.units.Quantity`
             Azimuthal angles in the bispectrum plane to extract slices at.
             Multiple slices are returned if `thetas` is an array.
-        delta_thetas : float or np.ndarray
+        delta_thetas : `~astropy.units.Quantity`
             The width around the angle in the bispectrum plane. If multiple
             angles are given, `delta_thetas` must match the length of `thetas`.
+        bin_width : float, optional
+            The radial size of the bins used to create the slice.
+        value : str, optional
+            Which surface to create a profile from. Can be "bispectrum"
+            (default), "bispectrum_logamp", or "bicoherence".
         '''
-        pass
+
+        if value == "bispectrum":
+            value_arr = self.bispectrum
+        elif value == "bispectrum_logamp":
+            value_arr = self.bispectrum_logamp
+        elif value == "bicoherence":
+            value_arr = self.bicoherence
+        else:
+            raise TypeError("value must be 'bispectrum'"
+                            ", 'bispectrum_logamp', or 'bicoherence'")
+
+        orig_thetas = thetas.copy().value
+
+        # Check units
+        if not hasattr(thetas, "unit") or not hasattr(delta_thetas, "unit"):
+            raise TypeError("thetas must have an attached angular unit.")
+        elif (not thetas.unit.is_equivalent(u.rad) or
+              not delta_thetas.unit.is_equivalent(u.rad)):
+            raise TypeError("thetas must have an attached angular unit.")
+        else:
+            thetas = thetas.to(u.rad).value
+            delta_thetas = delta_thetas.to(u.rad).value
+
+        # Make sure the lengths match if multiple values are given.
+        if isinstance(thetas, np.ndarray):
+            if not isinstance(delta_thetas, np.ndarray):
+                delta_thetas = np.array([delta_thetas] * len(thetas))
+            if len(thetas) != len(delta_thetas):
+                raise ValueError("Length of thetas and delta_thetas must "
+                                 "match.")
+        else:
+            thetas = np.array([thetas])
+            orig_thetas = np.array([orig_thetas])
+
+        if not isinstance(delta_thetas, np.ndarray):
+            delta_thetas = np.array([delta_thetas])
+
+        kky, kkx = make_radial_arrays(self.bispectrum.shape, y_center=0,
+                                      x_center=0)
+
+        radial_slices = dict.fromkeys(orig_thetas)
+
+        dist = np.sqrt(kky**2 + kkx**2)
+        theta_arr = np.arctan2(kky, kkx)
+
+        nbins = np.floor(dist.max() / bin_width).astype(int)
+        bins = np.linspace(0, dist.max(), nbins)
+
+        for theta, del_theta, theta0 in zip(thetas, delta_thetas, orig_thetas):
+
+            # Create the mask of the radii to extract the profile at.
+            mask = np.logical_and(theta_arr >= theta - del_theta / 2.,
+                                  theta_arr <= theta + del_theta / 2.)
+
+            vals, bin_edge, cts = binned_statistic(dist[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanmean)
+
+            stds, bin_edge, cts = binned_statistic(dist[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanstd)
+
+            bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
+
+            radial_slices[theta0] = np.array([bin_cents, vals, stds])
+
+        return radial_slices
 
     def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False,
             save_name=None):
@@ -211,10 +347,10 @@ class BiSpectrum(BaseStatisticMixIn):
 
             p.subplot(1, 2, 1)
             p.title("Bispectrum")
-            p.imshow(
-                self.bispectrum_amp, origin="lower", interpolation="nearest")
+            p.imshow(self.bispectrum_logamp, origin="lower",
+                     interpolation="nearest")
             p.colorbar()
-            p.contour(self.bispectrum_amp, colors="k")
+            p.contour(self.bispectrum_logamp, colors="k")
             p.xlabel(r"$k_1$")
             p.ylabel(r"$k_2$")
 
