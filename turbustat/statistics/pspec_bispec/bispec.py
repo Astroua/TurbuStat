@@ -1,12 +1,11 @@
 # Licensed under an MIT open source license - see LICENSE
-from __future__ import print_function, absolute_import, division
+# from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import numpy.random as ra
 import astropy.units as u
 from scipy.stats import binned_statistic
 
-from ..rfft_to_fft import rfft_to_fft
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..fitting_utils import check_fit_limits
@@ -74,7 +73,7 @@ class BiSpectrum(BaseStatisticMixIn):
         else:
             norm_data = self.data
 
-        fftarr = rfft_to_fft(norm_data)
+        fftarr = np.fft.fft2(norm_data)
         conjfft = np.conj(fftarr)
         ra.seed(seed)
 
