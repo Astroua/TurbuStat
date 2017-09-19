@@ -8,7 +8,6 @@ from scipy.stats import binned_statistic
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..fitting_utils import check_fit_limits
 from ..psds import make_radial_arrays
 
 
@@ -149,7 +148,7 @@ class BiSpectrum(BaseStatisticMixIn):
         return self._tracker
 
     def azimuthal_slice(self, radii, delta_radii, bin_width=5. * u.deg,
-                        value='bispectrum'):
+                        value='bispectrum', return_masks=False):
         '''
         Create an azimuthal slice of the bispectrum or bicoherence
         surfaces.
@@ -167,6 +166,16 @@ class BiSpectrum(BaseStatisticMixIn):
         value : str, optional
             Which surface to create a profile from. Can be "bispectrum"
             (default), "bispectrum_logamp", or "bicoherence".
+        return_masks : bool, optional
+            Return the radial masks used to create the slices.
+
+        Returns
+        -------
+        azimuthal_slices : dict
+            Dictionary with the azimuthal slices. Each radius given in radii
+            is a key in the dictionary. Each slice is a numpy array containing
+            the bin centers, the averaged values, and the standard deviations
+            in the azimuthal bins.
         '''
 
         if value == "bispectrum":
@@ -207,6 +216,8 @@ class BiSpectrum(BaseStatisticMixIn):
         bins = np.linspace(0, np.pi, nbins)
 
         azimuthal_slices = {}
+        if return_masks:
+            masks = []
 
         for rad, del_rad in zip(radii, delta_radii):
 
@@ -227,11 +238,16 @@ class BiSpectrum(BaseStatisticMixIn):
             bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
 
             azimuthal_slices[rad] = np.array([bin_cents, vals, stds])
+            if return_masks:
+                masks.append(mask)
+
+        if return_masks:
+            return azimuthal_slices, masks
 
         return azimuthal_slices
 
     def radial_slice(self, thetas, delta_thetas, bin_width=1.,
-                     value='bispectrum'):
+                     value='bispectrum', return_masks=False):
         '''
         Create a radial slice of the bispectrum (or bicoherence) plane.
 
@@ -248,6 +264,16 @@ class BiSpectrum(BaseStatisticMixIn):
         value : str, optional
             Which surface to create a profile from. Can be "bispectrum"
             (default), "bispectrum_logamp", or "bicoherence".
+        return_masks : bool, optional
+            Return the radial masks used to create the slices.
+
+        Returns
+        -------
+        radial_slices : dict
+            Dictionary with the radial slices. Each angle given in thetas
+            is a key in the dictionary. Each slice is a numpy array containing
+            the bin centers, the averaged values, and the standard deviations
+            in the radial bins.
         '''
 
         if value == "bispectrum":
@@ -290,6 +316,8 @@ class BiSpectrum(BaseStatisticMixIn):
                                       x_center=0)
 
         radial_slices = dict.fromkeys(orig_thetas)
+        if return_masks:
+            masks = []
 
         dist = np.sqrt(kky**2 + kkx**2)
         theta_arr = np.arctan2(kky, kkx)
@@ -316,6 +344,11 @@ class BiSpectrum(BaseStatisticMixIn):
             bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
 
             radial_slices[theta0] = np.array([bin_cents, vals, stds])
+            if return_masks:
+                masks.append(mask)
+
+        if return_masks:
+            return radial_slices, masks
 
         return radial_slices
 
