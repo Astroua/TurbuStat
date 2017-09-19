@@ -141,12 +141,20 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
             return bin_cents, ps1D, ps1D_stddev
 
 
-def make_radial_arrays(shape):
+def make_radial_arrays(shape, y_center=None, x_center=None):
 
-    y = np.arange(-np.floor(shape[0] / 2.).astype(int),
-                  shape[0] - np.floor(shape[0] / 2.).astype(int))
-    x = np.arange(-np.floor(shape[1] / 2.).astype(int),
-                  shape[1] - np.floor(shape[1] / 2.).astype(int))
+    if y_center is None:
+        y_center = np.floor(shape[0] / 2.).astype(int)
+    else:
+        y_center = int(y_center)
+
+    if x_center is None:
+        x_center = np.floor(shape[1] / 2.).astype(int)
+    else:
+        x_center = int(x_center)
+
+    y = np.arange(-y_center, shape[0] - y_center)
+    x = np.arange(-x_center, shape[1] - x_center)
 
     yy, xx = np.meshgrid(y, x, indexing='ij')
 
