@@ -408,6 +408,9 @@ def fit_2D_gaussian(xmat, ymat, z):
                                          'y_mean': True}) + \
         astropy_models.Const2D(amplitude=[np.percentile(z, 10)])
 
+    # Impose restrictions on theta
+    g.theta_0.bounds = (-np.pi, np.pi)
+
     fit_g = fitting.LevMarLSQFitter()
     output = fit_g(g, xmat, ymat, z)
     cov = fit_g.fit_info['param_cov']
