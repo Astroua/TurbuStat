@@ -102,7 +102,7 @@ def test_mvc_azimlimits(plaw, ellip):
     test3.run(radial_pspec_kwargs={},
               fit_2D=False, weighted_fit=True)
 
-    # Ensure slopes are consistent to within 5%
-    assert_between(test3.slope, - 1.05 * plaw, - 0.95 * plaw)
-    assert_between(test2.slope, - 1.05 * plaw, - 0.95 * plaw)
-    assert_between(test.slope, - 1.05 * plaw, - 0.95 * plaw)
+    # Ensure slopes are consistent to within 7%
+    assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
+    assert_between(test2.slope, - 1.07 * plaw, - 0.93 * plaw)
+    assert_between(test.slope, - 1.07 * plaw, - 0.93 * plaw)
