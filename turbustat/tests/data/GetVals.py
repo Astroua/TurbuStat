@@ -68,6 +68,13 @@ bispec_distance = \
 
 bispec_val = bispec_distance.bispec1.bicoherence
 
+azimuthal_slice = bispec_distance.bispec1.azimuthal_slice(16, 10,
+                                                          value='bispectrum_logamp',
+                                                          bin_width=5 * u.deg)
+bispec_azim_bins = azimuthal_slice[16][0]
+bispec_azim_vals = azimuthal_slice[16][1]
+bispec_azim_stds = azimuthal_slice[16][2]
+
 bispec_meansub = BiSpectrum(dataset1['moment0'])
 bispec_meansub.run(mean_subtract=True)
 
@@ -333,6 +340,9 @@ np.savez_compressed('checkVals',
                     pspec_slope=pspec_slope,
                     pspec_slope2D=pspec_slope2D,
                     bispec_val=bispec_val,
+                    bispec_azim_bins=bispec_azim_bins,
+                    bispec_azim_vals=bispec_azim_vals,
+                    bispec_azim_stds=bispec_azim_stds,
                     bispec_val_meansub=bispec_val_meansub,
                     genus_val=genus_val,
                     delvar_val=delvar_val,
