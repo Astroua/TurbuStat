@@ -97,10 +97,6 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             y_scale_errors[idx] = errs[1]
             x_scale_errors[idx] = errs[0]
 
-            print(output.parameters)
-            print(output.x_stddev_0, output.y_stddev_0)
-            print(cov, errs)
-
             if diagnosticplots and idx < 9:
                 import matplotlib.pyplot as plt
                 ax = plt.subplot(3, 3, idx + 1)
