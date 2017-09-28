@@ -52,11 +52,12 @@ def test_load_beam_props(major, minor, pa):
 
 
 # radio-beam no has an exception for when no beam is found.
-@pytest.mark.skipif("RADIO_BEAM_INSTALLED")
-@pytest.mark.xfail(raises=NoBeamException)
-def test_load_beam_fail():
+# @pytest.mark.skipif("RADIO_BEAM_INSTALLED")
+if RADIO_BEAM_INSTALLED:
+    @pytest.mark.xfail(raises=NoBeamException)
+    def test_load_beam_fail():
 
-    find_beam_width(header)
+        find_beam_width(header)
 
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 @pytest.mark.xfail(raises=ValueError)
