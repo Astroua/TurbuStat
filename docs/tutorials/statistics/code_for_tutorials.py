@@ -27,7 +27,7 @@ run_delvar = False
 run_dendro = False
 run_genus = False
 run_mvc = False
-run_pca = True
+run_pca = False
 run_pdf = False
 run_pspec = False
 run_scf = False
@@ -250,9 +250,7 @@ if run_pdf:
     moment0 = fits.open(osjoin(data_path, "Design4_flatrho_0021_00_radmc_moment0.fits"))[0]
     pdf_mom0 = PDF(moment0, min_val=0.0, bins=None)
     pdf_mom0.run(verbose=True),
-                 # save_name=osjoin(fig_path, "pdf_design4_mom0.png"))
-
-    print(argh)
+                 save_name=osjoin(fig_path, "pdf_design4_mom0.png"))
 
     print(pdf_mom0.find_percentile(500))
     print(pdf_mom0.find_at_percentile(96.3134765625))
