@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #166 - Removed testing python 2.7 with the dev version of astropy.
 * #164 - Add segmented linear fitting for the wavelet transform; updated unit test values to include segmented fitting slopes for wavelets
 * #163 - Use Hermitian eigenvalue decomposition for PCA (fixes getting imaginary components); Update the ellipse contour fitting to use the robust fitter from skimage (fixes previous PCA test failures); updated unit test values for the change in PCA
 * #161 - python 3 support; use ci-helpers; updated astropy-helpers; consistent convolution results with astropy 2.x; new delta-variance regression test values after convolution updates; DeltaVariance_Distance.curve_distance now restricts to the region between xlow and xhigh
