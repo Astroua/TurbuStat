@@ -51,9 +51,10 @@ matrix:
                CONDA_DEPENDENCIES='pytest scipy matplotlib pandas statsmodels scikit-learn mock sphinx_bootstrap_theme'
 
         # Now try Astropy dev and LTS vesions with the latest 3.x and 2.7.
-        - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=development
-               EVENT_TYPE='pull_request push cron'
+        # astropy dev is now >=3.5 only
+        # - os: linux
+        #   env: PYTHON_VERSION=2.7 ASTROPY_VERSION=development
+        #        EVENT_TYPE='pull_request push cron'
         - os: linux
           env: ASTROPY_VERSION=development
                EVENT_TYPE='pull_request push cron'
