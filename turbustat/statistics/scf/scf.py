@@ -668,7 +668,7 @@ class SCF(BaseStatisticMixIn):
 
             if self._azim_constraint_flag:
                 if not np.all(self._azim_mask):
-                    plt.contour(self._azim_mask, 'b', linestyles='-.', levels=[1])
+                    plt.contour(self._azim_mask, 'b', linestyles='-.', levels=[0.5])
                 else:
                     warn("Azimuthal mask includes all data. No contours will be drawn.")
 
@@ -691,8 +691,8 @@ class SCF(BaseStatisticMixIn):
                            markersize=5, label="Data")
 
             ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
-            ax.set_ylim(self.scf_spectrum.min() * 0.75,
-                        self.scf_spectrum.max() * 1.25)
+            ax.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
+                        np.nanmax(self.scf_spectrum) * 1.25)
 
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,
