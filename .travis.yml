@@ -43,7 +43,7 @@ matrix:
         # Do a coverage test.
         - os: linux
           env: SETUP_CMD='test --coverage'
-
+               PIP_DEPENDENCIES='emcee git+https://github.com/radio-astro-tools/radio_beam.git git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - os: linux
