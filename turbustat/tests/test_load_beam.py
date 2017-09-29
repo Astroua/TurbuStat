@@ -58,9 +58,9 @@ if RADIO_BEAM_INSTALLED:
     def test_load_beam_fail():
 
         find_beam_width(header)
+else:
+    # @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
+    @pytest.mark.xfail(raises=ValueError)
+    def test_load_beam_fail():
 
-@pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
-@pytest.mark.xfail(raises=ValueError)
-def test_load_beam_fail():
-
-    find_beam_width(header)
+        find_beam_width(header)
