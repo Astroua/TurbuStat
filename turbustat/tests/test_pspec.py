@@ -2,6 +2,7 @@
 from __future__ import print_function, absolute_import, division
 
 import pytest
+import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
@@ -103,3 +104,32 @@ def test_pspec_azimlimits(plaw, ellip):
     assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
     assert_between(test2.slope, - 1.07 * plaw, - 0.93 * plaw)
     assert_between(test.slope, - 1.07 * plaw, - 0.93 * plaw)
+
+
+@pytest.mark.parametrize('theta',
+                         [0., np.pi / 4., np.pi / 2., 7 * np.pi / 8.])
+def test_pspec_fit2D(theta):
+    '''
+    Since test_elliplaw tests everything, only check for consistent theta
+    here.
+    '''
+
+    imsize = 256
+    ellip = 0.5
+    plaw = 4.
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_psd=False)
+
+    test = PowerSpectrum(fits.PrimaryHDU(img))
+    test.run(radial_pspec_kwargs={"theta_0": theta * u.rad,
+                                  "delta_theta": 40 * u.deg},
+             fit_2D=True, weighted_fit=True)
+
+    try:
+        npt.assert_allclose(theta, test.theta2D,
+                            atol=0.08)
+    except AssertionError:
+        npt.assert_allclose(theta, test.theta2D - np.pi,
+                            atol=0.08)
