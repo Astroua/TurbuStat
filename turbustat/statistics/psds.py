@@ -138,6 +138,9 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
                                        psd2[azim_mask].ravel(),
                                        bins=bins,
                                        statistic=np.nanstd)[0]
+
+        ps1D_stddev[ps1D_stddev == 0.] = np.NaN
+
         if theta_0 is not None:
             return bin_cents, ps1D, ps1D_stddev, azim_mask
         else:
