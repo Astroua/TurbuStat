@@ -24,7 +24,7 @@ class StatisticBase_PSpec2D(object):
         '''
         Two-dimensional power spectrum.
         '''
-        return self._ps2D
+        return self._ps2D[::-1]
 
     @property
     def ps1D(self):

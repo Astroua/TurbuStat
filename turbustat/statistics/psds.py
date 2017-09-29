@@ -168,4 +168,4 @@ def make_radial_freq_arrays(shape):
 
     yy_freq, xx_freq = np.meshgrid(yfreqs, xfreqs, indexing='ij')
 
-    return yy_freq, xx_freq
+    return yy_freq[::-1], xx_freq[::-1]
