@@ -168,3 +168,31 @@ def test_SCF_azimlimits():
     # Ensure slopes are consistent to within 5%
     npt.assert_allclose(test3.slope, test.slope, atol=5e-3)
     npt.assert_allclose(test3.slope, test2.slope, atol=5e-3)
+
+
+@pytest.mark.parametrize('theta',
+                         [0., np.pi / 4., np.pi / 2., 7 * np.pi / 8.])
+def test_scf_fit2D(theta):
+    '''
+    Since test_elliplaw tests everything, only check for consistent theta
+    here.
+    '''
+
+    imsize = 512
+    ellip = 0.5
+    plaw = 4.
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_psd=False)[np.newaxis, ...]
+
+    test = SCF(fits.PrimaryHDU(img), size=21)
+    test.run(fit_2D=True)
+
+    try:
+        npt.assert_allclose(theta, test.theta2D,
+                            atol=0.12)
+    except AssertionError:
+        npt.assert_allclose(theta, test.theta2D - np.pi,
+                            atol=0.12)
+
