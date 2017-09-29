@@ -123,9 +123,7 @@ def test_pspec_fit2D(theta):
                         return_psd=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
-    test.run(radial_pspec_kwargs={"theta_0": theta * u.rad,
-                                  "delta_theta": 40 * u.deg},
-             fit_2D=True, weighted_fit=True)
+    test.run(fit_2D=True, weighted_fit=True)
 
     try:
         npt.assert_allclose(theta, test.theta2D,
