@@ -172,6 +172,14 @@ if run_mvc:
             high_cut=0.1 / u.pix, fit_2D=False,
             save_name=osjoin(fig_path, 'mvc_design4_physunits.png'))
 
+    # Azimuthal limits
+    mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)
+    mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+            high_cut=0.1 / u.pix, fit_2D=False,
+            radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+            save_name=osjoin(fig_path, 'mvc_design4_physunits_azimlimits.png'))
+
+
 # PCA
 if run_pca:
 
@@ -334,6 +342,12 @@ if run_pspec:
               radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
               save_name=osjoin(fig_path, "design4_pspec_breakfit_azimlimits.png"))
 
+    pspec = PowerSpectrum(moment0, distance=250 * u.pc)
+    pspec.run(verbose=True, xunit=u.pix**-1,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              weighted_fit=True,
+              save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
+
 # SCF
 if run_scf:
 
@@ -456,6 +470,12 @@ if run_vca:
     vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
                     brk=0.1 / u.pix, fit_2D=False,
                     save_name=osjoin(fig_path, "design4_vca_400ms_channels.png"))
+
+    # W/ azimuthal constraints
+    vca = VCA(cube)
+    vca.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix,
+            radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+            save_name=osjoin(fig_path, "design4_vca_limitedfreq_azimilimits.png"))
 
 
 # VCS
