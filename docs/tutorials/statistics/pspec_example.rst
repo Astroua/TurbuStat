@@ -166,6 +166,37 @@ There may be cases where you want to limit the azimuthal angles used to create t
 
 The azimuthal mask has been added onto the plot of the two-dimensional power spectrum. The constraints used here are based on the major axis direction from the two-dimensional fit performed above. This is given as `theta_0`. The other parameter, `delta_theta`, is the width of the azimuthal mask to use. Both parameters can be specified in any angular unit.
 
+The default fit uses Ordinary Least Squares. A Weighted Least Squares can be enabled with `weighted_fit=True` *if* the segmented linear fit is not used:
+
+    >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, weighted_fit=True)  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.969
+    Model:                            WLS   Adj. R-squared:                  0.966
+    Method:                 Least Squares   F-statistic:                     372.0
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           2.13e-10
+    Time:                        15:08:21   Log-Likelihood:                 13.966
+    No. Observations:                  14   AIC:                            -23.93
+    Df Residuals:                      12   BIC:                            -22.65
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          5.5119      0.194     28.476      0.000       5.090       5.934
+    x1            -3.0200      0.157    -19.288      0.000      -3.361      -2.679
+    ==============================================================================
+    Omnibus:                        0.701   Durbin-Watson:                   2.387
+    Prob(Omnibus):                  0.704   Jarque-Bera (JB):                0.655
+    Skew:                          -0.235   Prob(JB):                        0.721
+    Kurtosis:                       2.050   Cond. No.                         15.3
+    ==============================================================================
+
+.. image:: images/design4_pspec_limitedfreq_weightfit.png
+
+The fit has not changed significantly, but may in certain cases.
+
 
 References
 ----------
