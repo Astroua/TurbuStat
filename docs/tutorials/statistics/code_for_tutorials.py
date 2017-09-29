@@ -29,7 +29,7 @@ run_genus = False
 run_mvc = False
 run_pca = False
 run_pdf = False
-run_pspec = True
+run_pspec = False
 run_scf = False
 run_moments = False
 run_tsallis = False
@@ -326,6 +326,13 @@ if run_pspec:
               low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
               brk=0.1 / u.pix, log_break=False, fit_2D=False,
               save_name=osjoin(fig_path, "design4_pspec_breakfit.png"))
+
+    pspec = PowerSpectrum(moment0, distance=250 * u.pc)
+    pspec.run(verbose=True, xunit=u.pc**-1,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
+              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+              save_name=osjoin(fig_path, "design4_pspec_breakfit_azimlimits.png"))
 
 # SCF
 if run_scf:

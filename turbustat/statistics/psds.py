@@ -33,8 +33,11 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         Give the minimum value to bin to.
     return_freqs : bool, optional
         Return spatial frequencies.
-    theta_0 : list of two angles, optional
-        Provide azimuthal constraints to the averaging.
+    theta_0 : `~astropy.units.Quantity`, optional
+        The center angle of the azimuthal mask. Must have angular units.
+    delta_theta : `~astropy.units.Quantity`, optional
+        The width of the azimuthal mask. This must be given when
+        a `theta_0` is given. Must have angular units.
 
     Returns
     -------
