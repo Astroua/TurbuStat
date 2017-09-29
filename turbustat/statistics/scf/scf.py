@@ -156,7 +156,7 @@ class SCF(BaseStatisticMixIn):
             for j, y_shift in enumerate(dy):
 
                 if x_shift == 0 and y_shift == 0:
-                    self._scf_surface[i, j] = 1.
+                    self._scf_surface[j, i] = 1.
 
                 if x_shift == 0:
                     tmp = self.data
@@ -206,7 +206,7 @@ class SCF(BaseStatisticMixIn):
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[i, j] = scf_value
+                self._scf_surface[j, i] = scf_value
 
     def compute_spectrum(self, return_stddev=True,
                          **kwargs):
@@ -441,6 +441,11 @@ class SCF(BaseStatisticMixIn):
 
         yy, xx = make_radial_arrays(self.scf_surface.shape)
 
+        # Needed to make sure the definition of theta is consistent with
+        # azimuthal masking and the elliptical p-law
+        yy = yy[::-1]
+        xx = xx[::-1]
+
         dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
         mask = clip_func(dists, xlow_pix, xhigh_pix)
@@ -644,24 +649,28 @@ class SCF(BaseStatisticMixIn):
             cb = plt.colorbar()
             cb.set_label("SCF Value")
 
-            if fit_2D and hasattr(self, 'fit2D'):
+            yy, xx = make_radial_arrays(self.scf_surface.shape)
 
-                yy, xx = make_radial_arrays(self.scf_surface.shape)
+            pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+            dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
-                pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
-                dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+            xlow_pix = self._to_pixel(self.xlow).value
+            xhigh_pix = self._to_pixel(self.xhigh).value
 
-                xlow_pix = self._to_pixel(self.xlow).value
-                xhigh_pix = self._to_pixel(self.xhigh).value
+            mask = clip_func(dists, xlow_pix, xhigh_pix)
 
-                mask = clip_func(dists, xlow_pix, xhigh_pix)
-
-                plt.contour(self.fit2D(xx, yy), cmap='viridis')
-
+            if not mask.all():
                 plt.contour(mask, colors='b', linestyles='-.')
 
+            if fit_2D and hasattr(self, 'fit2D'):
+
+                plt.contour(self.fit2D(xx, yy)[::-1], cmap='viridis')
+
             if self._azim_constraint_flag:
-                plt.contour(self._azim_mask, 'b', linestyles='-.')
+                if not np.all(self._azim_mask):
+                    plt.contour(self._azim_mask, 'b', linestyles='-.', levels=[1])
+                else:
+                    warn("Azimuthal mask includes all data. No contours will be drawn.")
 
             plt.subplot(2, 2, 2)
             plt.hist(self.scf_surface.ravel())
