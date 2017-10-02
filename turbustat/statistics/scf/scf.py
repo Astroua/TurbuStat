@@ -660,7 +660,7 @@ class SCF(BaseStatisticMixIn):
             mask = clip_func(dists, xlow_pix, xhigh_pix)
 
             if not mask.all():
-                plt.contour(mask, colors='b', linestyles='-.')
+                plt.contour(mask, colors='b', linestyles='-.', levels=[0.5])
 
             if fit_2D and hasattr(self, 'fit2D'):
 
@@ -668,7 +668,7 @@ class SCF(BaseStatisticMixIn):
 
             if self._azim_constraint_flag:
                 if not np.all(self._azim_mask):
-                    plt.contour(self._azim_mask, 'b', linestyles='-.', levels=[0.5])
+                    plt.contour(self._azim_mask, colors='b', linestyles='-.', levels=[0.5])
                 else:
                     warn("Azimuthal mask includes all data. No contours will be drawn.")
 
