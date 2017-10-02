@@ -367,6 +367,12 @@ if run_scf:
     scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
             save_name=osjoin(fig_path, "design4_scf_fitlimits.png"))
 
+    # With azimuthal constraints
+    scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
+            radialavg_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 70 * u.deg},
+            save_name=osjoin(fig_path, "design4_scf_fitlimits_azimlimits.png"))
+
+
     # Custom lags w/ phys units
     distance = 250 * u.pc  # Assume a distance
     phys_conv = (np.abs(cube.header['CDELT2']) * u.deg).to(u.rad).value * distance
