@@ -59,8 +59,32 @@ if run_bispec:
     plt.subplot(122)
     plt.imshow(bispec2.bicoherence, vmin=0, vmax=1, origin='lower')
     plt.title("With mean subtraction")
-    plt.savefig(osjoin(fig_path, "bispectrum_w_and_wo_meansub_coherence"))
+    plt.savefig(osjoin(fig_path, "bispectrum_w_and_wo_meansub_coherence.png"))
     plt.close()
+
+    # Radial and azimuthal slices
+    rad_slices = bispec.radial_slice([30, 45, 60] * u.deg, 20 * u.deg, value='bispectrum_logamp')
+    plt.errorbar(rad_slices[30][0], rad_slices[30][1], yerr=rad_slices[30][2], label='30')
+    plt.errorbar(rad_slices[45][0], rad_slices[45][1], yerr=rad_slices[45][2], label='45')
+    plt.errorbar(rad_slices[60][0], rad_slices[60][1], yerr=rad_slices[60][2], label='60')
+    plt.legend()
+    plt.xlabel("Radius")
+    plt.ylabel("log Bispectrum")
+    plt.grid()
+    plt.savefig(osjoin(fig_path, "bispectrum_radial_slices.png"))
+    plt.close()
+
+    azim_slices = bispec.azimuthal_slice([8, 16, 50], 10, value='bispectrum_logamp', bin_width=5 * u.deg)
+    plt.errorbar(azim_slices[8][0], azim_slices[8][1], yerr=azim_slices[8][2], label='8')
+    plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerr=azim_slices[16][2], label='16')
+    plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerr=azim_slices[50][2], label='50')
+    plt.legend()
+    plt.xlabel("Theta (deg)")
+    plt.ylabel("log Bispectrum")
+    plt.grid()
+    plt.savefig(osjoin(fig_path, "bispectrum_azim_slices.png"))
+    plt.close()
+
 
 # Delta-Variance
 if run_delvar:
