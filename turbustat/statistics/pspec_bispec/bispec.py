@@ -188,7 +188,7 @@ class BiSpectrum(BaseStatisticMixIn):
             raise TypeError("value must be 'bispectrum'"
                             ", 'bispectrum_logamp', or 'bicoherence'")
 
-        if isinstance(radii, np.ndarray):
+        if isinstance(radii, np.ndarray) or isinstance(radii, list):
             if not isinstance(delta_radii, np.ndarray):
                 delta_radii = np.array([delta_radii] * len(radii))
             if len(radii) != len(delta_radii):
