@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #165 - Added azimuthal constraints when creating 1D power-spectra. Also added radial and azimuthal slicing for the bispectrum. Fixed a critical bug in the bootstrapping for the 2D elliptical power-law model.
 * #166 - Removed testing python 2.7 with the dev version of astropy.
 * #164 - Add segmented linear fitting for the wavelet transform; updated unit test values to include segmented fitting slopes for wavelets
 * #163 - Use Hermitian eigenvalue decomposition for PCA (fixes getting imaginary components); Update the ellipse contour fitting to use the robust fitter from skimage (fixes previous PCA test failures); updated unit test values for the change in PCA

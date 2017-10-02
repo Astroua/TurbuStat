@@ -1,245 +1,14 @@
 # Licensed under an MIT open source license - see LICENSE
-from __future__ import print_function, absolute_import, division
+# from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import numpy.random as ra
-from numpy.fft import fftshift
 import astropy.units as u
+from scipy.stats import binned_statistic
 
-from ..rfft_to_fft import rfft_to_fft
-from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
-from ..fitting_utils import check_fit_limits
-
-
-class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
-
-    """
-    Compute the power spectrum of a given image. (e.g., Burkhart et al., 2010)
-
-    Parameters
-    ----------
-    img : %(dtypes)s
-        2D image.
-    header : FITS header, optional
-        The image header. Needed for the pixel scale.
-    weights : %(dtypes)s
-        Weights to be applied to the image.
-    distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
-    """
-
-    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
-
-    def __init__(self, img, header=None, weights=None, distance=None):
-        super(PowerSpectrum, self).__init__()
-
-        # Set data and header
-        self.input_data_header(img, header)
-
-        self.data[np.isnan(self.data)] = 0.0
-
-        if weights is None:
-            weights = np.ones(self.data.shape)
-        else:
-            # Get rid of all NaNs
-            weights[np.isnan(weights)] = 0.0
-            weights[np.isnan(self.data)] = 0.0
-            self.data[np.isnan(self.data)] = 0.0
-
-        self.weighted_data = self.data * weights
-
-        self._ps1D_stddev = None
-
-        if distance is not None:
-            self.distance = distance
-
-    def compute_pspec(self):
-        '''
-        Compute the 2D power spectrum.
-        '''
-
-        fft = fftshift(rfft_to_fft(self.weighted_data))
-
-        self._ps2D = np.power(fft, 2.)
-
-    def run(self, verbose=False, logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={},
-            xunit=u.pix**-1, save_name=None,
-            use_wavenumber=False, **fit_kwargs):
-        '''
-        Full computation of the spatial power spectrum.
-
-        Parameters
-        ----------
-        verbose: bool, optional
-            Enables plotting.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        low_cut : `~astropy.units.Quantity`, optional
-            Low frequency cut off in frequencies used in the fitting.
-        high_cut : `~astropy.units.Quantity`, optional
-            High frequency cut off in frequencies used in the fitting.
-        fit_2D : bool, optional
-            Fit an elliptical power-law model to the 2D power spectrum.
-        fit_2D_kwargs : dict, optional
-            Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
-            `low_cut` and `high_cut` keywords to provide fit limits.
-        xunit : u.Unit, optional
-            Choose the unit to convert the x-axis to in the plot.
-        save_name : str,optional
-            Save the figure when a file name is given.
-        use_wavenumber : bool, optional
-            Plot the x-axis as the wavenumber rather than spatial frequency.
-        fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
-        '''
-
-        self.compute_pspec()
-        self.compute_radial_pspec(logspacing=logspacing,
-                                  return_stddev=return_stddev)
-
-        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
-
-        if fit_2D:
-            self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,
-                             **fit_2D_kwargs)
-
-        if verbose:
-            print(self.fit.summary())
-            self.plot_fit(show=True, show_2D=True,
-                          xunit=xunit, save_name=save_name,
-                          use_wavenumber=use_wavenumber)
-            if save_name is not None:
-                import matplotlib.pyplot as plt
-                plt.close()
-
-        return self
-
-
-class PSpec_Distance(object):
-
-    """
-
-    Distance metric for the spatial power spectrum. A linear model with an
-    interaction term is fit to the powerlaws. The distance is the
-    t-statistic of the interaction term.
-
-    Parameters
-    ----------
-
-    data1 : %(dtypes)s
-        Data with an associated header.
-    data2 : %(dtypes)s
-        See data1.
-    weights1 : %(dtypes)s, optional
-        Weights to apply to data1
-    weights2 : %(dtypes)s, optional
-        Weights to apply to data2
-    breaks : `~astropy.units.Quantity`, list or array, optional
-        Specify where the break point is with appropriate units.
-        If none is given, no break point will be used in the fit.
-    fiducial_model : PowerSpectrum
-        Computed PowerSpectrum object. use to avoid recomputing.
-    low_cut : `~astropy.units.Quantity` or np.ndarray, optional
-        The lower frequency fitting limit. An array with 2 elements can be
-        passed to give separate lower limits for the datasets.
-    high_cut : `~astropy.units.Quantity` or np.ndarray, optional
-        The upper frequency fitting limit. See `low_cut` above. Defaults to
-        0.5.
-    logspacing : bool, optional
-        Enable to use logarithmically-spaced bins.
-    phys_distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
-    """
-
-    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
-
-    def __init__(self, data1, data2, weights1=None, weights2=None,
-                 breaks=None, fiducial_model=None, low_cut=None,
-                 high_cut=0.5 / u.pix, logspacing=False, phys_distance=None):
-        super(PSpec_Distance, self).__init__()
-
-        low_cut, high_cut = check_fit_limits(low_cut, high_cut)
-
-        if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
-            breaks = [breaks] * 2
-
-        if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1, weights=weights1,
-                                        distance=phys_distance)
-            self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            logspacing=logspacing, brk=breaks[0],
-                            fit_2D=False)
-        else:
-            self.pspec1 = fiducial_model
-
-        self.pspec2 = PowerSpectrum(data2, weights=weights2,
-                                    distance=phys_distance)
-        self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        brk=breaks[1],
-                        logspacing=logspacing, fit_2D=False)
-
-        self.results = None
-        self.distance = None
-
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.pix**-1, save_name=None,
-                        use_wavenumber=False):
-        '''
-
-        Implements the distance metric for 2 Power Spectrum transforms.
-        We fit the linear portion of the transform to represent the powerlaw
-        A linear model with an interaction term is fit to the two powerlaws.
-        The distance is the t-statistic of the interaction.
-
-        Parameters
-        ----------
-        verbose : bool, optional
-            Enables plotting.
-        label1 : str, optional
-            Object or region name for data1
-        label2 : str, optional
-            Object or region name for data2
-        xunit : u.Unit, optional
-            Choose the unit to convert the x-axis to in the plot.
-        save_name : str,optional
-            Save the figure when a file name is given.
-        use_wavenumber : bool, optional
-            Plot the x-axis as the wavenumber rather than spatial frequency.
-        '''
-
-        self.distance = \
-            np.abs((self.pspec1.slope - self.pspec2.slope) /
-                   np.sqrt(self.pspec1.slope_err**2 +
-                           self.pspec2.slope_err**2))
-
-        if verbose:
-            print(self.pspec1.fit.summary())
-            print(self.pspec2.fit.summary())
-
-            import matplotlib.pyplot as p
-
-            self.pspec1.plot_fit(show=False, color='b',
-                                 label=label1, symbol='D',
-                                 xunit=xunit,
-                                 use_wavenumber=use_wavenumber)
-            self.pspec2.plot_fit(show=False, color='g',
-                                 label=label2, symbol='o',
-                                 xunit=xunit,
-                                 use_wavenumber=use_wavenumber)
-            p.legend(loc='best')
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
-
-        return self
+from ..psds import make_radial_arrays
 
 
 class BiSpectrum(BaseStatisticMixIn):
@@ -358,7 +127,7 @@ class BiSpectrum(BaseStatisticMixIn):
         return self._bispectrum
 
     @property
-    def bispectrum_amp(self):
+    def bispectrum_logamp(self):
         '''
         log amplitudes of the bispectrum.
         '''
@@ -377,6 +146,211 @@ class BiSpectrum(BaseStatisticMixIn):
         Array showing the number of samples in each k_1 k_2 bin.
         '''
         return self._tracker
+
+    def azimuthal_slice(self, radii, delta_radii, bin_width=5. * u.deg,
+                        value='bispectrum', return_masks=False):
+        '''
+        Create an azimuthal slice of the bispectrum or bicoherence
+        surfaces.
+
+        Parameters
+        ----------
+        radii : float or np.ndarray
+            Radii in the bispectrum plane to extract slices at. Multiple
+            slices are returned if radii is an array.
+        delta_radii : float or np.ndarray
+            The width around the radii in the bispectrum plane. If multiple
+            radii are given, `delta_radii` must match the length of `radii`.
+        bin_width : `~astropy.units.Quantity`, optional
+            The angular size of the bins used to create the slice.
+        value : str, optional
+            Which surface to create a profile from. Can be "bispectrum"
+            (default), "bispectrum_logamp", or "bicoherence".
+        return_masks : bool, optional
+            Return the radial masks used to create the slices.
+
+        Returns
+        -------
+        azimuthal_slices : dict
+            Dictionary with the azimuthal slices. Each radius given in radii
+            is a key in the dictionary. Each slice is a numpy array containing
+            the bin centers, the averaged values, and the standard deviations
+            in the azimuthal bins.
+        '''
+
+        if value == "bispectrum":
+            value_arr = self.bispectrum
+        elif value == "bispectrum_logamp":
+            value_arr = self.bispectrum_logamp
+        elif value == "bicoherence":
+            value_arr = self.bicoherence
+        else:
+            raise TypeError("value must be 'bispectrum'"
+                            ", 'bispectrum_logamp', or 'bicoherence'")
+
+        if isinstance(radii, np.ndarray) or isinstance(radii, list):
+            if not isinstance(delta_radii, np.ndarray):
+                delta_radii = np.array([delta_radii] * len(radii))
+            if len(radii) != len(delta_radii):
+                raise ValueError("Length of radii and delta_radii must match.")
+        else:
+            radii = np.array([radii])
+
+        if not isinstance(delta_radii, np.ndarray):
+            delta_radii = np.array([delta_radii])
+
+        if not hasattr(bin_width, "unit"):
+            raise TypeError("bin_width must have an attached angular unit.")
+        elif not bin_width.unit.is_equivalent(u.rad):
+            raise TypeError("bin_width must have an attached angular unit.")
+        else:
+            bin_width = bin_width.to(u.rad).value
+
+        kky, kkx = make_radial_arrays(self.bispectrum.shape, y_center=0,
+                                      x_center=0)
+
+        dist = np.sqrt(kky**2 + kkx**2)
+        theta = np.arctan2(kky, kkx)
+
+        nbins = np.floor(np.pi / bin_width).astype(int)
+        bins = np.linspace(0, np.pi, nbins)
+
+        azimuthal_slices = {}
+        if return_masks:
+            masks = []
+
+        for rad, del_rad in zip(radii, delta_radii):
+
+            # Create the mask of the radii to extract the profile at.
+            mask = np.logical_and(dist >= rad - del_rad / 2.,
+                                  dist <= rad + del_rad / 2.)
+
+            vals, bin_edge, cts = binned_statistic(theta[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanmean)
+
+            stds, bin_edge, cts = binned_statistic(theta[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanstd)
+
+            bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
+
+            azimuthal_slices[rad] = np.array([bin_cents, vals, stds])
+            if return_masks:
+                masks.append(mask)
+
+        if return_masks:
+            return azimuthal_slices, masks
+
+        return azimuthal_slices
+
+    def radial_slice(self, thetas, delta_thetas, bin_width=1.,
+                     value='bispectrum', return_masks=False):
+        '''
+        Create a radial slice of the bispectrum (or bicoherence) plane.
+
+        Parameters
+        ----------
+        thetas : `~astropy.units.Quantity`
+            Azimuthal angles in the bispectrum plane to extract slices at.
+            Multiple slices are returned if `thetas` is an array.
+        delta_thetas : `~astropy.units.Quantity`
+            The width around the angle in the bispectrum plane. If multiple
+            angles are given, `delta_thetas` must match the length of `thetas`.
+        bin_width : float, optional
+            The radial size of the bins used to create the slice.
+        value : str, optional
+            Which surface to create a profile from. Can be "bispectrum"
+            (default), "bispectrum_logamp", or "bicoherence".
+        return_masks : bool, optional
+            Return the radial masks used to create the slices.
+
+        Returns
+        -------
+        radial_slices : dict
+            Dictionary with the radial slices. Each angle given in thetas
+            is a key in the dictionary. Each slice is a numpy array containing
+            the bin centers, the averaged values, and the standard deviations
+            in the radial bins.
+        '''
+
+        if value == "bispectrum":
+            value_arr = self.bispectrum
+        elif value == "bispectrum_logamp":
+            value_arr = self.bispectrum_logamp
+        elif value == "bicoherence":
+            value_arr = self.bicoherence
+        else:
+            raise TypeError("value must be 'bispectrum'"
+                            ", 'bispectrum_logamp', or 'bicoherence'")
+
+        orig_thetas = thetas.copy().value
+
+        # Check units
+        if not hasattr(thetas, "unit") or not hasattr(delta_thetas, "unit"):
+            raise TypeError("thetas must have an attached angular unit.")
+        elif (not thetas.unit.is_equivalent(u.rad) or
+              not delta_thetas.unit.is_equivalent(u.rad)):
+            raise TypeError("thetas must have an attached angular unit.")
+        else:
+            thetas = thetas.to(u.rad).value
+            delta_thetas = delta_thetas.to(u.rad).value
+
+        # Make sure the lengths match if multiple values are given.
+        if isinstance(thetas, np.ndarray):
+            if not isinstance(delta_thetas, np.ndarray):
+                delta_thetas = np.array([delta_thetas] * len(thetas))
+            if len(thetas) != len(delta_thetas):
+                raise ValueError("Length of thetas and delta_thetas must "
+                                 "match.")
+        else:
+            thetas = np.array([thetas])
+            orig_thetas = np.array([orig_thetas])
+
+        if not isinstance(delta_thetas, np.ndarray):
+            delta_thetas = np.array([delta_thetas])
+
+        kky, kkx = make_radial_arrays(self.bispectrum.shape, y_center=0,
+                                      x_center=0)
+
+        radial_slices = dict.fromkeys(orig_thetas)
+        if return_masks:
+            masks = []
+
+        dist = np.sqrt(kky**2 + kkx**2)
+        theta_arr = np.arctan2(kky, kkx)
+
+        nbins = np.floor(dist.max() / bin_width).astype(int)
+        bins = np.linspace(0, dist.max(), nbins)
+
+        for theta, del_theta, theta0 in zip(thetas, delta_thetas, orig_thetas):
+
+            # Create the mask of the radii to extract the profile at.
+            mask = np.logical_and(theta_arr >= theta - del_theta / 2.,
+                                  theta_arr <= theta + del_theta / 2.)
+
+            vals, bin_edge, cts = binned_statistic(dist[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanmean)
+
+            stds, bin_edge, cts = binned_statistic(dist[mask].ravel(),
+                                                   value_arr[mask].ravel(),
+                                                   bins=bins,
+                                                   statistic=np.nanstd)
+
+            bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
+
+            radial_slices[theta0] = np.array([bin_cents, vals, stds])
+            if return_masks:
+                masks.append(mask)
+
+        if return_masks:
+            return radial_slices, masks
+
+        return radial_slices
 
     def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False,
             save_name=None):
@@ -405,10 +379,10 @@ class BiSpectrum(BaseStatisticMixIn):
 
             p.subplot(1, 2, 1)
             p.title("Bispectrum")
-            p.imshow(
-                self.bispectrum_amp, origin="lower", interpolation="nearest")
+            p.imshow(self.bispectrum_logamp, origin="lower",
+                     interpolation="nearest")
             p.colorbar()
-            p.contour(self.bispectrum_amp, colors="k")
+            p.contour(self.bispectrum_logamp, colors="k")
             p.xlabel(r"$k_1$")
             p.ylabel(r"$k_2$")
 

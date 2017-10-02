@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 from astropy.extern.six import string_types
 import statsmodels.api as sm
 import sys
+from warnings import warn
 
 if sys.version_info[0] >= 3:
     import _pickle as pickle
@@ -22,6 +23,7 @@ from ..fitting_utils import clip_func
 from ..elliptical_powerlaw import (fit_elliptical_powerlaw,
                                    inverse_interval_transform,
                                    inverse_interval_transform_stderr)
+from ..stats_warnings import TurbuStatMetricWarning
 
 
 class SCF(BaseStatisticMixIn):
@@ -154,7 +156,7 @@ class SCF(BaseStatisticMixIn):
             for j, y_shift in enumerate(dy):
 
                 if x_shift == 0 and y_shift == 0:
-                    self._scf_surface[i, j] = 1.
+                    self._scf_surface[j, i] = 1.
 
                 if x_shift == 0:
                     tmp = self.data
@@ -204,7 +206,7 @@ class SCF(BaseStatisticMixIn):
 
                 scf_value = 1. - \
                     np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[i, j] = scf_value
+                self._scf_surface[j, i] = scf_value
 
     def compute_spectrum(self, return_stddev=True,
                          **kwargs):
@@ -225,17 +227,31 @@ class SCF(BaseStatisticMixIn):
         if self.scf_surface is None:
             self.compute_surface()
 
-        if return_stddev:
-            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = \
-                pspec(self.scf_surface, logspacing=False,
-                      return_stddev=return_stddev, return_freqs=False,
-                      **kwargs)
-            self._stddev_flag = True
+        if kwargs.get("logspacing"):
+            warn("Disabled log-spaced bins. This does not work well for the"
+                 " SCF.", TurbuStatMetricWarning)
+            kwargs.pop('logspacing')
+
+        if kwargs.get("theta_0"):
+            azim_constraint_flag = True
         else:
-            self._lags, self._scf_spectrum = \
-                pspec(self.scf_surface, logspacing=False,
-                      return_freqs=False, **kwargs)
-            self._stddev_flag = False
+            azim_constraint_flag = False
+
+        out = pspec(self.scf_surface, return_stddev=return_stddev,
+                    logspacing=False, return_freqs=False, **kwargs)
+
+        self._stddev_flag = return_stddev
+        self._azim_constraint_flag = azim_constraint_flag
+
+        if return_stddev and azim_constraint_flag:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev, \
+                self._azim_mask = out
+        elif return_stddev:
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = out
+        elif azim_constraint_flag:
+            self._lags, self._scf_spectrum, self._azim_mask = out
+        else:
+            self._lags, self._scf_spectrum = out
 
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
@@ -376,7 +392,7 @@ class SCF(BaseStatisticMixIn):
         return 10**model_values
 
     def fit_2Dplaw(self, fit_method='LevMarq', p0=(), xlow=None,
-                   xhigh=None, bootstrap=True, niters=100):
+                   xhigh=None, bootstrap=True, niters=100, use_azimmask=False):
         '''
         Model the 2D power-spectrum surface with an elliptical power-law model.
 
@@ -398,6 +414,9 @@ class SCF(BaseStatisticMixIn):
             the covariance matrix.
         niters : int, optional
             Number of bootstrap iterations.
+        use_azimmask : bool, optional
+            Use the azimuthal mask defined for the 1D spectrum, when azimuthal
+            limit have been given.
         '''
 
         # Adjust the distance based on the separation of the lags
@@ -422,9 +441,17 @@ class SCF(BaseStatisticMixIn):
 
         yy, xx = make_radial_arrays(self.scf_surface.shape)
 
+        # Needed to make sure the definition of theta is consistent with
+        # azimuthal masking and the elliptical p-law
+        yy = yy[::-1]
+        xx = xx[::-1]
+
         dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
 
         mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+        if hasattr(self, "_azim_mask") and use_azimmask:
+            mask = np.logical_and(mask, self._azim_mask)
 
         if not mask.any():
             raise ValueError("Limits have removed all lag values. Make xlow"
@@ -566,7 +593,7 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
-            fit_2D=True, fit_2D_kwargs={},
+            fit_2D=True, fit_2D_kwargs={}, radialavg_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
@@ -586,6 +613,13 @@ class SCF(BaseStatisticMixIn):
             Pickle the results.
         output_name : str, optional
             Name of the outputted pickle file.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D spectrum.
+        fit_2D_kwargs : dict, optional
+            Keyword arguments for `SCF.fit_plaw`. Use the
+            `xlow` and `xhigh` keywords to provide fit limits.
+        radialavg_kwargs : dict, optional
+            Passed to `~SCF.compute_spectrum`.
         verbose : bool, optional
             Enables plotting.
         xunit : `~astropy.units.Unit`, optional
@@ -595,7 +629,8 @@ class SCF(BaseStatisticMixIn):
         '''
 
         self.compute_surface(boundary=boundary)
-        self.compute_spectrum(return_stddev=return_stddev)
+        self.compute_spectrum(return_stddev=return_stddev,
+                              **radialavg_kwargs)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if fit_2D:
@@ -614,21 +649,28 @@ class SCF(BaseStatisticMixIn):
             cb = plt.colorbar()
             cb.set_label("SCF Value")
 
+            yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+            pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+            dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+            xlow_pix = self._to_pixel(self.xlow).value
+            xhigh_pix = self._to_pixel(self.xhigh).value
+
+            mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+            if not mask.all():
+                plt.contour(mask, colors='b', linestyles='-.', levels=[0.5])
+
             if fit_2D and hasattr(self, 'fit2D'):
 
-                yy, xx = make_radial_arrays(self.scf_surface.shape)
+                plt.contour(self.fit2D(xx, yy)[::-1], cmap='viridis')
 
-                pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
-                dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
-
-                xlow_pix = self._to_pixel(self.xlow).value
-                xhigh_pix = self._to_pixel(self.xhigh).value
-
-                mask = clip_func(dists, xlow_pix, xhigh_pix)
-
-                plt.contour(self.fit2D(xx, yy), cmap='viridis')
-
-                plt.contour(mask, colors='b', linestyles='-.')
+            if self._azim_constraint_flag:
+                if not np.all(self._azim_mask):
+                    plt.contour(self._azim_mask, colors='b', linestyles='-.', levels=[0.5])
+                else:
+                    warn("Azimuthal mask includes all data. No contours will be drawn.")
 
             plt.subplot(2, 2, 2)
             plt.hist(self.scf_surface.ravel())
@@ -649,8 +691,8 @@ class SCF(BaseStatisticMixIn):
                            markersize=5, label="Data")
 
             ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
-            ax.set_ylim(self.scf_spectrum.min() * 0.75,
-                        self.scf_spectrum.max() * 1.25)
+            ax.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
+                        np.nanmax(self.scf_spectrum) * 1.25)
 
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,

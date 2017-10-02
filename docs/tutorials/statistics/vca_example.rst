@@ -57,7 +57,7 @@ The VCA spectrum is computed using:
 
 The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.VCA.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for a discussion of the two-dimensional fitting.
 
-The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, which is steeper than the power spectrum we found using the zeroth moment (:ref:`PowerSpectrum tutorial <pspec_tutorial>`). However, as was the case for the power-spectrum of the zeroth moment, there are deviation from a single power-law on small scales due to the inertial range in the simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. In this case, we will limit the fitting between frequencies of `0.02 / pix` and `0.1 / pix` (where the conversion to pixel scales in the simulation is just `1 / freq`):
+The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, which is steeper than the power spectrum we found using the zeroth moment (:ref:`PowerSpectrum tutorial <pspec_tutorial>`). However, as was the case for the power-spectrum of the zeroth moment, there are deviations from a single power-law on small scales due to the inertial range in the simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. In this case, we will limit the fitting between frequencies of `0.02 / pix` and `0.1 / pix` (where the conversion to pixel scales in the simulation is just `1 / freq`):
 
     >>> vca.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
@@ -86,6 +86,8 @@ The VCA power spectrum from this simulated data cube is :math:`-4.25\pm0.08`, wh
 .. image:: images/design4_vca_limitedfreq.png
 
 With the fitting limited to the valid region, we find a shallower slope of :math:`-3.1\pm0.1` and a better fit to the model. `low_cut` and `high_cut` can also be given as spatial frequencies in angular units (e.g., `u.deg**-1`). When a distance is given, the `low_cut` and `high_cut` can also be given in physical frequency units (e.g., `u.pc**-1`).
+
+This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with `weighted_fit=True` (this cannot be used for the segmented model described below).
 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `VCA` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`; see the description given in the :ref:`PowerSpectrum tutorial <pspec_tutorial>`). The 2D fitting is disabled for this section as it does handle fitting break points. In this example, we will assume a distance of 250 pc in order to show the power spectrum in physical units:
 
@@ -173,6 +175,38 @@ The Lazarian & Pogosyan theory predicts that the VCA power-spectrum depends on t
 .. image:: images/design4_vca_400ms_channels.png
 
 With the original spectral resolution, the slope in the inertial range was already consistent with the "thickest slice" case, the zeroth moment. The slope here remains consistent with the zeroth moment power-spectrum, so for this data set of :math:`^{13}{\rm CO}`, there is no evolution in the spectrum with channel size.
+
+
+Constraints on the azimuthal angles used to compute the one-dimensional power-spectrum can also be given:
+
+    >>> vca = VCA(cube)  # doctest: +SKIP
+    >>> vca.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.958
+    Model:                            OLS   Adj. R-squared:                  0.955
+    Method:                 Least Squares   F-statistic:                     298.9
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           2.36e-10
+    Time:                        14:57:53   Log-Likelihood:                 11.566
+    No. Observations:                  15   AIC:                            -19.13
+    Df Residuals:                      13   BIC:                            -17.71
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          4.2111      0.204     20.597      0.000       3.769       4.653
+    x1            -2.7475      0.159    -17.290      0.000      -3.091      -2.404
+    ==============================================================================
+    Omnibus:                       18.967   Durbin-Watson:                   2.608
+    Prob(Omnibus):                  0.000   Jarque-Bera (JB):               18.398
+    Skew:                          -1.869   Prob(JB):                     0.000101
+    Kurtosis:                       6.932   Cond. No.                         13.5
+    ==============================================================================
+
+.. image:: images/design4_vca_limitedfreq_azimilimits.png
+
+The azimuthal limits now appear as contours on the two-dimensional power-spectrum in the figure. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for more information on giving azimuthal constraints.
 
 
 References

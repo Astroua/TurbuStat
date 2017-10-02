@@ -27,7 +27,7 @@ run_delvar = False
 run_dendro = False
 run_genus = False
 run_mvc = False
-run_pca = True
+run_pca = False
 run_pdf = False
 run_pspec = False
 run_scf = False
@@ -59,8 +59,32 @@ if run_bispec:
     plt.subplot(122)
     plt.imshow(bispec2.bicoherence, vmin=0, vmax=1, origin='lower')
     plt.title("With mean subtraction")
-    plt.savefig(osjoin(fig_path, "bispectrum_w_and_wo_meansub_coherence"))
+    plt.savefig(osjoin(fig_path, "bispectrum_w_and_wo_meansub_coherence.png"))
     plt.close()
+
+    # Radial and azimuthal slices
+    rad_slices = bispec.radial_slice([30, 45, 60] * u.deg, 20 * u.deg, value='bispectrum_logamp')
+    plt.errorbar(rad_slices[30][0], rad_slices[30][1], yerr=rad_slices[30][2], label='30')
+    plt.errorbar(rad_slices[45][0], rad_slices[45][1], yerr=rad_slices[45][2], label='45')
+    plt.errorbar(rad_slices[60][0], rad_slices[60][1], yerr=rad_slices[60][2], label='60')
+    plt.legend()
+    plt.xlabel("Radius")
+    plt.ylabel("log Bispectrum")
+    plt.grid()
+    plt.savefig(osjoin(fig_path, "bispectrum_radial_slices.png"))
+    plt.close()
+
+    azim_slices = bispec.azimuthal_slice([8, 16, 50], 10, value='bispectrum_logamp', bin_width=5 * u.deg)
+    plt.errorbar(azim_slices[8][0], azim_slices[8][1], yerr=azim_slices[8][2], label='8')
+    plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerr=azim_slices[16][2], label='16')
+    plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerr=azim_slices[50][2], label='50')
+    plt.legend()
+    plt.xlabel("Theta (rad)")
+    plt.ylabel("log Bispectrum")
+    plt.grid()
+    plt.savefig(osjoin(fig_path, "bispectrum_azim_slices.png"))
+    plt.close()
+
 
 # Delta-Variance
 if run_delvar:
@@ -172,6 +196,14 @@ if run_mvc:
             high_cut=0.1 / u.pix, fit_2D=False,
             save_name=osjoin(fig_path, 'mvc_design4_physunits.png'))
 
+    # Azimuthal limits
+    mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)
+    mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+            high_cut=0.1 / u.pix, fit_2D=False,
+            radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+            save_name=osjoin(fig_path, 'mvc_design4_physunits_azimlimits.png'))
+
+
 # PCA
 if run_pca:
 
@@ -249,10 +281,8 @@ if run_pdf:
 
     moment0 = fits.open(osjoin(data_path, "Design4_flatrho_0021_00_radmc_moment0.fits"))[0]
     pdf_mom0 = PDF(moment0, min_val=0.0, bins=None)
-    pdf_mom0.run(verbose=True),
-                 # save_name=osjoin(fig_path, "pdf_design4_mom0.png"))
-
-    print(argh)
+    pdf_mom0.run(verbose=True,
+                 save_name=osjoin(fig_path, "pdf_design4_mom0.png"))
 
     print(pdf_mom0.find_percentile(500))
     print(pdf_mom0.find_at_percentile(96.3134765625))
@@ -315,7 +345,7 @@ if run_pspec:
               save_name=osjoin(fig_path, "design4_pspec.png"))
 
     pspec.run(verbose=True, xunit=u.pix**-1,
-              low_cut=0.02 / u.pix, high_cut=0.1 / u.pix,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
               save_name=osjoin(fig_path, "design4_pspec_limitedfreq.png"))
 
     print(pspec.slope2D, pspec.slope2D_err)
@@ -325,9 +355,22 @@ if run_pspec:
     # How about fitting a break?
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
-              low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
               brk=0.1 / u.pix, log_break=False, fit_2D=False,
               save_name=osjoin(fig_path, "design4_pspec_breakfit.png"))
+
+    pspec = PowerSpectrum(moment0, distance=250 * u.pc)
+    pspec.run(verbose=True, xunit=u.pc**-1,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
+              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+              save_name=osjoin(fig_path, "design4_pspec_breakfit_azimlimits.png"))
+
+    pspec = PowerSpectrum(moment0, distance=250 * u.pc)
+    pspec.run(verbose=True, xunit=u.pix**-1,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              weighted_fit=True,
+              save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
 
 # SCF
 if run_scf:
@@ -347,6 +390,12 @@ if run_scf:
     # With fit limits
     scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
             save_name=osjoin(fig_path, "design4_scf_fitlimits.png"))
+
+    # With azimuthal constraints
+    scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
+            radialavg_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 70 * u.deg},
+            save_name=osjoin(fig_path, "design4_scf_fitlimits_azimlimits.png"))
+
 
     # Custom lags w/ phys units
     distance = 250 * u.pc  # Assume a distance
@@ -451,6 +500,12 @@ if run_vca:
     vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
                     brk=0.1 / u.pix, fit_2D=False,
                     save_name=osjoin(fig_path, "design4_vca_400ms_channels.png"))
+
+    # W/ azimuthal constraints
+    vca = VCA(cube)
+    vca.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix,
+            radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
+            save_name=osjoin(fig_path, "design4_vca_limitedfreq_azimilimits.png"))
 
 
 # VCS
