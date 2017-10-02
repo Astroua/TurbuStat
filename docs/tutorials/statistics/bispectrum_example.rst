@@ -83,7 +83,7 @@ Three slices are returned, centered at 30, 45, and 60 degree. The width of each 
 
 The azimuthal slices are similarly calculated:
 
-    >>> azim_slices = tester.azimuthal_slice([8, 16, 50], 10, value='bispectrum_logamp', bin_width=5 * u.deg)
+    >>> azim_slices = tester.azimuthal_slice([8, 16, 50], 10, value='bispectrum_logamp', bin_width=5 * u.deg)  # doctest: +SKIP
     >>> plt.errorbar(azim_slices[8][0], azim_slices[8][1], yerror=azim_slices[8][2], label='8')  # doctest: +SKIP
     >>> plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerror=azim_slices[16][2], label='16')  # doctest: +SKIP
     >>> plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerror=azim_slices[50][2], label='50')  # doctest: +SKIP
