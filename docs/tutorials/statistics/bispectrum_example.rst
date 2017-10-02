@@ -68,7 +68,7 @@ The figure shows the effect on the bicoherence from subtracting the mean. The co
 
 Both radial and azimuthal slices can be extracted from the bispectrum to examine how its properties vary with angle and radius. Using the non-mean subtracted example, radial slices can be returned with:
 
-    >>> rad_slices = bispec.radial_slices([30, 45, 60] * u.deg, 20 * u.deg)  # doctest: +SKIP
+    >>> rad_slices = bispec.radial_slices([30, 45, 60] * u.deg, 20 * u.deg, value='bispectrum_logamp')  # doctest: +SKIP
     >>> plt.errorbar(rad_slices[30][0], rad_slices[30][1], yerror=rad_slices[30][2], label='30')  # doctest: +SKIP
     >>> plt.errorbar(rad_slices[45][0], rad_slices[45][1], yerror=rad_slices[45][2], label='45')  # doctest: +SKIP
     >>> plt.errorbar(rad_slices[60][0], rad_slices[60][1], yerror=rad_slices[60][2], label='60')  # doctest: +SKIP
@@ -76,7 +76,7 @@ Both radial and azimuthal slices can be extracted from the bispectrum to examine
 
 .. image:: images/bispectrum_radial_slices.png
 
-Three slices are returned, centered at 30, 45, and 60 degree. The width of each slice is 20 degree. `rad_slices` is a dictionary whose keys are the (rounded to the nearest integer) center angles given. Each entry in the dictionary has the bin centers (`[0]`), values (`[1]`), and standard deviations (`[2]`). The center angles and slice width can be given in any angular unit. By default, the averaging is over the bispectrum amplitudes. Setting `value='bispectrum_logamp'` or `value='bicoherence'` will change which quantity is averaged over. The size of the bins can also be changed by passing `bin_width` to `~Bispectrum.radial_slices`; the default is `1`.
+Three slices are returned, centered at 30, 45, and 60 degree. The width of each slice is 20 degree. `rad_slices` is a dictionary whose keys are the (rounded to the nearest integer) center angles given. Each entry in the dictionary has the bin centers (`[0]`), values (`[1]`), and standard deviations (`[2]`). The center angles and slice width can be given in any angular unit. By default, the averaging is over the bispectrum amplitudes. By passing `value='bispectrum_logamp'`, the log of the amplitudes are instead averaged over. The bicoherence array can also be averaged over with `value='bicoherence'`. The size of the bins can also be changed by passing `bin_width` to `~Bispectrum.radial_slices`; the default is `1`.
 
 
 The azimuthal slices are similarly calculated:
