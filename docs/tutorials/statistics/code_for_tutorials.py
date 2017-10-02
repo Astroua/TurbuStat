@@ -79,7 +79,7 @@ if run_bispec:
     plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerr=azim_slices[16][2], label='16')
     plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerr=azim_slices[50][2], label='50')
     plt.legend()
-    plt.xlabel("Theta (deg)")
+    plt.xlabel("Theta (rad)")
     plt.ylabel("log Bispectrum")
     plt.grid()
     plt.savefig(osjoin(fig_path, "bispectrum_azim_slices.png"))

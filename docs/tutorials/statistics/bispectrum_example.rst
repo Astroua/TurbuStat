@@ -73,6 +73,8 @@ Both radial and azimuthal slices can be extracted from the bispectrum to examine
     >>> plt.errorbar(rad_slices[45][0], rad_slices[45][1], yerror=rad_slices[45][2], label='45')  # doctest: +SKIP
     >>> plt.errorbar(rad_slices[60][0], rad_slices[60][1], yerror=rad_slices[60][2], label='60')  # doctest: +SKIP
     >>> plt.legend()
+    >>> plt.xlabel("Radius")
+    >>> plt.ylabel("log Bispectrum")
 
 .. image:: images/bispectrum_radial_slices.png
 
@@ -86,6 +88,8 @@ The azimuthal slices are similarly calculated:
     >>> plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerror=azim_slices[16][2], label='16')  # doctest: +SKIP
     >>> plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerror=azim_slices[50][2], label='50')  # doctest: +SKIP
     >>> plt.legend()
+    >>> plt.xlabel("Theta (rad)")
+    >>> plt.ylabel("log Bispectrum")
 
 .. image:: images/bispectrum_azim_slices.png
 
