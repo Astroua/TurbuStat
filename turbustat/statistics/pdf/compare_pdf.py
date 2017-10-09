@@ -520,6 +520,12 @@ class PDF_Distance(object):
         Weights to be used with img1
     weights2 : %(dtypes)s, optional
         Weights to be used with img2
+    bin_min : float, optional
+        Minimum value to use for the histogram bins *after* normalization is
+        applied.
+    bin_max : float, optional
+        Maximum value to use for the histogram bins *after* normalization is
+        applied.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
@@ -527,7 +533,8 @@ class PDF_Distance(object):
 
     def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
                  do_fit=True, normalization_type=None,
-                 nbins=None, weights1=None, weights2=None):
+                 nbins=None, weights1=None, weights2=None,
+                 bin_min=None, bin_max=None):
         super(PDF_Distance, self).__init__()
 
         if do_fit:
@@ -547,7 +554,8 @@ class PDF_Distance(object):
 
         self.bins, self.bin_centers = \
             common_histogram_bins(self.PDF1.data, self.PDF2.data,
-                                  return_centered=True, nbins=nbins)
+                                  return_centered=True, nbins=nbins,
+                                  min_val=bin_min, max_val=bin_max)
 
         # Feed the common set of bins to be used in the PDFs
         self._do_fit = do_fit
