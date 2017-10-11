@@ -48,6 +48,7 @@ Contents:
    install.rst
    tutorials/index
    moments.rst
+   preparing_simulated_data.rst
    cube_tools.rst
    statistics.rst
    helper_scripts.rst
