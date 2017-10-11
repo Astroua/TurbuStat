@@ -7,7 +7,6 @@ TurbuStat Tutorials
     :maxdepth: 2
 
     accepted_input_formats
-    preparing_simulated_data
     preprocessing_data
     masking_and_moments
 
