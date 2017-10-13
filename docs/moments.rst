@@ -2,7 +2,9 @@
 Deriving Cube Moments
 =====================
 
-The `turbustat.data_reduction.Mask_and_Moments` class returns moment arrays as well as their errors for use with 2D statistics in the package. Noise is estimated using `signal_id <https://github.com/radio-astro-tools/signal-id>`_. Moments are derived using `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`_ and are able to handle massive datacubes.
+The `turbustat.data_reduction.Mask_and_Moments` class returns moment arrays as well as their errors for use with 2D statistics in the package. If a noise level or map is not given, the noise will be estimated using `signal_id <https://github.com/radio-astro-tools/signal-id>`_, which is an optional dependency. The moment maps are derived using `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`_ and is able to handle massive data cubes.
+
+.. note:: The included masking routines are rather basic and will tend to work best for high signal-to-noise data with single spectral components. Please check the output mask and moments carefully.
 
 Basic Use
 ---------
