@@ -1,3 +1,4 @@
+.. _moments:
 
 Deriving Cube Moments
 =====================

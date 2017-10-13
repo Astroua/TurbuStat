@@ -46,10 +46,11 @@ Contents:
    :maxdepth: 2
 
    install.rst
-   tutorials/index
-   moments.rst
+   accepted_input_formats.rst
    preparing_simulated_data.rst
+   moments.rst
    cube_tools.rst
+   tutorials/index
    statistics.rst
    helper_scripts.rst
    contributing.rst
