@@ -189,40 +189,74 @@ class Mask_and_Moments(object):
 
     @property
     def moment0(self):
+        '''
+        Zeroth moment map.
+        '''
         return self._moment0
 
     @property
     def moment1(self):
+        '''
+        Centroid map.
+        '''
         return self._moment1
 
     @property
     def linewidth(self):
+        '''
+        Line width (sigma) map.
+        '''
         return self._linewidth
 
     @property
     def intint(self):
+        '''
+        Integrated intensity map over the largest continuous region
+        of channels above the noise level.
+        '''
         return self._intint
 
     @property
     def moment0_err(self):
+        '''
+        Zeroth moment uncertainty map.
+        '''
         return self._moment0_err
 
     @property
     def moment1_err(self):
+        '''
+        Centroid uncertainty map.
+        '''
         return self._moment1_err
 
     @property
     def linewidth_err(self):
+        '''
+        Line width uncertainty map.
+        '''
         return self._linewidth_err
 
     @property
     def intint_err(self):
+        '''
+        Integrated intensity uncertainty map.
+        '''
         return self._intint_err
 
     def all_moments(self):
-        return [self._moment0, self._moment1, self.linewidth, self._intint]
+        '''
+        Return the zeroth moment, centroid, line width, and integrated
+        intensity maps.
+        '''
+        return [self._moment0, self._moment1, self.linewidth]
+        # return [self._moment0, self._moment1, self.linewidth, self._intint]
 
     def all_moment_errs(self):
+        '''
+        Return the zeroth moment, centroid, line width, and integrated
+        intensity uncertainty maps.
+        '''
         return [self._moment0_err, self._moment1_err, self.linewidth_err,
                 self._intint_err]
 
@@ -331,7 +365,9 @@ class Mask_and_Moments(object):
 
     def to_fits(self, save_name=None):
         '''
-        Save the property arrays as fits files.
+        Save the property arrays as fits files. Each moment map will be saved
+        as a separate FITS file. The first extension contains the moment
+        map and the second contains the uncertainty map.
 
         Parameters
         ----------
@@ -499,7 +535,9 @@ class Mask_and_Moments(object):
 
     def _get_int_intensity(self, axis=0):
         '''
-        Get an integrated intensity image of the cube.
+        Get an integrated intensity image of the cube. This is defined as the
+        longest continuous region above the noise level in the spectrum. Use
+        with caution for spectra with multiple components.
 
         Parameters
         ----------
@@ -551,6 +589,26 @@ class Mask_and_Moments(object):
 
 def moment_masking(cube, kernel_size, clip=5, dilations=1):
     '''
+    Create a signal mask by sigma-clipping a smoothed version of the cube,
+    defined by the kernel size, and dilating that mask to include connected
+    faint structure just below the clipping level.
+
+    Parameters
+    ----------
+    cube : `~spectral_cube.SpectralCube`
+        Cube to mask.
+    kernel_size : int
+        Pixel size of the Gaussian kernel to use in smoothing.
+    clip : float, optional
+        Sigma level to create the initial mask from.
+    dilations : int, optional
+        Number of times to dilate the signal mask. Each iteration increases
+        the mask by one pixel in each dimension
+
+    Returns
+    -------
+    mask : np.ndarray
+        A boolean mask for the cube.
     '''
 
     if not signal_id_flag:
@@ -577,7 +635,9 @@ def moment_masking(cube, kernel_size, clip=5, dilations=1):
 
 
 def gauss_kern(size, ysize=None, zsize=None):
-    """ Returns a normalized 3D gauss kernel array for convolutions """
+    """
+    Returns a normalized 3D gauss kernel array for convolutions
+    """
     size = int(size)
     if not ysize:
         ysize = size
