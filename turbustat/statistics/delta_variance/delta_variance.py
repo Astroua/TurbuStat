@@ -65,7 +65,8 @@ class DeltaVariance(BaseStatisticMixIn):
         self.diam_ratio = diam_ratio
 
         if weights is None:
-            self.weights = np.ones(self.data.shape)
+            # self.weights = np.ones(self.data.shape)
+            self.weights = np.isfinite(self.data).astype(float)
         else:
             self.weights = input_data(weights, no_header=True)
 
@@ -134,7 +135,8 @@ class DeltaVariance(BaseStatisticMixIn):
 
         self._weights = arr
 
-    def do_convolutions(self, allow_huge=False, boundary='wrap'):
+    def do_convolutions(self, allow_huge=False, boundary='wrap',
+                        min_weight_frac=0.01, nan_interpolate=True):
         '''
         Perform the convolutions at all lags.
 
@@ -145,7 +147,17 @@ class DeltaVariance(BaseStatisticMixIn):
             images larger than 1 Gb.
         boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "fill" for non-periodic.
+        min_weight_frac : float, optional
+            Set the fraction of the peak of the weight array to mask below.
+            Default is 0.01. This will remove most edge artifacts, but is
+            not guaranteed to! Increase this value if artifacts are
+            encountered (this typically results in large spikes in the
+            delta-variance curve).
+        nan_interpolate : bool, optional
+            Enable to interpolate over NaNs in the convolution. Default is
+            True.
         '''
+
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
             annulus = annulus_kernel(
@@ -167,22 +179,27 @@ class DeltaVariance(BaseStatisticMixIn):
             img_core = \
                 convolution_wrapper(pad_img, core, boundary=boundary,
                                     fill_value=np.NaN,
-                                    allow_huge=allow_huge,)
+                                    allow_huge=allow_huge,
+                                    nan_interpolate=nan_interpolate)
             img_annulus = \
                 convolution_wrapper(pad_img, annulus,
                                     boundary=boundary, fill_value=np.NaN,
-                                    allow_huge=allow_huge)
+                                    allow_huge=allow_huge,
+                                    nan_interpolate=nan_interpolate)
             weights_core = \
                 convolution_wrapper(pad_weights, core,
-                                    boundary='fill', fill_value=np.NaN,
-                                    allow_huge=allow_huge)
+                                    boundary=boundary, fill_value=np.NaN,
+                                    allow_huge=allow_huge,
+                                    nan_interpolate=nan_interpolate)
             weights_annulus = \
                 convolution_wrapper(pad_weights, annulus,
-                                    boundary='fill', fill_value=np.NaN,
-                                    allow_huge=allow_huge)
+                                    boundary=boundary, fill_value=np.NaN,
+                                    allow_huge=allow_huge,
+                                    nan_interpolate=nan_interpolate)
 
-            weights_core[np.where(weights_core == 0)] = np.NaN
-            weights_annulus[np.where(weights_annulus == 0)] = np.NaN
+            cutoff_val = min_weight_frac * self.weights.max()
+            weights_core[np.where(weights_core <= cutoff_val)] = np.NaN
+            weights_annulus[np.where(weights_annulus <= cutoff_val)] = np.NaN
 
             self.convolved_arrays.append(
                 (img_core / weights_core) - (img_annulus / weights_annulus))
@@ -331,8 +348,9 @@ class DeltaVariance(BaseStatisticMixIn):
 
         return model_values
 
-    def run(self, verbose=False, xunit=u.pix, allow_huge=False,
-            boundary='wrap', xlow=None, xhigh=None, save_name=None):
+    def run(self, verbose=False, xunit=u.pix, nan_interpolate=True,
+            allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
+            save_name=None):
         '''
         Compute the delta-variance.
 
@@ -344,6 +362,9 @@ class DeltaVariance(BaseStatisticMixIn):
             The unit to show the x-axis in.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
+        nan_interpolate : bool, optional
+            Enable to interpolate over NaNs in the convolution. Default is
+            True.
         boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "cut" for non-periodic.
         xlow : `~astropy.units.Quantity`, optional
@@ -354,7 +375,8 @@ class DeltaVariance(BaseStatisticMixIn):
             Save the figure when a file name is given.
         '''
 
-        self.do_convolutions(allow_huge=allow_huge, boundary=boundary)
+        self.do_convolutions(allow_huge=allow_huge, boundary=boundary,
+                             nan_interpolate=nan_interpolate)
         self.compute_deltavar()
         self.fit_plaw(xlow=xlow, xhigh=xhigh, verbose=verbose)
 
@@ -369,7 +391,7 @@ class DeltaVariance(BaseStatisticMixIn):
             # Check for NaNs
             fin_vals = np.logical_or(np.isfinite(self.delta_var),
                                      np.isfinite(self.delta_var_error))
-            p.errorbar(lags, self.delta_var[fin_vals],
+            p.errorbar(lags[fin_vals], self.delta_var[fin_vals],
                        yerr=self.delta_var_error[fin_vals],
                        fmt="bD-", label="Data")
 
@@ -690,8 +712,19 @@ def convolution_wrapper(img, kernel, **kwargs):
     '''
 
     if int(astro_version[0]) >= 2:
+        if kwargs.get("nan_interpolate"):
+            if kwargs['nan_interpolate']:
+                nan_treatment = 'interpolate'
+            else:
+                nan_treatment = 'fill'
+        else:
+            # Default to not nan interpolating
+            nan_treatment = 'fill'
+        kwargs.pop('nan_interpolate')
+
         conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                nan_treatment='interpolate',
+                                nan_treatment=nan_treatment,
+                                preserve_nan=False,
                                 **kwargs)
     else:
         # in astropy >= v2, fill_value can be a NaN. ignore_edge_zeros gives
@@ -699,7 +732,6 @@ def convolution_wrapper(img, kernel, **kwargs):
         if kwargs.get('fill_value'):
             kwargs.pop('fill_value')
         conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                interpolate_nan=True,
                                 ignore_edge_zeros=True, **kwargs)
 
     return conv_img
