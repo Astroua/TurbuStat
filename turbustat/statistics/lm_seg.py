@@ -39,7 +39,7 @@ class Lm_Seg(object):
 
     """
 
-    def __init__(self, x, y, brk):
+    def __init__(self, x, y, brk, weights=None):
         super(Lm_Seg, self).__init__()
         self.x = x
         self.y = y
@@ -52,14 +52,19 @@ class Lm_Seg(object):
         if self.x.max() < self.brk or self.x.min() > self.brk:
             raise ValueError("brk is outside the range in x.")
 
-        # Check for nans, infs...
-        if not np.isfinite(x).all():
-            self.y = self.y[np.isfinite(self.x)]
-            self.x = self.x[np.isfinite(self.x)]
+        if weights is not None:
+            if x.size != weights.size:
+                raise ValueError("weights must have the same shape as x and y")
+            if not np.isfinite(weights).all():
+                raise ValueError("weights should all be finite values.")
 
-        if not np.isfinite(y).all():
-            self.x = self.x[np.isfinite(self.y)]
-            self.y = self.y[np.isfinite(self.y)]
+        self.weights = weights
+
+        # Check for nans, infs...
+        good_vals = np.logical_and(np.isfinite(self.y), np.isfinite(self.x))
+
+        self.y = self.y[good_vals]
+        self.x = self.x[good_vals]
 
         if self.x.size <= 3 or self.y.size <= 3:
             raise Warning("Not enough finite points to fit.")
@@ -69,11 +74,16 @@ class Lm_Seg(object):
         '''
         '''
         # Fit a normal linear model to the data
+
         if constant:
             x_const = sm.add_constant(self.x)
+        else:
+            x_const = self.x
+
+        if self.weights is None:
             model = sm.OLS(self.y, x_const)
         else:
-            model = sm.OLS(self.y, self.x)
+            model = sm.OLS(self.y, x_const, weights=self.weights)
         init_lm = model.fit()
 
         if verbose:
@@ -106,7 +116,10 @@ class Lm_Seg(object):
             if constant:
                 X_all = sm.add_constant(X_all)
 
-            model = sm.OLS(self.y, X_all)
+            if self.weights is None:
+                model = sm.OLS(self.y, X_all)
+            else:
+                model = sm.WLS(self.y, X_all, weights=self.weights)
             fit = model.fit()
 
             beta = fit.params[2]  # Get coef
@@ -171,7 +184,11 @@ class Lm_Seg(object):
             X_all = np.vstack([self.x, U, V]).T
             X_all = sm.add_constant(X_all)
 
-        model = sm.OLS(self.y, X_all)
+        if self.weights is None:
+            model = sm.OLS(self.y, X_all)
+        else:
+            model = sm.WLS(self.y, X_all, weights=self.weights)
+
         self.fit = model.fit()
         self._params = self.fit.params
         self._errs = self.fit.bse
