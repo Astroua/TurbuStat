@@ -6,7 +6,6 @@ TurbuStat Tutorials
 .. toctree::
     :maxdepth: 2
 
-    accepted_input_formats
     preprocessing_data
     masking_and_moments
 
