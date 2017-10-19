@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #171 - Fix issues with NaN interpolation in Delta-Variance for observational data; added a min. weighting for Delta-Variance; allow segmented fitting for Delta-Variance; added support for weights and WLS in Lm_Seg
 * #165 - Added azimuthal constraints when creating 1D power-spectra. Also added radial and azimuthal slicing for the bispectrum. Fixed a critical bug in the bootstrapping for the 2D elliptical power-law model.
 * #166 - Removed testing python 2.7 with the dev version of astropy.
 * #164 - Add segmented linear fitting for the wavelet transform; updated unit test values to include segmented fitting slopes for wavelets
