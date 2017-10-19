@@ -138,6 +138,7 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
 
 Since the Delta-variance is based on a series of convolutions, there is a choice for how the boundaries should be treated. This is set by the `boundary` keyword in `~turbustat.statistics.DeltaVariance.run`. By default, `boundary='wrap'` as is appropriate for simulated data in a periodic box. If the data is *not* periodic in the spatial dimensions, `boundary='fill'` should be used. This mode pads the edges of the data based on the size of the convolution kernel used.
 
+Another important keyword is `nan_interpolate`. By default, the convolution will interpolate over NaNs, which works well if the NaNs are small regions dispersed throughout the image. However, if your data have a large border of NaNs around the data, as is common for observational data, interpolating over NaNs will lead to edge effects and large deviations from the data at small lag values. If you find a non-smooth delta-variance curve with large spikes, try setting `nan_interpolate=False`.
 
 References
 ----------
