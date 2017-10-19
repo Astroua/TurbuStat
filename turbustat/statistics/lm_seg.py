@@ -173,6 +173,9 @@ class Lm_Seg(object):
 
         # Is the initial model without a break better?
         if self.break_fail_flag or np.sum(init_lm.resid**2) <= np.sum(fit.resid**2):
+            # If the initial fit was better, the segmented fit failed.
+            self.break_fail_flag = True
+
             self.brk = self.x.max()
 
             X_all = sm.add_constant(self.x)
