@@ -66,6 +66,17 @@ def test_DelVar_method_fitlimits():
     npt.assert_allclose(tester.slope, tester3.slope)
 
 
+def test_DelVar_method_wbrk():
+
+    tester = \
+        DeltaVariance(dataset1["moment0"],
+                      weights=dataset1['moment0_error'][0])
+    tester.run(xhigh=11 * u.pix, brk=6 * u.pix)
+
+    npt.assert_almost_equal(tester.slope, computed_data['delvar_slope_wbrk'])
+    npt.assert_almost_equal(tester.brk.value, computed_data['delvar_brk'])
+
+
 def test_DelVar_distance():
     tester_dist = \
         DeltaVariance_Distance(dataset1["moment0"],

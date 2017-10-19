@@ -114,6 +114,15 @@ delvar = DeltaVariance(dataset1["moment0"],
 delvar_val = delvar.delta_var
 delvar_slope = delvar.slope
 
+# Test with a break point
+delvar_wbrk = \
+  DeltaVariance(dataset1["moment0"],
+                weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix,
+                                                          brk=6 * u.pix)
+
+delvar_slope_wbrk = delvar_wbrk.slope
+delvar_brk = delvar_wbrk.brk.value
+
 # Change boundary conditions
 
 delvar_fill = \
@@ -347,6 +356,8 @@ np.savez_compressed('checkVals',
                     genus_val=genus_val,
                     delvar_val=delvar_val,
                     delvar_slope=delvar_slope,
+                    delvar_slope_wbrk=delvar_slope_wbrk,
+                    delvar_brk=delvar_brk,
                     delvar_fill_val=delvar_fill_val,
                     delvar_fill_slope=delvar_fill_slope,
                     vcs_val=vcs_val,
