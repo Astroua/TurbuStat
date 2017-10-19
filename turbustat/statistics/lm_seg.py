@@ -203,7 +203,7 @@ class Lm_Seg(object):
     def model(self, x=None, model_return=False):
         p = self.params
 
-        trans_pt = np.abs(self.x - self.brk).argmin()
+        trans_pt = np.abs(x - self.brk).argmin()
 
         mod_eqn = lambda k: p[0] + p[1] * k * (k < self.brk) + \
             ((p[1] + p[2]) * k + (-p[2]) * k[trans_pt]) * (k >= self.brk)
