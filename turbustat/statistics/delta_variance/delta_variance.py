@@ -18,6 +18,7 @@ from ..stats_utils import common_scale, padwithzeros
 from ..fitting_utils import check_fit_limits
 from .kernels import core_kernel, annulus_kernel
 from ..stats_warnings import TurbuStatMetricWarning
+from ..lm_seg import Lm_Seg
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -242,7 +243,8 @@ class DeltaVariance(BaseStatisticMixIn):
         '''
         return self._delta_var_error
 
-    def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
+    def fit_plaw(self, xlow=None, xhigh=None, brk=None, verbose=False,
+                 **fit_kwargs):
         '''
         Fit a power-law to the SCF spectrum.
 
@@ -252,6 +254,9 @@ class DeltaVariance(BaseStatisticMixIn):
             Lower lag value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
+        brk : `~astropy.units.Quantity`, optional
+            Give an initial guess for a break point. This enables fitting
+            with a `turbustat.statistics.Lm_Seg`.
         verbose : bool, optional
             Show fit summary when enabled.
         '''
@@ -284,28 +289,88 @@ class DeltaVariance(BaseStatisticMixIn):
         y = y[within_limits]
         x = x[within_limits]
 
-        x = sm.add_constant(x)
+        weights = self.delta_var_error[within_limits] ** -2
 
-        # If the std were computed, use them as weights
-        weighted_fit = True
-        if weighted_fit:
+        min_fits_pts = 3
 
-            # Converting to the log stds doesn't matter since the weights
-            # remain proportional to 1/sigma^2, and an overal normalization is
-            # applied in the fitting routine.
-            weights = self.delta_var_error[within_limits] ** -2
+        if brk is not None:
+            # Try fitting a segmented model
 
-            model = sm.WLS(y, x, missing='drop', weights=weights)
+            pix_brk = self._to_pixel(brk)
+
+            if pix_brk < xlow or pix_brk > xhigh:
+                raise ValueError("brk must be within xlow and xhigh.")
+
+            model = Lm_Seg(x, y, np.log10(pix_brk.value), weights=weights)
+
+            model.fit_model(**fit_kwargs)
+
+            self.fit = model.fit
+
+            if model.params.size == 5:
+
+                # Check to make sure this leaves enough to fit to.
+                if sum(x < model.brk) < min_fits_pts:
+                    warn("Not enough points to fit to." +
+                         " Ignoring break.")
+
+                    self._brk = None
+                else:
+                    good_pts = x.copy() < model.brk
+                    x = x[good_pts]
+                    y = y[good_pts]
+
+                    self._brk = 10**model.brk * u.pix
+                    self._brk_err = np.log(10) * self.brk.value * \
+                        model.brk_err * u.pix
+
+                    self._slope = model.slopes
+                    self._slope_err = model.slope_errs
+
+                    self.fit = model.fit
+
+            else:
+                self._brk = None
+                # Break fit failed, revert to normal model
+                warn("Model with break failed, reverting to model\
+                      without break.")
         else:
-            model = sm.OLS(y, x, missing='drop')
+            self._brk = None
 
-        self.fit = model.fit()
+        # Revert to model without break if none is given, or if the segmented
+        # model failed.
+        if self.brk is None:
+
+            x = sm.add_constant(x)
+
+            # model = sm.OLS(y, x, missing='drop')
+            model = sm.WLS(y, x, missing='drop', weights=weights)
+
+            self.fit = model.fit()
+
+            self._slope = self.fit.params[1]
+            self._slope_err = self.fit.bse[1]
+
+            self.fit = model.fit()
 
         if verbose:
             print(self.fit.summary())
 
-        self._slope = self.fit.params[1]
-        self._slope_err = self.fit.bse[1]
+        self._model = model
+
+    @property
+    def brk(self):
+        '''
+        Fitted break point.
+        '''
+        return self._brk
+
+    @property
+    def brk_err(self):
+        '''
+        1-sigma on the break point in the segmented linear model.
+        '''
+        return self._brk_err
 
     @property
     def slope(self):
@@ -344,13 +409,14 @@ class DeltaVariance(BaseStatisticMixIn):
             Values of the model at the given values.
         '''
 
-        model_values = self.fit.params[0] + self.fit.params[1] * xvals
-
-        return model_values
+        if isinstance(self._model, Lm_Seg):
+            return self._model.model(xvals)
+        else:
+            return self.fit.params[0] + self.fit.params[1] * xvals
 
     def run(self, verbose=False, xunit=u.pix, nan_interpolate=True,
             allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
-            save_name=None):
+            brk=None, save_name=None):
         '''
         Compute the delta-variance.
 
@@ -371,6 +437,9 @@ class DeltaVariance(BaseStatisticMixIn):
             Lower lag value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
             Upper lag value to consider in the fit.
+        brk : `~astropy.units.Quantity`, optional
+            Give an initial break point guess. Enables fitting a segmented
+            linear model.
         save_name : str,optional
             Save the figure when a file name is given.
         '''
@@ -378,7 +447,7 @@ class DeltaVariance(BaseStatisticMixIn):
         self.do_convolutions(allow_huge=allow_huge, boundary=boundary,
                              nan_interpolate=nan_interpolate)
         self.compute_deltavar()
-        self.fit_plaw(xlow=xlow, xhigh=xhigh, verbose=verbose)
+        self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose)
 
         if verbose:
             import matplotlib.pyplot as p
