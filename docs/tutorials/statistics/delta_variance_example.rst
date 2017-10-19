@@ -57,25 +57,25 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
     >>> delvar.run(verbose=True, xunit=u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.829
-    Model:                            WLS   Adj. R-squared:                  0.822
-    Method:                 Least Squares   F-statistic:                     111.5
-    Date:                Tue, 04 Jul 2017   Prob (F-statistic):           2.71e-10
-    Time:                        12:49:20   Log-Likelihood:                 1.6322
-    No. Observations:                  25   AIC:                            0.7355
-    Df Residuals:                      23   BIC:                             3.173
+    Dep. Variable:                      y   R-squared:                       0.946
+    Model:                            WLS   Adj. R-squared:                  0.943
+    Method:                 Least Squares   F-statistic:                     400.2
+    Date:                Wed, 18 Oct 2017   Prob (F-statistic):           4.80e-16
+    Time:                        18:38:51   Log-Likelihood:                 13.625
+    No. Observations:                  25   AIC:                            -23.25
+    Df Residuals:                      23   BIC:                            -20.81
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          1.8136      0.058     31.295      0.000       1.694       1.933
-    x1             1.0609      0.100     10.559      0.000       0.853       1.269
+    const          1.6826      0.036     46.701      0.000       1.608       1.757
+    x1             1.2654      0.063     20.006      0.000       1.135       1.396
     ==============================================================================
-    Omnibus:                       13.274   Durbin-Watson:                   0.286
-    Prob(Omnibus):                  0.001   Jarque-Bera (JB):               12.252
-    Skew:                          -1.445   Prob(JB):                      0.00218
-    Kurtosis:                       4.847   Cond. No.                         9.46
+    Omnibus:                        0.195   Durbin-Watson:                   0.506
+    Prob(Omnibus):                  0.907   Jarque-Bera (JB):                0.403
+    Skew:                          -0.047   Prob(JB):                        0.818
+    Kurtosis:                       2.385   Cond. No.                         10.6
     ==============================================================================
 
 .. image:: images/delvar_design4.png
@@ -85,25 +85,25 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
     >>> delvar.run(verbose=True, xunit=u.pix, xlow=4 * u.pix, xhigh=30 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.995
-    Model:                            WLS   Adj. R-squared:                  0.995
-    Method:                 Least Squares   F-statistic:                     2726.
-    Date:                Tue, 04 Jul 2017   Prob (F-statistic):           1.91e-17
-    Time:                        12:47:27   Log-Likelihood:                 40.177
-    No. Observations:                  16   AIC:                            -76.35
-    Df Residuals:                      14   BIC:                            -74.81
+    Dep. Variable:                      y   R-squared:                       0.994
+    Model:                            WLS   Adj. R-squared:                  0.993
+    Method:                 Least Squares   F-statistic:                     2167.
+    Date:                Wed, 18 Oct 2017   Prob (F-statistic):           9.44e-17
+    Time:                        18:38:52   Log-Likelihood:                 38.238
+    No. Observations:                  16   AIC:                            -72.48
+    Df Residuals:                      14   BIC:                            -70.93
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          1.8838      0.015    121.613      0.000       1.851       1.917
-    x1             1.0584      0.020     52.211      0.000       1.015       1.102
+    const          1.8620      0.017    106.799      0.000       1.825       1.899
+    x1             1.0630      0.023     46.549      0.000       1.014       1.112
     ==============================================================================
-    Omnibus:                        0.637   Durbin-Watson:                   0.560
-    Prob(Omnibus):                  0.727   Jarque-Bera (JB):                0.609
-    Skew:                          -0.386   Prob(JB):                        0.738
-    Kurtosis:                       2.438   Cond. No.                         11.5
+    Omnibus:                        0.142   Durbin-Watson:                   0.746
+    Prob(Omnibus):                  0.931   Jarque-Bera (JB):                0.271
+    Skew:                          -0.182   Prob(JB):                        0.873
+    Kurtosis:                       2.475   Cond. No.                         11.4
     ==============================================================================
 
 .. image:: images/delvar_design4_wlimits.png
@@ -113,25 +113,25 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
     >>> delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=30 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.995
-    Model:                            WLS   Adj. R-squared:                  0.995
-    Method:                 Least Squares   F-statistic:                     2726.
-    Date:                Tue, 04 Jul 2017   Prob (F-statistic):           1.91e-17
-    Time:                        12:47:27   Log-Likelihood:                 40.177
-    No. Observations:                  16   AIC:                            -76.35
-    Df Residuals:                      14   BIC:                            -74.81
+    Dep. Variable:                      y   R-squared:                       0.994
+    Model:                            WLS   Adj. R-squared:                  0.993
+    Method:                 Least Squares   F-statistic:                     2167.
+    Date:                Wed, 18 Oct 2017   Prob (F-statistic):           9.44e-17
+    Time:                        18:38:52   Log-Likelihood:                 38.238
+    No. Observations:                  16   AIC:                            -72.48
+    Df Residuals:                      14   BIC:                            -70.93
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          1.8838      0.015    121.613      0.000       1.851       1.917
-    x1             1.0584      0.020     52.211      0.000       1.015       1.102
+    const          1.8620      0.017    106.799      0.000       1.825       1.899
+    x1             1.0630      0.023     46.549      0.000       1.014       1.112
     ==============================================================================
-    Omnibus:                        0.637   Durbin-Watson:                   0.560
-    Prob(Omnibus):                  0.727   Jarque-Bera (JB):                0.609
-    Skew:                          -0.386   Prob(JB):                        0.738
-    Kurtosis:                       2.438   Cond. No.                         11.5
+    Omnibus:                        0.142   Durbin-Watson:                   0.746
+    Prob(Omnibus):                  0.931   Jarque-Bera (JB):                0.271
+    Skew:                          -0.182   Prob(JB):                        0.873
+    Kurtosis:                       2.475   Cond. No.                         11.4
     ==============================================================================
 
 .. image:: images/delvar_design4_physunits.png

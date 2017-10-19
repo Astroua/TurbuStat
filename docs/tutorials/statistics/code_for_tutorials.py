@@ -23,7 +23,7 @@ fig_path = 'images'
 
 # Choose which methods to run
 run_bispec = False
-run_delvar = False
+run_delvar = True
 run_dendro = False
 run_genus = False
 run_mvc = False
