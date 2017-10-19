@@ -140,6 +140,50 @@ Since the Delta-variance is based on a series of convolutions, there is a choice
 
 Another important keyword is `nan_interpolate`. By default, the convolution will interpolate over NaNs, which works well if the NaNs are small regions dispersed throughout the image. However, if your data have a large border of NaNs around the data, as is common for observational data, interpolating over NaNs will lead to edge effects and large deviations from the data at small lag values. If you find a non-smooth delta-variance curve with large spikes, try setting `nan_interpolate=False`.
 
+Similar to the fitting for other statistics, the Delta-variance curve can be fit with a segmented linear model:
+
+    >>> delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=40 * u.pix, brk=8 * u.pix)  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.996
+    Model:                            WLS   Adj. R-squared:                  0.995
+    Method:                 Least Squares   F-statistic:                     1168.
+    Date:                Thu, 19 Oct 2017   Prob (F-statistic):           4.97e-17
+    Time:                        15:36:23   Log-Likelihood:                 45.438
+    No. Observations:                  18   AIC:                            -82.88
+    Df Residuals:                      14   BIC:                            -79.31
+    Df Model:                           3
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          1.8454      0.015    121.610      0.000       1.813       1.878
+    x1             1.0860      0.020     54.133      0.000       1.043       1.129
+    x2            -1.1586      0.253     -4.585      0.000      -1.701      -0.617
+    x3            -0.0064      0.042     -0.153      0.881      -0.096       0.083
+    ==============================================================================
+    Omnibus:                        0.130   Durbin-Watson:                   1.082
+    Prob(Omnibus):                  0.937   Jarque-Bera (JB):                0.037
+    Skew:                           0.009   Prob(JB):                        0.982
+    Kurtosis:                       2.778   Cond. No.                         127.
+    ==============================================================================
+
+.. image:: images/delvar_design4_break.png
+
+The range here was chosen to force the model to fit a break near the turn-over, and the result is not great. This is not a realistic example; it is included only to highlight how the segmented model is enabled.
+
+There will now be two slopes, and a break point returned:
+
+    >>> delvar.slopes  # doctest: +SKIP
+    array([ 1.08598566, -0.07259903])
+    >>> delvar.brk  # doctest: +SKIP
+    <Quantity 19.413294229328802 pix>
+
+.. warning:: The turn-over at large scales tends to be dominated by the kernel shape rather than the data. Further, there are variations on those large scales that depend on how the convolution is done (there are some difference between v1 and v2 of astropy).
+
+On scales smaller than 4 pixels, the curve may tend to steepen. This is due to the finite beam-size (for observational data; see :ref:`Bensch et al. 2001 <ref-bensch2001>`).
+
+
 References
 ----------
 

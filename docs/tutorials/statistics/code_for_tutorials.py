@@ -105,6 +105,10 @@ if run_delvar:
     delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=30 * u.pix,
                save_name=osjoin(fig_path, "delvar_design4_physunits.png"))
 
+    delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=40 * u.pix,
+               brk=8 * u.pix,
+               save_name=osjoin(fig_path, "delvar_design4_break.png"))
+
     # Look at difference w/ non-periodic boundary handling
     # This needs to be revisited with the astropy convolution updates
     # delvar.run(verbose=True, xunit=u.pix, xlow=4 * u.pix, xhigh=30 * u.pix,
