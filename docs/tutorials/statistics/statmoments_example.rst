@@ -32,7 +32,7 @@ The moment0 HDU and radius of the neighborhood are given to initialize `~turbust
 
 This simulated data has periodic boundaries, so we enable `periodic=True` when computing the spatial moment maps:
 
-    >>> moments.run(verbose=True, periodic=True)  # doctest: +SKIP
+    >>> moments.run(verbose=True, periodic=True, min_frac=0.8)  # doctest: +SKIP
 
 .. image:: images/design4_statmoments.png
 
@@ -45,6 +45,8 @@ The moment maps are shown above, but the distributions of the moments are of gre
 .. image:: images/design4_statmoments_hists.png
 
 Again, the mean is just a smoothed version of the zeroth moment values. The variance has a strong tail, emphasized by the square term at high intensity peak in the map. The skewness and kurtosis provide distributions of normalized parameters, making it easier to use these quantities for comparing to other data sets.
+
+This example does not include any blanked regions, though observational data often due. To avoid edge effects near these regions, a limit can be set on the minimum fraction of finite points within each region with `min_frac`. By default, `min_frac` is set to 0.8. To completely remove edge effects, this parameter can be increased to 1 to reject all regions that contain a NaN. Note that this will increase the size of the blank region by your chosen radius.
 
 **Note:** This example uses data that is noiseless. If these data *did* have noise, it would be critical to not consider the noise-dominated regions when computing the skewness and kurtosis, in particular, since they are normalized by the variance. To minimize the effect of noise, the data can be masked beforehand or an array of weights can be passed to down-weight noisy regions. We recommend using the latter method. For example, a weight array could be the inverse squared noise level of the data. Assume the noise level is set to make the signal-to-noise ratio 10 for every pixel in the map:
 
