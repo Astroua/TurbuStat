@@ -480,7 +480,7 @@ class StatMoments_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, image1, image2, radius=5 * u.pix,
+    def __init__(self, image1, image2, radius=5 * u.pix, min_frac=0.8,
                  weights1=None, weights2=None,
                  nbins=None, periodic1=False, periodic2=False,
                  fiducial_model=None):
@@ -517,11 +517,13 @@ class StatMoments_Distance(object):
             self.moments1 = StatMoments(image1, radius=radius1,
                                         nbins=self.nbins,
                                         weights=weights1)
-            self.moments1.compute_spatial_distrib(periodic=periodic1)
+            self.moments1.compute_spatial_distrib(periodic=periodic1,
+                                                  min_frac=min_frac)
 
         self.moments2 = StatMoments(image2, radius=radius2, nbins=self.nbins,
                                     weights=weights2)
-        self.moments2.compute_spatial_distrib(periodic=periodic2)
+        self.moments2.compute_spatial_distrib(periodic=periodic2,
+                                              min_frac=min_frac)
 
     def create_common_histograms(self, nbins=None):
         '''
