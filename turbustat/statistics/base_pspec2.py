@@ -5,6 +5,7 @@ import numpy as np
 import statsmodels.api as sm
 import warnings
 import astropy.units as u
+from scipy.signal import tukey
 
 from .lm_seg import Lm_Seg
 from .psds import pspec, make_radial_freq_arrays
@@ -251,6 +252,21 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._brk_err
 
+    def apodizing_kernel(self, alpha=0.1):
+        '''
+        Return an apodizing kernel to be applied to the image before taking
+        Fourier transform
+
+        Returns
+        -------
+        window : `~numpy.ndarray`
+            Apodizing kernel
+        '''
+        window_x = tukey(self.data.shape[1], alpha=alpha)
+        window_y = tukey(self.data.shape[0], alpha=alpha)
+        window = np.outer(window_y, window_x)
+        return window
+
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
                     high_cut=None, bootstrap=True, niters=100,
                     use_azimmask=False):
@@ -404,17 +420,21 @@ class StatisticBase_PSpec2D(object):
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
-            p.subplot(122)
-            p.imshow(np.log10(self.ps2D), interpolation="nearest",
-                     origin="lower")
-            p.colorbar()
-
             yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
 
             freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
             mask = np.logical_and(freqs_dist >= self.low_cut.value,
                                   freqs_dist <= self.high_cut.value)
+
+            # Scale the colour map to be values within the mask
+            vmax = np.log10(self.ps2D[mask]).max()
+            vmin = np.log10(self.ps2D[mask]).min()
+
+            p.subplot(122)
+            p.imshow(np.log10(self.ps2D), interpolation="nearest",
+                     origin="lower", vmax=vmax, vmin=vmin)
+            p.colorbar()
 
             p.contour(mask, colors='r', linestyles='--')
 

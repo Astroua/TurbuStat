@@ -31,7 +31,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, header=None, weights=None, distance=None):
+    def __init__(self, img, header=None, weights=None, distance=None,
+                 beam=None):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
@@ -51,19 +52,37 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        if beam is not None:
+            self._beam = beam
+
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self):
+    def compute_pspec(self, beam_correct=True, apodize=True, alpha=0.3):
         '''
         Compute the 2D power spectrum.
         '''
 
-        fft = fftshift(rfft_to_fft(self.weighted_data))
+        if apodize:
+            apod_kernel = self.apodizing_kernel(alpha=alpha)
+            fft = fftshift(rfft_to_fft(self.weighted_data * apod_kernel))
+        else:
+            fft = fftshift(rfft_to_fft(self.weighted_data))
 
-        self._ps2D = np.power(fft, 2.)
+        if beam_correct and hasattr(self, '_beam'):
 
-    def run(self, verbose=False, logspacing=False,
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.data.shape[0],
+                                             x_size=self.data.shape[1])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._ps2D = np.power(fft / beam_fft, 2.)
+        else:
+            self._ps2D = np.power(fft, 2.)
+
+    def run(self, verbose=False, apodize=True, alpha=0.2, beam_correct=True,
+            logspacing=False,
             return_stddev=True, low_cut=None, high_cut=None,
             fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
             xunit=u.pix**-1, save_name=None,
@@ -99,7 +118,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
         '''
 
-        self.compute_pspec()
+        self.compute_pspec(apodize=apodize, alpha=alpha,
+                           beam_correct=beam_correct)
         self.compute_radial_pspec(logspacing=logspacing,
                                   return_stddev=return_stddev,
                                   **radial_pspec_kwargs)
