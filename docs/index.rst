@@ -48,6 +48,7 @@ Contents:
    install.rst
    accepted_input_formats.rst
    preparing_simulated_data.rst
+   data_requirements.rst
    moments.rst
    cube_tools.rst
    tutorials/index

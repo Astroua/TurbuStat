@@ -169,8 +169,7 @@ class Cramer_Distance(object):
     def distance_metric(self, normalize=True, n_jobs=1):
         '''
 
-        This serves as a simple wrapper in order to remain with the coding
-        convention used throughout the rest of this project.
+        Run the whole Cramer statistic.
 
         Parameters
         ----------
