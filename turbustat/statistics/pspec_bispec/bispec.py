@@ -5,6 +5,13 @@ import numpy as np
 import numpy.random as ra
 import astropy.units as u
 from scipy.stats import binned_statistic
+from warnings import warn
+
+try:
+    from pyfftw.interfaces.numpy_fft import fft2
+    PYFFTW_FLAG = True
+except ImportError:
+    PYFFTW_FLAG = False
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -49,13 +56,18 @@ class BiSpectrum(BaseStatisticMixIn):
         # Set nans to min
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-    def compute_bispectrum(self, nsamples=100, seed=1000,
-                           mean_subtract=False):
+    def compute_bispectrum(self, use_pyfftw=False, threads=1,
+                           nsamples=100, seed=1000, mean_subtract=False,
+                           **pyfftw_kwargs):
         '''
         Do the computation.
 
         Parameters
         ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
         nsamples : int, optional
             Sets the number of samples to take at each vector
             magnitude.
@@ -65,6 +77,10 @@ class BiSpectrum(BaseStatisticMixIn):
             Subtract the mean from the data before computing. This removes the
             "zero frequency" (i.e., constant) portion of the power, resulting
             in a loss of phase coherence along the k_1=k_2 line.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
         '''
 
         if mean_subtract:
@@ -72,7 +88,21 @@ class BiSpectrum(BaseStatisticMixIn):
         else:
             norm_data = self.data
 
-        fftarr = np.fft.fft2(norm_data)
+        if use_pyfftw:
+            if PYFFTW_FLAG:
+                if pyfftw_kwargs.get('threads') is not None:
+                    pyfftw_kwargs.pop('threads')
+
+                fftarr = fft2(norm_data,
+                              threads=threads,
+                              **pyfftw_kwargs)
+            else:
+                warn("pyfftw not installed. Reverting to using numpy.")
+                use_pyfftw = False
+
+        if not use_pyfftw:
+            fftarr = fft2(norm_data)
+
         conjfft = np.conj(fftarr)
         ra.seed(seed)
 
@@ -352,13 +382,18 @@ class BiSpectrum(BaseStatisticMixIn):
 
         return radial_slices
 
-    def run(self, nsamples=100, seed=1000, mean_subtract=False, verbose=False,
-            save_name=None):
+    def run(self, use_pyfftw=False, threads=1, nsamples=100, seed=1000,
+            mean_subtract=False, verbose=False,
+            save_name=None, **pyfftw_kwargs):
         '''
         Compute the bispectrum. Necessary to maintain package standards.
 
         Parameters
         ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
         nsamples : int, optional
             See `~BiSpectrum.compute_bispectrum`.
         seed : int, optional
@@ -369,10 +404,15 @@ class BiSpectrum(BaseStatisticMixIn):
             Enables plotting.
         save_name : str,optional
             Save the figure when a file name is given.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
         '''
 
-        self.compute_bispectrum(nsamples=nsamples, mean_subtract=mean_subtract,
-                                seed=seed)
+        self.compute_bispectrum(use_pyfftw=use_pyfftw, threads=threads,
+                                nsamples=nsamples, mean_subtract=mean_subtract,
+                                seed=seed, **pyfftw_kwargs)
 
         if verbose:
             import matplotlib.pyplot as p

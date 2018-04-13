@@ -1,9 +1,16 @@
 # Licensed under an MIT open source license - see LICENSE
 from __future__ import print_function, absolute_import, division
 
+import pytest
 
 import numpy.testing as npt
 import astropy.units as u
+
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
 
 from ..statistics import DeltaVariance, DeltaVariance_Distance
 from ._testing_data import \
@@ -91,3 +98,19 @@ def test_DelVar_distance():
     npt.assert_almost_equal(tester_dist.slope_distance,
                             computed_distances['delvar_slope_distance'],
                             decimal=3)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_DelVar_method_fftw():
+    # There is a difference in the convolution of astropy 1.x and 2.x on the
+    # large-scales. Restrict the fitting region to where the convolution
+    # agrees.
+    tester = \
+        DeltaVariance(dataset1["moment0"],
+                      weights=dataset1["moment0_error"][0])
+    tester.run(xhigh=11. * u.pix, use_pyfftw=True, threads=1)
+    # The slice is again to restrict where the convolution functions both give
+    # the same value
+    npt.assert_allclose(tester.delta_var[:-7],
+                        computed_data['delvar_val'][:-7])
+    npt.assert_almost_equal(tester.slope, computed_data['delvar_slope'])

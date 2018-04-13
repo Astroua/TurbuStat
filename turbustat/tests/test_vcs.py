@@ -7,6 +7,12 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
+
 from ..statistics import VCS, VCS_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
@@ -61,3 +67,15 @@ def test_VCS_method_fitlimits():
     tester2.run(high_cut=high_cut, low_cut=low_cut)
 
     npt.assert_allclose(tester.slope, tester2.slope, atol=0.02)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_VCS_method_fftw():
+    tester = VCS(dataset1["cube"]).run(high_cut=0.3 / u.pix,
+                                       low_cut=3e-2 / u.pix,
+                                       use_pyfftw=True,
+                                       threads=1)
+
+    npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
+
+    npt.assert_allclose(tester.slope, computed_data['vcs_slopes'])

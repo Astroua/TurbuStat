@@ -57,6 +57,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
     def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
+
         Parameters
         ----------
         use_pyfftw : bool, optional

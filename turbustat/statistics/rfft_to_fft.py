@@ -18,7 +18,7 @@ http://stackoverflow.com/questions/25147045/full-frequency-array-reconstruction-
 '''
 
 
-def rfft_to_fft(image, use_pyfftw=True, threads=1, **pyfftw_kwargs):
+def rfft_to_fft(image, use_pyfftw=False, threads=1, **pyfftw_kwargs):
     '''
     Perform a RFFT on the image (2 or 3D) and return the absolute value in
     the same format as you would get with the fft (negative frequencies).
