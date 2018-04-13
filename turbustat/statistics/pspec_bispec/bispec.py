@@ -101,7 +101,7 @@ class BiSpectrum(BaseStatisticMixIn):
                 use_pyfftw = False
 
         if not use_pyfftw:
-            fftarr = fft2(norm_data)
+            fftarr = np.fft.fft2(norm_data)
 
         conjfft = np.conj(fftarr)
         ra.seed(seed)
