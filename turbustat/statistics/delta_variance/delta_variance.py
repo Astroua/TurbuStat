@@ -5,8 +5,6 @@ from __future__ import (print_function, absolute_import, division,
 import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
-from astropy.convolution import convolve_fft
-from astropy.version import version as astro_version
 from copy import copy
 import statsmodels.api as sm
 from astropy.extern.six import string_types
@@ -19,6 +17,7 @@ from ..fitting_utils import check_fit_limits
 from .kernels import core_kernel, annulus_kernel
 from ..stats_warnings import TurbuStatMetricWarning
 from ..lm_seg import Lm_Seg
+from ..convolve_wrapper import convolution_wrapper
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -773,34 +772,3 @@ def _delvar(array, weight, lag):
                        np.nansum(weight)) - val**2) / nindep
 
     return val, val_err
-
-
-def convolution_wrapper(img, kernel, **kwargs):
-    '''
-    Adjust parameter setting to be consistent with astropy <2 and >=2.
-    '''
-
-    if int(astro_version[0]) >= 2:
-        if kwargs.get("nan_interpolate"):
-            if kwargs['nan_interpolate']:
-                nan_treatment = 'interpolate'
-            else:
-                nan_treatment = 'fill'
-        else:
-            # Default to not nan interpolating
-            nan_treatment = 'fill'
-        kwargs.pop('nan_interpolate')
-
-        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                nan_treatment=nan_treatment,
-                                preserve_nan=False,
-                                **kwargs)
-    else:
-        # in astropy >= v2, fill_value can be a NaN. ignore_edge_zeros gives
-        # the same behaviour in older versions.
-        if kwargs.get('fill_value'):
-            kwargs.pop('fill_value')
-        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                ignore_edge_zeros=True, **kwargs)
-
-    return conv_img
