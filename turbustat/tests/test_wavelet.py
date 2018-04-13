@@ -18,6 +18,29 @@ def test_Wavelet_method():
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])
 
 
+def test_Wavelet_method_withbreak():
+    tester = Wavelet(dataset1["moment0"])
+    tester.run(xhigh=7 * u.pix, brk=5.5 * u.pix)
+
+    npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope_wbrk'])
+    npt.assert_almost_equal(tester.brk.value,
+                            computed_data['wavelet_brk_wbrk'])
+
+
+def test_Wavelet_method_failbreak():
+    '''
+    Fit a segmented linear model where there isn't a break. Should revert to
+    fit without a break.
+    '''
+
+    tester = Wavelet(dataset1["moment0"])
+    tester.run(xlow=2.7 * u.pix, xhigh=4 * u.pix, brk=3. * u.pix)
+
+    # No break and only 1 slope
+    assert tester.brk is None
+    assert isinstance(tester.slope, np.float)
+
+
 def test_Wavelet_method_fitlimits():
 
     distance = 250 * u.pc

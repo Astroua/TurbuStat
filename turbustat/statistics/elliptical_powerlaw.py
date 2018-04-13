@@ -60,9 +60,9 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             for i in range(niters):
                 boot_fit = fitting.LevMarLSQFitter()
 
-                resamp_y = y + resid[np.random.permutation(resid.size)]
+                resamp_vals = values + resid[np.random.permutation(resid.size)]
 
-                boot_model = boot_fit(fit_model, x, resamp_y, values)
+                boot_model = boot_fit(fit_model, x, y, resamp_vals)
 
                 params[:, i] = boot_model.parameters
 
@@ -75,15 +75,19 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
                 import matplotlib.pyplot as plt
 
                 plt.subplot(221)
+                plt.title("log Amp")
                 _ = plt.hist(params[0], bins=10)
                 plt.axvline(fit_model.parameters[0])
                 plt.subplot(222)
+                plt.title("trans ellip")
                 _ = plt.hist(params[1], bins=10)
                 plt.axvline(fit_model.parameters[1])
                 plt.subplot(223)
+                plt.title("theta")
                 _ = plt.hist(params[2], bins=10)
                 plt.axvline(fit_model.parameters[2])
                 plt.subplot(224)
+                plt.title("gamma")
                 _ = plt.hist(params[3], bins=10)
                 plt.axvline(fit_model.parameters[3])
 

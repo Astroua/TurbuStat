@@ -104,7 +104,7 @@ The fit here is not very good since the spectrum deviates from a single power-la
 
 .. image:: images/mvc_design4_limitedfreq.png
 
-Note the drastic change in the slope! Specifying the correct fit region for the data you're using is critical for interpreting the results of the method.
+Note the drastic change in the slope! Specifying the correct fit region for the data you're using is critical for interpreting the results of the method. This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with `weighted_fit=True` (this cannot be used for the segmented model described below).
 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
@@ -140,7 +140,7 @@ Breaks in the power-law behaviour in observations (and higher-resolution simulat
 
 Many of the techniques in TurbuStat are derived from two-dimensional power spectra. Because of this, the radial averaging and fitting code for these techniques are contained within a common base class, `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D`. Fitting options may be passed as keyword arguments to `~turbustat.statistics.MVC.run`. Alterations to the power-spectrum binning can be passed in `~turbustat.statistics.MVC.compute_radial_pspec`, after which the fitting routine (`~turbustat.statistics.MVC.fit_pspec`) may be run.
 
-Finally, the frequency units of the final plot (`xunit`) and the units of `low_cut` and `high_cut` can be given in angular units, as well as physical units when a distance is given. For example:
+The frequency units of the final plot (`xunit`) and the units of `low_cut` and `high_cut` can be given in angular units, as well as physical units when a distance is given. For example:
 
     >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
     >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, fit_2D=False)  # doctest: +SKIP
@@ -170,6 +170,37 @@ Finally, the frequency units of the final plot (`xunit`) and the units of `low_c
 .. image:: images/mvc_design4_physunits.png
 
 Alternatively, the fitting limits could be passed in units of `u.pc**-1`.
+
+Constraints on the azimuthal angles used to compute the one-dimensional power-spectrum can also be given:
+
+    >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, fit_2D=False, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.806
+    Model:                            OLS   Adj. R-squared:                  0.791
+    Method:                 Least Squares   F-statistic:                     53.85
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           5.68e-06
+    Time:                        14:51:27   Log-Likelihood:                 1.4445
+    No. Observations:                  15   AIC:                             1.111
+    Df Residuals:                      13   BIC:                             2.527
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const         17.3709      0.401     43.271      0.000      16.504      18.238
+    x1            -2.2897      0.312     -7.338      0.000      -2.964      -1.616
+    ==============================================================================
+    Omnibus:                        1.198   Durbin-Watson:                   2.743
+    Prob(Omnibus):                  0.549   Jarque-Bera (JB):                0.809
+    Skew:                          -0.185   Prob(JB):                        0.667
+    Kurtosis:                       1.924   Cond. No.                         13.5
+    ==============================================================================
+
+.. image:: images/mvc_design4_physunits_azimlimits.png
+
+The azimuthal limits now appear as contours on the two-dimensional power-spectrum in the figure. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for more information on giving azimuthal constraints.
 
 References
 ----------

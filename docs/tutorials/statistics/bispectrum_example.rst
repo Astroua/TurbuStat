@@ -24,13 +24,6 @@ The phase information retained by the bispectrum requires it to be a complex qua
 
 The denominator normalizes out the "power" at the modes :math:`k_1,\,k_2`; this is effectively dividing out the value of the power spectrum, leaving a fractional difference that is entirely the result of the phase coupling. Alternatively, the denominator can be thought of as the value attained if the modes :math:`k_1\,k_2` are completely phase coupled, and therefore is the maximal value attainable.
 
-In the recent work of :ref:`Burkhart et al. 2016 <ref-burkhart2016>`, they used a *phase coherence technique* (PCI), alternative to the bispectrum, to measure phase coherence as a function of radial and azimuthal changes (so called *lags* averaged over radius or angle in the bispectrum plane). This is defined as
-
-.. math::
-    C(R) = \frac{L_{\rm PRS}(R) - L_{\rm ORG}(R)}{L_{\rm PRS}(R) - L_{\rm PCS}(R)}
-
-where :math:`L(R)` is the relevant averaged quantity calculated at different lags (denoted generally by :math:`R`). ORG is the original signal, PRS is the signal with randomized phases, and PCS is the signal with phases set to be correlated. For each value of R, this yields a normalized value (:math:`C(R)`) between 0 and 1, similar to the bispectrum. **Note: PCI will be added to the existing TurbuStat code, but is not yet complete.**.
-
 Using
 -----
 
@@ -40,6 +33,7 @@ We need to import the `~turbustat.statistics.BiSpectrum` code, along with a few 
 
     >>> from turbustat.statistics import BiSpectrum
     >>> from astropy.io import fits
+    >>> import matplotlib.pyplot as plt
 
 And we load in the data:
 
@@ -70,6 +64,36 @@ The computing the bispectrum and bicoherence maps is performed through `~turbust
 .. image:: images/bispectrum_w_and_wo_meansub_coherence.png
 
 The figure shows the effect on the bicoherence from subtracting the mean. The colorbar is limited between 0 and 1, with black representing 1.
+
+
+Both radial and azimuthal slices can be extracted from the bispectrum to examine how its properties vary with angle and radius. Using the non-mean subtracted example, radial slices can be returned with:
+
+    >>> rad_slices = bispec.radial_slices([30, 45, 60] * u.deg, 20 * u.deg, value='bispectrum_logamp')  # doctest: +SKIP
+    >>> plt.errorbar(rad_slices[30][0], rad_slices[30][1], yerror=rad_slices[30][2], label='30')  # doctest: +SKIP
+    >>> plt.errorbar(rad_slices[45][0], rad_slices[45][1], yerror=rad_slices[45][2], label='45')  # doctest: +SKIP
+    >>> plt.errorbar(rad_slices[60][0], rad_slices[60][1], yerror=rad_slices[60][2], label='60')  # doctest: +SKIP
+    >>> plt.legend()  # doctest: +SKIP
+    >>> plt.xlabel("Radius")  # doctest: +SKIP
+    >>> plt.ylabel("log Bispectrum")  # doctest: +SKIP
+
+.. image:: images/bispectrum_radial_slices.png
+
+Three slices are returned, centered at 30, 45, and 60 degree. The width of each slice is 20 degree. `rad_slices` is a dictionary whose keys are the (rounded to the nearest integer) center angles given. Each entry in the dictionary has the bin centers (`[0]`), values (`[1]`), and standard deviations (`[2]`). The center angles and slice width can be given in any angular unit. By default, the averaging is over the bispectrum amplitudes. By passing `value='bispectrum_logamp'`, the log of the amplitudes are instead averaged over. The bicoherence array can also be averaged over with `value='bicoherence'`. The size of the bins can also be changed by passing `bin_width` to `~Bispectrum.radial_slices`; the default is `1`.
+
+
+The azimuthal slices are similarly calculated:
+
+    >>> azim_slices = tester.azimuthal_slice([8, 16, 50], 10, value='bispectrum_logamp', bin_width=5 * u.deg)  # doctest: +SKIP
+    >>> plt.errorbar(azim_slices[8][0], azim_slices[8][1], yerror=azim_slices[8][2], label='8')  # doctest: +SKIP
+    >>> plt.errorbar(azim_slices[16][0], azim_slices[16][1], yerror=azim_slices[16][2], label='16')  # doctest: +SKIP
+    >>> plt.errorbar(azim_slices[50][0], azim_slices[50][1], yerror=azim_slices[50][2], label='50')  # doctest: +SKIP
+    >>> plt.legend()  # doctest: +SKIP
+    >>> plt.xlabel("Theta (rad)")  # doctest: +SKIP
+    >>> plt.ylabel("log Bispectrum")  # doctest: +SKIP
+
+.. image:: images/bispectrum_azim_slices.png
+
+The slices are returned over angles 0 to :math:`\pi / 2`. With the azimuthal slices, the center radii, in units of the wavevectors, are given and a radial width (10) is specified for all. If different widths are needed, multiple values for the width can be given, though the length must match the length of the center radii.
 
 References
 ----------

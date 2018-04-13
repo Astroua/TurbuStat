@@ -4,6 +4,12 @@ from __future__ import print_function, absolute_import, division
 import pytest
 import astropy.units as u
 
+try:
+    from radio_beam.beam import NoBeamException
+    RADIO_BEAM_INSTALLED = True
+except ImportError:
+    RADIO_BEAM_INSTALLED = False
+
 from ._testing_data import header
 from ..io import find_beam_width, find_beam_properties
 
@@ -45,7 +51,11 @@ def test_load_beam_props(major, minor, pa):
         assert bpa == pa * u.deg
 
 
-@pytest.mark.xfail(raises=(ValueError, TypeError))
-def test_load_beam_fail():
+# radio-beam no has an exception for when no beam is found.
+# @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
+if RADIO_BEAM_INSTALLED:
+    @pytest.mark.xfail(raises=NoBeamException)
+    def test_load_beam_fail():
 
-    find_beam_width(header)
+        find_beam_width(header)
+

@@ -178,9 +178,9 @@ class EllipseModel(object):
     >>> ellipse = EllipseModel()
     >>> ellipse.estimate(xy)
     True
-    >>> np.round(ellipse.params, 2)
+    >>> np.round(ellipse.params, 2)  # doctest: +SKIP
     array([ 10.  ,  15.  ,   4.  ,   8.  ,   0.52])
-    >>> np.round(abs(ellipse.residuals(xy)), 5)
+    >>> np.round(abs(ellipse.residuals(xy)), 5)  # doctest: +SKIP
     array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
             0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.])
 

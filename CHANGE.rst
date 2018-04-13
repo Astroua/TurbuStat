@@ -1,6 +1,11 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #174 - Set the fraction of valid data points to compute the moments in a region for `StatsMoments`. Updated those test values for the default setting of `min_frac=0.8`.
+* #171 - Fix issues with NaN interpolation in Delta-Variance for observational data; added a min. weighting for Delta-Variance; allow segmented fitting for Delta-Variance; added support for weights and WLS in Lm_Seg
+* #165 - Added azimuthal constraints when creating 1D power-spectra. Also added radial and azimuthal slicing for the bispectrum. Fixed a critical bug in the bootstrapping for the 2D elliptical power-law model.
+* #166 - Removed testing python 2.7 with the dev version of astropy.
+* #164 - Add segmented linear fitting for the wavelet transform; updated unit test values to include segmented fitting slopes for wavelets
 * #163 - Use Hermitian eigenvalue decomposition for PCA (fixes getting imaginary components); Update the ellipse contour fitting to use the robust fitter from skimage (fixes previous PCA test failures); updated unit test values for the change in PCA
 * #161 - python 3 support; use ci-helpers; updated astropy-helpers; consistent convolution results with astropy 2.x; new delta-variance regression test values after convolution updates; DeltaVariance_Distance.curve_distance now restricts to the region between xlow and xhigh
 * #159 - Add an elliptical power-law model for fitting 2D power-spectra. Added 2D fitting for PowerSpectrum, MVC, VCA, and SCF, along with tests for each. Unit test values updated to include the 2D slopes. Also updated the tutorials of those 4 methods to demonstrate the new fitting procedure.

@@ -10,6 +10,7 @@ import statsmodels.api as sm
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types
 from ..fitting_utils import check_fit_limits
+from ..lm_seg import Lm_Seg
 
 
 class Wavelet(BaseStatisticMixIn):
@@ -145,7 +146,8 @@ class Wavelet(BaseStatisticMixIn):
         '''
         return self._values
 
-    def fit_transform(self, xlow=None, xhigh=None):
+    def fit_transform(self, xlow=None, xhigh=None, brk=None, min_fits_pts=3,
+                      **fit_kwargs):
         '''
         Perform a fit to the transform in log-log space.
 
@@ -155,6 +157,10 @@ class Wavelet(BaseStatisticMixIn):
             Lower scale value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
             Upper scale value to consider in the fit.
+        brk : `~astropy.units.Quantity`, optional
+            Give an initial guess for a break point. This enables fitting
+            with a `turbustat.statistics.Lm_Seg`.
+        fit_kwargs : Passed to `turbustat.statistics.Lm_Seg.fit_model`
         '''
 
         pix_scales = self._to_pixel(self.scales)
@@ -185,14 +191,65 @@ class Wavelet(BaseStatisticMixIn):
 
         y = y[within_limits]
         x = x[within_limits]
-        x = sm.add_constant(x)
 
-        model = sm.OLS(y, x, missing='drop')
+        if brk is not None:
+            # Try fitting a segmented model
 
-        self.fit = model.fit()
+            pix_brk = self._to_pixel(brk)
 
-        self._slope = self.fit.params[1]
-        self._slope_err = self.fit.bse[1]
+            if pix_brk < xlow or pix_brk > xhigh:
+                raise ValueError("brk must be within xlow and xhigh.")
+
+            model = Lm_Seg(x, y, np.log10(pix_brk.value))
+
+            model.fit_model(**fit_kwargs)
+
+            self.fit = model.fit
+
+            if model.params.size == 5:
+
+                # Check to make sure this leaves enough to fit to.
+                if sum(x < model.brk) < min_fits_pts:
+                    warnings.warn("Not enough points to fit to." +
+                                  " Ignoring break.")
+
+                    self._brk = None
+                else:
+                    good_pts = x.copy() < model.brk
+                    x = x[good_pts]
+                    y = y[good_pts]
+
+                    self._brk = 10**model.brk * u.pix
+                    self._brk_err = np.log(10) * self.brk.value * \
+                        model.brk_err * u.pix
+
+                    self._slope = model.slopes
+                    self._slope_err = model.slope_errs
+
+                    self.fit = model.fit
+
+            else:
+                self._brk = None
+                # Break fit failed, revert to normal model
+                warnings.warn("Model with break failed, reverting to model\
+                               without break.")
+        else:
+            self._brk = None
+
+        # Revert to model without break if none is given, or if the segmented
+        # model failed.
+        if self.brk is None:
+
+            x = sm.add_constant(x)
+
+            model = sm.OLS(y, x, missing='drop')
+
+            self.fit = model.fit()
+
+            self._slope = self.fit.params[1]
+            self._slope_err = self.fit.bse[1]
+
+        self._model = model
 
     @property
     def slope(self):
@@ -207,6 +264,20 @@ class Wavelet(BaseStatisticMixIn):
         Standard error on the fitted slope.
         '''
         return self._slope_err
+
+    @property
+    def brk(self):
+        '''
+        Break point in the segmented linear model.
+        '''
+        return self._brk
+
+    @property
+    def brk_err(self):
+        '''
+        1-sigma on the break point in the segmented linear model.
+        '''
+        return self._brk_err
 
     @property
     def fit_range(self):
@@ -231,9 +302,10 @@ class Wavelet(BaseStatisticMixIn):
             Values of the model at the given values.
         '''
 
-        model_values = self.fit.params[0] + self.fit.params[1] * xvals
-
-        return model_values
+        if isinstance(self._model, Lm_Seg):
+            return self._model.model(xvals)
+        else:
+            return self.fit.params[0] + self.fit.params[1] * xvals
 
     def plot_transform(self, xunit=u.pix, show=True,
                        color='b', symbol='D', label=None):
@@ -268,7 +340,7 @@ class Wavelet(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, xunit=u.pix,
-            xlow=None, xhigh=None, scale_normalization=True,
+            xlow=None, xhigh=None, brk=None, scale_normalization=True,
             save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
@@ -283,6 +355,9 @@ class Wavelet(BaseStatisticMixIn):
             Lower scale value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
             Upper scale value to consider in the fit.
+        brk : `~astropy.units.Quantity`, optional
+            Give an initial guess for a break point. This enables fitting
+            with a `turbustat.statistics.Lm_Seg`.
         scale_normalization: bool, optional
             Multiply the wavelet transform by the correct normalization
             factor.
@@ -292,7 +367,7 @@ class Wavelet(BaseStatisticMixIn):
         '''
         self.compute_transform(scale_normalization=scale_normalization)
         self.make_1D_transform()
-        self.fit_transform(xlow=xlow, xhigh=xhigh)
+        self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
 
         if verbose:
 

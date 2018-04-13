@@ -74,13 +74,13 @@ The summary plot shows the correlation surface, a histogram of correlation value
 The 2D model parameters are not shown in the above summary. Instead, the parameters can be accessed with:
 
     >>> print(scf.slope2D, scf.slope2D_err)  # doctest: +SKIP
-    (-0.21648274416050342, 7.8586198274582797e-05)
+    (-0.21648274416050342, 0.0029877489213308711)
     >>> print(scf.ellip2D, scf.ellip2D_err)  # doctest: +SKIP
-    (0.89100428375797669, 0.00022227119552445208)
+    (0.89100428375797669, 0.013283231941591638)
     >>> print(scf.theta2D, scf.theta2D_err)  # doctest: +SKIP
-    (1.901971529507771, 0.00098767168667635019)
+    (0.33117523945671401, 0.06876652735591221)
 
-Since each value in the SCF surface is an average over the whole cube, it is less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
+Since each value in the SCF surface is an average over the whole cube, it is tends to be less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
 
 
 Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh` to limit which scales are used in the fit.
@@ -110,6 +110,36 @@ Real data may not have a spectrum described by a single power-law. In this case,
     ==============================================================================
 
 .. image:: images/design4_scf_fitlimits.png
+
+The one-dimensional power spectrum in the previous examples is averaged over all azimuthal angles. In cases where only a certain range of angles is of interest, limits on the averaged azimuthal angles can be given:
+
+    >>> scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix, radialavg_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 70 * u.deg})  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.987
+    Model:                            WLS   Adj. R-squared:                  0.981
+    Method:                 Least Squares   F-statistic:                     157.2
+    Date:                Mon, 02 Oct 2017   Prob (F-statistic):            0.00630
+    Time:                        09:00:45   Log-Likelihood:                 17.721
+    No. Observations:                   4   AIC:                            -31.44
+    Df Residuals:                       2   BIC:                            -32.67
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const         -0.0067      0.010     -0.695      0.559      -0.048       0.035
+    x1            -0.2098      0.017    -12.539      0.006      -0.282      -0.138
+    ==============================================================================
+    Omnibus:                          nan   Durbin-Watson:                   1.899
+    Prob(Omnibus):                    nan   Jarque-Bera (JB):                0.449
+    Skew:                          -0.003   Prob(JB):                        0.799
+    Kurtosis:                       1.358   Cond. No.                         14.4
+    ==============================================================================
+
+.. image:: images/design4_scf_fitlimits_azimlimits.png
+
+`theta_0` is the angle at the center of the azimuthal mask and `delta_theta` is the width of that mask. The mask is shown on the SCF surface by the radial blue-dashed contours.
 
 Here the fit limits were given in pixel units, but angular units and physical units (if a distance is given) can also be passed. For these data, there is some deviation from a power-law at small lags over the range of lags used and so limiting the fitting range has not significantly changed the fit. See Figure 8 in :ref:`Padoan et al. 2001 <ref-padoan2001>` for an example of deviations from power-law behaviour in the SCF spectrum.
 

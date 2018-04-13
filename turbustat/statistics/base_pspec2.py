@@ -24,7 +24,7 @@ class StatisticBase_PSpec2D(object):
         '''
         Two-dimensional power spectrum.
         '''
-        return self._ps2D
+        return self._ps2D[::-1]
 
     @property
     def ps1D(self):
@@ -71,22 +71,33 @@ class StatisticBase_PSpec2D(object):
         kwargs : passed to `~turbustat.statistics.psds.pspec`.
         '''
 
-        if return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = \
-                pspec(self.ps2D, return_stddev=return_stddev,
-                      logspacing=logspacing, max_bin=max_bin, **kwargs)
-            self._stddev_flag = True
+        # Check if azimuthal constraints are given
+        if kwargs.get("theta_0"):
+            azim_constraint_flag = True
         else:
-            self._freqs, self._ps1D = \
-                pspec(self.ps2D, return_stddev=return_stddev, max_bin=max_bin,
-                      **kwargs)
-            self._stddev_flag = False
+            azim_constraint_flag = False
+
+        out = pspec(self.ps2D, return_stddev=return_stddev,
+                    logspacing=logspacing, max_bin=max_bin, **kwargs)
+
+        self._stddev_flag = return_stddev
+        self._azim_constraint_flag = azim_constraint_flag
+
+        if return_stddev and azim_constraint_flag:
+            self._freqs, self._ps1D, self._ps1D_stddev, self._azim_mask = out
+        elif return_stddev:
+            self._freqs, self._ps1D, self._ps1D_stddev = out
+        elif azim_constraint_flag:
+            self._freqs, self._ps1D, self._azim_mask = out
+        else:
+            self._freqs, self._ps1D = out
 
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
-                  high_cut=None, min_fits_pts=10, verbose=False):
+                  high_cut=None, min_fits_pts=10, weighted_fit=False,
+                  verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -112,6 +123,10 @@ class StatisticBase_PSpec2D(object):
         min_fits_pts : int, optional
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
+        weighted_fit : bool, optional
+            Fit using weighted least-squares. Requires `return_stddev` to be
+            enabled when computing the radial power-spectrum. The weights are
+            the inverse-squared standard deviations in each radial bin.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
@@ -133,6 +148,21 @@ class StatisticBase_PSpec2D(object):
                                           self.high_cut.value)].value)
         y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut.value,
                                          self.high_cut.value)])
+
+        if weighted_fit:
+
+            if brk is not None:
+                raise ValueError("Weighted least-squares fitting cannot be "
+                                 "used when fitting a break-point.")
+
+            if not self._stddev_flag:
+                raise ValueError("'return_stddev' must be enabled when "
+                                 "computing the radial power spectrum. "
+                                 "The WLS fit requires uncertainties.")
+
+            y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
+                                                        self.low_cut.value,
+                                                        self.high_cut.value)])
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -183,7 +213,10 @@ class StatisticBase_PSpec2D(object):
         if self.brk is None:
             x = sm.add_constant(x)
 
-            model = sm.OLS(y, x, missing='drop')
+            if weighted_fit:
+                model = sm.WLS(y, x, missing='drop', weights=1 / y_err**2)
+            else:
+                model = sm.OLS(y, x, missing='drop')
 
             self.fit = model.fit()
 
@@ -219,7 +252,8 @@ class StatisticBase_PSpec2D(object):
         return self._brk_err
 
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
-                    high_cut=None, bootstrap=True, niters=100):
+                    high_cut=None, bootstrap=True, niters=100,
+                    use_azimmask=False):
         '''
         Model the 2D power-spectrum surface with an elliptical power-law model.
 
@@ -241,6 +275,9 @@ class StatisticBase_PSpec2D(object):
             the covariance matrix.
         niters : int, optional
             Number of bootstrap iterations.
+        use_azimmask : bool, optional
+            Use the azimuthal mask defined for the 1D spectrum, when azimuthal
+            limit have been given.
         '''
 
         # Make the data to fit to
@@ -261,6 +298,9 @@ class StatisticBase_PSpec2D(object):
         freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
 
         mask = clip_func(freqs_dist, self.low_cut.value, self.high_cut.value)
+
+        if hasattr(self, "_azim_mask") and use_azimmask:
+            mask = np.logical_and(mask, self._azim_mask)
 
         if not mask.any():
             raise ValueError("Limits have removed all points to fit. "
@@ -369,18 +409,21 @@ class StatisticBase_PSpec2D(object):
                      origin="lower")
             p.colorbar()
 
+            yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
+
+            freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
+
+            mask = np.logical_and(freqs_dist >= self.low_cut.value,
+                                  freqs_dist <= self.high_cut.value)
+
+            p.contour(mask, colors='r', linestyles='--')
+
             # Plot fit contours
             if hasattr(self, 'fit2D'):
-                yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
-
-                freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
-
-                mask = np.logical_and(freqs_dist >= self.low_cut.value,
-                                      freqs_dist <= self.high_cut.value)
-
                 p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
 
-                p.contour(mask, colors='r', linestyles='--')
+            if hasattr(self, "_azim_mask"):
+                p.contour(self._azim_mask, colors='r', linestyles='--')
 
             ax = p.subplot(121)
         else:

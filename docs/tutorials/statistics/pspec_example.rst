@@ -30,25 +30,25 @@ The power spectrum is computed using:
     >>> pspec.run(verbose=True, xunit=u.pix**-1)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.970
-    Model:                            OLS   Adj. R-squared:                  0.969
-    Method:                 Least Squares   F-statistic:                     1017.
-    Date:                Mon, 03 Jul 2017   Prob (F-statistic):           7.94e-26
-    Time:                        18:40:13   Log-Likelihood:                 15.718
-    No. Observations:                  34   AIC:                            -27.44
-    Df Residuals:                      32   BIC:                            -24.38
+    Dep. Variable:                      y   R-squared:                       0.941
+    Model:                            OLS   Adj. R-squared:                  0.941
+    Method:                 Least Squares   F-statistic:                     1426.
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           1.44e-56
+    Time:                        14:32:47   Log-Likelihood:                -52.829
+    No. Observations:                  91   AIC:                             109.7
+    Df Residuals:                      89   BIC:                             114.7
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          5.1333      0.109     47.020      0.000       4.911       5.356
-    x1            -3.2859      0.103    -31.896      0.000      -3.496      -3.076
+    const          3.1677      0.103     30.828      0.000       2.964       3.372
+    x1            -5.0144      0.133    -37.761      0.000      -5.278      -4.751
     ==============================================================================
-    Omnibus:                        5.932   Durbin-Watson:                   0.798
-    Prob(Omnibus):                  0.052   Jarque-Bera (JB):                4.380
-    Skew:                          -0.796   Prob(JB):                        0.112
-    Kurtosis:                       3.745   Cond. No.                         7.99
+    Omnibus:                        3.532   Durbin-Watson:                   0.129
+    Prob(Omnibus):                  0.171   Jarque-Bera (JB):                3.481
+    Skew:                          -0.468   Prob(JB):                        0.175
+    Kurtosis:                       2.797   Cond. No.                         4.40
     ==============================================================================
 
 .. image:: images/design4_pspec.png
@@ -57,46 +57,46 @@ The code returns a summary of the one-dimensional fit and a figure showing the o
 
 The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the limited inertial range in this simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
 
-    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.952
-    Model:                            OLS   Adj. R-squared:                  0.948
-    Method:                 Least Squares   F-statistic:                     255.7
-    Date:                Mon, 03 Jul 2017   Prob (F-statistic):           6.26e-10
-    Time:                        18:40:25   Log-Likelihood:                 10.458
-    No. Observations:                  15   AIC:                            -16.92
-    Df Residuals:                      13   BIC:                            -15.50
+    Dep. Variable:                      y   R-squared:                       0.971
+    Model:                            OLS   Adj. R-squared:                  0.968
+    Method:                 Least Squares   F-statistic:                     398.6
+    Date:                Thu, 28 Sep 2017   Prob (F-statistic):           1.42e-10
+    Time:                        17:02:20   Log-Likelihood:                 14.077
+    No. Observations:                  14   AIC:                            -24.15
+    Df Residuals:                      12   BIC:                            -22.87
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          5.8480      0.220     26.566      0.000       5.372       6.324
-    x1            -2.7359      0.171    -15.991      0.000      -3.106      -2.366
+    const          5.5109      0.190     29.021      0.000       5.097       5.925
+    x1            -3.0223      0.151    -19.964      0.000      -3.352      -2.692
     ==============================================================================
-    Omnibus:                        0.822   Durbin-Watson:                   2.075
-    Prob(Omnibus):                  0.663   Jarque-Bera (JB):                0.621
-    Skew:                          -0.448   Prob(JB):                        0.733
-    Kurtosis:                       2.562   Cond. No.                         13.5
+    Omnibus:                        0.901   Durbin-Watson:                   2.407
+    Prob(Omnibus):                  0.637   Jarque-Bera (JB):                0.718
+    Skew:                          -0.215   Prob(JB):                        0.698
+    Kurtosis:                       1.977   Cond. No.                         15.2
     ==============================================================================
+
 
 .. image:: images/design4_pspec_limitedfreq.png
 
-When limiting the fit to the inertial range, the slope is :math:`-2.7\pm0.2`. `low_cut` and `high_cut` can also be given as spatial frequencies in angular units (e.g., `u.deg**-1`). And since a distance was specified, the `low_cut` and `high_cut` can also be given in physical frequency units (e.g., `u.pc**-1`).
+When limiting the fit to the inertial range, the slope is :math:`-3.0\pm0.2`. `low_cut` and `high_cut` can also be given as spatial frequencies in angular units (e.g., `u.deg**-1`). And since a distance was specified, the `low_cut` and `high_cut` can also be given in physical frequency units (e.g., `u.pc**-1`).
 
 The fit to the two-dimensional power-spectrum has also changed. These parameters aren't included in the fit summary for the 1D fit. Instead, they can be accessed through:
 
     >>> print(pspec.slope2D, pspec.slope2D_err)  # doctest: +SKIP
-    (-3.0568257229644442, 0.42962017690271243)
+    (-3.155235947194412, 0.19744198375014044)
     >>> print(pspec.ellip2D, pspec.ellip2D_err)  # doctest: +SKIP
-    (0.726886399420131, 2.2978314267268547)
+    (0.74395734515060385, 0.043557506230624203)
     >>> print(pspec.theta2D, pspec.theta2D_err)  # doctest: +SKIP
-    (1.1528218999604305, 6.9282582013852014)
+    (1.1364954648370515, 0.09436799399259721)
 
-The slope is consistent with the 1D model, but the uncertainty is much larger. This is due to the very limited range of the data used for the fit. By default, the parameter uncertainties for the 2D model are determined by a bootstrap. After fitting the model, the residuals are added back to the data, and re-fit some number of times. The bootstrap estimation is enabled by the `bootstrap` keyword in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec` and the number of iterations is set with `niters` (the default is 100). These can be set in `~turbustat.statistics.PowerSpectrum.run` by passing a keyword dictionary to `fit_2D_kwargs` (e.g., `fit_2D_kwargs={'bootstrap': False}`). The other parameters are the ellipticity, which is bounded between 0 and 1 (with 1 being circular), and theta, the angle between the x-axis and the semi-major axis of the ellipse. Theta is bounded between 0 and :math:`\pi`.
+The slope is moderately steeper than in the 1D model, but within the respective uncertainty ranges. By default, the parameter uncertainties for the 2D model are determined by a bootstrap. After fitting the model, the residuals are added back to the data, and re-fit some number of times (the default is 100). The bootstrap estimation is enabled by the `bootstrap` keyword in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec` and the number of iterations is set with `niters` (the default is 100). These can be set in `~turbustat.statistics.PowerSpectrum.run` by passing a keyword dictionary to `fit_2D_kwargs` (e.g., `fit_2D_kwargs={'bootstrap': False}`). The other parameters are the ellipticity, which is bounded between 0 and 1 (with 1 being circular), and theta, the angle between the x-axis and the semi-major axis of the ellipse. Theta is bounded between 0 and :math:`\pi`. The example data here is moderately anisotropic.
 
-*Why are the errors so large?* For this example, the errors on the latter two parameters are larger than the ranges they are defined over! Why? Theta is left unbounded during the fit, and when unconstrained, both it and the error will be large. For the ellipticity, the fit uses a transformed version of the ellipticity that makes it defined over the real line. This has a massive effect on stabilizing the fits. The down-side is that the error becomes large when it is not well-constrained. In order to constrain these parameters, the model needs to be fit over a larger range of frequencies.
 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
 
@@ -104,27 +104,27 @@ Breaks in the power-law behaviour in observations (and higher-resolution simulat
     >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.994
-    Model:                            OLS   Adj. R-squared:                  0.994
-    Method:                 Least Squares   F-statistic:                     4024.
-    Date:                Tue, 04 Jul 2017   Prob (F-statistic):           1.49e-75
-    Time:                        11:16:04   Log-Likelihood:                 53.270
-    No. Observations:                  71   AIC:                            -98.54
-    Df Residuals:                      67   BIC:                            -89.49
+    Dep. Variable:                      y   R-squared:                       0.996
+    Model:                            OLS   Adj. R-squared:                  0.995
+    Method:                 Least Squares   F-statistic:                     4904.
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           1.84e-77
+    Time:                        14:29:10   Log-Likelihood:                 61.421
+    No. Observations:                  70   AIC:                            -114.8
+    Df Residuals:                      66   BIC:                            -105.8
     Df Model:                           3
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          5.3112      0.094     56.790      0.000       5.124       5.498
-    x1            -3.1436      0.085    -36.871      0.000      -3.314      -2.973
-    x2            -5.0891      0.205    -24.853      0.000      -5.498      -4.680
-    x3            -0.0015      0.054     -0.028      0.978      -0.109       0.106
+    const          5.1169      0.087     59.057      0.000       4.944       5.290
+    x1            -3.3384      0.082    -40.924      0.000      -3.501      -3.176
+    x2            -4.9624      0.191    -26.043      0.000      -5.343      -4.582
+    x3            -0.0084      0.048     -0.174      0.863      -0.105       0.088
     ==============================================================================
-    Omnibus:                        9.165   Durbin-Watson:                   1.075
-    Prob(Omnibus):                  0.010   Jarque-Bera (JB):                8.822
-    Skew:                          -0.747   Prob(JB):                       0.0121
-    Kurtosis:                       3.867   Cond. No.                         21.5
+    Omnibus:                        3.812   Durbin-Watson:                   1.096
+    Prob(Omnibus):                  0.149   Jarque-Bera (JB):                2.211
+    Skew:                          -0.191   Prob(JB):                        0.331
+    Kurtosis:                       2.218   Cond. No.                         22.4
     ==============================================================================
 
 .. image:: images/design4_pspec_breakfit.png
@@ -132,6 +132,71 @@ Breaks in the power-law behaviour in observations (and higher-resolution simulat
 `brk` is the initial guess at where the break point is. Here I've set it to the extent of the inertial range of the simulation. `log_break` should be enabled if the given `brk` is already the log (base-10) value (since the fitting is done in log-space). The segmented linear model iteratively optimizes the location of the break point, trying to minimize the gap between the different components. This is the `x3` parameter above. The slopes of the components are `x1` and `x2`, but the second slope is defined *relative to the first slope* (i.e., if `x2=0`, the slopes of the components would be the same). The true slopes can be accessed through `pspec.slope` and `pspec.slope_err`. The location of the fitted break point is given by `pspec.brk`, and its uncertainty `pspec.brk_err`. If the fit does not find a good break point, it will revert to a linear fit without the break.
 
 Note that the 2D fitting was disabled in this last example. The 2D model cannot fit a break point, and will instead try to fit a single power-law for the between `low_cut` and `high_cut`, which we know already know is the wrong model. Thus, it has been disabled to avoid confusion. A strategy for fitting the 2D model when the spectrum shows a break is to first fit the 1D model, find the break point, and then fit the 2D spectrum independently using the break point as the `high_cut` in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec`.
+
+There may be cases where you want to limit the azimuthal angles used to create the 1D averaged power-spectrum. This may be useful if, for example, you want to find a measure of anistropy but the 2D power-law fit is not performing well. We will add extra constraints to the previous example with a break point:
+
+    >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.990
+    Model:                            OLS   Adj. R-squared:                  0.989
+    Method:                 Least Squares   F-statistic:                     2113.
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           1.76e-65
+    Time:                        14:29:10   Log-Likelihood:                 30.377
+    No. Observations:                  70   AIC:                            -52.75
+    Df Residuals:                      66   BIC:                            -43.76
+    Df Model:                           3
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          5.7150      0.173     33.005      0.000       5.369       6.061
+    x1            -2.9371      0.154    -19.041      0.000      -3.245      -2.629
+    x2            -4.9096      0.254    -19.313      0.000      -5.417      -4.402
+    x3             0.0156      0.077      0.202      0.840      -0.138       0.169
+    ==============================================================================
+    Omnibus:                        3.679   Durbin-Watson:                   1.837
+    Prob(Omnibus):                  0.159   Jarque-Bera (JB):                1.894
+    Skew:                          -0.030   Prob(JB):                        0.388
+    Kurtosis:                       2.196   Cond. No.                         22.9
+    ==============================================================================
+
+.. image:: images/design4_pspec_breakfit_azimlimits.png
+
+The azimuthal mask has been added onto the plot of the two-dimensional power spectrum. The constraints used here are based on the major axis direction from the two-dimensional fit performed above. This is given as `theta_0`. The other parameter, `delta_theta`, is the width of the azimuthal mask to use. Both parameters can be specified in any angular unit.
+
+The default fit uses Ordinary Least Squares. A Weighted Least Squares can be enabled with `weighted_fit=True` *if* the segmented linear fit is not used:
+
+    >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, weighted_fit=True)  # doctest: +SKIP
+                                WLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.969
+    Model:                            WLS   Adj. R-squared:                  0.966
+    Method:                 Least Squares   F-statistic:                     372.0
+    Date:                Fri, 29 Sep 2017   Prob (F-statistic):           2.13e-10
+    Time:                        15:08:21   Log-Likelihood:                 13.966
+    No. Observations:                  14   AIC:                            -23.93
+    Df Residuals:                      12   BIC:                            -22.65
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          5.5119      0.194     28.476      0.000       5.090       5.934
+    x1            -3.0200      0.157    -19.288      0.000      -3.361      -2.679
+    ==============================================================================
+    Omnibus:                        0.701   Durbin-Watson:                   2.387
+    Prob(Omnibus):                  0.704   Jarque-Bera (JB):                0.655
+    Skew:                          -0.235   Prob(JB):                        0.721
+    Kurtosis:                       2.050   Cond. No.                         15.3
+    ==============================================================================
+
+.. image:: images/design4_pspec_limitedfreq_weightfit.png
+
+The fit has not changed significantly, but may in certain cases.
+
 
 References
 ----------
