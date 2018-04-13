@@ -5,7 +5,7 @@ import numpy as np
 from warnings import warn
 
 try:
-    from pyfftw.builders import rfftn
+    from pyfftw.interfaces.numpy_fft import rfftn
     PYFFTW_FLAG = True
 except ImportError:
     PYFFTW_FLAG = False
@@ -18,7 +18,7 @@ http://stackoverflow.com/questions/25147045/full-frequency-array-reconstruction-
 '''
 
 
-def rfft_to_fft(image, use_pyfftw=True, **pyfftw_kwargs):
+def rfft_to_fft(image, use_pyfftw=True, threads=1, **pyfftw_kwargs):
     '''
     Perform a RFFT on the image (2 or 3D) and return the absolute value in
     the same format as you would get with the fft (negative frequencies).
@@ -28,6 +28,7 @@ def rfft_to_fft(image, use_pyfftw=True, **pyfftw_kwargs):
     ------
     image : numpy.ndarray
         2 or 3D array.
+    use_pyfftw : bool, optional
 
     Outputs
     -------
@@ -43,7 +44,7 @@ def rfft_to_fft(image, use_pyfftw=True, **pyfftw_kwargs):
 
     if use_pyfftw:
         if PYFFTW_FLAG:
-            fft_abs = np.abs(rfftn(image, **pyfftw_kwargs)())
+            fft_abs = np.abs(rfftn(image, **pyfftw_kwargs))
         else:
             use_pyfftw = False
             warn("pyfftw is not installed")
