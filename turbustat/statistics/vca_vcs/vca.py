@@ -71,7 +71,7 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Number of threads to use in FFT when using pyfftw.
         pyfftw_kwargs : Passed to
             `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
-            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`__
             for a list of accepted kwargs.
         '''
 
