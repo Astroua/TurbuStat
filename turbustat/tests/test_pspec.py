@@ -147,7 +147,7 @@ def test_pspec_fit2D(theta):
 def test_PSpec_method_fftw():
     tester = \
         PowerSpectrum(dataset1["moment0"])
-    tester.run(use_pyfftw=True, threads=2)
+    tester.run(use_pyfftw=True, threads=1)
     npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
     npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
     npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])
