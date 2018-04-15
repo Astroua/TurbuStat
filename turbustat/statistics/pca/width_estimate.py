@@ -10,13 +10,8 @@ from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
 import astropy.units as u
 from matplotlib.path import Path
-
-try:
-    from skimage.measure import find_contours
-    from scipy.ndimage import map_coordinates
-    HAS_SKIMAGE = True
-except ImportError:
-    HAS_SKIMAGE = False
+from skimage.measure import find_contours
+from scipy.ndimage import map_coordinates
 
 from ..stats_utils import EllipseModel
 
@@ -417,11 +412,6 @@ def get_contour_path(xmat, ymat, z, level, idx=0):
     Otherwise use skimage.measure.find_contours.
 
     '''
-
-    # Fallback on skimage
-    if not HAS_SKIMAGE:
-        raise ValueError("Require skimage for creating contours in PCA.")
-
     # Get the contour in the array coordinates then map to the given xmat, ymat
 
     contours = find_contours(z, level)
