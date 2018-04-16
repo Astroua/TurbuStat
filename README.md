@@ -56,6 +56,7 @@ Requires:
  *   sklearn>=0.13.0
  *   pandas>=0.13
  *   statsmodels>=0.4.0
+ *   scikit-image>=0.12
 
 Recommended:
 
@@ -66,7 +67,6 @@ Optional:
  *   [signal-id](https://github.com/radio-astro-tools/signal-id) - Noise estimation in PPV cubes.
  *   [radio_beam](https://github.com/radio-astro-tools/radio_beam) - A class for handling radio beams and useful utilities. Used for noise estimation in signal-id
  *   [emcee](http://dan.iel.fm/emcee/current/) - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA.
-
 
 Credits
 -------

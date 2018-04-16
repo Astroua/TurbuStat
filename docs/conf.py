@@ -64,7 +64,7 @@ MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'spectral_cube.wcs_utils', "spectral_cube.cube_utils",
                 'spectral_cube.lower_dimensional_structures',
                 'spectral_cube.spectral_cube',
-                'emcee']
+                'emcee', 'skimage', 'skimage.measure']
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
