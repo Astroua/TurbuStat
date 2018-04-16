@@ -152,7 +152,8 @@ def test_vca_azimlimits(plaw, ellip):
               fit_kwargs={'weighted_fit': True},
               low_cut=10**-2 / u.pix)
 
-    # Ensure slopes are consistent to within 5%
+    # Ensure slopes are consistent to within 0.1. Shot noise with the
+    # limited number of points requires checking within a range.
     assert_between(- test3.slope, plaw - 0.1, plaw + 0.1)
     assert_between(- test2.slope, plaw - 0.1, plaw + 0.1)
     assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
