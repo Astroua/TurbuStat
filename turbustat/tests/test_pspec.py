@@ -7,6 +7,12 @@ import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
 
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
+
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
                             computed_distances, make_extended, assert_between)
@@ -89,16 +95,19 @@ def test_pspec_azimlimits(plaw, ellip):
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
-             fit_2D=False, weighted_fit=True)
+             fit_kwargs={'weighted_fit': True},
+             fit_2D=False)
 
     test2 = PowerSpectrum(fits.PrimaryHDU(img))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
-              fit_2D=False, weighted_fit=True)
+              fit_kwargs={'weighted_fit': True},
+              fit_2D=False)
 
     test3 = PowerSpectrum(fits.PrimaryHDU(img))
     test3.run(radial_pspec_kwargs={},
-              fit_2D=False, weighted_fit=True)
+              fit_kwargs={'weighted_fit': True},
+              fit_2D=False)
 
     # Ensure slopes are consistent to within 7%
     assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
@@ -123,7 +132,8 @@ def test_pspec_fit2D(theta):
                         return_psd=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
-    test.run(fit_2D=True, weighted_fit=True)
+    test.run(fit_2D=True,
+             fit_kwargs={'weighted_fit': True})
 
     try:
         npt.assert_allclose(theta, test.theta2D,
@@ -131,3 +141,13 @@ def test_pspec_fit2D(theta):
     except AssertionError:
         npt.assert_allclose(theta, test.theta2D - np.pi,
                             atol=0.08)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_PSpec_method_fftw():
+    tester = \
+        PowerSpectrum(dataset1["moment0"])
+    tester.run(use_pyfftw=True, threads=1)
+    npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
+    npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
+    npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])

@@ -9,6 +9,12 @@ import astropy.units as u
 from astropy.io import fits
 from scipy.stats import linregress
 
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
+
 from ..statistics import BiSpectrum, BiSpectrum_Distance
 from ._testing_data import dataset1,\
     dataset2, computed_data, computed_distances, make_extended
@@ -85,3 +91,11 @@ def test_bispec_radial_slicing(plaw):
     # Because of the phase information causing distortions, we're going to be
     # liberal with the allowed range.
     npt.assert_allclose(out.slope, -plaw * 1.5, atol=0.3)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_Bispec_method_fftw():
+    tester = BiSpectrum(dataset1["moment0"])
+    tester.run(use_pyfftw=True, threads=1)
+    assert np.allclose(tester.bicoherence,
+                       computed_data['bispec_val'])

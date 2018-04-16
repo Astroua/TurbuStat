@@ -7,6 +7,12 @@ from astropy.io import fits
 import pytest
 import numpy as np
 
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
+
 from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances, make_extended, assert_between
@@ -19,9 +25,11 @@ def test_MVC_method():
                  dataset1["centroid"][1])
     tester.run()
 
-    npt.assert_allclose(tester.ps1D, computed_data['mvc_val'])
-    npt.assert_almost_equal(tester.slope, computed_data['mvc_slope'])
-    npt.assert_almost_equal(tester.slope2D, computed_data['mvc_slope2D'])
+    # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
+    npt.assert_allclose(tester.ps1D, computed_data['mvc_val'], rtol=1e-3)
+    npt.assert_allclose(tester.slope, computed_data['mvc_slope'], rtol=1e-4)
+    npt.assert_allclose(tester.slope2D, computed_data['mvc_slope2D'],
+                        rtol=1e-4)
 
 
 def test_MVC_method_fitlimits():
@@ -62,8 +70,10 @@ def test_MVC_method_fitlimits():
 def test_MVC_distance():
     tester_dist = \
         MVC_Distance(dataset1, dataset2).distance_metric()
-    npt.assert_almost_equal(tester_dist.distance,
-                            computed_distances['mvc_distance'])
+    # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
+    npt.assert_allclose(tester_dist.distance,
+                        computed_distances['mvc_distance'],
+                        rtol=2e-3)
 
 
 @pytest.mark.parametrize(('plaw', 'ellip'),
@@ -89,20 +99,38 @@ def test_mvc_azimlimits(plaw, ellip):
                fits.PrimaryHDU(ones))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
-             fit_2D=False, weighted_fit=True)
+             fit_2D=False,
+             fit_kwargs={'weighted_fit': True})
 
     test2 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                 fits.PrimaryHDU(ones))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
-              fit_2D=False, weighted_fit=True)
+              fit_2D=False,
+              fit_kwargs={'weighted_fit': True})
 
     test3 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                 fits.PrimaryHDU(ones))
     test3.run(radial_pspec_kwargs={},
-              fit_2D=False, weighted_fit=True)
+              fit_2D=False,
+              fit_kwargs={'weighted_fit': True})
 
     # Ensure slopes are consistent to within 7%
     assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
     assert_between(test2.slope, - 1.07 * plaw, - 0.93 * plaw)
     assert_between(test.slope, - 1.07 * plaw, - 0.93 * plaw)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_MVC_method_fftw():
+    tester = MVC(dataset1["centroid"],
+                 dataset1["moment0"],
+                 dataset1["linewidth"],
+                 dataset1["centroid"][1])
+    tester.run(use_pyfftw=True, threads=1)
+
+    # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
+    npt.assert_allclose(tester.ps1D, computed_data['mvc_val'], rtol=1e-3)
+    npt.assert_allclose(tester.slope, computed_data['mvc_slope'], rtol=1e-4)
+    npt.assert_allclose(tester.slope2D, computed_data['mvc_slope2D'],
+                        rtol=1e-4)

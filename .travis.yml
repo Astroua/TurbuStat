@@ -8,6 +8,7 @@ addons:
             - graphviz
             - texlive-latex-extra
             - dvipng
+            - libfftw3-dev
 
 env:
     global:
@@ -43,7 +44,7 @@ matrix:
         # Do a coverage test.
         - os: linux
           env: SETUP_CMD='test --coverage'
-               PIP_DEPENDENCIES='emcee git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
+               PIP_DEPENDENCIES='emcee pyfftw git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - os: linux
@@ -71,9 +72,9 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.10
         - os: linux
-          env: PYTHON_VERSION=3.4 NUMPY_VERSION=1.10
+          env: PYTHON_VERSION=3.4 NUMPY_VERSION=1.11
         - os: linux
-          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11
+          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.12
 
         # Try numpy pre-release
         - os: linux

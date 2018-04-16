@@ -56,7 +56,7 @@ class StatisticBase_PSpec2D(object):
         return self._freqs * min(self._ps2D.shape)
 
     def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=True, max_bin=None, **kwargs):
+                             logspacing=False, max_bin=None, **kwargs):
         '''
         Computes the radially averaged power spectrum.
 

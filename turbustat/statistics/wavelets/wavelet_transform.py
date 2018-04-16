@@ -6,6 +6,13 @@ import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import astropy.units as u
 import statsmodels.api as sm
+from warnings import warn
+
+try:
+    from pyfftw.interfaces.numpy_fft import fftn, ifftn
+    PYFFTW_FLAG = True
+except ImportError:
+    PYFFTW_FLAG = False
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types
@@ -89,7 +96,8 @@ class Wavelet(BaseStatisticMixIn):
 
         self._scales = values
 
-    def compute_transform(self, scale_normalization=True):
+    def compute_transform(self, scale_normalization=True, use_pyfftw=False,
+                          threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
 
@@ -98,8 +106,26 @@ class Wavelet(BaseStatisticMixIn):
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
-
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
+
+        if use_pyfftw:
+            if PYFFTW_FLAG:
+                use_fftn = fftn
+                use_ifftn = ifftn
+            else:
+                warn("pyfftw not installed. Using numpy.fft functions.")
+                use_fftn = np.fft.fftn
+                use_ifftn = np.fft.ifftn
+        else:
+            use_fftn = np.fft.fftn
+            use_ifftn = np.fft.ifftn
 
         n0, m0 = self.data.shape
         A = len(self.scales)
@@ -119,7 +145,8 @@ class Wavelet(BaseStatisticMixIn):
             psi = MexicanHat2DKernel(an)
 
             self._Wf[i] = \
-                convolve_fft(self.data, psi, normalize_kernel=False).real * \
+                convolve_fft(self.data, psi, normalize_kernel=False,
+                             fftn=use_fftn, ifftn=use_ifftn).real * \
                 an**factor
 
     @property
@@ -339,8 +366,9 @@ class Wavelet(BaseStatisticMixIn):
         if show:
             plt.show()
 
-    def run(self, verbose=False, xunit=u.pix,
-            xlow=None, xhigh=None, brk=None, scale_normalization=True,
+    def run(self, verbose=False, xunit=u.pix, use_pyfftw=False, threads=1,
+            pyfftw_kwargs={}, scale_normalization=True,
+            xlow=None, xhigh=None, brk=None,
             save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
@@ -351,6 +379,19 @@ class Wavelet(BaseStatisticMixIn):
             Plot wavelet transform.
         xunit : u.Unit, optional
             Choose the unit to convert to when ang_units is enabled.
+        scale_normalization: bool, optional
+            Compute the transform with the correct scale-invariant
+            normalization.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
+        scale_normalization: bool, optional
+            Multiply the wavelet transform by the correct normalization
+            factor.
         xlow : `~astropy.units.Quantity`, optional
             Lower scale value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
@@ -358,14 +399,13 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
-        scale_normalization: bool, optional
-            Multiply the wavelet transform by the correct normalization
-            factor.
         save_name : str,optional
             Save the figure when a file name is given.
         plot_kwargs : Passed to `~Wavelet.plot_transform`.
         '''
-        self.compute_transform(scale_normalization=scale_normalization)
+        self.compute_transform(scale_normalization=scale_normalization,
+                               use_pyfftw=use_pyfftw, threads=threads,
+                               pyfftw_kwargs=pyfftw_kwargs)
         self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
 
