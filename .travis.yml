@@ -8,6 +8,7 @@ addons:
             - graphviz
             - texlive-latex-extra
             - dvipng
+            - libfftw3-dev
 
 env:
     global:
