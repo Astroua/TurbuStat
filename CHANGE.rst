@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #179 - Remove use of matplotlib._cntr (removed in their version 2.2) for PCA contours. Added scikit-image as a dependency to use their find_contours function.1
 * #174 - Set the fraction of valid data points to compute the moments in a region for `StatsMoments`. Updated those test values for the default setting of `min_frac=0.8`.
 * #171 - Fix issues with NaN interpolation in Delta-Variance for observational data; added a min. weighting for Delta-Variance; allow segmented fitting for Delta-Variance; added support for weights and WLS in Lm_Seg
 * #165 - Added azimuthal constraints when creating 1D power-spectra. Also added radial and azimuthal slicing for the bispectrum. Fixed a critical bug in the bootstrapping for the 2D elliptical power-law model.
