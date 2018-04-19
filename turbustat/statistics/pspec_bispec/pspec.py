@@ -113,9 +113,12 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
             beam_fft = fftshift(rfft_to_fft(beam_kern.array))
 
-            self._ps2D = np.power(fft / beam_fft, 2.)
-        else:
-            self._ps2D = np.power(fft, 2.)
+            self._beam_pow = np.abs(beam_fft**2)
+
+        self._ps2D = np.power(fft, 2.)
+
+        if beam_correct:
+            self._ps2D /= self._beam_pow
 
     def run(self, verbose=False, beam_correct=False,
             apodize_kernel=None, alpha=0.2, beta=0.0,
