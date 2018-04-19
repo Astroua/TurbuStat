@@ -5,6 +5,7 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 
+
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -52,13 +53,12 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
-        if beam is not None:
-            self._beam = beam
+        self.load_beam(beam=beam)
 
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self, beam_correct=True, apodize=True, alpha=0.3,
+    def compute_pspec(self, beam_correct=False, apodize=False, alpha=0.3,
                       use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
@@ -103,8 +103,8 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         else:
             self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, apodize=True, alpha=0.2,
-            beam_correct=True,
+    def run(self, verbose=False, apodize=False, alpha=0.2,
+            beam_correct=False,
             use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, return_stddev=True,
             low_cut=None, high_cut=None,
