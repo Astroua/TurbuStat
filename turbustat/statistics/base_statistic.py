@@ -6,6 +6,7 @@ import astropy.units as u
 import numpy as np
 from astropy.wcs import WCS
 from radio_beam import Beam
+from radio_beam.beam import NoBeamException
 from warnings import warn
 
 from ..io import input_data
@@ -50,8 +51,11 @@ class BaseStatisticMixIn(object):
 
         if beam is None:
             if hasattr(self, "_header"):
-                beam = Beam.from_fits_header(self.header)
-                self._beam = beam
+                try:
+                    beam = Beam.from_fits_header(self.header)
+                    self._beam = beam
+                except NoBeamException:
+                    warn("Header missing beam information.")
             else:
                 warn("No header available. Cannot load beam.")
         else:
@@ -75,12 +79,12 @@ class BaseStatisticMixIn(object):
     def data(self, values):
 
         if self.no_data_flag:
-            values = None
+            self._data = None
+        else:
+            if not isinstance(values, np.ndarray):
+                raise TypeError("Data is not a numpy array.")
 
-        elif not isinstance(values, np.ndarray):
-            raise TypeError("Data is not a numpy array.")
-
-        self._data = values
+            self._data = values.squeeze()
 
     def input_data_header(self, data, header):
         '''
