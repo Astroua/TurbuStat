@@ -5,7 +5,6 @@ import numpy as np
 import statsmodels.api as sm
 import warnings
 import astropy.units as u
-from scipy.signal import tukey
 
 from .lm_seg import Lm_Seg
 from .psds import pspec, make_radial_freq_arrays
@@ -13,6 +12,7 @@ from .fitting_utils import clip_func
 from .elliptical_powerlaw import (fit_elliptical_powerlaw,
                                   inverse_interval_transform,
                                   inverse_interval_transform_stderr)
+from .apodizing_kernels import *
 
 
 class StatisticBase_PSpec2D(object):
@@ -252,7 +252,7 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._brk_err
 
-    def apodizing_kernel(self, alpha=0.1):
+    def apodizing_kernel(self, kernel_type="tukey", alpha=0.1, beta=0.0):
         '''
         Return an apodizing kernel to be applied to the image before taking
         Fourier transform
@@ -262,9 +262,26 @@ class StatisticBase_PSpec2D(object):
         window : `~numpy.ndarray`
             Apodizing kernel
         '''
-        window_x = tukey(self.data.shape[1], alpha=alpha)
-        window_y = tukey(self.data.shape[0], alpha=alpha)
-        window = np.outer(window_y, window_x)
+
+        shape = self.data.shape
+
+        avail_types = ['splitcosinebell', 'hanning', 'tukey',
+                       'cosinebell', 'tophat']
+
+        if kernel_type == "splitcosinebell":
+            return SplitCosineBellWindow(alpha, beta)(shape)
+        elif kernel_type == "hanning":
+            return HanningWindow()(shape)
+        elif kernel_type == "tukey":
+            return TukeyWindow(alpha)(shape)
+        elif kernel_type == 'cosinebell':
+            return CosineBellWindow(alpha)(shape)
+        elif kernel_type == "tophat":
+            return TopHatWindow(beta)(shape)
+        else:
+            raise ValueError("kernel_type {0} is not one of the available "
+                             "types: {1}".format(kernel_type, avail_types))
+
         return window
 
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
