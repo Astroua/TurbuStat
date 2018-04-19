@@ -58,18 +58,40 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self, beam_correct=True, apodize=True, alpha=0.3):
+    def compute_pspec(self, beam_correct=True, apodize=True, alpha=0.3,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
+
+        Parameters
+        ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`__
+            for a list of accepted kwargs.
         '''
 
         if apodize:
             apod_kernel = self.apodizing_kernel(alpha=alpha)
-            fft = fftshift(rfft_to_fft(self.weighted_data * apod_kernel))
+            data = self.weighted_data * apod_kernel
         else:
-            fft = fftshift(rfft_to_fft(self.weighted_data))
+            data = self.weighted_data
 
-        if beam_correct and hasattr(self, '_beam'):
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        fft = fftshift(rfft_to_fft(data, use_pyfftw=use_pyfftw,
+                                   threads=threads,
+                                   **pyfftw_kwargs))
+
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
 
             beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
                                              y_size=self.data.shape[0],
@@ -81,12 +103,15 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         else:
             self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, apodize=True, alpha=0.2, beam_correct=True,
-            logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
+    def run(self, verbose=False, apodize=True, alpha=0.2,
+            beam_correct=True,
+            use_pyfftw=False, threads=1,
+            pyfftw_kwargs={}, return_stddev=True,
+            low_cut=None, high_cut=None,
+            fit_2D=True, radial_pspec_kwargs={}, fit_kwargs={},
+            fit_2D_kwargs={},
             xunit=u.pix**-1, save_name=None,
-            use_wavenumber=False, **fit_kwargs):
+            use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
 
@@ -94,8 +119,14 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose: bool, optional
             Enables plotting.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
         low_cut : `~astropy.units.Quantity`, optional
@@ -104,24 +135,31 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             High frequency cut off in frequencies used in the fitting.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D power spectrum.
+        radial_pspec_kwargs : dict, optional
+            Passed to `~PowerSpectrum.compute_radial_pspec`.
+        fit_kwargs : dict, optional
+            Passed to `~PowerSpectrum.fit_pspec`.
         fit_2D_kwargs : dict, optional
             Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
-        radial_pspec_kwargs : dict, optional
-            Passed to `~PowerSpectrum.compute_radial_pspec`.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
-        fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
         '''
 
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
         self.compute_pspec(apodize=apodize, alpha=alpha,
-                           beam_correct=beam_correct)
-        self.compute_radial_pspec(logspacing=logspacing,
-                                  return_stddev=return_stddev,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
+        self.compute_radial_pspec(return_stddev=return_stddev,
                                   **radial_pspec_kwargs)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
@@ -194,7 +232,8 @@ class PSpec_Distance(object):
             self.pspec1 = PowerSpectrum(data1, weights=weights1,
                                         distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            logspacing=logspacing, brk=breaks[0],
+                            radial_pspec_kwargs={"logspacing": logspacing},
+                            fit_kwargs={'brk': breaks[0]},
                             fit_2D=False)
         else:
             self.pspec1 = fiducial_model
@@ -202,8 +241,9 @@ class PSpec_Distance(object):
         self.pspec2 = PowerSpectrum(data2, weights=weights2,
                                     distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        brk=breaks[1],
-                        logspacing=logspacing, fit_2D=False)
+                        fit_kwargs={'brk': breaks[1]},
+                        radial_pspec_kwargs={"logspacing": logspacing},
+                        fit_2D=False)
 
         self.results = None
         self.distance = None

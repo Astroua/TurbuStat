@@ -13,6 +13,7 @@ TurbuStat requires the follow packages:
  *   sklearn>=0.13.0
  *   pandas>=0.13
  *   statsmodels>=0.4.0
+ *   scikit-image>=0.12
 
 The following packages are optional, but required for specific functions in TurbuStat:
 

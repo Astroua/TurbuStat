@@ -8,9 +8,12 @@ from scipy.interpolate import LSQUnivariateSpline, interp1d
 from astropy.modeling import fitting, models
 from astropy.modeling import models as astropy_models
 from scipy.signal import argrelmin
-# from ..stats_utils import EllipseModel
-from turbustat.statistics.stats_utils import EllipseModel
 import astropy.units as u
+from matplotlib.path import Path
+from skimage.measure import find_contours
+from scipy.ndimage import map_coordinates
+
+from ..stats_utils import EllipseModel
 
 
 def WidthEstimate2D(inList, method='contour', noise_ACF=0,
@@ -152,22 +155,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
             znorm = z
             znorm /= znorm.max()
 
-            # Import contour tools and paths that don't require making a
-            # plotting window
-            # http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-            import matplotlib._cntr as cntr
-            from matplotlib.path import Path
-
-            try:
-                level = np.exp(-1)
-                contours = cntr.Cntr(xmat, ymat, znorm)
-
-            except ValueError as e:
-                raise e("Contour level not found in autocorrelation image " +
-                        str(idx))
-
-            nlist = contours.trace(level, level, 0)
-            paths = [Path(verts) for verts in nlist[:len(nlist) // 2]]
+            level = np.exp(-1)
+            paths = get_contour_path(xmat, ymat, znorm, level, idx)
 
             # Only points that contain the origin
 
@@ -415,3 +404,29 @@ def fit_2D_gaussian(xmat, ymat, z):
         cov = np.zeros((4, 4)) * np.NaN
 
     return output, cov
+
+
+def get_contour_path(xmat, ymat, z, level, idx=0):
+    '''
+    Return the contour path using matplotlib._cntr for versions <2.2.
+    Otherwise use skimage.measure.find_contours.
+
+    '''
+    # Get the contour in the array coordinates then map to the given xmat, ymat
+
+    contours = find_contours(z, level)
+
+    if len(contours) == 0:
+        return []
+
+    # Map onto the given coordinate grids
+    mapped_contours = []
+    for contour in contours:
+        x_proj = map_coordinates(xmat, contour.T)
+        y_proj = map_coordinates(ymat, contour.T)
+
+        mapped_contours.append(np.vstack([x_proj, y_proj]).T)
+
+    paths = [Path(verts) for verts in mapped_contours]
+
+    return paths

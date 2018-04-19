@@ -1,9 +1,17 @@
 # Licensed under an MIT open source license - see LICENSE
 from __future__ import print_function, absolute_import, division
 
+import pytest
+
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
 
 from ..statistics import Wavelet, Wavelet_Distance
 from ._testing_data import \
@@ -96,3 +104,12 @@ def test_Wavelet_distance():
                          dataset2["moment0"]).distance_metric()
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['wavelet_distance'])
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_Wavelet_method_fftw():
+    tester = Wavelet(dataset1["moment0"])
+    tester.run(use_pyfftw=True, threads=1)
+    npt.assert_almost_equal(tester.values, computed_data['wavelet_val'])
+
+    npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])

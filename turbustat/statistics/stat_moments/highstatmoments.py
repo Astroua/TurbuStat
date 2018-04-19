@@ -97,10 +97,27 @@ class StatMoments(BaseStatisticMixIn):
         self.mean, self.variance, self.skewness, self.kurtosis = \
             compute_moments(self.data, self.weights)
 
-    def compute_spatial_distrib(self, radius=None, periodic=True):
+    def compute_spatial_distrib(self, radius=None, periodic=True,
+                                min_frac=0.8):
         '''
         Compute the moments over circular region with the specified radius.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`, optional
+            Override the radius size of the region.
+        periodic : bool, optional
+            Specify whether the boundaries can be wrapped. Default is True.
+        min_frac : float, optional
+            A number between 0 and 1 that sets the minimum fraction of data in
+            each region that are finite. A value of 1.0 requires that no NaNs
+            be in the region.
         '''
+
+        # Require the fraction to be > 0 and <=1
+        if min_frac <= 0.0 or min_frac > 1.:
+            raise ValueError("min_frac must be larger than 0 and less than"
+                             "or equal to 1.")
 
         self._mean_array = np.empty(self.data.shape)
         self._variance_array = np.empty(self.data.shape)
@@ -132,8 +149,12 @@ class StatMoments(BaseStatisticMixIn):
                 wgt_slice = pad_weights[i - pix_rad:i + pix_rad + 1,
                                         j - pix_rad:j + pix_rad + 1]
 
-                if np.isnan(img_slice).all() or np.isnan(wgt_slice).all():
-                    # Subtract off pix_rad to account for padding.
+                valid_img_frac = \
+                    np.isfinite(img_slice).sum() / float(img_slice.size)
+                valid_wgt_frac = \
+                    np.isfinite(wgt_slice).sum() / float(wgt_slice.size)
+
+                if valid_img_frac < min_frac or valid_wgt_frac < min_frac:
                     self.mean_array[i - pix_rad, j - pix_rad] = np.NaN
                     self.variance_array[i - pix_rad, j - pix_rad] = np.NaN
                     self.skewness_array[i - pix_rad, j - pix_rad] = np.NaN
@@ -352,8 +373,8 @@ class StatMoments(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, save_name=None, periodic=True, radius=None,
-            **hist_kwargs):
+    def run(self, verbose=False, save_name=None, radius=None, periodic=True,
+            min_frac=0.8, **hist_kwargs):
         '''
         Compute the entire method.
 
@@ -363,10 +384,14 @@ class StatMoments(BaseStatisticMixIn):
             Enables plotting.
         save_name : str,optional
             Save the figure when a file name is given.
-        periodic : bool, optional
-            If the data is periodic (e.g. from a simulation), wrap the data.
         radius : `~astropy.units.Quantity`, optional
-            Overrides the radius given to `~StatMoments`. See `~StatMoments`.
+            Override the radius size of the region.
+        periodic : bool, optional
+            Specify whether the boundaries can be wrapped. Default is True.
+        min_frac : float, optional
+            A number between 0 and 1 that sets the minimum fraction of data in
+            each region that are finite. A value of 1.0 requires that no NaNs
+            be in the region.
         hist_kwargs : Passed to `~StatMoments.make_spatial_histograms`.
         '''
 
@@ -455,7 +480,7 @@ class StatMoments_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, image1, image2, radius=5 * u.pix,
+    def __init__(self, image1, image2, radius=5 * u.pix, min_frac=0.8,
                  weights1=None, weights2=None,
                  nbins=None, periodic1=False, periodic2=False,
                  fiducial_model=None):
@@ -492,11 +517,13 @@ class StatMoments_Distance(object):
             self.moments1 = StatMoments(image1, radius=radius1,
                                         nbins=self.nbins,
                                         weights=weights1)
-            self.moments1.compute_spatial_distrib(periodic=periodic1)
+            self.moments1.compute_spatial_distrib(periodic=periodic1,
+                                                  min_frac=min_frac)
 
         self.moments2 = StatMoments(image2, radius=radius2, nbins=self.nbins,
                                     weights=weights2)
-        self.moments2.compute_spatial_distrib(periodic=periodic2)
+        self.moments2.compute_spatial_distrib(periodic=periodic2,
+                                              min_frac=min_frac)
 
     def create_common_histograms(self, nbins=None):
         '''

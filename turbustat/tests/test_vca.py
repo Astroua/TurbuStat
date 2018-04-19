@@ -8,6 +8,12 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 
+try:
+    import pyfftw
+    PYFFTW_INSTALLED = True
+except ImportError:
+    PYFFTW_INSTALLED = False
+
 from ..statistics import VCA, VCA_Distance
 from ..statistics.vca_vcs.slice_thickness import spectral_regrid_cube
 from ..io.input_base import to_spectral_cube
@@ -109,7 +115,7 @@ def test_vca_azimlimits(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 512
     theta = 0
 
     nchans = 10
@@ -120,21 +126,45 @@ def test_vca_azimlimits(plaw, ellip):
                                 theta=theta,
                                 return_psd=False)
 
+    # Use large bins to minimize shot noise since the number of samples is
+    # limited
+    # Also cut-off the largest scale which seems to get skewed up in the
+    # power-law image.
     test = VCA(fits.PrimaryHDU(cube))
-    test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
+    test.run(radial_pspec_kwargs={'binsize': 8.,
+                                  "theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
-             fit_2D=False, weighted_fit=True)
+             fit_2D=False,
+             fit_kwargs={'weighted_fit': True},
+             low_cut=10**-2 / u.pix)
 
     test2 = VCA(fits.PrimaryHDU(cube))
-    test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
+    test2.run(radial_pspec_kwargs={'binsize': 8.,
+                                   "theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
-              fit_2D=False, weighted_fit=True)
+              fit_2D=False,
+              fit_kwargs={'weighted_fit': True},
+              low_cut=10**-2 / u.pix)
 
     test3 = VCA(fits.PrimaryHDU(cube))
-    test3.run(radial_pspec_kwargs={},
-              fit_2D=False, weighted_fit=True)
+    test3.run(radial_pspec_kwargs={'binsize': 8.},
+              fit_2D=False,
+              fit_kwargs={'weighted_fit': True},
+              low_cut=10**-2 / u.pix)
 
-    # Ensure slopes are consistent to within 5%
-    assert_between(test3.slope, - 1.05 * plaw, - 0.95 * plaw)
-    assert_between(test2.slope, - 1.05 * plaw, - 0.95 * plaw)
-    assert_between(test.slope, - 1.05 * plaw, - 0.95 * plaw)
+    # Ensure slopes are consistent to within 0.1. Shot noise with the
+    # limited number of points requires checking within a range.
+    assert_between(- test3.slope, plaw - 0.1, plaw + 0.1)
+    assert_between(- test2.slope, plaw - 0.1, plaw + 0.1)
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+
+
+@pytest.mark.skipif("not PYFFTW_INSTALLED")
+def test_VCA_method_fftw():
+    tester = VCA(dataset1["cube"])
+    tester.run(use_pyfftw=True, threads=1)
+    npt.assert_allclose(tester.ps1D, computed_data['vca_val'])
+    npt.assert_almost_equal(tester.slope, computed_data['vca_slope'],
+                            decimal=3)
+    npt.assert_almost_equal(tester.slope2D, computed_data['vca_slope2D'],
+                            decimal=3)

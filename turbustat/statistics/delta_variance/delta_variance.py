@@ -5,8 +5,6 @@ from __future__ import (print_function, absolute_import, division,
 import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
-from astropy.convolution import convolve_fft
-from astropy.version import version as astro_version
 from copy import copy
 import statsmodels.api as sm
 from astropy.extern.six import string_types
@@ -19,6 +17,7 @@ from ..fitting_utils import check_fit_limits
 from .kernels import core_kernel, annulus_kernel
 from ..stats_warnings import TurbuStatMetricWarning
 from ..lm_seg import Lm_Seg
+from ..convolve_wrapper import convolution_wrapper
 
 
 class DeltaVariance(BaseStatisticMixIn):
@@ -137,7 +136,9 @@ class DeltaVariance(BaseStatisticMixIn):
         self._weights = arr
 
     def do_convolutions(self, allow_huge=False, boundary='wrap',
-                        min_weight_frac=0.01, nan_interpolate=True):
+                        min_weight_frac=0.01, nan_interpolate=True,
+                        use_pyfftw=False, threads=1,
+                        pyfftw_kwargs={}):
         '''
         Perform the convolutions at all lags.
 
@@ -157,12 +158,19 @@ class DeltaVariance(BaseStatisticMixIn):
         nan_interpolate : bool, optional
             Enable to interpolate over NaNs in the convolution. Default is
             True.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
 
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
-            annulus = annulus_kernel(
-                lag, self.diam_ratio, self.data.shape[0], self.data.shape[1])
+            annulus = annulus_kernel(lag, self.diam_ratio, self.data.shape[0],
+                                     self.data.shape[1])
 
             if boundary == "wrap":
                 # Don't pad for periodic boundaries
@@ -181,29 +189,41 @@ class DeltaVariance(BaseStatisticMixIn):
                 convolution_wrapper(pad_img, core, boundary=boundary,
                                     fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate)
+                                    nan_interpolate=nan_interpolate,
+                                    use_pyfftw=use_pyfftw,
+                                    threads=threads,
+                                    pyfftw_kwargs=pyfftw_kwargs)
             img_annulus = \
                 convolution_wrapper(pad_img, annulus,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate)
+                                    nan_interpolate=nan_interpolate,
+                                    use_pyfftw=use_pyfftw,
+                                    threads=threads,
+                                    pyfftw_kwargs=pyfftw_kwargs)
             weights_core = \
                 convolution_wrapper(pad_weights, core,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate)
+                                    nan_interpolate=nan_interpolate,
+                                    use_pyfftw=use_pyfftw,
+                                    threads=threads,
+                                    pyfftw_kwargs=pyfftw_kwargs)
             weights_annulus = \
                 convolution_wrapper(pad_weights, annulus,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate)
+                                    nan_interpolate=nan_interpolate,
+                                    use_pyfftw=use_pyfftw,
+                                    threads=threads,
+                                    pyfftw_kwargs=pyfftw_kwargs)
 
             cutoff_val = min_weight_frac * self.weights.max()
             weights_core[np.where(weights_core <= cutoff_val)] = np.NaN
             weights_annulus[np.where(weights_annulus <= cutoff_val)] = np.NaN
 
-            self.convolved_arrays.append(
-                (img_core / weights_core) - (img_annulus / weights_annulus))
+            self.convolved_arrays.append((img_core / weights_core) -
+                                         (img_annulus / weights_annulus))
             self.convolved_weights.append(weights_core * weights_annulus)
 
     def compute_deltavar(self):
@@ -246,7 +266,7 @@ class DeltaVariance(BaseStatisticMixIn):
     def fit_plaw(self, xlow=None, xhigh=None, brk=None, verbose=False,
                  **fit_kwargs):
         '''
-        Fit a power-law to the SCF spectrum.
+        Fit a power-law to the Delta-variance spectrum.
 
         Parameters
         ----------
@@ -415,8 +435,11 @@ class DeltaVariance(BaseStatisticMixIn):
             return self.fit.params[0] + self.fit.params[1] * xvals
 
     def run(self, verbose=False, xunit=u.pix, nan_interpolate=True,
-            allow_huge=False, boundary='wrap', xlow=None, xhigh=None,
-            brk=None, save_name=None):
+            allow_huge=False, boundary='wrap',
+            use_pyfftw=False, threads=1, pyfftw_kwargs={},
+            xlow=None, xhigh=None,
+            brk=None, fit_kwargs={},
+            save_name=None):
         '''
         Compute the delta-variance.
 
@@ -433,6 +456,13 @@ class DeltaVariance(BaseStatisticMixIn):
             True.
         boundary : {"wrap", "fill"}, optional
             Use "wrap" for periodic boundaries, and "cut" for non-periodic.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         xlow : `~astropy.units.Quantity`, optional
             Lower lag value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
@@ -440,14 +470,21 @@ class DeltaVariance(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial break point guess. Enables fitting a segmented
             linear model.
+        fit_kwargs : dict, optional
+            Passed to `~turbustat.statistics.lm_seg.Lm_Seg.fit_model` when
+            using a broken linear fit.
         save_name : str,optional
             Save the figure when a file name is given.
         '''
 
         self.do_convolutions(allow_huge=allow_huge, boundary=boundary,
-                             nan_interpolate=nan_interpolate)
+                             nan_interpolate=nan_interpolate,
+                             use_pyfftw=use_pyfftw,
+                             threads=threads,
+                             pyfftw_kwargs=pyfftw_kwargs)
         self.compute_deltavar()
-        self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose)
+        self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose,
+                      **fit_kwargs)
 
         if verbose:
             import matplotlib.pyplot as p
@@ -773,34 +810,3 @@ def _delvar(array, weight, lag):
                        np.nansum(weight)) - val**2) / nindep
 
     return val, val_err
-
-
-def convolution_wrapper(img, kernel, **kwargs):
-    '''
-    Adjust parameter setting to be consistent with astropy <2 and >=2.
-    '''
-
-    if int(astro_version[0]) >= 2:
-        if kwargs.get("nan_interpolate"):
-            if kwargs['nan_interpolate']:
-                nan_treatment = 'interpolate'
-            else:
-                nan_treatment = 'fill'
-        else:
-            # Default to not nan interpolating
-            nan_treatment = 'fill'
-        kwargs.pop('nan_interpolate')
-
-        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                nan_treatment=nan_treatment,
-                                preserve_nan=False,
-                                **kwargs)
-    else:
-        # in astropy >= v2, fill_value can be a NaN. ignore_edge_zeros gives
-        # the same behaviour in older versions.
-        if kwargs.get('fill_value'):
-            kwargs.pop('fill_value')
-        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                ignore_edge_zeros=True, **kwargs)
-
-    return conv_img
