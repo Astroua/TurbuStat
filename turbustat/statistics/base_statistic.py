@@ -5,6 +5,8 @@ from astropy.io import fits
 import astropy.units as u
 import numpy as np
 from astropy.wcs import WCS
+from radio_beam import Beam
+from warnings import warn
 
 from ..io import input_data
 
@@ -35,6 +37,28 @@ class BaseStatisticMixIn(object):
                             " astropy.io.fits.header.Header.")
 
         self._header = input_hdr
+
+    def load_beam(self, beam=None):
+        '''
+        Try loading the beam from the header or a given object.
+
+        Parameters
+        ----------
+        beam : `~radio_beam.Beam`, optional
+            The beam.
+        '''
+
+        if beam is None:
+            if hasattr(self, "_header"):
+                beam = Beam.from_fits_header(self.header)
+                self._beam = beam
+            else:
+                warn("No header available. Cannot load beam.")
+        else:
+            if not isinstance(beam, Beam):
+                raise TypeError("beam must be a radio_beam.Beam object.")
+
+            self._beam = beam
 
     @property
     def _wcs(self):
