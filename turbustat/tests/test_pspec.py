@@ -6,6 +6,7 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
+import os
 
 try:
     import pyfftw
@@ -26,6 +27,17 @@ def test_PSpec_method():
     npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
     npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])
 
+    # Test loading and saving
+    tester.save_results("pspec_output.pkl", keep_data=False)
+
+    saved_tester = PowerSpectrum.load_results("pspec_output.pkl")
+
+    # Remove the file
+    os.remove("pspec_output.pkl")
+
+    npt.assert_allclose(saved_tester.ps1D, computed_data['pspec_val'])
+    npt.assert_allclose(saved_tester.slope, computed_data['pspec_slope'])
+    npt.assert_allclose(saved_tester.slope2D, computed_data['pspec_slope2D'])
 
 def test_Pspec_method_fitlimits():
 

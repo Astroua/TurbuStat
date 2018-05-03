@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+import os
 
 from ..statistics import StatMoments, StatMoments_Distance
 from ._testing_data import \
@@ -23,6 +24,19 @@ def test_moments():
 
     # TODO: Add more test comparisons. Save the total moments over the whole
     # arrays, portions of the local arrays, and the histogram values.
+
+    # Test loading and saving
+    tester.save_results("statmom_output.pkl", keep_data=False)
+
+    saved_tester = StatMoments.load_results("statmom_output.pkl")
+
+    # Remove the file
+    os.remove("statmom_output.pkl")
+
+    assert np.allclose(saved_tester.kurtosis_hist[1],
+                       computed_data['kurtosis_nondist_val'])
+    assert np.allclose(saved_tester.skewness_hist[1],
+                       computed_data['skewness_nondist_val'])
 
 
 def test_moments_units():

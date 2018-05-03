@@ -8,6 +8,13 @@ from astropy.wcs import WCS
 from radio_beam import Beam
 from radio_beam.beam import NoBeamException
 from warnings import warn
+import sys
+from copy import deepcopy
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..io import input_data
 
@@ -96,6 +103,58 @@ class BaseStatisticMixIn(object):
             self.header = header
         else:
             self.data, self.header = input_data(data)
+
+    def save_results(self, output_name, keep_data=False):
+        '''
+        Save the results of the SCF to avoid re-computing.
+        The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
+        '''
+
+        if not output_name.endswith(".pkl"):
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy._data = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    @staticmethod
+    def load_results(pickle_file):
+        '''
+        Load in a saved pickle file.
+
+        Parameters
+        ----------
+        pickle_file : str
+            Name of filename to load in.
+
+        Returns
+        -------
+        self : SCF instance
+            SCF instance with saved results.
+
+        Examples
+        --------
+        Load saved results.
+        >>> scf = SCF.load_results("scf_saved.pkl") # doctest: +SKIP
+
+        '''
+
+        with open(pickle_file, 'rb') as input:
+                self = pickle.load(input)
+
+        return self
 
     @property
     def _angular_equiv(self):

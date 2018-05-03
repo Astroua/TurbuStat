@@ -7,6 +7,7 @@ import numpy.testing as npt
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+import os
 
 try:
     import pyfftw
@@ -28,6 +29,20 @@ def test_VCA_method():
     npt.assert_almost_equal(tester.slope, computed_data['vca_slope'],
                             decimal=3)
     npt.assert_almost_equal(tester.slope2D, computed_data['vca_slope2D'],
+                            decimal=3)
+
+    # Test loading and saving
+    tester.save_results("vca_output.pkl", keep_data=False)
+
+    saved_tester = VCA.load_results("vca_output.pkl")
+
+    # Remove the file
+    os.remove("vca_output.pkl")
+
+    npt.assert_allclose(saved_tester.ps1D, computed_data['vca_val'])
+    npt.assert_almost_equal(saved_tester.slope, computed_data['vca_slope'],
+                            decimal=3)
+    npt.assert_almost_equal(saved_tester.slope2D, computed_data['vca_slope2D'],
                             decimal=3)
 
 

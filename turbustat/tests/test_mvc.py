@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.io import fits
 import pytest
 import numpy as np
+import os
 
 try:
     import pyfftw
@@ -31,6 +32,19 @@ def test_MVC_method():
     npt.assert_allclose(tester.slope2D, computed_data['mvc_slope2D'],
                         rtol=1e-4)
 
+    # Test loading and saving
+    tester.save_results("mvc_output.pkl", keep_data=False)
+
+    saved_tester = MVC.load_results("mvc_output.pkl")
+
+    # Remove the file
+    os.remove("mvc_output.pkl")
+
+    npt.assert_allclose(saved_tester.ps1D, computed_data['mvc_val'], rtol=1e-3)
+    npt.assert_allclose(saved_tester.slope, computed_data['mvc_slope'],
+                        rtol=1e-4)
+    npt.assert_allclose(saved_tester.slope2D, computed_data['mvc_slope2D'],
+                        rtol=1e-4)
 
 def test_MVC_method_fitlimits():
 

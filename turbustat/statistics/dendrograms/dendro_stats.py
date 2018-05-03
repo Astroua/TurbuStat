@@ -13,16 +13,8 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from copy import deepcopy
 from warnings import warn
 import statsmodels.api as sm
-import sys
-
-if sys.version_info[0] >= 3:
-    import _pickle as pickle
-else:
-    import cPickle as pickle
-
 
 try:
     from astrodendro import Dendrogram, periodic_neighbours
@@ -280,43 +272,6 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         1-sigma error on slope of power-law tail.
         '''
         return self._tail_slope_err
-
-    def save_results(self, output_name=None, keep_data=False):
-        '''
-        Save the results of the dendrogram statistics to avoid re-computing.
-        The pickled file will not include the data cube by default.
-        '''
-
-        if output_name is None:
-            output_name = "dendrogram_stats_output.pkl"
-
-        if output_name[-4:] != ".pkl":
-            output_name += ".pkl"
-
-        self_copy = deepcopy(self)
-
-        # Don't keep the whole cube unless keep_data enabled.
-        if not keep_data:
-            self_copy.cube = None
-
-        with open(output_name, 'wb') as output:
-            pickle.dump(self_copy, output, -1)
-
-    @staticmethod
-    def load_results(pickle_file):
-        '''
-        Load in a saved pickle file.
-
-        Parameters
-        ----------
-        pickle_file : str
-            Name of filename to load in.
-        '''
-
-        with open(pickle_file, 'rb') as input:
-            self = pickle.load(input)
-
-        return self
 
     @staticmethod
     def load_dendrogram(hdf5_file, min_deltas=None):

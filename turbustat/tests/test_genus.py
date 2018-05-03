@@ -9,6 +9,7 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 from copy import copy
+import os
 
 from ..statistics import GenusDistance, Genus
 from ._testing_data import \
@@ -21,6 +22,17 @@ def test_Genus_method():
     tester.run()
 
     assert np.allclose(tester.genus_stats,
+                       computed_data['genus_val'])
+
+    # Test loading and saving
+    tester.save_results("genus_output.pkl", keep_data=False)
+
+    saved_tester = Genus.load_results("genus_output.pkl")
+
+    # Remove the file
+    os.remove("genus_output.pkl")
+
+    assert np.allclose(saved_tester.genus_stats,
                        computed_data['genus_val'])
 
 

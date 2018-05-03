@@ -5,6 +5,13 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 from warnings import warn
+import sys
+from copy import deepcopy
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -145,6 +152,33 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         mvc_fft = fftshift(mvc_fft)
 
         self._ps2D = np.abs(mvc_fft) ** 2.
+
+    def save_results(self, output_name, keep_data=False):
+        '''
+        Save the results of the SCF to avoid re-computing.
+        The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
+        '''
+
+        if not output_name.endswith(".pkl"):
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy._centroid = None
+            self_copy._moment0 = None
+            self_copy._linewidth = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
 
     def run(self, verbose=False, use_pyfftw=False, threads=1,
             pyfftw_kwargs={},

@@ -26,16 +26,16 @@ def test_SCF_method():
     npt.assert_almost_equal(tester.slope2D, computed_data["scf_slope2D"])
 
     # Test the save and load
-    tester.save_results(keep_data=False)
-    tester.load_results("scf_output.pkl")
+    tester.save_results("scf_output.pkl", keep_data=False)
+    saved_tester = SCF.load_results("scf_output.pkl")
 
     # Remove the file
     os.remove("scf_output.pkl")
 
-    assert np.allclose(tester.scf_surface, computed_data['scf_val'])
-    npt.assert_array_almost_equal(tester.scf_spectrum,
+    assert np.allclose(saved_tester.scf_surface, computed_data['scf_val'])
+    npt.assert_array_almost_equal(saved_tester.scf_spectrum,
                                   computed_data["scf_spectrum"])
-    npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
+    npt.assert_almost_equal(saved_tester.slope, computed_data["scf_slope"])
 
 
 def test_SCF_method_fitlimits():

@@ -5,6 +5,7 @@ import pytest
 
 import numpy.testing as npt
 import astropy.units as u
+import os
 
 try:
     import pyfftw
@@ -30,6 +31,17 @@ def test_DelVar_method():
     npt.assert_allclose(tester.delta_var[:-7],
                         computed_data['delvar_val'][:-7])
     npt.assert_almost_equal(tester.slope, computed_data['delvar_slope'])
+
+    # Test the save and load
+    tester.save_results("delvar_output.pkl", keep_data=False)
+    saved_tester = DeltaVariance.load_results("delvar_output.pkl")
+
+    # Remove the file
+    os.remove("delvar_output.pkl")
+
+    npt.assert_allclose(saved_tester.delta_var[:-7],
+                        computed_data['delvar_val'][:-7])
+    npt.assert_almost_equal(saved_tester.slope, computed_data['delvar_slope'])
 
 
 def test_DelVar_method_fill():

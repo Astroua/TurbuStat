@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+import os
 
 try:
     import pyfftw
@@ -24,6 +25,18 @@ def test_Wavelet_method():
     npt.assert_almost_equal(tester.values, computed_data['wavelet_val'])
 
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])
+
+    # Test loading and saving
+    tester.save_results("wave_output.pkl", keep_data=False)
+
+    saved_tester = Wavelet.load_results("wave_output.pkl")
+
+    # Remove the file
+    os.remove("wave_output.pkl")
+
+    npt.assert_almost_equal(saved_tester.values, computed_data['wavelet_val'])
+
+    npt.assert_almost_equal(saved_tester.slope, computed_data['wavelet_slope'])
 
 
 def test_Wavelet_method_withbreak():

@@ -8,6 +8,7 @@ import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
 from scipy.stats import linregress
+import os
 
 try:
     import pyfftw
@@ -24,6 +25,16 @@ def test_Bispec_method():
     tester = BiSpectrum(dataset1["moment0"])
     tester.run()
     assert np.allclose(tester.bicoherence,
+                       computed_data['bispec_val'])
+
+    # Test the save and load
+    tester.save_results("bispec_output.pkl", keep_data=False)
+    saved_tester = BiSpectrum.load_results("bispec_output.pkl")
+
+    # Remove the file
+    os.remove("bispec_output.pkl")
+
+    assert np.allclose(saved_tester.bicoherence,
                        computed_data['bispec_val'])
 
 
