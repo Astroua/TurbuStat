@@ -265,6 +265,10 @@ class StatisticBase_PSpec2D(object):
 
         shape = self.data.shape
 
+        # Assume first axis is velocity if >2 dimensions
+        if len(shape) > 2:
+            shape = shape[1:]
+
         avail_types = ['splitcosinebell', 'hanning', 'tukey',
                        'cosinebell', 'tophat']
 
@@ -481,6 +485,11 @@ class StatisticBase_PSpec2D(object):
         xvals = self._spatial_freq_unit_conversion(xvals, xunit).value
 
         if self._stddev_flag:
+
+            # Axis limits to highlight the fitted region
+            vmax = 1.1 * \
+                np.max((self.ps1D + self.ps1D_stddev)[self.freqs <= self.high_cut])
+
             ax.errorbar(np.log10(xvals),
                         np.log10(self.ps1D),
                         yerr=0.434 * (self.ps1D_stddev / self.ps1D),
@@ -493,7 +502,11 @@ class StatisticBase_PSpec2D(object):
             ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
+            ax.set_ylim(top=np.log10(vmax))
+
         else:
+            vmax = 1.1 * np.max(self.ps1D[self.freqs <= self.high_cut])
+
             ax.loglog(self.xvals, 10**y_fit, color + '-',
                       label=label, linewidth=2)
 
@@ -502,6 +515,8 @@ class StatisticBase_PSpec2D(object):
 
             ax.set_xlabel(xlab)
             ax.set_ylabel(r"P$_2(K)$")
+
+            ax.set_ylim(top=vmax)
 
         # Show the fitting extents
         low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value
