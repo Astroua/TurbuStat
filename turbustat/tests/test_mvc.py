@@ -4,6 +4,7 @@ from __future__ import print_function, absolute_import, division
 import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
+from astropy.convolution import convolve_fft
 import pytest
 import numpy as np
 import os
@@ -13,6 +14,12 @@ try:
     PYFFTW_INSTALLED = True
 except ImportError:
     PYFFTW_INSTALLED = False
+
+try:
+    from radio_beam.beam import Beam
+    RADIO_BEAM_INSTALLED = True
+except ImportError:
+    RADIO_BEAM_INSTALLED = False
 
 from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
@@ -148,3 +155,81 @@ def test_MVC_method_fftw():
     npt.assert_allclose(tester.slope, computed_data['mvc_slope'], rtol=1e-4)
     npt.assert_allclose(tester.slope2D, computed_data['mvc_slope2D'],
                         rtol=1e-4)
+
+
+@pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
+def test_MVC_beamcorrect():
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    beam = Beam(30 * u.arcsec)
+
+    plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                          theta=theta,
+                          return_psd=False)
+    plane = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
+                         boundary='wrap')
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(plane)
+
+    hdu.header['CDELT1'] = (10 * u.arcsec).to(u.deg).value
+    hdu.header['CDELT2'] = - (10 * u.arcsec).to(u.deg).value
+    hdu.header['BMAJ'] = beam.major.to(u.deg).value
+    hdu.header['BMIN'] = beam.major.to(u.deg).value
+    hdu.header['BPA'] = 0.0
+    hdu.header['CRPIX1'] = imsize / 2.,
+    hdu.header['CRPIX2'] = imsize / 2.,
+    hdu.header['CRVAL1'] = 0.0,
+    hdu.header['CRVAL2'] = 0.0,
+    hdu.header['CTYPE1'] = 'GLON-CAR',
+    hdu.header['CTYPE2'] = 'GLAT-CAR',
+    hdu.header['CUNIT1'] = 'deg',
+    hdu.header['CUNIT2'] = 'deg',
+
+    hdu.header.update(beam.to_header_keywords())
+
+    ones = np.ones_like(plane)
+
+    test = MVC(hdu, fits.PrimaryHDU(ones),
+               fits.PrimaryHDU(ones))
+
+    test.run(beam_correct=True,
+             low_cut=10**-1.5 / u.pix,
+             high_cut=1 / (6 * u.pix),
+             fit_2D=False)
+
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+
+
+@pytest.mark.parametrize(('apod_type'),
+                         ['splitcosinebell', 'hanning', 'tukey',
+                          'cosinebell'])
+def test_MVC_apod_kernel(apod_type):
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                          theta=theta,
+                          return_psd=False)
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(plane)
+
+    ones = np.ones_like(plane)
+
+    test = MVC(hdu, fits.PrimaryHDU(ones),
+               fits.PrimaryHDU(ones))
+
+    # Avoid shot noise scatter at large scales
+    low_cut = 10**-1.6 / u.pix
+
+    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+             low_cut=low_cut)
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)

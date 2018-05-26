@@ -176,10 +176,6 @@ def test_PSpec_method_fftw():
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 def test_PSpec_beamcorrect():
 
-    from turbustat.tests._testing_data import make_extended
-    from turbustat.statistics import PowerSpectrum
-    from astropy.convolution import convolve_fft
-
     imsize = 512
     theta = 0
     plaw = 3.0
@@ -221,7 +217,10 @@ def test_PSpec_beamcorrect():
     assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
 
 
-def test_PSpec_apod_kernel():
+@pytest.mark.parametrize(('apod_type'),
+                         ['splitcosinebell', 'hanning', 'tukey',
+                          'cosinebell'])
+def test_PSpec_apod_kernel(apod_type):
 
     # from turbustat.tests._testing_data import (make_extended, assert_between)
     # from turbustat.statistics import VCA
@@ -240,18 +239,13 @@ def test_PSpec_apod_kernel():
 
     test = PowerSpectrum(hdu)
 
-    avail_types = ['splitcosinebell', 'hanning', 'tukey',
-                   'cosinebell']
+    # Effects large scales
+    if apod_type == 'cosinebell':
+        low_cut = 10**-1.8 / u.pix
+    else:
+        low_cut = None
 
-    for apod_type in avail_types:
+    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+             low_cut=low_cut)
 
-        # Effects large scales
-        if apod_type == 'cosinebell':
-            low_cut = 10**-1.8 / u.pix
-        else:
-            low_cut = None
-
-        test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
-                 low_cut=low_cut)
-
-        assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)

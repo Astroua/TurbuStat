@@ -239,7 +239,10 @@ def test_VCA_beamcorrect():
     assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
 
 
-def test_VCA_apod_kernel():
+@pytest.mark.parametrize(('apod_type'),
+                         ['splitcosinebell', 'hanning', 'tukey',
+                          'cosinebell'])
+def test_VCA_apod_kernel(apod_type):
 
     imsize = 512
     theta = 0
@@ -259,18 +262,12 @@ def test_VCA_apod_kernel():
 
     test = VCA(hdu)
 
-    avail_types = ['splitcosinebell', 'hanning', 'tukey',
-                   'cosinebell']
+    # Effects large scales
+    if apod_type == 'cosinebell':
+        low_cut = 10**-1.8 / u.pix
+    else:
+        low_cut = None
 
-    for apod_type in avail_types:
-
-        # Effects large scales
-        if apod_type == 'cosinebell':
-            low_cut = 10**-1.8 / u.pix
-        else:
-            low_cut = None
-
-        test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
-                 low_cut=low_cut)
-
-        assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+             low_cut=low_cut)
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
