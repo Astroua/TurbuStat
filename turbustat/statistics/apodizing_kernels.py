@@ -37,7 +37,7 @@ import numpy as np
 
 
 __all__ = ['SplitCosineBellWindow', 'HanningWindow', 'TukeyWindow',
-           'CosineBellWindow', 'TopHatWindow']
+           'CosineBellWindow']
 
 
 def _radial_distance(shape):
