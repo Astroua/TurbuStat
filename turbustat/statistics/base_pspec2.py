@@ -263,7 +263,11 @@ class StatisticBase_PSpec2D(object):
             Apodizing kernel
         '''
 
-        shape = self.data.shape
+        if self.data is not None:
+            shape = self.data.shape
+        else:
+            # MVC doesn't have a data attribute set
+            shape = self.centroid.shape
 
         # Assume first axis is velocity if >2 dimensions
         if len(shape) > 2:
