@@ -259,41 +259,41 @@ class CosineBellWindow(SplitCosineBellWindow):
         self.beta = 0.0
 
 
-class TopHatWindow(SplitCosineBellWindow):
-    """
-    Class to define a 2D top hat window function.
+# class TopHatWindow(SplitCosineBellWindow):
+#     """
+#     Class to define a 2D top hat window function.
 
-    Parameters
-    ----------
-    beta : float, optional
-        The inner diameter as a fraction of the array size beyond which
-        the taper begins. ``beta`` must be less or equal to 1.0.
+#     Parameters
+#     ----------
+#     beta : float, optional
+#         The inner diameter as a fraction of the array size beyond which
+#         the taper begins. ``beta`` must be less or equal to 1.0.
 
-    Examples
-    --------
-    .. plot::
-        :include-source:
+#     Examples
+#     --------
+#     .. plot::
+#         :include-source:
 
-        import matplotlib.pyplot as plt
-        from photutils import TopHatWindow
-        taper = TopHatWindow(beta=0.4)
-        data = taper((101, 101))
-        plt.imshow(data, cmap='viridis', origin='lower',
-                   interpolation='nearest')
-        plt.colorbar()
+#         import matplotlib.pyplot as plt
+#         from photutils import TopHatWindow
+#         taper = TopHatWindow(beta=0.4)
+#         data = taper((101, 101))
+#         plt.imshow(data, cmap='viridis', origin='lower',
+#                    interpolation='nearest')
+#         plt.colorbar()
 
-    A 1D cut across the image center:
+#     A 1D cut across the image center:
 
-    .. plot::
-        :include-source:
+#     .. plot::
+#         :include-source:
 
-        import matplotlib.pyplot as plt
-        from photutils import TopHatWindow
-        taper = TopHatWindow(beta=0.4)
-        data = taper((101, 101))
-        plt.plot(data[50, :])
-    """
+#         import matplotlib.pyplot as plt
+#         from photutils import TopHatWindow
+#         taper = TopHatWindow(beta=0.4)
+#         data = taper((101, 101))
+#         plt.plot(data[50, :])
+#     """
 
-    def __init__(self, beta):
-        self.alpha = 0.0
-        self.beta = beta
+#     def __init__(self, beta):
+#         self.alpha = 0.0
+#         self.beta = beta

@@ -270,7 +270,7 @@ class StatisticBase_PSpec2D(object):
             shape = shape[1:]
 
         avail_types = ['splitcosinebell', 'hanning', 'tukey',
-                       'cosinebell', 'tophat']
+                       'cosinebell']
 
         if kernel_type == "splitcosinebell":
             return SplitCosineBellWindow(alpha, beta)(shape)
@@ -280,8 +280,6 @@ class StatisticBase_PSpec2D(object):
             return TukeyWindow(alpha)(shape)
         elif kernel_type == 'cosinebell':
             return CosineBellWindow(alpha)(shape)
-        elif kernel_type == "tophat":
-            return TopHatWindow(beta)(shape)
         else:
             raise ValueError("kernel_type {0} is not one of the available "
                              "types: {1}".format(kernel_type, avail_types))
