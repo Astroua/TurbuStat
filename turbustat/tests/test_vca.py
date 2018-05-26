@@ -7,6 +7,7 @@ import numpy.testing as npt
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+from astropy.convolution import convolve_fft
 import os
 
 try:
@@ -14,6 +15,13 @@ try:
     PYFFTW_INSTALLED = True
 except ImportError:
     PYFFTW_INSTALLED = False
+
+try:
+    from radio_beam.beam import Beam
+    RADIO_BEAM_INSTALLED = True
+except ImportError:
+    RADIO_BEAM_INSTALLED = False
+
 
 from ..statistics import VCA, VCA_Distance
 from ..statistics.vca_vcs.slice_thickness import spectral_regrid_cube
@@ -183,3 +191,86 @@ def test_VCA_method_fftw():
                             decimal=3)
     npt.assert_almost_equal(tester.slope2D, computed_data['vca_slope2D'],
                             decimal=3)
+
+
+@pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
+def test_VCA_beamcorrect():
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    beam = Beam(30 * u.arcsec)
+
+    nchans = 10
+    # Generate a red noise model cube
+    cube = np.empty((nchans, imsize, imsize))
+    for i in range(nchans):
+        plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                              theta=theta,
+                              return_psd=False)
+        cube[i] = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
+                               boundary='wrap')
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(cube)
+
+    hdu.header['CDELT1'] = (10 * u.arcsec).to(u.deg).value
+    hdu.header['CDELT2'] = - (10 * u.arcsec).to(u.deg).value
+    hdu.header['BMAJ'] = beam.major.to(u.deg).value
+    hdu.header['BMIN'] = beam.major.to(u.deg).value
+    hdu.header['BPA'] = 0.0
+    hdu.header['CRPIX1'] = imsize / 2.,
+    hdu.header['CRPIX2'] = imsize / 2.,
+    hdu.header['CRVAL1'] = 0.0,
+    hdu.header['CRVAL2'] = 0.0,
+    hdu.header['CTYPE1'] = 'GLON-CAR',
+    hdu.header['CTYPE2'] = 'GLAT-CAR',
+    hdu.header['CUNIT1'] = 'deg',
+    hdu.header['CUNIT2'] = 'deg',
+
+    hdu.header.update(beam.to_header_keywords())
+
+    test = VCA(hdu)
+    test.run(beam_correct=True, high_cut=1 / (6 * u.pix),
+             fit_2D=False)
+
+    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+
+
+def test_VCA_apod_kernel():
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    nchans = 10
+    # Generate a red noise model cube
+    cube = np.empty((nchans, imsize, imsize))
+    for i in range(nchans):
+        cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                                theta=theta,
+                                return_psd=False)
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(cube)
+
+    test = VCA(hdu)
+
+    avail_types = ['splitcosinebell', 'hanning', 'tukey',
+                   'cosinebell']
+
+    for apod_type in avail_types:
+
+        # Effects large scales
+        if apod_type == 'cosinebell':
+            low_cut = 10**-1.8 / u.pix
+        else:
+            low_cut = None
+
+        test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+                 low_cut=low_cut)
+
+        assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
