@@ -33,6 +33,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         to smaller channel sizes than the original is not supported.
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
+    beam : `radio_beam.Beam`, optional
+        Beam object for correcting for the effect of a finite beam.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
