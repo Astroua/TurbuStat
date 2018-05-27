@@ -134,4 +134,5 @@ def test_PDF_lognorm_distance():
     test_dist.distance_metric()
 
     npt.assert_almost_equal(test_dist.lognormal_distance,
-                            computed_distances['pdf_lognorm_distance'])
+                            computed_distances['pdf_lognorm_distance'],
+                            decimal=4)
