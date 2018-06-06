@@ -359,22 +359,56 @@ if run_pspec:
     # How about fitting a break?
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
-              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
-              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix, fit_2D=False,
+              fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False},
               save_name=osjoin(fig_path, "design4_pspec_breakfit.png"))
 
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
-              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
-              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix, fit_2D=False,
+              fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False},
               radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
               save_name=osjoin(fig_path, "design4_pspec_breakfit_azimlimits.png"))
 
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pix**-1,
               low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              weighted_fit=True,
+              fit_kwargs={'weighted_fit': True},
               save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
+
+    # Apodizing kernel
+    pspec = PowerSpectrum(moment0.data[40:, 60:], header=moment0.header)
+    pspec.run(verbose=True,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              save_name=osjoin(fig_path, "design4_pspec_edgering.png"))
+
+    pspec.run(verbose=True,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              apodize_kernel='tukey', alpha=0.1,
+              save_name=osjoin(fig_path, "design4_pspec_apodkern.png"))
+
+    # Beam correction
+    from spectral_cube import Projection
+    from radio_beam import Beam
+
+    mom0_proj = Projection.from_hdu(moment0)
+    mom0_proj._beam = Beam(0 * u.deg)
+
+    new_beam = Beam(3 * moment0.header['CDELT2'] * u.deg)
+
+    mom0_conv = mom0_proj.convolve_to(new_beam)
+
+    pspec = PowerSpectrum(mom0_conv, distance=250 * u.pc)
+    pspec.run(verbose=True, xunit=u.pix**-1,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              apodize_kernel='tukey')
+              # save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
+
+    pspec.run(verbose=True, xunit=u.pix**-1,
+              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+              apodize_kernel='tukey', beam_correct=True)
+              # save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
+
 
 # SCF
 if run_scf:

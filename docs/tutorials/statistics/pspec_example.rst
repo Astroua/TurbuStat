@@ -101,7 +101,7 @@ The slope is moderately steeper than in the 1D model, but within the respective 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False}, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.996
@@ -136,7 +136,7 @@ Note that the 2D fitting was disabled in this last example. The 2D model cannot 
 There may be cases where you want to limit the azimuthal angles used to create the 1D averaged power-spectrum. This may be useful if, for example, you want to find a measure of anistropy but the 2D power-law fit is not performing well. We will add extra constraints to the previous example with a break point:
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, fit_2D=False, fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False}, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.990
@@ -169,7 +169,8 @@ The azimuthal mask has been added onto the plot of the two-dimensional power spe
 The default fit uses Ordinary Least Squares. A Weighted Least Squares can be enabled with `weighted_fit=True` *if* the segmented linear fit is not used:
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, weighted_fit=True)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+                  fit_kwargs={'weighted_fit': True})  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.969
@@ -196,6 +197,71 @@ The default fit uses Ordinary Least Squares. A Weighted Least Squares can be ena
 .. image:: images/design4_pspec_limitedfreq_weightfit.png
 
 The fit has not changed significantly, but may in certain cases.
+
+
+If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. For example, consider a portion of the previous image sliced with a bright region at the edge:
+    >>> pspec = PowerSpectrum(moment0.data[40:, 60:], header=moment0.header)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.965
+    Model:                            OLS   Adj. R-squared:                  0.960
+    Method:                 Least Squares   F-statistic:                     193.2
+    Date:                Sun, 27 May 2018   Prob (F-statistic):           2.36e-06
+    Time:                        11:08:17   Log-Likelihood:                 7.2142
+    No. Observations:                   9   AIC:                            -10.43
+    Df Residuals:                       7   BIC:                            -10.03
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          4.5785      0.300     15.284      0.000       3.870       5.287
+    x1            -3.3195      0.239    -13.899      0.000      -3.884      -2.755
+    ==============================================================================
+    Omnibus:                        0.329   Durbin-Watson:                   2.441
+    Prob(Omnibus):                  0.848   Jarque-Bera (JB):                0.431
+    Skew:                           0.139   Prob(JB):                        0.806
+    Kurtosis:                       1.965   Cond. No.                         14.9
+    ==============================================================================
+
+.. image:: images/design4_pspec_edgering.png
+
+The 2D power spectrum has a cross structure due to the ringing in the FFT. This can be minimized by applying a tapering function to the edges of the image before taking the FFT. There are four apodizing kernels that can be used: `'splitcosinebell', 'hanning', 'tukey', 'cosinebell'`. The fraction of data and the shapes of the kernels are controlled with `alpha` and `beta`:
+    >>> pspec.run(verbose=True, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, apodize_kernel='tukey', alpha=0.3)  # doctest: +SKIP
+                                OLS Regression Results
+    ==============================================================================
+    Dep. Variable:                      y   R-squared:                       0.963
+    Model:                            OLS   Adj. R-squared:                  0.958
+    Method:                 Least Squares   F-statistic:                     183.0
+    Date:                Sun, 27 May 2018   Prob (F-statistic):           2.83e-06
+    Time:                        11:14:22   Log-Likelihood:                 6.6158
+    No. Observations:                   9   AIC:                            -9.232
+    Df Residuals:                       7   BIC:                            -8.837
+    Df Model:                           1
+    Covariance Type:            nonrobust
+    ==============================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+    ------------------------------------------------------------------------------
+    const          4.4075      0.320     13.767      0.000       3.651       5.165
+    x1            -3.4531      0.255    -13.528      0.000      -4.057      -2.849
+    ==============================================================================
+    Omnibus:                        0.462   Durbin-Watson:                   2.562
+    Prob(Omnibus):                  0.794   Jarque-Bera (JB):                0.293
+    Skew:                          -0.355   Prob(JB):                        0.864
+    Kurtosis:                       2.472   Cond. No.                         14.9
+    ==============================================================================
+
+.. image:: images/design4_pspec_apodkern.png
+
+The ringing has been minimized by the tapering at the image edges.
+
+Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales:
+
+
+
+
+To account for this, the 2D power spectrum can be divided by the beam response.
 
 
 References
