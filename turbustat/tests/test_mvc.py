@@ -23,7 +23,9 @@ except ImportError:
 
 from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
-    dataset1, dataset2, computed_data, computed_distances, make_extended, assert_between
+    dataset1, dataset2, computed_data, computed_distances
+from .generate_test_images import make_extended
+from .testing_utilities import assert_between
 
 
 def test_MVC_method():

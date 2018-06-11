@@ -17,9 +17,9 @@ except ImportError:
 
 from ..statistics import PCA, PCA_Distance
 from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
-from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, generate_2D_array,
-                            generate_1D_array, assert_between)
+from ._testing_data import dataset1, dataset2, computed_data, computed_distances
+from .generate_test_images import generate_2D_array, generate_1D_array
+from .testing_utilities import assert_between
 
 
 def test_PCA_method():

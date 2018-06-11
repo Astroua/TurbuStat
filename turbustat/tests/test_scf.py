@@ -12,7 +12,8 @@ from astropy.io import fits
 
 from ..statistics import SCF, SCF_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, make_extended, assert_between)
+                            computed_distances)
+from .generate_test_images import make_extended
 
 
 def test_SCF_method():

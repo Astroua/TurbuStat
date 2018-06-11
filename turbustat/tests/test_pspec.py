@@ -23,7 +23,9 @@ except ImportError:
 
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, make_extended, assert_between)
+                            computed_distances)
+from .generate_test_images import make_extended
+from .testing_utilities import assert_between
 
 
 def test_PSpec_method():

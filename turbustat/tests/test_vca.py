@@ -27,7 +27,9 @@ from ..statistics import VCA, VCA_Distance
 from ..statistics.vca_vcs.slice_thickness import spectral_regrid_cube
 from ..io.input_base import to_spectral_cube
 from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, make_extended, assert_between)
+                            computed_distances)
+from .generate_test_images import make_extended
+from .testing_utilities import assert_between
 
 
 def test_VCA_method():

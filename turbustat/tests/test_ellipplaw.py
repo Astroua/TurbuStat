@@ -10,7 +10,7 @@ from ..statistics.elliptical_powerlaw import (fit_elliptical_powerlaw,
                                               LogEllipticalPowerLaw2D,
                                               interval_transform,
                                               inverse_interval_transform)
-from ._testing_data import make_extended
+from .generate_test_images import make_extended
 
 
 def test_simple_ellipplaw():

@@ -18,7 +18,8 @@ except ImportError:
 
 from ..statistics import BiSpectrum, BiSpectrum_Distance
 from ._testing_data import dataset1,\
-    dataset2, computed_data, computed_distances, make_extended
+    dataset2, computed_data, computed_distances
+from .generate_test_images import make_extended
 
 
 def test_Bispec_method():
