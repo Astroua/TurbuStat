@@ -123,7 +123,6 @@ def create_image_header(pixel_scale, beamfwhm, imshape,
               'CTYPE2': 'GLAT-CAR',
               'CUNIT1': 'deg',
               'CUNIT2': 'deg',
-              'CRPIX3': 1,
               'RESTFRQ': restfreq.to(u.Hz).value,
               'BUNIT': bunit.to_string(),
               }
