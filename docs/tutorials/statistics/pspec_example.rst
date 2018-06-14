@@ -199,69 +199,9 @@ The default fit uses Ordinary Least Squares. A Weighted Least Squares can be ena
 The fit has not changed significantly, but may in certain cases.
 
 
-If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. For example, consider a portion of the previous image sliced with a bright region at the edge:
-    >>> pspec = PowerSpectrum(moment0.data[40:, 60:], header=moment0.header)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
-                                OLS Regression Results
-    ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.965
-    Model:                            OLS   Adj. R-squared:                  0.960
-    Method:                 Least Squares   F-statistic:                     193.2
-    Date:                Sun, 27 May 2018   Prob (F-statistic):           2.36e-06
-    Time:                        11:08:17   Log-Likelihood:                 7.2142
-    No. Observations:                   9   AIC:                            -10.43
-    Df Residuals:                       7   BIC:                            -10.03
-    Df Model:                           1
-    Covariance Type:            nonrobust
-    ==============================================================================
-                     coef    std err          t      P>|t|      [0.025      0.975]
-    ------------------------------------------------------------------------------
-    const          4.5785      0.300     15.284      0.000       3.870       5.287
-    x1            -3.3195      0.239    -13.899      0.000      -3.884      -2.755
-    ==============================================================================
-    Omnibus:                        0.329   Durbin-Watson:                   2.441
-    Prob(Omnibus):                  0.848   Jarque-Bera (JB):                0.431
-    Skew:                           0.139   Prob(JB):                        0.806
-    Kurtosis:                       1.965   Cond. No.                         14.9
-    ==============================================================================
+If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. This effect and the use of apodizing kernels to taper the data is covered :ref:`here <apodkernspspec_tutorial>`.
 
-.. image:: images/design4_pspec_edgering.png
-
-The 2D power spectrum has a cross structure due to the ringing in the FFT. This can be minimized by applying a tapering function to the edges of the image before taking the FFT. There are four apodizing kernels that can be used: `'splitcosinebell', 'hanning', 'tukey', 'cosinebell'`. The fraction of data and the shapes of the kernels are controlled with `alpha` and `beta`:
-    >>> pspec.run(verbose=True, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, apodize_kernel='tukey', alpha=0.3)  # doctest: +SKIP
-                                OLS Regression Results
-    ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.963
-    Model:                            OLS   Adj. R-squared:                  0.958
-    Method:                 Least Squares   F-statistic:                     183.0
-    Date:                Sun, 27 May 2018   Prob (F-statistic):           2.83e-06
-    Time:                        11:14:22   Log-Likelihood:                 6.6158
-    No. Observations:                   9   AIC:                            -9.232
-    Df Residuals:                       7   BIC:                            -8.837
-    Df Model:                           1
-    Covariance Type:            nonrobust
-    ==============================================================================
-                     coef    std err          t      P>|t|      [0.025      0.975]
-    ------------------------------------------------------------------------------
-    const          4.4075      0.320     13.767      0.000       3.651       5.165
-    x1            -3.4531      0.255    -13.528      0.000      -4.057      -2.849
-    ==============================================================================
-    Omnibus:                        0.462   Durbin-Watson:                   2.562
-    Prob(Omnibus):                  0.794   Jarque-Bera (JB):                0.293
-    Skew:                          -0.355   Prob(JB):                        0.864
-    Kurtosis:                       2.472   Cond. No.                         14.9
-    ==============================================================================
-
-.. image:: images/design4_pspec_apodkern.png
-
-The ringing has been minimized by the tapering at the image edges.
-
-Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales:
-
-
-
-
-To account for this, the 2D power spectrum can be divided by the beam response.
+Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales.  To account for this, the 2D power spectrum can be divided by the beam response. This is demonstrated :ref:`here <correcting_for_beam>` for spatial power-spectra.
 
 
 References
