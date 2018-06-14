@@ -457,7 +457,8 @@ class StatisticBase_PSpec2D(object):
             p.subplot(122)
             p.imshow(np.log10(self.ps2D), interpolation="nearest",
                      origin="lower", vmax=vmax, vmin=vmin)
-            p.colorbar()
+            cbar = p.colorbar()
+            cbar.set_label(r"log $P_2 \ (K_x,\ K_y)$")
 
             p.contour(mask, colors=[color], linestyles='--')
 
