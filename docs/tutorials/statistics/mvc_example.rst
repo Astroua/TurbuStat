@@ -1,4 +1,6 @@
 
+.. _mvc_tutorial:
+
 ***************************
 Modified Velocity Centroids
 ***************************
