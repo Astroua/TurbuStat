@@ -428,10 +428,38 @@ class StatisticBase_PSpec2D(object):
         return self._ellip2D_err
 
     def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", xunit=u.pix**-1, save_name=None,
+                 fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
+
+        Parameters
+        ----------
+        show : bool, optional
+            Call `plt.show()` after plotting.
+        show_2D : bool, optional
+            Plot the 2D power spectrum with contours for the masked regions
+            and 2D fit contours (if the 2D power spectrum was fit).
+        color : str, optional
+            Color to use in the plotted points.
+        label : str, optional
+            Apply a label to the 1D plot. Useful for overplotting multiple
+            power-spectra.
+        fillin_errs : bool, optional
+            Show the range of the standard deviation with as a transparent
+            filled in region. When disabled, the standard deviations are shown
+            as error bars.
+        symbol : str, optional
+            Plot symbols for the 1D power spectrum.
+        xunit : `astropy.units.Unit`, optional
+            Units for the x-axis. If a header is given, `xunit` can be given
+            in inverse angular units. And if a distance is given, an inverse
+            physical unit can also be passed.
+        save_name : str, optional
+            File name for the plot to be saved. Enables saving when a string
+            is given.
+        use_wavenumber : bool, optional
+            Convert spatial frequencies to a wavenumber.
         '''
 
         import matplotlib.pyplot as p
@@ -494,12 +522,26 @@ class StatisticBase_PSpec2D(object):
                 np.max((self.ps1D + self.ps1D_stddev)
                        [self.freqs <= self.high_cut])
 
-            ax.errorbar(np.log10(xvals),
-                        np.log10(self.ps1D),
-                        yerr=0.434 * (self.ps1D_stddev / self.ps1D),
-                        color=color,
-                        fmt=symbol, markersize=5, alpha=0.5, capsize=10,
-                        elinewidth=3)
+            logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
+
+            if fillin_errs:
+                # Implementation by R. Boyden
+                ax.fill_between(np.log10(xvals),
+                                np.log10(self.ps1D) - logyerrs,
+                                np.log10(self.ps1D) + logyerrs,
+                                color=color,
+                                alpha=0.5)
+
+                ax.plot(np.log10(xvals), np.log10(self.ps1D),
+                        color=color, markersize=5, alpha=0.8)
+
+            else:
+                ax.errorbar(np.log10(xvals),
+                            np.log10(self.ps1D),
+                            yerr=logyerrs,
+                            color=color,
+                            fmt=symbol, markersize=5, alpha=0.5, capsize=10,
+                            elinewidth=3)
 
             ax.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
                     label=label, linewidth=2, color=color)
