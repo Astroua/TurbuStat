@@ -2,6 +2,7 @@
 
 import numpy as np
 from astropy.modeling.models import Gaussian2D, Const2D, Gaussian1D, Const1D
+from astropy.utils import NumpyRNGContext
 
 
 # Define ways to make 1D and 2D profiles (typically Gaussian for ease)
@@ -55,7 +56,7 @@ def generate_1D_array(shape=200, curve_type='gaussian', **kwargs):
 
 
 def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
-                  return_psd=False):
+                  return_psd=False, randomseed=32768324):
     '''
     Adapted from https://github.com/keflavich/image_registration. Added ability
     to make the power spectra elliptical.
@@ -112,8 +113,9 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
     # flag out the bad point to avoid warnings
     rr[rr == 0] = np.nan
 
-    powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) +
-                np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) * 1j)
+    with NumpyRNGContext(randomseed):
+        powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) +
+                    np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) * 1j)
     powermap[powermap != powermap] = 0
 
     if return_psd:
