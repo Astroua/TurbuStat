@@ -10,7 +10,7 @@ from scipy.stats import t as t_dist
 
 def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
           logspacing=True, max_bin=None, min_bin=None, return_freqs=True,
-          theta_0=None, delta_theta=None):
+          theta_0=None, delta_theta=None, boot_iter=None):
     '''
     Calculate the radial profile using scipy.stats.binned_statistic.
 
@@ -39,6 +39,9 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     delta_theta : `~astropy.units.Quantity`, optional
         The width of the azimuthal mask. This must be given when
         a `theta_0` is given. Must have angular units.
+    boot_iter : int, optional
+        Number of bootstrap iterations for estimating the standard deviation
+        in each bin. Require `return_stddev=True`.
 
     Returns
     -------
@@ -135,10 +138,21 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         else:
             return bin_cents, ps1D
     else:
+
+        if boot_iter is None:
+
+            stat_func = lambda x: np.nanstd(x, ddof=1)
+
+        else:
+            from astropy.stats import bootstrap
+
+            stat_func = lambda data: np.mean(bootstrap(data, boot_iter,
+                                                       bootfunc=np.std))
+
         ps1D_stddev = binned_statistic(dist_arr[azim_mask].ravel(),
                                        psd2[azim_mask].ravel(),
                                        bins=bins,
-                                       statistic=lambda x: np.nanstd(x, ddof=1))[0]
+                                       statistic=stat_func)[0]
 
         # We're dealing with variations in the number of samples for each bin.
         # Add a correction based on the t distribution
