@@ -459,14 +459,14 @@ class StatisticBase_PSpec2D(object):
                      origin="lower", vmax=vmax, vmin=vmin)
             p.colorbar()
 
-            p.contour(mask, colors='r', linestyles='--')
+            p.contour(mask, colors=[color], linestyles='--')
 
             # Plot fit contours
             if hasattr(self, 'fit2D'):
                 p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
 
             if hasattr(self, "_azim_mask"):
-                p.contour(self._azim_mask, colors='r', linestyles='--')
+                p.contour(self._azim_mask, colors=[color], linestyles='--')
 
             ax = p.subplot(121)
         else:
@@ -490,7 +490,8 @@ class StatisticBase_PSpec2D(object):
 
             # Axis limits to highlight the fitted region
             vmax = 1.1 * \
-                np.max((self.ps1D + self.ps1D_stddev)[self.freqs <= self.high_cut])
+                np.max((self.ps1D + self.ps1D_stddev)
+                       [self.freqs <= self.high_cut])
 
             ax.errorbar(np.log10(xvals),
                         np.log10(self.ps1D),
@@ -499,8 +500,8 @@ class StatisticBase_PSpec2D(object):
                         fmt=symbol, markersize=5, alpha=0.5, capsize=10,
                         elinewidth=3)
 
-            ax.plot(np.log10(xvals[fit_index]), y_fit, color + '-',
-                    label=label, linewidth=2)
+            ax.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
+                    label=label, linewidth=2, color=color)
             ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
@@ -509,11 +510,11 @@ class StatisticBase_PSpec2D(object):
         else:
             vmax = 1.1 * np.max(self.ps1D[self.freqs <= self.high_cut])
 
-            ax.loglog(self.xvals, 10**y_fit, color + '-',
-                      label=label, linewidth=2)
+            ax.loglog(self.xvals, 10**y_fit, linestyle='-',
+                      label=label, linewidth=2, color=color)
 
-            ax.loglog(self.xvals, self.ps1D, color + symbol, alpha=0.5,
-                      markersize=5)
+            ax.loglog(self.xvals, self.ps1D, symbol, alpha=0.5,
+                      markersize=5, color=color)
 
             ax.set_xlabel(xlab)
             ax.set_ylabel(r"P$_2(K)$")
