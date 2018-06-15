@@ -114,8 +114,10 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
     rr[rr == 0] = np.nan
 
     with NumpyRNGContext(randomseed):
-        powermap = (np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) +
-                    np.random.randn(imsize2, imsize) * rr**(-powerlaw / 2.) * 1j)
+        powermap = rr**(-powerlaw / 2.) * \
+            np.exp(1j * np.random.uniform(0, 2 * np.pi,
+                                          size=(imsize2, imsize)))
+
     powermap[powermap != powermap] = 0
 
     if return_psd:
