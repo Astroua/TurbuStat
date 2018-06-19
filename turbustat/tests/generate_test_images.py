@@ -55,18 +55,21 @@ def generate_1D_array(shape=200, curve_type='gaussian', **kwargs):
     return mod(xgrid)
 
 
-def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
+def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
                   return_psd=False, randomseed=32768324):
     '''
+
+    Generate a power-law image with a specified index and random phases.
+
     Adapted from https://github.com/keflavich/image_registration. Added ability
-    to make the power spectra elliptical.
+    to make the power spectra elliptical. Also changed the random sampling so
+    the random phases are Hermitian (and the inverse FFT gives a real-valued
+    image).
 
     Parameters
     ----------
     imsize : int
         Array size.
-    imsize2 : int, optional
-        Array size in 2nd dimension.
     powerlaw : float, optional
         Powerlaw index.
     theta : float, optional
@@ -75,25 +78,25 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
         Ratio of the minor to major axis. Must be > 0 and <= 1. Defaults to
         the circular case (ellip=1).
     return_psd : bool, optional
-        Return the power-map instead of the image.
+        Return the power-map instead of the image. The full powermap is
+        returned, including the redundant negative phase phases for the RFFT.
+    randomseed: int, optional
+        Seed for random number generator.
 
     Returns
     -------
     newmap : np.ndarray
         Two-dimensional array with the given power-law properties.
+    full_powermap : np.ndarray
+        The 2D array in Fourier space.
     '''
     imsize = int(imsize)
-    if imsize2 is None:
-        imsize2 = imsize
 
     if ellip > 1 or ellip <= 0:
         raise ValueError("ellip must be > 0 and <= 1.")
 
-    yy, xx = np.indices((imsize2, imsize), dtype='float')
-    xcen = imsize / 2. - (1. - imsize % 2)
-    ycen = imsize2 / 2. - (1. - imsize2 % 2)
-    yy -= ycen
-    xx -= xcen
+    yy, xx = np.meshgrid(np.fft.fftfreq(imsize),
+                         np.fft.rfftfreq(imsize), indexing="ij")
 
     if ellip < 1:
         # Apply a rotation and scale the x-axis (ellip).
@@ -114,15 +117,45 @@ def make_extended(imsize, imsize2=None, powerlaw=2.0, theta=0., ellip=1.,
     rr[rr == 0] = np.nan
 
     with NumpyRNGContext(randomseed):
-        powermap = rr**(-powerlaw / 2.) * \
-            np.exp(1j * np.random.uniform(0, 2 * np.pi,
-                                          size=(imsize2, imsize)))
+
+        Np1 = (imsize - 1) // 2 if imsize % 2 != 0 else imsize // 2
+
+        angles = np.random.uniform(0, 2 * np.pi,
+                                   size=(imsize, Np1 + 1))
+
+        phases = np.cos(angles) + 1j * np.sin(angles)
+
+        # Impose symmetry
+        # From https://dsp.stackexchange.com/questions/26312/numpys-real-fft-rfft-losing-power
+        if imsize % 2 == 0:
+            phases[1:Np1, 0] = np.conj(phases[imsize:Np1:-1, 0])
+            phases[1:Np1, -1] = np.conj(phases[imsize:Np1:-1, -1])
+        else:
+            phases[1:Np1, 0] = np.conj(phases[imsize:Np1 + 1:-1, 0])
+            phases[1:Np1, -1] = np.conj(phases[imsize:Np1 + 1:-1, -1])
+
+        powermap = (rr**(-powerlaw / 2.)).astype('complex') * phases
 
     powermap[powermap != powermap] = 0
 
     if return_psd:
-        return powermap
 
-    newmap = np.abs(np.fft.fftshift(np.fft.fft2(powermap)))
+        # Create the full power map, with the symmetric conjugate component
+        if imsize % 2 == 0:
+            power_map_symm = np.conj(powermap[:, -2:0:-1])
+        else:
+            power_map_symm = np.conj(powermap[:, -1:0:-1])
+
+        power_map_symm[1::, :] = power_map_symm[:0:-1, :]
+
+        full_powermap = np.concatenate((powermap, power_map_symm), axis=1)
+
+        if not full_powermap.shape[1] == imsize:
+            raise ValueError("The full powermap should have a square shape."
+                             " Instead has {}".format(full_powermap.shape))
+
+        return full_powermap
+
+    newmap = np.fft.irfft2(powermap)
 
     return newmap
