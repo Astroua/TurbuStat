@@ -91,7 +91,9 @@ def test_bispec_radial_slicing(plaw):
     rad_vals = rad_prof[45][1]
 
     # Remove empty bins and avoid the increased value at largest wavenumbers.
-    mask = np.isfinite(rad_vals) & (np.log10(rad_bins) < 2.)
+    mask = np.isfinite(rad_vals) & (rad_bins < 140.)
+    # Lack of power at small wavenumber?
+    mask = mask & (rad_bins > 3.)
 
     # Do a quick fit to get the slope and test against the expected value
     out = linregress(np.log10(rad_bins[mask]),
