@@ -25,7 +25,6 @@ from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
                             computed_distances)
 from .generate_test_images import make_extended
-from .testing_utilities import assert_between
 
 
 def test_PSpec_method():
@@ -131,10 +130,10 @@ def test_pspec_azimlimits(plaw, ellip):
               fit_kwargs={'weighted_fit': True},
               fit_2D=False)
 
-    # Ensure slopes are consistent to within 7%
-    assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
-    assert_between(test2.slope, - 1.07 * plaw, - 0.93 * plaw)
-    assert_between(test.slope, - 1.07 * plaw, - 0.93 * plaw)
+    # Ensure slopes are consistent to within 2%
+    npt.assert_allclose(-plaw, test3.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test2.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.parametrize('theta',
@@ -163,6 +162,8 @@ def test_pspec_fit2D(theta):
     except AssertionError:
         npt.assert_allclose(theta, test.theta2D - np.pi,
                             atol=0.08)
+
+    npt.assert_allclose(-plaw, test.slope2D, rtol=0.02)
 
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
@@ -216,16 +217,13 @@ def test_PSpec_beamcorrect():
              high_cut=1 / (6 * u.pix),
              fit_2D=False)
 
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.parametrize(('apod_type'),
                          ['splitcosinebell', 'hanning', 'tukey',
                           'cosinebell'])
 def test_PSpec_apod_kernel(apod_type):
-
-    # from turbustat.tests._testing_data import (make_extended, assert_between)
-    # from turbustat.statistics import VCA
 
     imsize = 512
     theta = 0
@@ -247,7 +245,9 @@ def test_PSpec_apod_kernel(apod_type):
     else:
         low_cut = None
 
-    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
-             low_cut=low_cut)
+    low_cut = 10**-1.8 / u.pix
 
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+             low_cut=low_cut, verbose=False)
+
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)

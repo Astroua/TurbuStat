@@ -179,9 +179,9 @@ def test_vca_azimlimits(plaw, ellip):
 
     # Ensure slopes are consistent to within 0.1. Shot noise with the
     # limited number of points requires checking within a range.
-    assert_between(- test3.slope, plaw - 0.1, plaw + 0.1)
-    assert_between(- test2.slope, plaw - 0.1, plaw + 0.1)
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test3.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test2.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
@@ -238,7 +238,7 @@ def test_VCA_beamcorrect():
     test.run(beam_correct=True, high_cut=1 / (6 * u.pix),
              fit_2D=False)
 
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.parametrize(('apod_type'),
@@ -272,4 +272,4 @@ def test_VCA_apod_kernel(apod_type):
 
     test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
              low_cut=low_cut)
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)

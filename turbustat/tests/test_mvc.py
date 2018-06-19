@@ -204,7 +204,7 @@ def test_MVC_beamcorrect():
              high_cut=1 / (6 * u.pix),
              fit_2D=False)
 
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.parametrize(('apod_type'),
@@ -230,8 +230,11 @@ def test_MVC_apod_kernel(apod_type):
                fits.PrimaryHDU(ones))
 
     # Avoid shot noise scatter at large scales
-    low_cut = 10**-1.6 / u.pix
+    if apod_type == 'cosinebell':
+        low_cut = 10**-1.1 / u.pix
+    else:
+        low_cut = 10**-1.4 / u.pix
 
     test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
              low_cut=low_cut)
-    assert_between(- test.slope, plaw - 0.1, plaw + 0.1)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)

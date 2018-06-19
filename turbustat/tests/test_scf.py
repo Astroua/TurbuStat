@@ -189,7 +189,8 @@ def test_scf_fit2D(theta, ellip):
     cube = np.empty((nchans, imsize, imsize))
 
     for i in range(nchans):
-        cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta)
+        cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                                theta=theta)
 
     test = SCF(fits.PrimaryHDU(cube), size=11)
     test.run(fit_2D=True, xhigh=7 * u.pix)
