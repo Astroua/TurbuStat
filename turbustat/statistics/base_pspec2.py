@@ -427,7 +427,8 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._ellip2D_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', label=None,
+    def plot_fit(self, show=True, show_2D=False, color='r', fit_color=None,
+                 label=None,
                  fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
@@ -442,6 +443,9 @@ class StatisticBase_PSpec2D(object):
             and 2D fit contours (if the 2D power spectrum was fit).
         color : str, optional
             Color to use in the plotted points.
+        fit_color : str, optional
+            Color to show the fitted relation in. Defaults to `color` when
+            no color is given.
         label : str, optional
             Apply a label to the 1D plot. Useful for overplotting multiple
             power-spectra.
@@ -468,6 +472,9 @@ class StatisticBase_PSpec2D(object):
             xlab = r"k / (" + xunit.to_string() + ")"
         else:
             xlab = r"Spatial Frequency (" + xunit.to_string() + ")"
+
+        if fit_color is None:
+            fit_color = color
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -532,7 +539,7 @@ class StatisticBase_PSpec2D(object):
                                 color=color,
                                 alpha=0.5)
 
-                ax.plot(np.log10(xvals), np.log10(self.ps1D),
+                ax.plot(np.log10(xvals), np.log10(self.ps1D), symbol,
                         color=color, markersize=5, alpha=0.8)
 
             else:
@@ -544,7 +551,7 @@ class StatisticBase_PSpec2D(object):
                             elinewidth=3)
 
             ax.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
-                    label=label, linewidth=2, color=color)
+                    label=label, linewidth=3, color=fit_color)
             ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
@@ -554,7 +561,7 @@ class StatisticBase_PSpec2D(object):
             vmax = 1.1 * np.max(self.ps1D[self.freqs <= self.high_cut])
 
             ax.loglog(self.xvals, 10**y_fit, linestyle='-',
-                      label=label, linewidth=2, color=color)
+                      label=label, linewidth=2, color=fit_color)
 
             ax.loglog(self.xvals, self.ps1D, symbol, alpha=0.5,
                       markersize=5, color=color)
