@@ -6,6 +6,7 @@ import pytest
 import numpy.testing as npt
 import astropy.units as u
 import os
+from astropy.io import fits
 
 try:
     import pyfftw
@@ -14,6 +15,7 @@ except ImportError:
     PYFFTW_INSTALLED = False
 
 from ..statistics import DeltaVariance, DeltaVariance_Distance
+from .generate_test_images import make_extended
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -126,3 +128,34 @@ def test_DelVar_method_fftw():
     npt.assert_allclose(tester.delta_var[:-7],
                         computed_data['delvar_val'][:-7])
     npt.assert_almost_equal(tester.slope, computed_data['delvar_slope'])
+
+
+@pytest.mark.parametrize(('plaw', 'ellip'),
+                         [(plaw, ellip) for plaw in [2, 3, 4]
+                          for ellip in [0.2, 0.75, 1.0]])
+def test_delvar_plaw_img(plaw, ellip):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 256
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_psd=False)
+
+    test = DeltaVariance(fits.PrimaryHDU(img))
+    test.run()
+
+    # Ensure slopes are consistent to within 2%
+    # Relation to the power law slope is plaw - 2
+    # Highly elliptical structure (0.2) leads to ~3% deviations
+
+    # Use an abs difference when the delvar should be 0.
+    if plaw == 2.:
+        npt.assert_allclose(plaw - 2., test.slope, atol=0.01)
+    else:
+        npt.assert_allclose(plaw - 2., test.slope, rtol=0.03)
