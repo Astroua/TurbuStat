@@ -69,10 +69,10 @@ def test_simple_ellipplaw_2D(plaw, ellip, theta):
     yy, xx = np.mgrid[-imsize / 2:imsize / 2, -imsize / 2:imsize / 2]
 
     # Don't fit the 0, 0 point. It isn't defined by the model.
-    valids = np.ones_like(yy, dtype=bool)
-    valids[imsize // 2 - 1, imsize // 2 - 1] = False
+    valids = psd != 0.
 
     assert np.isfinite(psd[valids]).all()
+    assert (psd[valids] > 0.).all()
 
     test_fit, test_stderr = \
         fit_elliptical_powerlaw(np.log10(psd[valids]),
