@@ -88,7 +88,8 @@ def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
     newmap : np.ndarray
         Two-dimensional array with the given power-law properties.
     full_powermap : np.ndarray
-        The 2D array in Fourier space.
+        The 2D array in Fourier space. The zero-frequency is shifted to
+        the centre.
     '''
     imsize = int(imsize)
 
@@ -154,7 +155,7 @@ def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
             raise ValueError("The full powermap should have a square shape."
                              " Instead has {}".format(full_powermap.shape))
 
-        return full_powermap
+        return np.fft.fftshift(full_powermap)
 
     newmap = np.fft.irfft2(powermap)
 
