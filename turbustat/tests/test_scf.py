@@ -23,8 +23,10 @@ def test_SCF_method():
     assert np.allclose(tester.scf_surface, computed_data['scf_val'])
     npt.assert_array_almost_equal(tester.scf_spectrum,
                                   computed_data["scf_spectrum"])
-    npt.assert_almost_equal(tester.slope, computed_data["scf_slope"])
-    npt.assert_almost_equal(tester.slope2D, computed_data["scf_slope2D"])
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope"],
+                            decimal=3)
+    npt.assert_almost_equal(tester.slope2D, computed_data["scf_slope2D"],
+                            decimal=3)
 
     # Test the save and load
     tester.save_results("scf_output.pkl", keep_data=False)
@@ -36,7 +38,8 @@ def test_SCF_method():
     assert np.allclose(saved_tester.scf_surface, computed_data['scf_val'])
     npt.assert_array_almost_equal(saved_tester.scf_spectrum,
                                   computed_data["scf_spectrum"])
-    npt.assert_almost_equal(saved_tester.slope, computed_data["scf_slope"])
+    npt.assert_almost_equal(saved_tester.slope, computed_data["scf_slope"],
+                            decimal=3)
 
 
 def test_SCF_method_fitlimits():
@@ -44,9 +47,10 @@ def test_SCF_method_fitlimits():
     tester.run(boundary='continuous', xlow=1.5 * u.pix,
                xhigh=4.5 * u.pix)
 
-    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"])
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"],
+                            decimal=3)
     npt.assert_almost_equal(tester.slope2D,
-                            computed_data["scf_slope_wlimits_2D"])
+                            computed_data["scf_slope_wlimits_2D"], decimal=3)
 
 
 def test_SCF_method_fitlimits_units():
@@ -60,7 +64,8 @@ def test_SCF_method_fitlimits_units():
     tester.run(boundary='continuous', xlow=xlow,
                xhigh=xhigh, fit_2D=False)
 
-    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"])
+    npt.assert_almost_equal(tester.slope, computed_data["scf_slope_wlimits"],
+                            decimal=3)
 
     xlow = xlow.value * dataset1['cube'][1]['CDELT2'] * u.deg
     xhigh = xhigh.value * dataset1['cube'][1]['CDELT2'] * u.deg
@@ -69,7 +74,8 @@ def test_SCF_method_fitlimits_units():
     tester2.run(boundary='continuous', xlow=xlow,
                 xhigh=xhigh, fit_2D=False)
 
-    npt.assert_almost_equal(tester2.slope, computed_data["scf_slope_wlimits"])
+    npt.assert_almost_equal(tester2.slope, computed_data["scf_slope_wlimits"],
+                            decimal=3)
 
     xlow = xlow.to(u.rad).value * distance
     xhigh = xhigh.to(u.rad).value * distance
@@ -78,7 +84,8 @@ def test_SCF_method_fitlimits_units():
     tester3.run(boundary='continuous', xlow=xlow,
                 xhigh=xhigh, fit_2D=False)
 
-    npt.assert_almost_equal(tester3.slope, computed_data["scf_slope_wlimits"])
+    npt.assert_almost_equal(tester3.slope, computed_data["scf_slope_wlimits"],
+                            decimal=3)
 
 
 def test_SCF_method_noncont_boundary():
