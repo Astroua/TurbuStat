@@ -376,39 +376,6 @@ if run_pspec:
               fit_kwargs={'weighted_fit': True},
               save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
 
-    # Apodizing kernel
-    pspec = PowerSpectrum(moment0.data[40:, 60:], header=moment0.header)
-    pspec.run(verbose=True,
-              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              save_name=osjoin(fig_path, "design4_pspec_edgering.png"))
-
-    pspec.run(verbose=True,
-              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              apodize_kernel='tukey', alpha=0.1,
-              save_name=osjoin(fig_path, "design4_pspec_apodkern.png"))
-
-    # Beam correction
-    from spectral_cube import Projection
-    from radio_beam import Beam
-
-    mom0_proj = Projection.from_hdu(moment0)
-    mom0_proj._beam = Beam(0 * u.deg)
-
-    new_beam = Beam(3 * moment0.header['CDELT2'] * u.deg)
-
-    mom0_conv = mom0_proj.convolve_to(new_beam)
-
-    pspec = PowerSpectrum(mom0_conv, distance=250 * u.pc)
-    pspec.run(verbose=True, xunit=u.pix**-1,
-              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              apodize_kernel='tukey')
-              # save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
-
-    pspec.run(verbose=True, xunit=u.pix**-1,
-              low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              apodize_kernel='tukey', beam_correct=True)
-              # save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
-
 
 # SCF
 if run_scf:
@@ -592,4 +559,3 @@ if run_wavelet:
     wavelet = Wavelet(moment0)
     wavelet.run(verbose=True, scale_normalization=False, xhigh=10 * u.pix,
                 save_name=osjoin(fig_path, 'design4_wavelet_unnorm.png'))
-
