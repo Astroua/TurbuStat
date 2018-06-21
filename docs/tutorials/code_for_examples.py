@@ -19,7 +19,7 @@ sb.set_context("poster", font_scale=1.0)
 fig_path = 'images'
 
 # Choose which methods to run
-run_apod_examples = True
+run_apod_examples = False
 run_beamcorr_examples = False
 
 if run_apod_examples:
@@ -83,11 +83,11 @@ if run_apod_examples:
     plt.savefig(osjoin(fig_path, '1d_apods.png'))
     plt.close()
 
-    freqs = np.fft.fftfreq(shape[0])
-    plt.loglog(freqs, np.abs(np.fft.fft(data[shape[0] // 2]))**2, label='Hanning')
-    plt.loglog(freqs, np.abs(np.fft.fft(data2[shape[0] // 2]))**2, label='Cosine')
-    plt.loglog(freqs, np.abs(np.fft.fft(data3[shape[0] // 2]))**2, label='Split Cosine')
-    plt.loglog(freqs, np.abs(np.fft.fft(data4[shape[0] // 2]))**2, label='Tukey')
+    freqs = np.fft.rfftfreq(shape[0])
+    plt.loglog(freqs, np.abs(np.fft.rfft(data[shape[0] // 2]))**2, label='Hanning')
+    plt.loglog(freqs, np.abs(np.fft.rfft(data2[shape[0] // 2]))**2, label='Cosine')
+    plt.loglog(freqs, np.abs(np.fft.rfft(data3[shape[0] // 2]))**2, label='Split Cosine')
+    plt.loglog(freqs, np.abs(np.fft.rfft(data4[shape[0] // 2]))**2, label='Tukey')
     plt.legend(frameon=True)
     plt.xlabel("Freq. (1 / pix)")
     plt.ylabel("Power")
@@ -113,7 +113,7 @@ if run_apod_examples:
 
     pspec = PowerSpectrum(plaw_hdu)
     pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
-              fit_kwargs={'weighted_fit': True}, fit_2D=False,
+              fit_kwargs={'weighted_fit': False}, fit_2D=False,
               low_cut=1. / (60 * u.pix),
               save_name=osjoin(fig_path, "rednoise_pspec_slope3.png"))
 
@@ -125,25 +125,25 @@ if run_apod_examples:
 
     pspec2 = PowerSpectrum(plaw_hdu)
     pspec2.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-               fit_kwargs={'weighted_fit': True}, fit_2D=False,
+               fit_kwargs={'weighted_fit': False}, fit_2D=False,
                low_cut=1. / (60 * u.pix),
                apodize_kernel='hanning',)
 
     pspec3 = PowerSpectrum(plaw_hdu)
     pspec3.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-               fit_kwargs={'weighted_fit': True}, fit_2D=False,
+               fit_kwargs={'weighted_fit': False}, fit_2D=False,
                low_cut=1. / (60 * u.pix),
                apodize_kernel='cosinebell', alpha=0.98,)
 
     pspec4 = PowerSpectrum(plaw_hdu)
     pspec4.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-               fit_kwargs={'weighted_fit': True}, fit_2D=False,
+               fit_kwargs={'weighted_fit': False}, fit_2D=False,
                low_cut=1. / (60 * u.pix),
                apodize_kernel='splitcosinebell', alpha=0.3, beta=0.8)
 
     pspec5 = PowerSpectrum(plaw_hdu)
     pspec5.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-               fit_kwargs={'weighted_fit': True}, fit_2D=False,
+               fit_kwargs={'weighted_fit': False}, fit_2D=False,
                low_cut=1. / (60 * u.pix),
                apodize_kernel='tukey', alpha=0.3)
 
@@ -156,14 +156,15 @@ if run_apod_examples:
     pspec4.plot_fit(color=col_pal[3], label='SplitCosineBell')
     pspec5.plot_fit(color=col_pal[4], label='Tukey')
     plt.legend(frameon=True, loc='lower left')
-    plt.ylim([2, 9.5])
+    plt.ylim([-2, 7.5])
     plt.tight_layout()
     plt.savefig(osjoin(fig_path, "rednoise_pspec_slope3_apod_comparisons.png"))
     plt.close()
 
-    print("Original: {0} \nHanning: {1} \nCosineBell: {2} \n"
-          "SplitCosineBell: {3} \nTukey: {4}".format(pspec.slope,
-                                                     pspec2.slope,
-                                                     pspec3.slope,
-                                                     pspec4.slope,
-                                                     pspec5.slope))
+    print("Original: {0:.2f} \nHanning: {1:.2f} \nCosineBell: {2:.2f} \n"
+          "SplitCosineBell: {3:.2f} \nTukey: {4:.2f}"
+          .format(pspec.slope, pspec2.slope, pspec3.slope, pspec4.slope,
+                  pspec5.slope))
+
+if run_beamcorr_examples:
+    pass

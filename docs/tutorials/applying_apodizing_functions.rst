@@ -106,27 +106,27 @@ The power-spectrum of the image should give a slope of 3:
                   fit_kwargs={'weighted_fit': True}, fit_2D=False,
                   low_cut=1. / (60 * u.pix))
 
-                                WLS Regression Results
+                                OLS Regression Results
     ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.997
-    Model:                            WLS   Adj. R-squared:                  0.997
-    Method:                 Least Squares   F-statistic:                 5.956e+04
-    Date:                Thu, 14 Jun 2018   Prob (F-statistic):          1.33e-223
-    Time:                        15:10:48   Log-Likelihood:                 300.42
-    No. Observations:                 177   AIC:                            -596.8
-    Df Residuals:                     175   BIC:                            -590.5
+    Dep. Variable:                      y   R-squared:                       1.000
+    Model:                            OLS   Adj. R-squared:                  1.000
+    Method:                 Least Squares   F-statistic:                 8.070e+06
+    Date:                Thu, 21 Jun 2018   Prob (F-statistic):               0.00
+    Time:                        11:43:47   Log-Likelihood:                 701.40
+    No. Observations:                 177   AIC:                            -1399.
+    Df Residuals:                     175   BIC:                            -1392.
     Df Model:                           1
     Covariance Type:            nonrobust
     ==============================================================================
                      coef    std err          t      P>|t|      [0.025      0.975]
     ------------------------------------------------------------------------------
-    const          2.4133      0.008    313.309      0.000       2.398       2.429
-    x1            -2.9876      0.012   -244.052      0.000      -3.012      -2.963
+    const          0.0032      0.001      3.952      0.000       0.002       0.005
+    x1            -2.9946      0.001  -2840.850      0.000      -2.997      -2.992
     ==============================================================================
-    Omnibus:                        1.798   Durbin-Watson:                   2.060
-    Prob(Omnibus):                  0.407   Jarque-Bera (JB):                1.474
-    Skew:                          -0.213   Prob(JB):                        0.479
-    Kurtosis:                       3.136   Cond. No.                         5.10
+    Omnibus:                      252.943   Durbin-Watson:                   1.077
+    Prob(Omnibus):                  0.000   Jarque-Bera (JB):            26797.433
+    Skew:                          -5.963   Prob(JB):                         0.00
+    Kurtosis:                      62.087   Cond. No.                         4.55
     ==============================================================================
 
 .. image:: images/rednoise_pspec_slope3.png
@@ -191,13 +191,14 @@ Comparing the different power spectra with different apodizing kernels, the only
     ...                                 pspec4.slope,
     ...                                 pspec5.slope))
 
-    Original: -2.99
-    Hanning: -3.01
-    CosineBell: -3.01
-    SplitCosineBell: -3.01
-    Tukey: -3.00
+    Original: -3.00
+    Hanning: -2.95
+    CosineBell: -2.95
+    SplitCosineBell: -3.00
+    Tukey: -3.01
 
-All of the slopes, fit without the large scale frequencies, yields the correct slope.
+
+All of the power spectra with an apodizing kernel applied, fit without the large scale frequencies, yield the correct slope.
 
 .. warning:: The range of frequencies affected by the apodizing kernel depends on the properties of the kernel used. The shape of the kernels are controlled by the :math:`\alpha` and/or :math:`\beta` parameters (see above). Narrower shapes will tend to have a larger effect on the power-spectrum. It is prudent to check the effect of the apodizing kernel by comparing different choices for the shape!
 
