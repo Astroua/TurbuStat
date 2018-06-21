@@ -68,7 +68,7 @@ The former two windows consistently taper smoothly from the centre to the edge, 
     >>> plt.plot(data2[shape[0] // 2], label='Cosine')  # doctest: +SKIP
     >>> plt.plot(data3[shape[0] // 2], label='Split Cosine')  # doctest: +SKIP
     >>> plt.plot(data4[shape[0] // 2], label='Tukey')  # doctest: +SKIP
-    >>> plt.legend(frameon=True)
+    >>> plt.legend(frameon=True)  # doctest: +SKIP
 
 .. image:: images/1d_apods.png
 
@@ -175,8 +175,8 @@ We will now compare the how the different apodizing kernels change the power-spe
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='tukey', alpha=0.3)
 
-    >>> import seaborn as sb  # Change the colours and comment these lines if you don't use seaborn
-    >>> col_pal = sb.color_palette()
+    >>> import seaborn as sb  # doctest: +SKIP Change the colours and comment these lines if you don't use seaborn
+    >>> col_pal = sb.color_palette()  # doctest: +SKIP
     >>> pspec.plot_fit(color=col_pal[0], label='Original')  # doctest: +SKIP
     >>> pspec2.plot_fit(color=col_pal[1], label='Hanning')  # doctest: +SKIP
     >>> pspec3.plot_fit(color=col_pal[2], label='CosineBell')  # doctest: +SKIP

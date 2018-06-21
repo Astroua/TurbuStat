@@ -84,8 +84,8 @@ Next we will define the beam to smooth to. A 3-pixel wide FWHM is reasonable:
 
 How has smoothing changed the shape of the power-spectrum?
 
-    >>> import seaborn as sb  # Change the colours and comment these lines if you don't use seaborn
-    >>> col_pal = sb.color_palette()
+    >>> import seaborn as sb  # doctest: +SKIP Change the colours and comment these lines if you don't use seaborn
+    >>> col_pal = sb.color_palette()  # doctest: +SKIP
     >>> pspec2 = PowerSpectrum(plaw_conv)
     >>> pspec2.run(verbose=True, xunit=u.pix**-1, fit_2D=False,
     ...            low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
