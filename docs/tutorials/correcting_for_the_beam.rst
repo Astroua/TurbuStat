@@ -34,9 +34,8 @@ The power-spectrum of the image should give a slope of 3:
     >>> from turbustat.statistics import PowerSpectrum
     >>> pspec = PowerSpectrum(plaw_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
-                  fit_kwargs={'weighted_fit': True}, fit_2D=False,
-                  low_cut=1. / (60 * u.pix))
-
+    ...           fit_kwargs={'weighted_fit': True}, fit_2D=False,
+    ...           low_cut=1. / (60 * u.pix))
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000
@@ -93,7 +92,6 @@ How has smoothing changed the shape of the power-spectrum?
     ...            apodize_kernel='tukey')
     >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
     ...             zorder=1)
-
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.988
@@ -143,7 +141,6 @@ The beam correction in TurbuStat requires the optional package `radio_beam <http
     ...            apodize_kernel='tukey', beam_correct=True)
     >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
     ...             zorder=1)
-
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.998

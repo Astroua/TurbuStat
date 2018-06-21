@@ -111,9 +111,8 @@ The power-spectrum of the image should give a slope of 3:
     >>> from turbustat.statistics import PowerSpectrum
     >>> pspec = PowerSpectrum(plaw_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
-                  fit_2D=False,
-                  low_cut=1. / (60 * u.pix))
-
+    ...           fit_2D=False,
+    ...           low_cut=1. / (60 * u.pix))
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000
