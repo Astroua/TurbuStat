@@ -10,8 +10,10 @@ A common way to avoid this issue is to apply a window function that smoothly tap
 
 TurbuStat has four built-in apodizing functions based on the implementations from `photutils <https://photutils.readthedocs.io/en/stable/psf_matching.html>`_:
 
-    >>>     from turbustat.statistics.apodizing_kernels import \
-        (CosineBellWindow, TukeyWindow, HanningWindow, SplitCosineBellWindow)
+The Hanning window:
+
+    >>> from turbustat.statistics.apodizing_kernels import \
+    ...    (CosineBellWindow, TukeyWindow, HanningWindow, SplitCosineBellWindow)
     >>> import matplotlib.pyplot as plt
     >>> shape = (101, 101)
     >>> taper = HanningWindow()
@@ -24,6 +26,8 @@ TurbuStat has four built-in apodizing functions based on the implementations fro
 
 .. image:: images/hanning.png
 
+The Cosine Bell Window:
+
     >>> taper2 = CosineBellWindow(alpha=0.8)
     >>> data2 = taper2(shape)
     >>> plt.subplot(121)
@@ -34,6 +38,8 @@ TurbuStat has four built-in apodizing functions based on the implementations fro
 
 .. image:: images/cosine.png
 
+The Split-Cosine Bell Window:
+
     >>> taper3 = SplitCosineBellWindow(alpha=0.1, beta=0.5)
     >>> data3 = taper3(shape)
     >>> plt.subplot(121)
@@ -43,6 +49,8 @@ TurbuStat has four built-in apodizing functions based on the implementations fro
     >>> plt.plot(data3[shape[0] // 2])
 
 .. image:: images/splitcosine.png
+
+And the Tukey Window:
 
     >>> taper4 = TukeyWindow(alpha=0.3)
     >>> data4 = taper4(shape)
@@ -66,11 +74,11 @@ The former two windows consistently taper smoothly from the centre to the edge, 
 
 To get an idea of how these apodizing functions affect the data, we can examine their power-spectra:
 
-    >>> freqs = np.fft.fftfreq(shape[0])
-    >>> plt.loglog(freqs, np.abs(np.fft.fft(data[shape[0] // 2]))**2, label='Hanning')
-    >>> plt.loglog(freqs, np.abs(np.fft.fft(data2[shape[0] // 2]))**2, label='Cosine')
-    >>> plt.loglog(freqs, np.abs(np.fft.fft(data3[shape[0] // 2]))**2, label='Split Cosine')
-    >>> plt.loglog(freqs, np.abs(np.fft.fft(data4[shape[0] // 2]))**2, label='Tukey')
+    >>> freqs = np.fft.rfftfreq(shape[0])
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data[shape[0] // 2]))**2, label='Hanning')
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data2[shape[0] // 2]))**2, label='Cosine')
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data3[shape[0] // 2]))**2, label='Split Cosine')
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data4[shape[0] // 2]))**2, label='Tukey')
     >>> plt.legend(frameon=True)
     >>> plt.xlabel("Freq. (1 / pix)")
     >>> plt.ylabel("Power")
@@ -103,7 +111,7 @@ The power-spectrum of the image should give a slope of 3:
     >>> from turbustat.statistics import PowerSpectrum
     >>> pspec = PowerSpectrum(plaw_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
-                  fit_kwargs={'weighted_fit': True}, fit_2D=False,
+                  fit_2D=False,
                   low_cut=1. / (60 * u.pix))
 
                                 OLS Regression Results
@@ -146,25 +154,25 @@ We will now compare the how the different apodizing kernels change the power-spe
 
     >>> pspec2 = PowerSpectrum(plaw_hdu)
     >>> pspec2.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-    ...            fit_kwargs={'weighted_fit': True}, fit_2D=False,
+    ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='hanning',)
 
     >>> pspec3 = PowerSpectrum(plaw_hdu)
     >>> pspec3.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-    ...            fit_kwargs={'weighted_fit': True}, fit_2D=False,
+    ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='cosinebell', alpha=0.98,)
 
     >>> pspec4 = PowerSpectrum(plaw_hdu)
     >>> pspec4.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-    ...            fit_kwargs={'weighted_fit': True}, fit_2D=False,
+    ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='splitcosinebell', alpha=0.3, beta=0.8)
 
     >>> pspec5 = PowerSpectrum(plaw_hdu)
     >>> pspec5.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
-    ...            fit_kwargs={'weighted_fit': True}, fit_2D=False,
+    ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='tukey', alpha=0.3)
 

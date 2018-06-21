@@ -11,9 +11,18 @@ import numpy as np
 from turbustat.tests.generate_test_images import make_extended
 from turbustat.io.sim_tools import create_fits_hdu
 
+from turbustat.statistics import PowerSpectrum
+
 # Use my default seaborn setting
 sb.set(font='Times New Roman', style='ticks')
-sb.set_context("poster", font_scale=1.0)
+sb.set_context("poster", font_scale=1.0,
+               rc={'figure.figsize': (11.7, 8.27)})
+
+# For some reason, the figure size isn't getting updated by the context
+# change on my work desktop. Specify manually here
+plt.rcParams['figure.figsize'] = (11.8, 8.27)
+
+col_pal = sb.color_palette('colorblind')
 
 
 fig_path = 'images'
@@ -24,7 +33,6 @@ run_beamcorr_examples = False
 
 if run_apod_examples:
 
-    from turbustat.statistics import PowerSpectrum
     from turbustat.statistics.apodizing_kernels import \
         (CosineBellWindow, TukeyWindow, HanningWindow, SplitCosineBellWindow)
 
@@ -148,7 +156,6 @@ if run_apod_examples:
                apodize_kernel='tukey', alpha=0.3)
 
     # Overplot all of the to demonstrate affect on large-scales.
-    col_pal = sb.color_palette()
 
     pspec.plot_fit(color=col_pal[0], label='Original')
     pspec2.plot_fit(color=col_pal[1], label='Hanning')
@@ -167,4 +174,64 @@ if run_apod_examples:
                   pspec5.slope))
 
 if run_beamcorr_examples:
-    pass
+
+    from radio_beam import Beam
+
+    rnoise_img = make_extended(256, powerlaw=3.)
+
+    pixel_scale = 3 * u.arcsec
+    beamfwhm = 3 * u.arcsec
+    imshape = rnoise_img.shape
+    restfreq = 1.4 * u.GHz
+    bunit = u.K
+
+    plaw_hdu = create_fits_hdu(rnoise_img, pixel_scale, beamfwhm, imshape,
+                               restfreq, bunit)
+
+    pspec = PowerSpectrum(plaw_hdu)
+    pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
+              fit_kwargs={'weighted_fit': False}, fit_2D=False,
+              low_cut=1. / (60 * u.pix),
+              save_name=osjoin(fig_path, "rednoise_pspec_slope3.png"))
+
+    pencil_beam = Beam(0 * u.deg)
+    plaw_proj = Projection.from_hdu(plaw_hdu)
+    plaw_proj = plaw_proj.with_beam(pencil_beam)
+
+    new_beam = Beam(3 * plaw_hdu.header['CDELT2'] * u.deg)
+    plaw_conv = plaw_proj.convolve_to(new_beam)
+
+    plaw_conv.quicklook()
+    plt.savefig('images/rednoise_slope3_img_smoothed.png')
+    plt.close()
+
+    pspec2 = PowerSpectrum(plaw_conv)
+    pspec2.run(verbose=True, xunit=u.pix**-1, fit_2D=False,
+               low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+               radial_pspec_kwargs={'binsize': 1.0},
+               apodize_kernel='tukey')
+    plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
+                zorder=1)
+    plt.savefig("images/rednoise_pspec_slope3_smoothed.png")
+    plt.close()
+
+    pspec3 = PowerSpectrum(plaw_conv)
+    pspec3.run(verbose=True, xunit=u.pix**-1, fit_2D=False,
+               low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
+               apodize_kernel='tukey', beam_correct=True)
+    plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
+                zorder=1)
+    plt.savefig("images/rednoise_pspec_slope3_smoothed_beamcorr.png")
+    plt.close()
+
+    # Overplot original, smooth, corrected, etc..
+
+    pspec.plot_fit(color=col_pal[0], label='Original')
+    pspec2.plot_fit(color=col_pal[1], label='Smoothed')
+    pspec3.plot_fit(color=col_pal[2], label='Beam-Corrected')
+    plt.legend(frameon=True, loc='lower left')
+    plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8, zorder=-1)
+    plt.ylim([-2, 7.5])
+    plt.tight_layout()
+    plt.savefig("images/rednoise_pspec_slope3_apod_comparisons.png")
+    plt.close()
