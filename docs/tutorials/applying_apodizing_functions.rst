@@ -15,6 +15,7 @@ The Hanning window:
     >>> from turbustat.statistics.apodizing_kernels import \
     ...    (CosineBellWindow, TukeyWindow, HanningWindow, SplitCosineBellWindow)
     >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
     >>> shape = (101, 101)
     >>> taper = HanningWindow()
     >>> data = taper(shape)
@@ -175,7 +176,8 @@ We will now compare the how the different apodizing kernels change the power-spe
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='tukey', alpha=0.3)
 
-    >>> import seaborn as sb  # doctest: +SKIP Change the colours and comment these lines if you don't use seaborn
+    >>> # Change the colours and comment these lines if you don't use seaborn
+    >>> import seaborn as sb  # doctest: +SKIP
     >>> col_pal = sb.color_palette()  # doctest: +SKIP
     >>> pspec.plot_fit(color=col_pal[0], label='Original')  # doctest: +SKIP
     >>> pspec2.plot_fit(color=col_pal[1], label='Hanning')  # doctest: +SKIP
