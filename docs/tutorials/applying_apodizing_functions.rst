@@ -18,11 +18,11 @@ The Hanning window:
     >>> shape = (101, 101)
     >>> taper = HanningWindow()
     >>> data = taper(shape)
-    >>> plt.subplot(121)
-    >>> plt.imshow(data, cmap='viridis', origin='lower')
-    >>> plt.colorbar()
-    >>> plt.subplot(122)
-    >>> plt.plot(data[shape[0] // 2])
+    >>> plt.subplot(121)  # doctest: +SKIP
+    >>> plt.imshow(data, cmap='viridis', origin='lower')  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
+    >>> plt.subplot(122)  # doctest: +SKIP
+    >>> plt.plot(data[shape[0] // 2])  # doctest: +SKIP
 
 .. image:: images/hanning.png
 
@@ -30,11 +30,11 @@ The Cosine Bell Window:
 
     >>> taper2 = CosineBellWindow(alpha=0.8)
     >>> data2 = taper2(shape)
-    >>> plt.subplot(121)
-    >>> plt.imshow(data2, cmap='viridis', origin='lower')
-    >>> plt.colorbar()
-    >>> plt.subplot(122)
-    >>> plt.plot(data2[shape[0] // 2])
+    >>> plt.subplot(121)  # doctest: +SKIP
+    >>> plt.imshow(data2, cmap='viridis', origin='lower')  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
+    >>> plt.subplot(122)  # doctest: +SKIP
+    >>> plt.plot(data2[shape[0] // 2])  # doctest: +SKIP
 
 .. image:: images/cosine.png
 
@@ -42,11 +42,11 @@ The Split-Cosine Bell Window:
 
     >>> taper3 = SplitCosineBellWindow(alpha=0.1, beta=0.5)
     >>> data3 = taper3(shape)
-    >>> plt.subplot(121)
-    >>> plt.imshow(data3, cmap='viridis', origin='lower')
-    >>> plt.colorbar()
-    >>> plt.subplot(122)
-    >>> plt.plot(data3[shape[0] // 2])
+    >>> plt.subplot(121)  # doctest: +SKIP
+    >>> plt.imshow(data3, cmap='viridis', origin='lower')  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
+    >>> plt.subplot(122)  # doctest: +SKIP
+    >>> plt.plot(data3[shape[0] // 2])  # doctest: +SKIP
 
 .. image:: images/splitcosine.png
 
@@ -54,20 +54,20 @@ And the Tukey Window:
 
     >>> taper4 = TukeyWindow(alpha=0.3)
     >>> data4 = taper4(shape)
-    >>> plt.subplot(121)
-    >>> plt.imshow(data4, cmap='viridis', origin='lower')
-    >>> plt.colorbar()
-    >>> plt.subplot(122)
-    >>> plt.plot(data4[shape[0] // 2])
+    >>> plt.subplot(121)  # doctest: +SKIP
+    >>> plt.imshow(data4, cmap='viridis', origin='lower')  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
+    >>> plt.subplot(122)  # doctest: +SKIP
+    >>> plt.plot(data4[shape[0] // 2])  # doctest: +SKIP
 
 .. image:: images/tukey.png
 
 The former two windows consistently taper smoothly from the centre to the edge, while the latter two have flattened plateaus with tapering only at the edge. Plotting the 1-dimensional slices makes these differences clear:
 
-    >>> plt.plot(data[shape[0] // 2], label='Hanning')
-    >>> plt.plot(data2[shape[0] // 2], label='Cosine')
-    >>> plt.plot(data3[shape[0] // 2], label='Split Cosine')
-    >>> plt.plot(data4[shape[0] // 2], label='Tukey')
+    >>> plt.plot(data[shape[0] // 2], label='Hanning')  # doctest: +SKIP
+    >>> plt.plot(data2[shape[0] // 2], label='Cosine')  # doctest: +SKIP
+    >>> plt.plot(data3[shape[0] // 2], label='Split Cosine')  # doctest: +SKIP
+    >>> plt.plot(data4[shape[0] // 2], label='Tukey')  # doctest: +SKIP
     >>> plt.legend(frameon=True)
 
 .. image:: images/1d_apods.png
@@ -75,13 +75,13 @@ The former two windows consistently taper smoothly from the centre to the edge, 
 To get an idea of how these apodizing functions affect the data, we can examine their power-spectra:
 
     >>> freqs = np.fft.rfftfreq(shape[0])
-    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data[shape[0] // 2]))**2, label='Hanning')
-    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data2[shape[0] // 2]))**2, label='Cosine')
-    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data3[shape[0] // 2]))**2, label='Split Cosine')
-    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data4[shape[0] // 2]))**2, label='Tukey')
-    >>> plt.legend(frameon=True)
-    >>> plt.xlabel("Freq. (1 / pix)")
-    >>> plt.ylabel("Power")
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data[shape[0] // 2]))**2, label='Hanning')  # doctest: +SKIP
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data2[shape[0] // 2]))**2, label='Cosine')  # doctest: +SKIP
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data3[shape[0] // 2]))**2, label='Split Cosine')  # doctest: +SKIP
+    >>> plt.loglog(freqs, np.abs(np.fft.rfft(data4[shape[0] // 2]))**2, label='Tukey')  # doctest: +SKIP
+    >>> plt.legend(frameon=True)  # doctest: +SKIP
+    >>> plt.xlabel("Freq. (1 / pix)")  # doctest: +SKIP
+    >>> plt.ylabel("Power")  # doctest: +SKIP
 
 .. image:: images/1d_apods_pspec.png
 
@@ -102,7 +102,7 @@ As an example, we will compare the effect each of the windows has on a red-noise
     >>> bunit = u.K
     >>> # Create a FITS HDU
     >>> plaw_hdu = create_fits_hdu(rnoise_img, pixel_scale, beamfwhm, imshape, restfreq, bunit)
-    >>> plt.imshow(plaw_hdu.data)
+    >>> plt.imshow(plaw_hdu.data)  # doctest: +SKIP
 
 .. image:: images/rednoise_slope3_img.png
 
@@ -112,7 +112,7 @@ The power-spectrum of the image should give a slope of 3:
     >>> pspec = PowerSpectrum(plaw_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
     ...           fit_2D=False,
-    ...           low_cut=1. / (60 * u.pix))
+    ...           low_cut=1. / (60 * u.pix))  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000
@@ -143,7 +143,7 @@ The slope is nearly 3, as expected. Note that we have limited the range of frequ
 Before exploring the effect of the apodizing kernels, we can demonstrate the need for an apodizing kernel by taking a slice of the red-noise image, such that the edges are no longer periodic.
 
     >>> pspec_partial = PowerSpectrum(rnoise_img[:128, :128], header=plaw_hdu.header).run(verbose=False, fit_2D=False, low_cut=1 / (60. * u.pix))
-    >>> plt.imshow(np.log10(pspec_partial.ps2D))
+    >>> plt.imshow(np.log10(pspec_partial.ps2D))  # doctest: +SKIP
 
 .. image:: images/rednoise_pspec_slope3_2D_slicecross.png
 
@@ -177,14 +177,14 @@ We will now compare the how the different apodizing kernels change the power-spe
 
     >>> import seaborn as sb  # Change the colours and comment these lines if you don't use seaborn
     >>> col_pal = sb.color_palette()
-    >>> pspec.plot_fit(color=col_pal[0], label='Original')
-    >>> pspec2.plot_fit(color=col_pal[1], label='Hanning')
-    >>> pspec3.plot_fit(color=col_pal[2], label='CosineBell')
-    >>> pspec4.plot_fit(color=col_pal[3], label='SplitCosineBell')
-    >>> pspec5.plot_fit(color=col_pal[4], label='Tukey')
-    >>> plt.legend(frameon=True, loc='lower left')
-    >>> plt.ylim([2, 9.5])
-    >>> plt.tight_layout()
+    >>> pspec.plot_fit(color=col_pal[0], label='Original')  # doctest: +SKIP
+    >>> pspec2.plot_fit(color=col_pal[1], label='Hanning')  # doctest: +SKIP
+    >>> pspec3.plot_fit(color=col_pal[2], label='CosineBell')  # doctest: +SKIP
+    >>> pspec4.plot_fit(color=col_pal[3], label='SplitCosineBell')  # doctest: +SKIP
+    >>> pspec5.plot_fit(color=col_pal[4], label='Tukey')  # doctest: +SKIP
+    >>> plt.legend(frameon=True, loc='lower left')  # doctest: +SKIP
+    >>> plt.ylim([2, 9.5])  # doctest: +SKIP
+    >>> plt.tight_layout()  # doctest: +SKIP
 
 .. image:: images/rednoise_pspec_slope3_apod_comparisons.png
 
@@ -197,7 +197,6 @@ Comparing the different power spectra with different apodizing kernels, the only
     ...                                 pspec3.slope,
     ...                                 pspec4.slope,
     ...                                 pspec5.slope))
-
     Original: -3.00
     Hanning: -2.95
     CosineBell: -2.95

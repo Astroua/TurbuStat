@@ -12,6 +12,7 @@ The beam size is typically expressed as the full-width-half-max (FWHM). However,
 important to note that the data will still be correlated beyond the FWHM. For example,
 consider a randomly-drawn image with a specified power-law index:
 
+    >>> import matplotlib.pyplot as plt
     >>> from turbustat.tests.generate_test_images import make_extended
     >>> from turbustat.io.sim_tools import create_fits_hdu
     >>> from astropy import units as u
@@ -25,7 +26,7 @@ consider a randomly-drawn image with a specified power-law index:
     >>> bunit = u.K
     >>> # Create a FITS HDU
     >>> plaw_hdu = create_fits_hdu(rnoise_img, pixel_scale, beamfwhm, imshape, restfreq, bunit)
-    >>> plt.imshow(plaw_hdu.data)
+    >>> plt.imshow(plaw_hdu.data)  # doctest: +SKIP
 
 .. image:: images/rednoise_slope3_img.png
 
@@ -35,7 +36,7 @@ The power-spectrum of the image should give a slope of 3:
     >>> pspec = PowerSpectrum(plaw_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
     ...           fit_kwargs={'weighted_fit': True}, fit_2D=False,
-    ...           low_cut=1. / (60 * u.pix))
+    ...           low_cut=1. / (60 * u.pix))  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000
@@ -77,7 +78,7 @@ Next we will define the beam to smooth to. A 3-pixel wide FWHM is reasonable:
 
     >>> new_beam = Beam(3 * plaw_hdu.header['CDELT2'] * u.deg)
     >>> plaw_conv = plaw_proj.convolve_to(new_beam)
-    >>> plaw_conv.quicklook()
+    >>> plaw_conv.quicklook()  # doctest: +SKIP
 
 .. image:: images/rednoise_slope3_img_smoothed.png
 
@@ -89,9 +90,9 @@ How has smoothing changed the shape of the power-spectrum?
     >>> pspec2.run(verbose=True, xunit=u.pix**-1, fit_2D=False,
     ...            low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
     ...            radial_pspec_kwargs={'binsize': 1.0},
-    ...            apodize_kernel='tukey')
+    ...            apodize_kernel='tukey')  # doctest: +SKIP
     >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
-    ...             zorder=1)
+    ...             zorder=1)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.988
@@ -138,9 +139,9 @@ The beam correction in TurbuStat requires the optional package `radio_beam <http
     >>> pspec3 = PowerSpectrum(plaw_conv)
     >>> pspec3.run(verbose=True, xunit=u.pix**-1, fit_2D=False,
     ...            low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
-    ...            apodize_kernel='tukey', beam_correct=True)
+    ...            apodize_kernel='tukey', beam_correct=True)  # doctest: +SKIP
     >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8,
-    ...             zorder=1)
+    ...             zorder=1)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.998
@@ -170,13 +171,13 @@ The shape of the power-spectrum has been restored and we recover the correct slo
 
 Here are the three power-spectra shown above overplotted to highlight the shape changes from spatial smoothing:
 
-    >>> pspec.plot_fit(color=col_pal[0], label='Original')
-    >>> pspec2.plot_fit(color=col_pal[1], label='Smoothed')
-    >>> pspec3.plot_fit(color=col_pal[2], label='Beam-Corrected')
-    >>> plt.legend(frameon=True, loc='lower left')
-    >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8, zorder=-1)
-    >>> plt.ylim([-2, 7.5])
-    >>> plt.tight_layout()
+    >>> pspec.plot_fit(color=col_pal[0], label='Original')  # doctest: +SKIP
+    >>> pspec2.plot_fit(color=col_pal[1], label='Smoothed')  # doctest: +SKIP
+    >>> pspec3.plot_fit(color=col_pal[2], label='Beam-Corrected')  # doctest: +SKIP
+    >>> plt.legend(frameon=True, loc='lower left')  # doctest: +SKIP
+    >>> plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8, zorder=-1)  # doctest: +SKIP
+    >>> plt.ylim([-2, 7.5])  # doctest: +SKIP
+    >>> plt.tight_layout()  # doctest: +SKIP
 
 .. image:: images/rednoise_pspec_slope3_apod_comparisons.png
 
