@@ -156,25 +156,25 @@ We will now compare the how the different apodizing kernels change the power-spe
     >>> pspec2.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
     ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
-    ...            apodize_kernel='hanning',)
+    ...            apodize_kernel='hanning',)  # doctest: +SKIP
 
     >>> pspec3 = PowerSpectrum(plaw_hdu)
     >>> pspec3.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
     ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
-    ...            apodize_kernel='cosinebell', alpha=0.98,)
+    ...            apodize_kernel='cosinebell', alpha=0.98)  # doctest: +SKIP
 
     >>> pspec4 = PowerSpectrum(plaw_hdu)
     >>> pspec4.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
     ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
-    ...            apodize_kernel='splitcosinebell', alpha=0.3, beta=0.8)
+    ...            apodize_kernel='splitcosinebell', alpha=0.3, beta=0.8)  # doctest: +SKIP
 
     >>> pspec5 = PowerSpectrum(plaw_hdu)
     >>> pspec5.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
     ...            fit_2D=False,
     ...            low_cut=1. / (60 * u.pix),
-    ...            apodize_kernel='tukey', alpha=0.3)
+    ...            apodize_kernel='tukey', alpha=0.3)  # doctest: +SKIP
 
     >>> # Change the colours and comment these lines if you don't use seaborn
     >>> import seaborn as sb  # doctest: +SKIP
