@@ -7,3 +7,5 @@ astropy
 mock
 numpydoc
 sphinx_bootstrap_theme
+radio_beam
+spectral_cube
