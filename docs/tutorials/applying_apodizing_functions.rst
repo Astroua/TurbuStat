@@ -188,7 +188,7 @@ We will now compare the how the different apodizing kernels change the power-spe
     >>> plt.ylim([2, 9.5])  # doctest: +SKIP
     >>> plt.tight_layout()  # doctest: +SKIP
 
-.. image:: images/rednoise_pspec_slope3_beam_comparisons.png
+.. image:: images/rednoise_pspec_slope3_apod_comparisons.png
 
 Comparing the different power spectra with different apodizing kernels, the only variations occur on large scales.  However, as noted above, the large frequencies suffer from a lack of samples and tend to have underestimated errors.  Effectively, the use of apodizing kernels will leave the relevant region of the power spectrum unaffected. This is clear from the fitted slopes:
 

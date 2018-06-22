@@ -180,6 +180,6 @@ Here are the three power-spectra shown above overplotted to highlight the shape 
     >>> plt.ylim([-2, 7.5])  # doctest: +SKIP
     >>> plt.tight_layout()  # doctest: +SKIP
 
-.. image:: images/rednoise_pspec_slope3_apod_comparisons.png
+.. image:: images/rednoise_pspec_slope3_beam_comparisons.png
 
 Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be avoided from any fitting. For example, lag scales smaller than the beam in the :ref:`Delta-Variance <delvar_tutorial>`, :ref:`Wavelets <wavelet_tutorial>`, and :ref:`SCF <scf_tutorial>` should not be fit. The spatial filtering used to measure :ref:`Statistical Moments <statmoments_tutorial>` should be set to a width of at least the beam size.
