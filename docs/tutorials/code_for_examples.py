@@ -233,5 +233,5 @@ if run_beamcorr_examples:
     plt.axvline(np.log10(1 / 3.), color=col_pal[3], linewidth=8, alpha=0.8, zorder=-1)
     plt.ylim([-2, 7.5])
     plt.tight_layout()
-    plt.savefig("images/rednoise_pspec_slope3_apod_comparisons.png")
+    plt.savefig("images/rednoise_pspec_slope3_beam_comparisons.png")
     plt.close()
