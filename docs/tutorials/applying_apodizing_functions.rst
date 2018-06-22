@@ -198,7 +198,7 @@ Comparing the different power spectra with different apodizing kernels, the only
     ...                                 pspec2.slope,
     ...                                 pspec3.slope,
     ...                                 pspec4.slope,
-    ...                                 pspec5.slope))
+    ...                                 pspec5.slope))  # doctest: +SKIP
     Original: -3.00
     Hanning: -2.95
     CosineBell: -2.95
