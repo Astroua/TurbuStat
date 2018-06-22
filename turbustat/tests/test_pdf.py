@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import numpy.testing as npt
+import os
 
 from ..statistics.pdf import PDF, PDF_Distance
 
@@ -26,6 +27,24 @@ def test_PDF():
 
     npt.assert_equal(50.,
                      test.find_percentile(np.median(test.data)))
+
+    # Test loading and saving
+    test.save_results("pdf_output.pkl", keep_data=True)
+
+    saved_test = PDF.load_results("pdf_output.pkl")
+
+    # Remove the file
+    os.remove("pdf_output.pkl")
+
+    npt.assert_almost_equal(saved_test.pdf,
+                            computed_data["pdf_val"])
+    npt.assert_almost_equal(saved_test.ecdf, computed_data["pdf_ecdf"])
+
+    npt.assert_equal(np.median(saved_test.data),
+                     saved_test.find_at_percentile(50))
+
+    npt.assert_equal(50.,
+                     saved_test.find_percentile(np.median(saved_test.data)))
 
 
 def test_PDF_fitting():
@@ -115,4 +134,5 @@ def test_PDF_lognorm_distance():
     test_dist.distance_metric()
 
     npt.assert_almost_equal(test_dist.lognormal_distance,
-                            computed_distances['pdf_lognorm_distance'])
+                            computed_distances['pdf_lognorm_distance'],
+                            decimal=4)

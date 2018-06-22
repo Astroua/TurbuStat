@@ -5,6 +5,7 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 
+
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -27,11 +28,14 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Weights to be applied to the image.
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
+    beam : `radio_beam.Beam`, optional
+        Beam object for correcting for the effect of a finite beam.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, header=None, weights=None, distance=None):
+    def __init__(self, img, header=None, weights=None, distance=None,
+                 beam=None):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
@@ -51,15 +55,30 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        self.load_beam(beam=beam)
+
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
+    def compute_pspec(self, beam_correct=False,
+                      apodize_kernel=None, alpha=0.3, beta=0.0,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
 
         Parameters
         ----------
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -70,16 +89,42 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             for a list of accepted kwargs.
         '''
 
+        if apodize_kernel is not None:
+            apod_kernel = self.apodizing_kernel(kernel_type=apodize_kernel,
+                                                alpha=alpha,
+                                                beta=beta)
+            data = self.weighted_data * apod_kernel
+        else:
+            data = self.weighted_data
+
         if pyfftw_kwargs.get('threads') is not None:
             pyfftw_kwargs.pop('threads')
 
-        fft = fftshift(rfft_to_fft(self.weighted_data, use_pyfftw=use_pyfftw,
+        fft = fftshift(rfft_to_fft(data, use_pyfftw=use_pyfftw,
                                    threads=threads,
                                    **pyfftw_kwargs))
 
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
+
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.data.shape[0],
+                                             x_size=self.data.shape[1])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._beam_pow = np.abs(beam_fft**2)
+
         self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, use_pyfftw=False, threads=1,
+        if beam_correct:
+            self._ps2D /= self._beam_pow
+
+    def run(self, verbose=False, beam_correct=False,
+            apodize_kernel=None, alpha=0.2, beta=0.0,
+            use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, return_stddev=True,
             low_cut=None, high_cut=None,
             fit_2D=True, radial_pspec_kwargs={}, fit_kwargs={},
@@ -93,6 +138,17 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose: bool, optional
             Enables plotting.
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -127,7 +183,11 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         # Remove threads if in dict
         if pyfftw_kwargs.get('threads') is not None:
             pyfftw_kwargs.pop('threads')
-        self.compute_pspec(use_pyfftw=use_pyfftw, threads=threads,
+
+        self.compute_pspec(apodize_kernel=apodize_kernel,
+                           alpha=alpha, beta=beta,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
                            **pyfftw_kwargs)
 
         self.compute_radial_pspec(return_stddev=return_stddev,

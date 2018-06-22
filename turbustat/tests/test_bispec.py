@@ -8,6 +8,7 @@ import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
 from scipy.stats import linregress
+import os
 
 try:
     import pyfftw
@@ -17,13 +18,24 @@ except ImportError:
 
 from ..statistics import BiSpectrum, BiSpectrum_Distance
 from ._testing_data import dataset1,\
-    dataset2, computed_data, computed_distances, make_extended
+    dataset2, computed_data, computed_distances
+from .generate_test_images import make_extended
 
 
 def test_Bispec_method():
     tester = BiSpectrum(dataset1["moment0"])
     tester.run()
     assert np.allclose(tester.bicoherence,
+                       computed_data['bispec_val'])
+
+    # Test the save and load
+    tester.save_results("bispec_output.pkl", keep_data=False)
+    saved_tester = BiSpectrum.load_results("bispec_output.pkl")
+
+    # Remove the file
+    os.remove("bispec_output.pkl")
+
+    assert np.allclose(saved_tester.bicoherence,
                        computed_data['bispec_val'])
 
 
@@ -79,7 +91,9 @@ def test_bispec_radial_slicing(plaw):
     rad_vals = rad_prof[45][1]
 
     # Remove empty bins and avoid the increased value at largest wavenumbers.
-    mask = np.isfinite(rad_vals) & (np.log10(rad_bins) < 2.)
+    mask = np.isfinite(rad_vals) & (rad_bins < 140.)
+    # Lack of power at small wavenumber?
+    mask = mask & (rad_bins > 3.)
 
     # Do a quick fit to get the slope and test against the expected value
     out = linregress(np.log10(rad_bins[mask]),

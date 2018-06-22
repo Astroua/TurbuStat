@@ -10,7 +10,7 @@ from ..statistics.elliptical_powerlaw import (fit_elliptical_powerlaw,
                                               LogEllipticalPowerLaw2D,
                                               interval_transform,
                                               inverse_interval_transform)
-from ._testing_data import make_extended
+from .generate_test_images import make_extended
 
 
 def test_simple_ellipplaw():
@@ -69,10 +69,10 @@ def test_simple_ellipplaw_2D(plaw, ellip, theta):
     yy, xx = np.mgrid[-imsize / 2:imsize / 2, -imsize / 2:imsize / 2]
 
     # Don't fit the 0, 0 point. It isn't defined by the model.
-    valids = np.ones_like(yy, dtype=bool)
-    valids[imsize // 2 - 1, imsize // 2 - 1] = False
+    valids = psd != 0.
 
     assert np.isfinite(psd[valids]).all()
+    assert (psd[valids] > 0.).all()
 
     test_fit, test_stderr = \
         fit_elliptical_powerlaw(np.log10(psd[valids]),

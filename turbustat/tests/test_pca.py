@@ -7,6 +7,7 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 import astropy.constants as const
+import os
 
 try:
     import emcee
@@ -16,9 +17,9 @@ except ImportError:
 
 from ..statistics import PCA, PCA_Distance
 from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
-from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, generate_2D_array,
-                            generate_1D_array, assert_between)
+from ._testing_data import dataset1, dataset2, computed_data, computed_distances
+from .generate_test_images import generate_2D_array, generate_1D_array
+from .testing_utilities import assert_between
 
 
 def test_PCA_method():
@@ -49,6 +50,34 @@ def test_PCA_method():
     assert_between(fit_values["sonic_length"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
+
+    # Test loading and saving
+    tester.save_results("pca_output.pkl", keep_data=False)
+
+    saved_tester = PCA.load_results("pca_output.pkl")
+
+    # Remove the file
+    os.remove("pca_output.pkl")
+
+    npt.assert_allclose(saved_tester.eigvals[slice_used],
+                        computed_data['pca_val'][slice_used])
+
+    npt.assert_allclose(saved_tester.spatial_width.value,
+                        computed_data['pca_spatial_widths'])
+    npt.assert_allclose(saved_tester.spectral_width.value,
+                        computed_data['pca_spectral_widths'])
+
+    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+    assert_between(fit_values["index"], saved_tester.index_error_range[0],
+                   saved_tester.index_error_range[1])
+    assert_between(fit_values["gamma"], saved_tester.gamma_error_range[0],
+                   saved_tester.gamma_error_range[1])
+    assert_between(fit_values["intercept"],
+                   saved_tester.intercept_error_range[0].value,
+                   saved_tester.intercept_error_range[1].value)
+    assert_between(fit_values["sonic_length"],
+                   saved_tester.sonic_length()[1][0].value,
+                   saved_tester.sonic_length()[1][1].value)
 
 
 @pytest.mark.skipif("not EMCEE_INSTALLED")
