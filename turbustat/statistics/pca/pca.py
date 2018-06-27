@@ -108,6 +108,13 @@ class PCA(BaseStatisticMixIn):
 
         '''
 
+        # Define the decomposition-only flag, if not yet set. Will get
+        # overridden later if the size-line width relation is fit.
+        if not hasattr(self, "_decomp_only"):
+            self._decomp_only = True
+        else:
+            self._decomp_only = True
+
         if n_eigs == 'auto' and min_eigval is None:
             raise ValueError("min_eigval must be given when using "
                              "n_eigs='auto'.")
@@ -477,6 +484,12 @@ class PCA(BaseStatisticMixIn):
             when fit_method is bayes.
         '''
 
+        # Set the decomposition flag to False if not defined yet
+        if not hasattr(self, "_decomp_only"):
+            self._decomp_only = False
+        else:
+            self._decomp_only = False
+
         if fit_method != 'odr' and fit_method != 'bayes':
             raise TypeError("fit_method must be 'odr' or 'bayes'.")
 
@@ -661,6 +674,113 @@ class PCA(BaseStatisticMixIn):
 
         return lambd, lambd_error_range
 
+    def plot_fit(self, save_name=None, show_cov_bar=True, show_sl_fit=True,
+                 n_eigs=None, color='r', fit_color='k', cov_cmap='viridis'):
+        '''
+        Plot the covariance matrix, bar plot of eigenvalues, and the fitted
+        size-line width relation.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        show_cov_bar : bool, optional
+            Show the covariance matrix and eigenvalue variance bar plot.
+        show_sl_fit : bool, optional
+            Show the size-line width relation, if fit.
+        n_eigs : int, optional
+            Number of eigenvalues to show in the bar plot. Defaults to the
+            automatically-set value (`PCA.n_eigs`).
+        color : {str, RGB tuple}, optional
+            Color to use in the plots. Defaults to red.
+        fit_color : {str, RBG tuple}, optional
+            Colour to show the fit line in. Defaults to `color` when `None` is
+            given.
+        cov_cmap : {str, matplotlib colormap}, optional
+            Colormap to show the covariance matrix in.
+        '''
+
+        if self._decomp_only and show_sl_fit:
+            warn("Size-line width fit not performed. Disabling show_sl_fit.")
+            show_sl_fit = False
+
+        import matplotlib.pyplot as plt
+
+        if show_cov_bar:
+            if show_sl_fit:
+                plt.subplot(221)
+            else:
+                plt.subplot(121)
+            plt.imshow(self.cov_matrix, origin="lower",
+                       interpolation="nearest", cmap=cov_cmap)
+            plt.colorbar()
+
+            if show_sl_fit:
+                plt.subplot(223)
+            else:
+                plt.subplot(122)
+
+            if n_eigs is None:
+                n_eigs = self.n_eigs
+
+            plt.bar(np.arange(1, self.n_eigs + 1), self.eigvals[:n_eigs],
+                    0.5, color=color)
+            plt.xlim([0, n_eigs + 1])
+            plt.xlabel('Eigenvalues')
+            plt.ylabel('Variance')
+
+        if show_sl_fit:
+            if fit_color is None:
+                fit_color = color
+
+            if show_cov_bar:
+                plt.subplot(122)
+            else:
+                plt.subplot(111)
+
+            print(color)
+
+            plt.errorbar(np.log10(self.spatial_width.value),
+                         np.log10(self.spectral_width.value),
+                         xerr=0.434 * self.spatial_width_error /
+                         self.spatial_width,
+                         yerr=0.434 * self.spectral_width_error /
+                         self.spectral_width, fmt='o', color=color)
+            plt.ylabel("log Linewidth / "
+                       "{}".format(self.spectral_width.unit.to_string()))
+            plt.xlabel("log Spatial Length / "
+                       "{}".format(self.spatial_width.unit.to_string()))
+            xvals = np.linspace(np.log10(np.nanmin(self.spatial_width).value),
+                                np.log10(np.nanmax(self.spatial_width).value),
+                                self.spatial_width.size * 10)
+            plt.plot(xvals, self.index * xvals +
+                     np.log10(self.intercept.value),
+                     '-', color=fit_color)
+            # Some very large error bars makes it difficult to see the model
+            # Limit the range shown in the plot.
+            x_range = \
+                np.ptp(np.log10(self.spatial_width.value)
+                       [np.isfinite(self.spatial_width)])
+            y_range = \
+                np.ptp(np.log10(self.spectral_width.value)
+                       [np.isfinite(self.spectral_width)])
+            plt.xlim([np.log10(np.nanmin(self.spatial_width.value)) -
+                      y_range / 4,
+                      np.log10(np.nanmax(self.spatial_width.value)) +
+                      y_range / 4])
+            plt.ylim([np.log10(np.nanmin(self.spectral_width.value)) -
+                      x_range / 4,
+                      np.log10(np.nanmax(self.spectral_width.value)) +
+                      x_range / 4])
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, mean_sub=False,
             decomp_only=False, n_eigs='auto', min_eigval=None,
             eigen_cut_method='value', spatial_method='contour',
@@ -712,6 +832,8 @@ class PCA(BaseStatisticMixIn):
                          min_eigval=min_eigval,
                          eigen_cut_method=eigen_cut_method)
 
+        self._decomp_only = decomp_only
+
         # Run rest of the analysis
         if not decomp_only:
             self.find_spatial_widths(method=spatial_method,
@@ -723,8 +845,6 @@ class PCA(BaseStatisticMixIn):
             self.fit_plaw(fit_method=fit_method)
 
         if verbose:
-            import matplotlib.pyplot as p
-
             print('Proportion of Variance kept: %s' % (self.var_proportion))
             print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
                   .format(self.index, *self.index_error_range))
@@ -738,55 +858,7 @@ class PCA(BaseStatisticMixIn):
                   .format(sl.value, sl.unit.to_string(), T_k.value,
                           T_k.unit.to_string(), *sl_range.value))
 
-            p.subplot(221)
-            p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
-            p.colorbar()
-            p.subplot(223)
-            p.bar(np.arange(1, self.n_eigs + 1), self.eigvals[:self.n_eigs],
-                  0.5, color='r')
-            p.xlim([0, self.n_eigs + 1])
-            p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
-
-            p.subplot(122)
-            p.errorbar(np.log10(self.spatial_width.value),
-                       np.log10(self.spectral_width.value),
-                       xerr=0.434 * self.spatial_width_error /
-                       self.spatial_width,
-                       yerr=0.434 * self.spectral_width_error /
-                       self.spectral_width, fmt='o', color='k')
-            p.ylabel("log Linewidth / "
-                     "{}".format(self.spectral_width.unit.to_string()))
-            p.xlabel("log Spatial Length / "
-                     "{}".format(self.spatial_width.unit.to_string()))
-            xvals = np.linspace(np.log10(np.nanmin(self.spatial_width).value),
-                                np.log10(np.nanmax(self.spatial_width).value),
-                                self.spatial_width.size * 10)
-            p.plot(xvals, self.index * xvals + np.log10(self.intercept.value),
-                   'r-')
-            # Some very large error bars makes it difficult to see the model
-            x_range = \
-                np.ptp(np.log10(self.spatial_width.value)
-                       [np.isfinite(self.spatial_width)])
-            y_range = \
-                np.ptp(np.log10(self.spectral_width.value)
-                       [np.isfinite(self.spectral_width)])
-            p.xlim([np.log10(np.nanmin(self.spatial_width.value)) -
-                    y_range / 4,
-                    np.log10(np.nanmax(self.spatial_width.value)) +
-                    y_range / 4])
-            p.ylim([np.log10(np.nanmin(self.spectral_width.value)) -
-                    x_range / 4,
-                    np.log10(np.nanmax(self.spectral_width.value)) +
-                    x_range / 4])
-
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, show_sl_fit=not decomp_only)
 
         return self
 
