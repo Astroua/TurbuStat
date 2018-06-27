@@ -13,7 +13,7 @@ addons:
 env:
     global:
         - PYTHON_VERSION=3.6
-        - NUMPY_VERSION=stable
+        - NUMPY_VERSION=1.12
         - ASTROPY_VERSION=stable
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test'
