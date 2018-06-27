@@ -2,14 +2,22 @@
 from __future__ import print_function, absolute_import, division
 
 import numpy as np
-from numpy.fft import fft2, fftshift
+from numpy.fft import fftshift
 import astropy.units as u
 from warnings import warn
+import sys
+from copy import deepcopy
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
 from ...io import input_data, common_types, twod_types
 from ..fitting_utils import check_fit_limits
+from ..rfft_to_fft import rfft_to_fft
 
 
 class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
@@ -35,7 +43,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, centroid, moment0, linewidth, header=None,
-                 distance=None):
+                 distance=None, beam=None):
 
         # data property not used here
         self.no_data_flag = True
@@ -75,6 +83,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        self.load_beam(beam=beam)
+
     @property
     def centroid(self):
         '''
@@ -96,7 +106,9 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         '''
         return self._linewidth
 
-    def compute_pspec(self):
+    def compute_pspec(self, beam_correct=False,
+                      apodize_kernel=None, alpha=0.3, beta=0.0,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
 
@@ -108,59 +120,168 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         An unnormalized centroid can be constructed by multiplying the centroid
         array by the moment0. Velocity dispersion is the square of the
         linewidth subtracted by the square of the normalized centroid.
+
+        Parameters
+        ----------
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`__
+            for a list of accepted kwargs.
+
         '''
 
-        term1 = fft2(self.centroid * self.moment0)
+        if apodize_kernel is not None:
+            apod_kernel = self.apodizing_kernel(kernel_type=apodize_kernel,
+                                                alpha=alpha,
+                                                beta=beta)
+            term1_data = self.centroid * self.moment0 * apod_kernel
+            term2_data = self.linewidth**2 + self.centroid**2 * apod_kernel
+            mom0_data = self.moment0 * apod_kernel
+
+        else:
+            term1_data = self.centroid * self.moment0
+            term2_data = self.linewidth**2 + self.centroid**2
+            mom0_data = self.moment0
+
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        term1 = rfft_to_fft(term1_data,
+                            use_pyfftw=use_pyfftw,
+                            threads=threads,
+                            **pyfftw_kwargs)
+
+        fft_mom0 = rfft_to_fft(mom0_data,
+                               use_pyfftw=use_pyfftw,
+                               threads=threads,
+                               **pyfftw_kwargs)
 
         # Account for normalization in the line width.
-        term2 = np.nanmean(self.linewidth**2 + self.centroid**2)
+        term2 = np.nanmean(term2_data)
 
-        mvc_fft = term1 - term2 * fft2(self.moment0)
+        mvc_fft = term1 - term2 * fft_mom0
 
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
+
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.centroid.shape[0],
+                                             x_size=self.centroid.shape[1])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._beam_pow = np.abs(beam_fft**2)
+
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, save_name=None, logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
-            xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
+        if beam_correct:
+            self._ps2D /= self._beam_pow
+
+    def save_results(self, output_name, keep_data=False):
+        '''
+        Save the results of the SCF to avoid re-computing.
+        The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
+        '''
+
+        if not output_name.endswith(".pkl"):
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy._centroid = None
+            self_copy._moment0 = None
+            self_copy._linewidth = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    def run(self, verbose=False, beam_correct=False,
+            apodize_kernel=None, alpha=0.2, beta=0.0,
+            use_pyfftw=False, threads=1, pyfftw_kwargs={},
+            return_stddev=True, radial_pspec_kwargs={},
+            low_cut=None, high_cut=None,
+            fit_2D=True, fit_kwargs={}, fit_2D_kwargs={},
+            save_name=None, xunit=u.pix**-1, use_wavenumber=False):
         '''
         Full computation of MVC. For fitting parameters and radial binning
         options, see `~turbustat.statistics.base_pspec2.StatisticBase_PSpec2D`.
 
         Parameters
         ----------
-        verbose: bool, optional
+        verbose : bool, optional
             Enables plotting.
-        save_name : str,optional
-            Save the figure when a file name is given.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
         return_stddev : bool, optional
             Return the standard deviation in the 1D bins.
+        radial_pspec_kwargs : dict, optional
+            Passed to `~PowerSpectrum.compute_radial_pspec`.
         low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D power spectrum.
+        fit_kwargs : dict, optional
+            Passed to `~PowerSpectrum.fit_pspec`.
         fit_2D_kwargs : dict, optional
-            Keyword arguments for `MVC.fit_2Dpspec`. Use the
+            Keyword arguments for `~MVC.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
-        radial_pspec_kwargs : dict, optional
-            Passed to `~MVC.compute_radial_pspec`.
+        save_name : str,optional
+            Save the figure when a file name is given.
         xunit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+            Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         fit_kwargs : Passed to `~MVC.fit_pspec`.
         '''
 
-        self.compute_pspec()
-        self.compute_radial_pspec(logspacing=logspacing,
-                                  return_stddev=return_stddev,
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        self.compute_pspec(apodize_kernel=apodize_kernel,
+                           alpha=alpha, beta=beta,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
+        self.compute_radial_pspec(return_stddev=return_stddev,
                                   **radial_pspec_kwargs)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
@@ -252,13 +373,17 @@ class MVC_Distance(object):
         else:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
                             data1["centroid"][1], distance=phys_distance)
-            self.mvc1.run(logspacing=logspacing, high_cut=high_cut[0],
-                          low_cut=low_cut[0], brk=breaks[0], fit_2D=False)
+            self.mvc1.run(radial_pspec_kwargs={'logspacing': logspacing},
+                          high_cut=high_cut[0],
+                          low_cut=low_cut[0],
+                          fit_kwargs={'brk': breaks[0]}, fit_2D=False)
 
         self.mvc2 = MVC(centroid2, moment02, linewidth2,
                         data2["centroid"][1], distance=phys_distance)
-        self.mvc2.run(logspacing=logspacing, high_cut=high_cut[1],
-                      low_cut=low_cut[1], brk=breaks[1], fit_2D=False)
+        self.mvc2.run(radial_pspec_kwargs={'logspacing': logspacing},
+                      high_cut=high_cut[1],
+                      low_cut=low_cut[1],
+                      fit_kwargs={'brk': breaks[1]}, fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         xunit=u.pix**-1, save_name=None,

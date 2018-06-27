@@ -105,6 +105,10 @@ if run_delvar:
     delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=30 * u.pix,
                save_name=osjoin(fig_path, "delvar_design4_physunits.png"))
 
+    delvar.run(verbose=True, xunit=u.pc, xlow=4 * u.pix, xhigh=40 * u.pix,
+               brk=8 * u.pix,
+               save_name=osjoin(fig_path, "delvar_design4_break.png"))
+
     # Look at difference w/ non-periodic boundary handling
     # This needs to be revisited with the astropy convolution updates
     # delvar.run(verbose=True, xunit=u.pix, xlow=4 * u.pix, xhigh=30 * u.pix,
@@ -355,22 +359,23 @@ if run_pspec:
     # How about fitting a break?
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
-              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
-              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix, fit_2D=False,
+              fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False},
               save_name=osjoin(fig_path, "design4_pspec_breakfit.png"))
 
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pc**-1,
-              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix,
-              brk=0.1 / u.pix, log_break=False, fit_2D=False,
+              low_cut=0.025 / u.pix, high_cut=0.4 / u.pix, fit_2D=False,
+              fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False},
               radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
               save_name=osjoin(fig_path, "design4_pspec_breakfit_azimlimits.png"))
 
     pspec = PowerSpectrum(moment0, distance=250 * u.pc)
     pspec.run(verbose=True, xunit=u.pix**-1,
               low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
-              weighted_fit=True,
+              fit_kwargs={'weighted_fit': True},
               save_name=osjoin(fig_path, "design4_pspec_limitedfreq_weightfit.png"))
+
 
 # SCF
 if run_scf:
@@ -554,4 +559,3 @@ if run_wavelet:
     wavelet = Wavelet(moment0)
     wavelet.run(verbose=True, scale_normalization=False, xhigh=10 * u.pix,
                 save_name=osjoin(fig_path, 'design4_wavelet_unnorm.png'))
-

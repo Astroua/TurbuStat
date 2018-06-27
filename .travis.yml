@@ -8,6 +8,7 @@ addons:
             - graphviz
             - texlive-latex-extra
             - dvipng
+            - libfftw3-dev
 
 env:
     global:
@@ -22,7 +23,7 @@ env:
         - CONDA_CHANNELS='astropy-ci-extras astropy'
         - SETUP_XVFB=True
 
-        - CONDA_DEPENDENCIES='pytest scipy matplotlib pandas statsmodels scikit-learn'
+        - CONDA_DEPENDENCIES='pytest scipy matplotlib pandas statsmodels scikit-learn scikit-image'
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
@@ -43,7 +44,7 @@ matrix:
         # Do a coverage test.
         - os: linux
           env: SETUP_CMD='test --coverage'
-               PIP_DEPENDENCIES='emcee git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
+               PIP_DEPENDENCIES='emcee pyfftw git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - os: linux
@@ -71,20 +72,14 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.10
         - os: linux
-          env: PYTHON_VERSION=3.4 NUMPY_VERSION=1.10
+          env: PYTHON_VERSION=3.4 NUMPY_VERSION=1.11
         - os: linux
-          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11
+          env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.12
 
         # Try numpy pre-release
         - os: linux
           env: NUMPY_VERSION=prerelease
                EVENT_TYPE='pull_request push cron'
-
-        # With optional dependencies
-        # With emcee
-        - os: linux
-          env: PIP_DEPENDENCIES='emcee git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git'
-
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh

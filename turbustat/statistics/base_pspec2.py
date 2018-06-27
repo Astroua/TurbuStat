@@ -12,6 +12,7 @@ from .fitting_utils import clip_func
 from .elliptical_powerlaw import (fit_elliptical_powerlaw,
                                   inverse_interval_transform,
                                   inverse_interval_transform_stderr)
+from .apodizing_kernels import *
 
 
 class StatisticBase_PSpec2D(object):
@@ -56,7 +57,7 @@ class StatisticBase_PSpec2D(object):
         return self._freqs * min(self._ps2D.shape)
 
     def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=True, max_bin=None, **kwargs):
+                             logspacing=False, max_bin=None, **kwargs):
         '''
         Computes the radially averaged power spectrum.
 
@@ -251,6 +252,44 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._brk_err
 
+    def apodizing_kernel(self, kernel_type="tukey", alpha=0.1, beta=0.0):
+        '''
+        Return an apodizing kernel to be applied to the image before taking
+        Fourier transform
+
+        Returns
+        -------
+        window : `~numpy.ndarray`
+            Apodizing kernel
+        '''
+
+        if self.data is not None:
+            shape = self.data.shape
+        else:
+            # MVC doesn't have a data attribute set
+            shape = self.centroid.shape
+
+        # Assume first axis is velocity if >2 dimensions
+        if len(shape) > 2:
+            shape = shape[1:]
+
+        avail_types = ['splitcosinebell', 'hanning', 'tukey',
+                       'cosinebell']
+
+        if kernel_type == "splitcosinebell":
+            return SplitCosineBellWindow(alpha, beta)(shape)
+        elif kernel_type == "hanning":
+            return HanningWindow()(shape)
+        elif kernel_type == "tukey":
+            return TukeyWindow(alpha)(shape)
+        elif kernel_type == 'cosinebell':
+            return CosineBellWindow(alpha)(shape)
+        else:
+            raise ValueError("kernel_type {0} is not one of the available "
+                             "types: {1}".format(kernel_type, avail_types))
+
+        return window
+
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
                     high_cut=None, bootstrap=True, niters=100,
                     use_azimmask=False):
@@ -388,11 +427,43 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._ellip2D_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', label=None,
-                 symbol="D", xunit=u.pix**-1, save_name=None,
+    def plot_fit(self, show=True, show_2D=False, color='r', fit_color=None,
+                 label=None,
+                 fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
+
+        Parameters
+        ----------
+        show : bool, optional
+            Call `plt.show()` after plotting.
+        show_2D : bool, optional
+            Plot the 2D power spectrum with contours for the masked regions
+            and 2D fit contours (if the 2D power spectrum was fit).
+        color : str, optional
+            Color to use in the plotted points.
+        fit_color : str, optional
+            Color to show the fitted relation in. Defaults to `color` when
+            no color is given.
+        label : str, optional
+            Apply a label to the 1D plot. Useful for overplotting multiple
+            power-spectra.
+        fillin_errs : bool, optional
+            Show the range of the standard deviation with as a transparent
+            filled in region. When disabled, the standard deviations are shown
+            as error bars.
+        symbol : str, optional
+            Plot symbols for the 1D power spectrum.
+        xunit : `astropy.units.Unit`, optional
+            Units for the x-axis. If a header is given, `xunit` can be given
+            in inverse angular units. And if a distance is given, an inverse
+            physical unit can also be passed.
+        save_name : str, optional
+            File name for the plot to be saved. Enables saving when a string
+            is given.
+        use_wavenumber : bool, optional
+            Convert spatial frequencies to a wavenumber.
         '''
 
         import matplotlib.pyplot as p
@@ -402,13 +473,11 @@ class StatisticBase_PSpec2D(object):
         else:
             xlab = r"Spatial Frequency (" + xunit.to_string() + ")"
 
+        if fit_color is None:
+            fit_color = color
+
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
-            p.subplot(122)
-            p.imshow(np.log10(self.ps2D), interpolation="nearest",
-                     origin="lower")
-            p.colorbar()
-
             yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
 
             freqs_dist = np.sqrt(yy_freq**2 + xx_freq**2)
@@ -416,14 +485,24 @@ class StatisticBase_PSpec2D(object):
             mask = np.logical_and(freqs_dist >= self.low_cut.value,
                                   freqs_dist <= self.high_cut.value)
 
-            p.contour(mask, colors='r', linestyles='--')
+            # Scale the colour map to be values within the mask
+            vmax = np.log10(self.ps2D[mask]).max()
+            vmin = np.log10(self.ps2D[mask]).min()
+
+            p.subplot(122)
+            p.imshow(np.log10(self.ps2D), interpolation="nearest",
+                     origin="lower", vmax=vmax, vmin=vmin)
+            cbar = p.colorbar()
+            cbar.set_label(r"log $P_2 \ (K_x,\ K_y)$")
+
+            p.contour(mask, colors=[color], linestyles='--')
 
             # Plot fit contours
             if hasattr(self, 'fit2D'):
                 p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
 
             if hasattr(self, "_azim_mask"):
-                p.contour(self._azim_mask, colors='r', linestyles='--')
+                p.contour(self._azim_mask, colors=[color], linestyles='--')
 
             ax = p.subplot(121)
         else:
@@ -444,27 +523,53 @@ class StatisticBase_PSpec2D(object):
         xvals = self._spatial_freq_unit_conversion(xvals, xunit).value
 
         if self._stddev_flag:
-            ax.errorbar(np.log10(xvals),
-                        np.log10(self.ps1D),
-                        yerr=0.434 * (self.ps1D_stddev / self.ps1D),
-                        color=color,
-                        fmt=symbol, markersize=5, alpha=0.5, capsize=10,
-                        elinewidth=3)
 
-            ax.plot(np.log10(xvals[fit_index]), y_fit, color + '-',
-                    label=label, linewidth=2)
+            # Axis limits to highlight the fitted region
+            vmax = 1.1 * \
+                np.max((self.ps1D + self.ps1D_stddev)
+                       [self.freqs <= self.high_cut])
+
+            logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
+
+            if fillin_errs:
+                # Implementation by R. Boyden
+                ax.fill_between(np.log10(xvals),
+                                np.log10(self.ps1D) - logyerrs,
+                                np.log10(self.ps1D) + logyerrs,
+                                color=color,
+                                alpha=0.5)
+
+                ax.plot(np.log10(xvals), np.log10(self.ps1D), symbol,
+                        color=color, markersize=5, alpha=0.8)
+
+            else:
+                ax.errorbar(np.log10(xvals),
+                            np.log10(self.ps1D),
+                            yerr=logyerrs,
+                            color=color,
+                            fmt=symbol, markersize=5, alpha=0.5, capsize=10,
+                            elinewidth=3)
+
+            ax.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
+                    label=label, linewidth=3, color=fit_color)
             ax.set_xlabel("log " + xlab)
             ax.set_ylabel(r"log P$_2(K)$")
 
-        else:
-            ax.loglog(self.xvals, 10**y_fit, color + '-',
-                      label=label, linewidth=2)
+            ax.set_ylim(top=np.log10(vmax))
 
-            ax.loglog(self.xvals, self.ps1D, color + symbol, alpha=0.5,
-                      markersize=5)
+        else:
+            vmax = 1.1 * np.max(self.ps1D[self.freqs <= self.high_cut])
+
+            ax.loglog(self.xvals, 10**y_fit, linestyle='-',
+                      label=label, linewidth=2, color=fit_color)
+
+            ax.loglog(self.xvals, self.ps1D, symbol, alpha=0.5,
+                      markersize=5, color=color)
 
             ax.set_xlabel(xlab)
             ax.set_ylabel(r"P$_2(K)$")
+
+            ax.set_ylim(top=vmax)
 
         # Show the fitting extents
         low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value

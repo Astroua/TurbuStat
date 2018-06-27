@@ -28,14 +28,14 @@ def test_DendroStat():
                         computed_data["dendrogram_val"])
 
     # Test loading and saving
-    tester.save_results(keep_data=False)
+    tester.save_results("dendrogram_stats_output.pkl", keep_data=False)
 
-    tester.load_results("dendrogram_stats_output.pkl")
+    saved_tester = Dendrogram_Stats.load_results("dendrogram_stats_output.pkl")
 
     # Remove the file
     os.remove("dendrogram_stats_output.pkl")
 
-    npt.assert_allclose(tester.numfeatures,
+    npt.assert_allclose(saved_tester.numfeatures,
                         computed_data["dendrogram_val"])
 
 

@@ -60,9 +60,20 @@ class VCS(BaseStatisticMixIn):
         self.freqs = \
             np.abs(fftfreq(self.data.shape[0])) / u.pix
 
-    def compute_pspec(self):
+    def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Take the FFT of each spectrum in the velocity dimension and average.
+
+        Parameters
+        ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
 
         if self._has_nan_flag:
@@ -72,9 +83,14 @@ class VCS(BaseStatisticMixIn):
             good_pixel_count = \
                 float(self.data.shape[1] * self.data.shape[2])
 
-        ps3D = np.power(rfft_to_fft(self.data), 2.)
-        self._ps1D = np.nansum(ps3D, axis=(1, 2)) /\
-            good_pixel_count
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        fft = rfft_to_fft(self.data, use_pyfftw=use_pyfftw,
+                          threads=threads,
+                          **pyfftw_kwargs)
+        ps3D = np.power(fft, 2.)
+        self._ps1D = np.nansum(ps3D, axis=(1, 2)) / good_pixel_count
 
     @property
     def ps1D(self):
@@ -225,6 +241,7 @@ class VCS(BaseStatisticMixIn):
         return self.fit.brk_err
 
     def run(self, verbose=False, save_name=None, xunit=u.pix**-1,
+            use_pyfftw=False, threads=1, pyfftw_kwargs={},
             **fit_kwargs):
         '''
         Run the entire computation.
@@ -237,10 +254,23 @@ class VCS(BaseStatisticMixIn):
             Save the figure when a file name is given.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis in the plot to.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         fit_kwargs : Passed to `~VCS.fit_pspec`.
-
         '''
-        self.compute_pspec()
+
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+        self.compute_pspec(use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
         self.fit_pspec(**fit_kwargs)
 
         if verbose:

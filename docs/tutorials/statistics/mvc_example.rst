@@ -1,4 +1,6 @@
 
+.. _mvc_tutorial:
+
 ***************************
 Modified Velocity Centroids
 ***************************
@@ -201,6 +203,10 @@ Constraints on the azimuthal angles used to compute the one-dimensional power-sp
 .. image:: images/mvc_design4_physunits_azimlimits.png
 
 The azimuthal limits now appear as contours on the two-dimensional power-spectrum in the figure. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for more information on giving azimuthal constraints.
+
+If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. This effect and the use of apodizing kernels to taper the data is covered :ref:`here <apodkerns>`.
+
+Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales.  To account for this, the 2D power spectrum can be divided by the beam response. This is demonstrated :ref:`here <correcting_for_beam>` for spatial power-spectra.
 
 References
 ----------
