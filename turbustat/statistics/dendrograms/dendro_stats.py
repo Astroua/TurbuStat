@@ -295,9 +295,66 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
+    def plot_fit(self, save_name=None, show_hists=True, color='r',
+                 fit_color=None):
+        '''
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        xunit : u.Unit, optional
+            The unit to show the x-axis in.
+        show_hists : bool, optional
+            Plot the histograms of intensity. Requires
+            `~Dendrogram_Stats.make_hists` to be run first.
+        color : {str, RGB tuple}, optional
+            Color to show the delta-variance curve in.
+        fit_color : {str, RGB tuple}, optional
+            Color of the fitted line. Defaults to `color` when no input is
+            given.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if not show_hists:
+            ax1 = plt.subplot(111)
+        else:
+            ax1 = plt.subplot(121)
+
+        if fit_color is None:
+            fit_color = color
+
+        ax1.plot(self.fitvals[0], self.fitvals[1], 'D', color=color)
+        ax1.plot(self.fitvals[0], self.model.fittedvalues, color=fit_color)
+        plt.xlabel(r"log $\delta$")
+        plt.ylabel(r"log Number of Features")
+
+        if show_hists:
+            ax2 = plt.subplot(122)
+
+            if not hasattr(self, "_hists"):
+                raise ValueError("Histograms were not computed with "
+                                 "Dendrogram_Stats.make_hists. Cannot plot.")
+
+            for bins, vals in self.hists:
+                if bins.size < 1:
+                    continue
+                bin_width = np.abs(bins[1] - bins[0])
+                ax2.bar(bins, vals, align="center",
+                        width=bin_width, alpha=0.25,
+                        color=color)
+                plt.xlabel("Data Value")
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, periodic_bounds=False, verbose=False, save_name=None,
             dendro_verbose=False, dendro_obj=None, save_results=False,
-            output_name=None, make_hists=True, **kwargs):
+            output_name=None, fit_kwargs={}, make_hists=True, hist_kwargs={}):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -323,46 +380,22 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         output_name : str, optional
             Filename used when `save_results` is enabled. Must be given when
             saving.
+        fit_kwargs : dict, optional
+            Passed to `~Dendro_Statistics.fit_numfeat`.
         make_hists : bool, optional
             Enable computing histograms.
-        kwargs : Passed to `~Dendro_Statistics.make_hists`.
+        hist_kwargs : dict, optional
+            Passed to `~Dendro_Statistics.make_hists`.
         '''
         self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj,
                             periodic_bounds=periodic_bounds)
-        self.fit_numfeat(verbose=verbose)
+        self.fit_numfeat(verbose=verbose, **fit_kwargs)
 
         if make_hists:
-            self.make_hists(**kwargs)
+            self.make_hists(**hist_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            if not make_hists:
-                ax1 = p.subplot(111)
-            else:
-                ax1 = p.subplot(121)
-
-            ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
-            ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
-            p.xlabel(r"log $\delta$")
-            p.ylabel(r"log Number of Features")
-
-            if make_hists:
-                ax2 = p.subplot(122)
-
-                for bins, vals in self.hists:
-                    if bins.size < 1:
-                        continue
-                    bin_width = np.abs(bins[1] - bins[0])
-                    ax2.bar(bins, vals, align="center",
-                            width=bin_width, alpha=0.25)
-                    p.xlabel("Data Value")
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, show_hists=make_hists)
 
         if save_results:
             self.save_results(output_name=output_name)
