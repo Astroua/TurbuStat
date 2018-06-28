@@ -385,6 +385,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                         color=color)
                 plt.xlabel("Data Value")
 
+        plt.tight_layout()
+
         if save_name is not None:
             plt.savefig(save_name)
             plt.close()
