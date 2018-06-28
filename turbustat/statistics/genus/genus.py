@@ -163,7 +163,6 @@ class Genus(BaseStatisticMixIn):
 
         self._smoothing_radii = values
 
-
     def make_smooth_arrays(self, **kwargs):
         '''
         Smooth data using a Gaussian kernel. NaN interpolation during
@@ -265,8 +264,47 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
+    def plot_fit(self, save_name=None, color='b'):
+        '''
+        Plot the Genus curves.
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        color : {str, RGB tuple}, optional
+            Color to show the Genus curves in.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        num = len(self.smoothing_radii)
+        num_cols = num / 2 if num % 2 == 0 else (num / 2) + 1
+
+        for i in range(1, num + 1):
+            if num == 1:
+                ax = plt.subplot(111)
+            else:
+                ax = plt.subplot(num_cols, 2, i)
+            # plt.title("Smooth Size: {0}".format(self.smoothing_radii[i - 1]))
+            ax.text(0.3, 0.1,
+                    "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
+                    transform=ax.transAxes, fontsize=12)
+            plt.plot(self.thresholds, self.genus_stats[i - 1], "D-",
+                     color=color)
+            plt.xlabel("Intensity")
+            plt.grid(True)
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, use_beam=False,
-            beam_area=None, min_size=4, **kwargs):
+            beam_area=None, min_size=4, color='b', **kwargs):
         '''
         Run the whole statistic.
 
@@ -291,27 +329,7 @@ class Genus(BaseStatisticMixIn):
         self.make_genus_curve(use_beam=use_beam, min_size=min_size)
 
         if verbose:
-            import matplotlib.pyplot as p
-            num = len(self.smoothing_radii)
-            num_cols = num / 2 if num % 2 == 0 else (num / 2) + 1
-            for i in range(1, num + 1):
-                if num == 1:
-                    p.subplot(111)
-                else:
-                    p.subplot(num_cols, 2, i)
-                p.title(
-                    "".join(["Smooth Size: ",
-                            str(self.smoothing_radii[i - 1])]))
-                p.plot(self.thresholds, self.genus_stats[i - 1], "bD")
-                p.xlabel("Intensity")
-                p.grid(True)
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, color=color)
 
         return self
 
