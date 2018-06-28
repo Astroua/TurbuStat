@@ -34,7 +34,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
     """
     Dendrogram statistics as described in Burkhart et al. (2013)
     Two statistics are contained:
-    * number of leaves + branches vs. $\delta$ parameter
+    * number of leaves & branches vs. :math:`\delta` parameter
     * statistical moments of the intensity histogram
 
     Parameters
@@ -42,18 +42,22 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
     data : %(dtypes)s
         Data to create the dendrogram from.
-    min_deltas : numpy.ndarray or list
-        Minimum deltas of leaves in the dendrogram.
+    min_deltas : {`~numpy.ndarray`, 'auto', None}, optional
+        Minimum deltas of leaves in the dendrogram. Multiple values must
+        be given in increasing order to correctly prune the dendrogram.
+        The default estimates delta levels from percentiles in the data.
     dendro_params : dict
         Further parameters for the dendrogram algorithm
         (see www.dendrograms.org for more info).
-
+    num_deltas : int, optional
+        Number of min_delta values to use when `min_delta='auto'`.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, data, header=None, min_deltas=None, dendro_params=None):
+    def __init__(self, data, header=None, min_deltas='auto',
+                 dendro_params=None, num_deltas=10):
         super(Dendrogram_Stats, self).__init__()
 
         if not astrodendro_flag:
@@ -69,7 +73,10 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         else:
             self.dendro_params = dendro_params
 
-        self.min_deltas = min_deltas
+        if min_deltas == 'auto':
+            self.autoset_min_deltas(num=num_deltas)
+        else:
+            self.min_deltas = min_deltas
 
     @property
     def min_deltas(self):
@@ -83,10 +90,38 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         # In the case where only one min_delta is given
         if "min_delta" in self.dendro_params and value is None:
             self._min_deltas = np.array([self.dendro_params["min_delta"]])
-        elif not isinstance(value, np.ndarray):
-            self._min_deltas = np.array([value])
         else:
-            self._min_deltas = value
+            # Multiple values given. Ensure they are in increasing order
+            if not (np.diff(value) > 0).all():
+                raise ValueError("Multiple values of min_delta must be given "
+                                 "in increasing order.")
+
+            if not isinstance(value, np.ndarray):
+                self._min_deltas = np.array([value])
+            else:
+                self._min_deltas = value
+
+    def autoset_min_deltas(self, num=10):
+        '''
+        Create an array delta values that the dendrogram will be pruned to.
+        Creates equally-spaced delta values between the minimum value set in
+        `~Dendrogram_Stats.dendro_params` and the maximum in the data. The last
+        delta (which would only occur at the peak in the data) is removed.
+
+        Parameters
+        ----------
+        num : int, optional
+            Number of delta values to create.
+        '''
+
+        min_val = self.dendro_params.get('min_value', -np.inf)
+
+        min_delta = self.dendro_params.get('min_delta', 1e-5)
+
+        # Calculate the ptp above the min_val
+        ptp = np.nanmax(self.data[self.data > min_val]) - min_val
+
+        self.min_deltas = np.linspace(min_delta, ptp, num + 1)[:-1]
 
     def compute_dendro(self, verbose=False, save_dendro=False,
                        dendro_name=None, dendro_obj=None,
@@ -217,9 +252,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
 
         if len(self.numfeatures) == 1:
-            warn("Multiple min_delta values must be provided to perform"
-                 " fitting. Only one value was given.")
-            return
+            raise ValueError("Multiple min_delta values must be provided to "
+                             "perform fitting. Only one value was given.")
 
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
