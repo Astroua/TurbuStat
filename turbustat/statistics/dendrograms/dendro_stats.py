@@ -262,6 +262,11 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         break_pos = std_window(nums, size=size)
         self.break_pos = deltas[break_pos]
 
+        # Still enough point to fit to?
+        if len(deltas[break_pos:]) < 2:
+            raise ValueError("Too few points to fit. Try running with more "
+                             "min_deltas or lowering the std. window size.")
+
         # Remove points where there is only 1 feature or less.
         self._fitvals = [np.log10(deltas[break_pos:]),
                          np.log10(nums[break_pos:])]
