@@ -79,6 +79,8 @@ class PDF(BaseStatisticMixIn):
         self._pdf = None
         self._ecdf = None
 
+        self._do_fit = False
+
     def make_pdf(self, bins=None):
         '''
         Create the PDF.
@@ -209,6 +211,8 @@ class PDF(BaseStatisticMixIn):
 
         self._fit_fixes = {"loc": [floc, loc], "scale": [fscale, scale]}
 
+        self._do_fit = True
+
         class Likelihood(GenericLikelihoodModel):
 
             # Get the number of parameters from shapes.
@@ -287,6 +291,8 @@ class PDF(BaseStatisticMixIn):
         init_params = np.array(init_params)
 
         self._model = Likelihood(self.data)
+
+        self._scipy_model = model
 
         if fit_type == 'mle':
             fitted_model = \
@@ -388,8 +394,115 @@ class PDF(BaseStatisticMixIn):
             ax.plot(self._mcmc_chain.flatchain[:, i], **kwargs)
             ax.set_ylabel("par{}".format(i + 1))
 
+    def plot_distrib(self, save_name=None, color='b', fit_color=None,
+                     show_ecdf=True):
+        '''
+        Plot the PDF distribution and (if fitted) the best fit model.
+        Optionally show the ECDF and fit ECDF, too.
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        color : {str, RGB tuple}, optional
+            Color to show the Genus curves in.
+        fit_color : {str, RGB tuple}, optional
+            Color of the fitted line. Defaults to `color` when no input is
+            given.
+        show_ecdf : bool, optional
+            Plot the ECDF when enabled.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if self.normalization_type == "standardize":
+            xlabel = r"z-score"
+        elif self.normalization_type == "center":
+            xlabel = r"$I - \bar{I}$"
+        elif self.normalization_type == "normalize_by_mean":
+            xlabel = r"$I/\bar{I}$"
+        else:
+            xlabel = r"Intensity"
+
+        if fit_color is None:
+            fit_color = color
+
+        # PDF
+        if show_ecdf:
+            plt.subplot(121)
+        else:
+            plt.subplot(111)
+
+        plt.semilogy(self.bins, self.pdf, '-', color=color, label='Data')
+
+        if self._do_fit:
+            # Plot the fitted model.
+            vals = np.linspace(self.bins[0], self.bins[-1], 1000)
+
+            # Check which of the parameters were kept fixed
+            if self._fit_fixes['loc'][0] and self._fit_fixes['scale'][0]:
+                loc = self._fit_fixes['loc'][1]
+                scale = self._fit_fixes['scale'][1]
+                params = self.model_params
+            elif self._fit_fixes['loc'][0]:
+                loc = self._fit_fixes['loc'][1]
+                scale = self.model_params[-1]
+                params = self.model_params[:-1]
+            elif self._fit_fixes['scale'][0]:
+                loc = self.model_params[-1]
+                scale = self._fit_fixes['scale'][1]
+                params = self.model_params[:-1]
+            else:
+                loc = self.model_params[-2]
+                scale = self.model_params[-1]
+                params = self.model_params[:-2]
+
+            plt.semilogy(vals,
+                         self._scipy_model.pdf(vals, *params,
+                                               scale=scale,
+                                               loc=loc),
+                         '--', color=fit_color, label='Fit')
+            plt.legend(loc='best')
+
+        plt.grid(True)
+        plt.xlabel(xlabel)
+        plt.ylabel("PDF")
+
+        # ECDF
+        if show_ecdf:
+            ax2 = plt.subplot(122)
+            ax2.yaxis.tick_right()
+            ax2.yaxis.set_label_position("right")
+            if self.normalization_type != "None":
+                ax2.plot(self.bins, self.ecdf, '-', color=color)
+                if self._do_fit:
+                    ax2.plot(vals,
+                             self._scipy_model.cdf(vals, *params,
+                                                   scale=scale,
+                                                   loc=loc),
+                             '--', color=fit_color)
+            else:
+                ax2.semilogx(self.bins, self.ecdf, '-', color=color)
+                if self._do_fit:
+                    ax2.semilogx(vals,
+                                 self._scipy_model.cdf(vals, *params,
+                                                       scale=scale,
+                                                       loc=0),
+                                 '--', color=fit_color)
+            plt.grid(True)
+            plt.xlabel(xlabel)
+            plt.ylabel("ECDF")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, bins=None, do_fit=True,
-            model=lognorm, **kwargs):
+            model=lognorm, color=None, **kwargs):
         '''
         Compute the PDF and ECDF. Enabling verbose provides
         a summary plot.
@@ -406,6 +519,8 @@ class PDF(BaseStatisticMixIn):
             Enables (by default) fitting a given model.
         model : scipy.stats distribution, optional
             Pass any scipy distribution. See `~PDF.fit_pdf`.
+        color : {str, RGB tuple}, optional
+            Color to show the Genus curves in when `verbose=True`.
         kwargs : Passed to `~PDF.fit_pdf`.
         '''
 
@@ -416,83 +531,8 @@ class PDF(BaseStatisticMixIn):
             self.fit_pdf(model=model, verbose=verbose, **kwargs)
 
         if verbose:
+            self.plot_distrib(save_name=save_name, color=color)
 
-            import matplotlib.pyplot as p
-
-            if self.normalization_type == "standardize":
-                xlabel = r"z-score"
-            elif self.normalization_type == "center":
-                xlabel = r"$I - \bar{I}$"
-            elif self.normalization_type == "normalize_by_mean":
-                xlabel = r"$I/\bar{I}$"
-            else:
-                xlabel = r"Intensity"
-
-            # PDF
-            p.subplot(121)
-            p.semilogy(self.bins, self.pdf, 'b-', label='Data')
-            if do_fit:
-                # Plot the fitted model.
-                vals = np.linspace(self.bins[0], self.bins[-1], 1000)
-
-                # Check which of the parameters were kept fixed
-                if self._fit_fixes['loc'][0] and self._fit_fixes['scale'][0]:
-                    loc = self._fit_fixes['loc'][1]
-                    scale = self._fit_fixes['scale'][1]
-                    params = self.model_params
-                elif self._fit_fixes['loc'][0]:
-                    loc = self._fit_fixes['loc'][1]
-                    scale = self.model_params[-1]
-                    params = self.model_params[:-1]
-                elif self._fit_fixes['scale'][0]:
-                    loc = self.model_params[-1]
-                    scale = self._fit_fixes['scale'][1]
-                    params = self.model_params[:-1]
-                else:
-                    loc = self.model_params[-2]
-                    scale = self.model_params[-1]
-                    params = self.model_params[:-2]
-
-                p.semilogy(vals,
-                           model.pdf(vals, *params,
-                                     scale=scale,
-                                     loc=loc), 'r--', label='Fit')
-                p.legend(loc='best')
-            # else:
-            #     p.loglog(self.bins, self.pdf, 'b-')
-            p.grid(True)
-            p.xlabel(xlabel)
-            p.ylabel("PDF")
-
-            # ECDF
-            ax2 = p.subplot(122)
-            ax2.yaxis.tick_right()
-            ax2.yaxis.set_label_position("right")
-            if self.normalization_type != "None":
-                ax2.plot(self.bins, self.ecdf, 'b-')
-                if do_fit:
-                    ax2.plot(vals,
-                             model.cdf(vals, *params,
-                                       scale=scale,
-                                       loc=loc), 'r--')
-            else:
-                ax2.semilogx(self.bins, self.ecdf, 'b-')
-                if do_fit:
-                    ax2.semilogx(vals,
-                                 model.cdf(vals, *params,
-                                           scale=scale,
-                                           loc=0), 'r--')
-            p.grid(True)
-            p.xlabel(xlabel)
-            p.ylabel("ECDF")
-
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
         return self
 
 
