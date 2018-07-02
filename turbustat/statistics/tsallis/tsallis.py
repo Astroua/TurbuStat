@@ -181,7 +181,10 @@ class Tsallis(BaseStatisticMixIn):
 
         for i, dist in enumerate(self.lag_distribs):
             if sigma_clip is None:
-                clipped = dist[0], dist[1]
+                # Keep all finite data
+                finite_mask = np.logical_and(np.isfinite(dist[0]),
+                                             np.isfinite(dist[1]))
+                clipped = dist[0][finite_mask], dist[1][finite_mask]
             else:
                 clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
 
