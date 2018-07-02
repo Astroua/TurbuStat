@@ -48,8 +48,8 @@ mvc_slope2D = mvc.slope2D
 
 # Spatial Power Spectrum/ Bispectrum
 
-from turbustat.statistics import (PSpec_Distance, BiSpectrum_Distance,
-                                  BiSpectrum, PowerSpectrum)
+from turbustat.statistics import (PSpec_Distance, Bispectrum_Distance,
+                                  Bispectrum, PowerSpectrum)
 
 pspec_distance = \
     PSpec_Distance(dataset1["moment0"],
@@ -63,7 +63,7 @@ pspec_slope = pspec.slope
 pspec_slope2D = pspec.slope2D
 
 bispec_distance = \
-    BiSpectrum_Distance(dataset1["moment0"],
+    Bispectrum_Distance(dataset1["moment0"],
                         dataset2["moment0"]).distance_metric()
 
 bispec_val = bispec_distance.bispec1.bicoherence
@@ -75,7 +75,7 @@ bispec_azim_bins = azimuthal_slice[16][0]
 bispec_azim_vals = azimuthal_slice[16][1]
 bispec_azim_stds = azimuthal_slice[16][2]
 
-bispec_meansub = BiSpectrum(dataset1['moment0'])
+bispec_meansub = Bispectrum(dataset1['moment0'])
 bispec_meansub.run(mean_subtract=True)
 
 bispec_val_meansub = bispec_meansub.bicoherence

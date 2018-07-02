@@ -18,7 +18,7 @@ from ...io import common_types, twod_types, input_data
 from ..psds import make_radial_arrays
 
 
-class BiSpectrum(BaseStatisticMixIn):
+class Bispectrum(BaseStatisticMixIn):
 
     """
     Computes the bispectrum (three-point correlation function) of the given
@@ -34,10 +34,10 @@ class BiSpectrum(BaseStatisticMixIn):
 
     Example
     -------
-    >>> from turbustat.statistics import BiSpectrum
+    >>> from turbustat.statistics import Bispectrum
     >>> from astropy.io import fits
     >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
-    >>> bispec = BiSpectrum(moment0) # doctest: +SKIP
+    >>> bispec = Bispectrum(moment0) # doctest: +SKIP
     >>> bispec.run(verbose=True, nsamples=1000) # doctest: +SKIP
 
     """
@@ -45,7 +45,6 @@ class BiSpectrum(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img):
-        super(BiSpectrum, self).__init__()
 
         self.need_header_flag = False
         self.header = None
@@ -470,7 +469,20 @@ class BiSpectrum(BaseStatisticMixIn):
         return self
 
 
-class BiSpectrum_Distance(object):
+def BiSpectrum(*args, **kwargs):
+    '''
+    Old name for the Bispectrum class.
+    '''
+
+    print("ASHAJ")
+
+    warn("Use the new 'Bispectrum' class. 'BiSpectrum' is deprecated and will"
+         " be removed in a future release.", Warning)
+
+    return Bispectrum(*args, **kwargs)
+
+
+class Bispectrum_Distance(object):
 
     '''
     Calculate the distance between two images based on their bicoherence.
@@ -491,15 +503,14 @@ class BiSpectrum_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
-        super(BiSpectrum_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
-            self.bispec1 = BiSpectrum(data1)
+            self.bispec1 = Bispectrum(data1)
             self.bispec1.run(nsamples=nsamples)
 
-        self.bispec2 = BiSpectrum(data2)
+        self.bispec2 = Bispectrum(data2)
         self.bispec2.run(nsamples=nsamples)
 
         self.distance = None
@@ -560,3 +571,15 @@ class BiSpectrum_Distance(object):
                 p.show()
 
         return self
+
+
+def BiSpectrum_Distance(*args, **kwargs):
+    '''
+    Old name for the Bispectrum class.
+    '''
+
+    warn("Use the new 'Bispectrum_Distance' class. 'BiSpectrum_Distance'"
+         " is deprecated and will be removed in a future release.",
+         Warning)
+
+    return Bispectrum_Distance(*args, **kwargs)
