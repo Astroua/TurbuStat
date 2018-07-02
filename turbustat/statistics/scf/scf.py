@@ -542,7 +542,22 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        show_radial : bool, optional
+            Show the azimuthally-averaged 1D SCF spectrum and fit.
+        show_surface : bool, optional
+            Show the SCF surface and (if performed) fit.
+        contour_color : {str, RGB tuple}, optional
+            Color of the 2D fit contours.
+        cmap : {str, matplotlib color map}, optional
+            Colormap to use in the plots. Default is viridis.
+        data_color : {str, RGB tuple}, optional
+            Color of the azimuthally-averaged data.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
         '''
 
         import matplotlib.pyplot as plt
@@ -672,7 +687,7 @@ class SCF(BaseStatisticMixIn):
             Enables plotting.
         xunit : `~astropy.units.Unit`, optional
             Choose the angular unit to convert to when ang_units is enabled.
-        save_name : str,optional
+        save_name : str, optional
             Save the figure when a file name is given.
         '''
 
