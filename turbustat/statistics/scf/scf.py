@@ -92,6 +92,8 @@ class SCF(BaseStatisticMixIn):
         self._scf_surface = None
         self._scf_spectrum_stddev = None
 
+        self._fit2D_flag = False
+
     @property
     def scf_surface(self):
         '''
@@ -487,6 +489,8 @@ class SCF(BaseStatisticMixIn):
         self._ellip2D_err = \
             inverse_interval_transform_stderr(stderrs[1], params[1], 0, 1)
 
+        self._fit2D_flag = True
+
     @property
     def slope2D(self):
         '''
@@ -528,6 +532,112 @@ class SCF(BaseStatisticMixIn):
         Ellipticity standard error of the 2D power-law.
         '''
         return self._ellip2D_err
+
+    def plot_fit(self, save_name=None, show_radial=True,
+                 show_surface=True, contour_color='k',
+                 cmap='viridis', data_color='k', fit_color=None,
+                 xunit=u.pix):
+        '''
+        Plot the SCF surface, radial profiles, and associated fits.
+
+        Parameters
+        ----------
+
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if show_surface:
+
+            plt.subplot(1, 2, 1)
+
+            plt.imshow(self.scf_surface, origin="lower",
+                       interpolation="nearest",
+                       cmap=cmap)
+            cb = plt.colorbar()
+            cb.set_label("SCF Value")
+
+            yy, xx = make_radial_arrays(self.scf_surface.shape)
+
+            pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
+            dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
+
+            xlow_pix = self._to_pixel(self.xlow).value
+            xhigh_pix = self._to_pixel(self.xhigh).value
+
+            mask = clip_func(dists, xlow_pix, xhigh_pix)
+
+            if not mask.all():
+                plt.contour(mask, colors='b', linestyles='-.', levels=[0.5])
+
+            if self._fit2D_flag:
+
+                plt.contour(self.fit2D(xx, yy)[::-1], colors=contour_color,
+                            linestyles='-')
+
+            if self._azim_constraint_flag:
+                if not np.all(self._azim_mask):
+                    plt.contour(self._azim_mask, colors='b', linestyles='-.',
+                                levels=[0.5])
+                else:
+                    warn("Azimuthal mask includes all data. No contours will "
+                         "be drawn.")
+
+            if show_radial:
+                plt.subplot(2, 2, 2)
+            else:
+                plt.subplot(1, 2, 2)
+
+            plt.hist(self.scf_surface.ravel(), bins='auto')
+            plt.xlabel("SCF Value")
+
+        if show_radial:
+            if show_surface:
+                ax = plt.subplot(2, 2, 4)
+            else:
+                ax = plt.subplot(1, 1, 1)
+
+            pix_lags = self._to_pixel(self.lags)
+            lags = self._spatial_unit_conversion(pix_lags, xunit).value
+
+            if self._stddev_flag:
+                ax.errorbar(lags, self.scf_spectrum,
+                            yerr=self.scf_spectrum_stddev,
+                            fmt='D', color=data_color,
+                            markersize=5, label="Data")
+                ax.set_xscale("log", nonposy='clip')
+                ax.set_yscale("log", nonposy='clip')
+            else:
+                plt.loglog(self.lags, self.scf_spectrum, 'D',
+                           markersize=5, label="Data",
+                           color=data_color)
+
+            ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
+            ax.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
+                        np.nanmax(self.scf_spectrum) * 1.25)
+
+            # Overlay the fit. Use points 5% lower than the min and max.
+            xvals = np.linspace(lags.min() * 0.95,
+                                lags.max() * 1.05, 50) * xunit
+            plt.loglog(xvals, self.fitted_model(xvals), '--', linewidth=2,
+                       label='Fit', color=fit_color)
+            # Show the fit limits
+            xlow = self._spatial_unit_conversion(self._xlow, xunit).value
+            xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
+            plt.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+            plt.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
+
+            plt.legend()
+
+            ax.set_xlabel("Lag ({})".format(xunit))
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
 
     def run(self, return_stddev=True, boundary='continuous',
             xlow=None, xhigh=None, save_results=False, output_name=None,
@@ -579,81 +689,8 @@ class SCF(BaseStatisticMixIn):
             self.save_results(output_name=output_name)
 
         if verbose:
-            import matplotlib.pyplot as plt
+            self.plot_fit(save_name=save_name, xunit=xunit)
 
-            plt.subplot(1, 2, 1)
-            plt.imshow(self.scf_surface, origin="lower",
-                       interpolation="nearest")
-            cb = plt.colorbar()
-            cb.set_label("SCF Value")
-
-            yy, xx = make_radial_arrays(self.scf_surface.shape)
-
-            pix_lag_diff = np.diff(self._to_pixel(self.lags))[0].value
-            dists = np.sqrt(yy**2 + xx**2) * pix_lag_diff
-
-            xlow_pix = self._to_pixel(self.xlow).value
-            xhigh_pix = self._to_pixel(self.xhigh).value
-
-            mask = clip_func(dists, xlow_pix, xhigh_pix)
-
-            if not mask.all():
-                plt.contour(mask, colors='b', linestyles='-.', levels=[0.5])
-
-            if fit_2D and hasattr(self, 'fit2D'):
-
-                plt.contour(self.fit2D(xx, yy)[::-1], cmap='viridis')
-
-            if self._azim_constraint_flag:
-                if not np.all(self._azim_mask):
-                    plt.contour(self._azim_mask, colors='b', linestyles='-.', levels=[0.5])
-                else:
-                    warn("Azimuthal mask includes all data. No contours will be drawn.")
-
-            plt.subplot(2, 2, 2)
-            plt.hist(self.scf_surface.ravel())
-            plt.xlabel("SCF Value")
-
-            ax = plt.subplot(2, 2, 4)
-            pix_lags = self._to_pixel(self.lags)
-            lags = self._spatial_unit_conversion(pix_lags, xunit).value
-
-            if self._stddev_flag:
-                ax.errorbar(lags, self.scf_spectrum,
-                            yerr=self.scf_spectrum_stddev,
-                            fmt='D', color='k', markersize=5, label="Data")
-                ax.set_xscale("log", nonposy='clip')
-                ax.set_yscale("log", nonposy='clip')
-            else:
-                plt.loglog(self.lags, self.scf_spectrum, 'kD',
-                           markersize=5, label="Data")
-
-            ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
-            ax.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
-                        np.nanmax(self.scf_spectrum) * 1.25)
-
-            # Overlay the fit. Use points 5% lower than the min and max.
-            xvals = np.linspace(lags.min() * 0.95,
-                                lags.max() * 1.05, 50) * xunit
-            plt.loglog(xvals, self.fitted_model(xvals), 'r--', linewidth=2,
-                       label='Fit')
-            # Show the fit limits
-            xlow = self._spatial_unit_conversion(self._xlow, xunit).value
-            xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
-            plt.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
-            plt.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
-
-            plt.legend()
-
-            ax.set_xlabel("Lag ({})".format(xunit))
-
-            plt.tight_layout()
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
         return self
 
 
