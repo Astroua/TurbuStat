@@ -165,7 +165,8 @@ class Tsallis(BaseStatisticMixIn):
         Parameters
         ----------
         sigma_clip : float
-            Sets the sigma value to clip data at.
+            Sets the sigma value to clip data at. If `None`,
+            no clipping is performed on the data. Defaults to 5.
         '''
 
         if not hasattr(self, 'lag_distribs'):
@@ -179,10 +180,15 @@ class Tsallis(BaseStatisticMixIn):
         self._tsallis_chisq = np.empty((len(self.lags), 1))
 
         for i, dist in enumerate(self.lag_distribs):
-            clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
+            if sigma_clip is None:
+                clipped = dist[0], dist[1]
+            else:
+                clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
+
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1],
                                      p0=(-np.max(clipped[1]), 1., 2.),
                                      maxfev=100 * len(dist[0]))
+
             fitted_vals = tsallis_function(clipped[0], *params)
             self._tsallis_params[i] = params
             self._tsallis_stderrs[i] = np.diag(pcov)
@@ -297,8 +303,12 @@ class Tsallis(BaseStatisticMixIn):
                     color=fit_color)
 
             # Indicate which data was used for the fits.
-            ax.axvline(self._sigma_clip, color='r', linestyle='--', alpha=0.7)
-            ax.axvline(-self._sigma_clip, color='r', linestyle='--', alpha=0.7)
+            # Only if sigma-clipping is applied.
+            if self._sigma_clip is not None:
+                ax.axvline(self._sigma_clip, color='r', linestyle='--',
+                           alpha=0.7)
+                ax.axvline(-self._sigma_clip, color='r', linestyle='--',
+                           alpha=0.7)
 
             ax.legend(frameon=True, loc='best')
 
