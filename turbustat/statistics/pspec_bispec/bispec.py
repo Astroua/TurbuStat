@@ -382,6 +382,56 @@ class BiSpectrum(BaseStatisticMixIn):
 
         return radial_slices
 
+    def plot_surface(self, save_name=None, show_bicoh=True,
+                     cmap='viridis', contour_color='k'):
+        '''
+        Plot the bispectrum amplitude and (optionally) the bicoherence.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        show_bicoh : bool, optional
+            Plot the bicoherence surface. Enabled by default.
+        cmap : {str, matplotlib color map}, optional
+            Colormap to use in the plots. Default is viridis.
+        contour_color : {str, RGB tuple}, optional
+            Color of the amplitude contours.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if show_bicoh:
+            plt.subplot(1, 2, 1)
+        else:
+            plt.subplot(1, 1, 1)
+        plt.imshow(self.bispectrum_logamp, origin="lower",
+                   interpolation="nearest", cmap=cmap)
+        cbar1 = plt.colorbar()
+        cbar1.set_label(r"log$_{10}$ Bispectrum Amplitude")
+        plt.contour(self.bispectrum_logamp,
+                    colors=contour_color)
+        plt.xlabel(r"$k_1$")
+        plt.ylabel(r"$k_2$")
+
+        if show_bicoh:
+            plt.subplot(1, 2, 2)
+            plt.imshow(self.bicoherence, origin="lower",
+                       interpolation="nearest",
+                       cmap=cmap)
+            cbar2 = plt.colorbar()
+            cbar2.set_label("Bicoherence")
+            plt.xlabel(r"$k_1$")
+            plt.ylabel(r"$k_2$")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, use_pyfftw=False, threads=1, nsamples=100, seed=1000,
             mean_subtract=False, verbose=False,
             save_name=None, **pyfftw_kwargs):
@@ -415,31 +465,7 @@ class BiSpectrum(BaseStatisticMixIn):
                                 seed=seed, **pyfftw_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            p.subplot(1, 2, 1)
-            p.title("Bispectrum")
-            p.imshow(self.bispectrum_logamp, origin="lower",
-                     interpolation="nearest")
-            p.colorbar()
-            p.contour(self.bispectrum_logamp, colors="k")
-            p.xlabel(r"$k_1$")
-            p.ylabel(r"$k_2$")
-
-            p.subplot(1, 2, 2)
-            p.title("Bicoherence")
-            p.imshow(self.bicoherence, origin="lower", interpolation="nearest")
-            p.colorbar()
-            p.xlabel(r"$k_1$")
-            p.ylabel(r"$k_2$")
-
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_surface(save_name=save_name)
 
         return self
 
