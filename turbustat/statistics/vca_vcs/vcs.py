@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
-from numpy.fft import fftfreq
+from numpy.fft import rfftfreq
 from astropy import units as u
 
 from ..lm_seg import Lm_Seg
@@ -58,7 +58,7 @@ class VCS(BaseStatisticMixIn):
         self.vel_channels = np.arange(1, self.data.shape[0], 1)
 
         self.freqs = \
-            np.abs(fftfreq(self.data.shape[0])) / u.pix
+            np.abs(rfftfreq(self.data.shape[0])) / u.pix
 
     def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
@@ -87,6 +87,7 @@ class VCS(BaseStatisticMixIn):
             pyfftw_kwargs.pop('threads')
 
         fft = rfft_to_fft(self.data, use_pyfftw=use_pyfftw,
+                          keep_rfft=True,
                           threads=threads,
                           **pyfftw_kwargs)
         ps3D = np.power(fft, 2.)
