@@ -314,7 +314,8 @@ class StatMoments(BaseStatisticMixIn):
         '''
         return self._kurtosis_hist
 
-    def plot_histograms(self, new_figure=True, save_name=None):
+    def plot_histograms(self, new_figure=True, save_name=None,
+                        hist_color='b', face_color='b'):
         '''
         Plot the histograms of each moment.
 
@@ -335,35 +336,90 @@ class StatMoments(BaseStatisticMixIn):
         if new_figure:
             plt.figure()
 
+        alpha = 0.5
+
         plt.subplot(221)
         plt.plot(self.mean_hist[0],
-                 self.mean_hist[1], 'b')
+                 self.mean_hist[1], color=hist_color)
         plt.fill_between(self.mean_hist[0], 0,
-                         self.mean_hist[1], facecolor='b', alpha=0.5)
+                         self.mean_hist[1], facecolor=face_color,
+                         alpha=alpha)
         plt.xlabel("Mean")
         plt.ylabel("PDF")
 
         plt.subplot(222)
         plt.plot(self.variance_hist[0],
-                 self.variance_hist[1], 'b')
+                 self.variance_hist[1], color=hist_color)
         plt.fill_between(self.variance_hist[0], 0,
-                         self.variance_hist[1], facecolor='b', alpha=0.5)
+                         self.variance_hist[1], facecolor=face_color,
+                         alpha=alpha)
         plt.xlabel("Variance")
 
         plt.subplot(223)
         plt.plot(self.skewness_hist[0],
-                 self.skewness_hist[1], 'b')
+                 self.skewness_hist[1], color=hist_color)
         plt.fill_between(self.skewness_hist[0], 0,
-                         self.skewness_hist[1], facecolor='b', alpha=0.5)
+                         self.skewness_hist[1], facecolor=face_color,
+                         alpha=alpha)
         plt.xlabel("Skewness")
         plt.ylabel("PDF")
 
         plt.subplot(224)
         plt.plot(self.kurtosis_hist[0],
-                 self.kurtosis_hist[1], 'b')
+                 self.kurtosis_hist[1], color=hist_color)
         plt.fill_between(self.kurtosis_hist[0], 0,
-                         self.kurtosis_hist[1], facecolor='b', alpha=0.5)
+                         self.kurtosis_hist[1], facecolor=face_color,
+                         alpha=alpha)
         plt.xlabel("Kurtosis")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
+    def plot_maps(self, save_name=None, cmap='binary',
+                  contour_cmap='viridis'):
+        '''
+        Plot the maps of locally-estimated moments.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        cmap : {str, matplotlib colormap}, optional
+            Colormap for the images.
+        contour_cmap : {str, matplotlib colormap}, optional
+            Colormap for the contours.
+        '''
+        import matplotlib.pyplot as plt
+
+        plt.subplot(221)
+        plt.imshow(self.mean_array, cmap=cmap,
+                   origin="lower", interpolation="nearest")
+        plt.title("Mean")
+        plt.colorbar()
+        plt.contour(self.data, cmap=contour_cmap)
+        plt.subplot(222)
+        plt.imshow(self.variance_array, cmap=cmap,
+                   origin="lower", interpolation="nearest")
+        plt.title("Variance")
+        plt.colorbar()
+        plt.contour(self.data, cmap=contour_cmap)
+        plt.subplot(223)
+        plt.imshow(self.skewness_array, cmap=cmap,
+                   origin="lower", interpolation="nearest")
+        plt.title("Skewness")
+        plt.colorbar()
+        plt.contour(self.data, cmap=contour_cmap)
+        plt.subplot(224)
+        plt.imshow(self.kurtosis_array, cmap=cmap,
+                   origin="lower", interpolation="nearest")
+        plt.title("Kurtosis")
+        plt.colorbar()
+        plt.contour(self.data, cmap=contour_cmap)
 
         plt.tight_layout()
 
@@ -400,40 +456,8 @@ class StatMoments(BaseStatisticMixIn):
         self.make_spatial_histograms(**hist_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as plt
+            self.plot_maps(save_name=save_name)
 
-            plt.subplot(221)
-            plt.imshow(self.mean_array, cmap="binary",
-                       origin="lower", interpolation="nearest")
-            plt.title("Mean")
-            plt.colorbar()
-            plt.contour(self.data, cmap='viridis')
-            plt.subplot(222)
-            plt.imshow(self.variance_array, cmap="binary",
-                       origin="lower", interpolation="nearest")
-            plt.title("Variance")
-            plt.colorbar()
-            plt.contour(self.data, cmap='viridis')
-            plt.subplot(223)
-            plt.imshow(self.skewness_array, cmap="binary",
-                       origin="lower", interpolation="nearest")
-            plt.title("Skewness")
-            plt.colorbar()
-            plt.contour(self.data, cmap='viridis')
-            plt.subplot(224)
-            plt.imshow(self.kurtosis_array, cmap="binary",
-                       origin="lower", interpolation="nearest")
-            plt.title("Kurtosis")
-            plt.colorbar()
-            plt.contour(self.data, cmap='viridis')
-
-            plt.tight_layout()
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
         return self
 
 
