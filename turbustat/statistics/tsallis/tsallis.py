@@ -475,5 +475,9 @@ def clip_to_sigma(x, y, sigma=2):
     '''
 
     clip_mask = np.logical_and(y < sigma, y > -sigma)
+    # And ensure all data is finite for fitting
+    finite_mask = np.logical_and(np.isfinite(y), np.isfinite(x))
 
-    return x[clip_mask], y[clip_mask]
+    all_mask = np.logical_and(clip_mask, finite_mask)
+
+    return x[all_mask], y[all_mask]
