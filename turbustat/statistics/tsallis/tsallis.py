@@ -191,7 +191,7 @@ class Tsallis(BaseStatisticMixIn):
 
             fitted_vals = tsallis_function(clipped[0], *params)
             self._tsallis_params[i] = params
-            self._tsallis_stderrs[i] = np.diag(pcov)
+            self._tsallis_stderrs[i] = np.sqrt(np.diag(pcov))
             self._tsallis_chisq[i] = chisquare(np.exp(fitted_vals),
                                                f_exp=np.exp(clipped[1]),
                                                ddof=3)[0]
