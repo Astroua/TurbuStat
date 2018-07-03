@@ -36,7 +36,7 @@ def test_PCA_method():
 
     npt.assert_allclose(tester.spatial_width().value,
                         computed_data['pca_spatial_widths'])
-    npt.assert_allclose(tester.spectral_width(unit=u.m / u.s).value,
+    npt.assert_allclose(tester.spectral_width(unit=u.pix).value,
                         computed_data['pca_spectral_widths'])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
@@ -45,8 +45,8 @@ def test_PCA_method():
     assert_between(fit_values["gamma"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
     assert_between(fit_values["intercept"],
-                   tester.intercept_error_range(unit=u.m / u.s)[0].value,
-                   tester.intercept_error_range(unit=u.m / u.s)[1].value)
+                   tester.intercept_error_range(unit=u.pix)[0].value,
+                   tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
@@ -64,7 +64,7 @@ def test_PCA_method():
 
     npt.assert_allclose(saved_tester.spatial_width().value,
                         computed_data['pca_spatial_widths'])
-    npt.assert_allclose(saved_tester.spectral_width(unit=u.m / u.s).value,
+    npt.assert_allclose(saved_tester.spectral_width(unit=u.pix).value,
                         computed_data['pca_spectral_widths'])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
@@ -73,8 +73,8 @@ def test_PCA_method():
     assert_between(fit_values["gamma"], saved_tester.gamma_error_range[0],
                    saved_tester.gamma_error_range[1])
     assert_between(fit_values["intercept"],
-                   saved_tester.intercept_error_range(unit=u.m / u.s)[0].value,
-                   saved_tester.intercept_error_range(unit=u.m / u.s)[1].value)
+                   saved_tester.intercept_error_range(unit=u.pix)[0].value,
+                   saved_tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
                    saved_tester.sonic_length()[1][0].value,
                    saved_tester.sonic_length()[1][1].value)
@@ -95,7 +95,7 @@ def test_PCA_method_w_bayes():
 
     npt.assert_allclose(tester.spatial_width().value,
                         computed_data['pca_spatial_widths'])
-    npt.assert_allclose(tester.spectral_width(unit=u.m / u.s).value,
+    npt.assert_allclose(tester.spectral_width(unit=u.pix).value,
                         computed_data['pca_spectral_widths'])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
@@ -104,8 +104,8 @@ def test_PCA_method_w_bayes():
     assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
     assert_between(fit_values["intercept_bayes"],
-                   tester.intercept_error_range(unit=u.m / u.s)[0].value,
-                   tester.intercept_error_range(unit=u.m / u.s)[1].value)
+                   tester.intercept_error_range(unit=u.pix)[0].value,
+                   tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length_bayes"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
