@@ -828,6 +828,7 @@ class PCA(BaseStatisticMixIn):
         ----------
         show_progress : bool, optional
             Show a progress bar during the creation of the covariance matrix.
+            Enabled by default.
         verbose : bool, optional
             Enables plotting of the results.
         save_name : str,optional
