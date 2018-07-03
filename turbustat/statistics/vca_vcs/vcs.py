@@ -241,6 +241,64 @@ class VCS(BaseStatisticMixIn):
         '''
         return self.fit.brk_err
 
+    def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
+                 fit_color=None):
+        '''
+        Plot the VCS curve and the associated fit.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        color : {str, RGB tuple}, optional
+            Color to plot the VCS curve.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        '''
+        import matplotlib.pyplot as plt
+
+        if fit_color is None:
+            fit_color = color
+
+        xlab = r"log $( k_v / $ (" + str(xunit**-1) + \
+            ")$^{-1})$"
+
+        shape = self.freqs.size
+        rfreqs = self.freqs[1:shape // 2]
+        ps1D = self.ps1D[1:shape // 2]
+
+        good_interval = clip_func(rfreqs.value, self.low_cut.value,
+                                  self.high_cut.value)
+
+        freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
+
+        y_fit = \
+            10**self.fit.model(np.log10(rfreqs.value[good_interval]))
+
+        # Points in dark red
+        plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
+                   color=color)
+        plt.loglog(freq[good_interval], y_fit, color=fit_color,
+                   label='Fit', linewidth=4)
+        plt.xlabel(xlab)
+        plt.ylabel(r"log P$_{1}$(k$_{v}$)")
+        plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
+                                                        xunit).value,
+                    linestyle="--", color='r', alpha=0.5)
+        plt.axvline(self._spectral_freq_unit_conversion(self.high_cut,
+                                                        xunit).value,
+                    linestyle="--", color='r', alpha=0.5)
+        plt.grid(True)
+        plt.legend(loc='best', frameon=True)
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, xunit=u.pix**-1,
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             **fit_kwargs):
@@ -279,44 +337,7 @@ class VCS(BaseStatisticMixIn):
             if not fit_kwargs.get("fit_verbose"):
                 print(self.fit.fit.summary())
 
-            import matplotlib.pyplot as plt
-
-            xlab = r"log $( k_v / $" + str(xunit**-1) + \
-                "$^{-1})$"
-
-            shape = self.freqs.size
-            rfreqs = self.freqs[1:shape // 2]
-            ps1D = self.ps1D[1:shape // 2]
-
-            good_interval = clip_func(rfreqs.value, self.low_cut.value,
-                                      self.high_cut.value)
-
-            freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
-
-            y_fit = \
-                10**self.fit.model(np.log10(rfreqs.value[good_interval]))
-
-            # Points in dark red
-            plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
-                       color='#8B0000')
-            plt.loglog(freq[good_interval], y_fit, 'r',
-                       label='Fit', linewidth=4)
-            plt.xlabel(xlab)
-            plt.ylabel(r"log P$_{1}$(k$_{v}$)")
-            plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
-                                                            xunit).value,
-                        linestyle="--", color='r', alpha=0.5)
-            plt.axvline(self._spectral_freq_unit_conversion(self.high_cut,
-                                                            xunit).value,
-                        linestyle="--", color='r', alpha=0.5)
-            plt.grid(True)
-            plt.legend(loc='best', frameon=True)
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_fit(save_name=save_name, xunit=xunit)
 
         return self
 
