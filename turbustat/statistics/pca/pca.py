@@ -65,6 +65,10 @@ class PCA(BaseStatisticMixIn):
         if distance is not None:
             self.distance = distance
 
+        # Try loading in the beam from the header
+
+
+
     @property
     def n_eigs(self):
         return self._n_eigs
@@ -859,6 +863,18 @@ class PCA(BaseStatisticMixIn):
             Defaults to pixels. The spectral unit *MUST* match the spectral
             unit defined in the data cube.
         '''
+
+        # Check if the beam can be loaded. Otherwise, turn off the beam
+        # correction before computing the covariance matrix
+        if beam_fwhm is None and brunt_beamcorrect:
+            try:
+                beam_fwhm = find_beam_width(self.header)
+            # Don't check for type. Otherwise I need to check if radio_beam
+            # is installed.
+            except Exception:
+                raise ValueError("Cannot load beam size from the header. "
+                                 "Please give the beam FWHM or set "
+                                 "`brunt_beamcorrect=False`.")
 
         self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
                          min_eigval=min_eigval,
