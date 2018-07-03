@@ -7,6 +7,8 @@ from astropy.wcs import WCS
 from astropy.extern.six import string_types
 import statsmodels.api as sm
 from warnings import warn
+from astropy.utils.console import ProgressBar
+from itertools import product
 
 from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
@@ -125,15 +127,18 @@ class SCF(BaseStatisticMixIn):
         '''
         return self._lags
 
-    def compute_surface(self, boundary='continuous'):
+    def compute_surface(self, boundary='continuous', show_progress=True):
         '''
-        Computes the SCF up to the given lag value.
+        Computes the SCF up to the given lag value. This is an
+        expensive operation and could take a long time to calculate.
 
         Parameters
         ----------
         boundary : {"continuous", "cut"}
             Treat the boundary as continuous (wrap-around) or cut values
             beyond the edge (i.e., for most observational data).
+        show_progress : bool, optional
+            Show a progress bar when computing the surface. =
         '''
 
         if boundary not in ["continuous", "cut"]:
@@ -147,61 +152,74 @@ class SCF(BaseStatisticMixIn):
         dx = pix_lags.copy()
         dy = pix_lags.copy()
 
-        for i, x_shift in enumerate(dx):
-            for j, y_shift in enumerate(dy):
+        if show_progress:
+            bar = ProgressBar(len(dx) * len(dy))
 
-                if x_shift == 0 and y_shift == 0:
-                    self._scf_surface[j, i] = 1.
+        for n, (x_shift, y_shift) in enumerate(product(dx, dy)):
 
-                if x_shift == 0:
-                    tmp = self.data
+            i, j = np.unravel_index(n, (len(dx), len(dy)))
+
+            if x_shift == 0 and y_shift == 0:
+                self._scf_surface[j, i] = 1.
+
+            if x_shift == 0:
+                tmp = self.data
+            else:
+                if float(x_shift).is_integer():
+                    shift_func = pixel_shift
                 else:
-                    if float(x_shift).is_integer():
-                        shift_func = pixel_shift
-                    else:
-                        shift_func = fourier_shift
-                    tmp = shift_func(self.data, x_shift, axis=1)
+                    shift_func = fourier_shift
+                tmp = shift_func(self.data, x_shift, axis=1)
 
-                if y_shift != 0:
-                    if float(y_shift).is_integer():
-                        shift_func = pixel_shift
-                    else:
-                        shift_func = fourier_shift
-                    tmp = shift_func(tmp, y_shift, axis=2)
+            if y_shift != 0:
+                if float(y_shift).is_integer():
+                    shift_func = pixel_shift
+                else:
+                    shift_func = fourier_shift
+                tmp = shift_func(tmp, y_shift, axis=2)
 
-                if boundary is "cut":
-                    # Always round up to the nearest integer.
-                    x_shift = np.ceil(x_shift).astype(int)
-                    y_shift = np.ceil(y_shift).astype(int)
-                    if x_shift < 0:
-                        x_slice_data = slice(None, tmp.shape[1] + x_shift)
-                        x_slice_tmp = slice(-x_shift, None)
-                    else:
-                        x_slice_data = slice(x_shift, None)
-                        x_slice_tmp = slice(None, tmp.shape[1] - x_shift)
+            if boundary is "cut":
+                # Always round up to the nearest integer.
+                x_shift = np.ceil(x_shift).astype(int)
+                y_shift = np.ceil(y_shift).astype(int)
+                if x_shift < 0:
+                    x_slice_data = slice(None, tmp.shape[1] + x_shift)
+                    x_slice_tmp = slice(-x_shift, None)
+                else:
+                    x_slice_data = slice(x_shift, None)
+                    x_slice_tmp = slice(None, tmp.shape[1] - x_shift)
 
-                    if y_shift < 0:
-                        y_slice_data = slice(None, tmp.shape[2] + y_shift)
-                        y_slice_tmp = slice(-y_shift, None)
-                    else:
-                        y_slice_data = slice(y_shift, None)
-                        y_slice_tmp = slice(None, tmp.shape[2] - y_shift)
+                if y_shift < 0:
+                    y_slice_data = slice(None, tmp.shape[2] + y_shift)
+                    y_slice_tmp = slice(-y_shift, None)
+                else:
+                    y_slice_data = slice(y_shift, None)
+                    y_slice_tmp = slice(None, tmp.shape[2] - y_shift)
 
-                    data_slice = (slice(None), x_slice_data, y_slice_data)
-                    tmp_slice = (slice(None), x_slice_tmp, y_slice_tmp)
-                elif boundary is "continuous":
-                    data_slice = (slice(None),) * 3
-                    tmp_slice = (slice(None),) * 3
+                data_slice = (slice(None), x_slice_data, y_slice_data)
+                tmp_slice = (slice(None), x_slice_tmp, y_slice_tmp)
+            elif boundary is "continuous":
+                data_slice = (slice(None),) * 3
+                tmp_slice = (slice(None),) * 3
 
-                values = \
-                    np.nansum(((self.data[data_slice] - tmp[tmp_slice]) ** 2),
-                              axis=0) / \
-                    (np.nansum(self.data[data_slice] ** 2, axis=0) +
-                     np.nansum(tmp[tmp_slice] ** 2, axis=0))
+            values = \
+                np.nansum(((self.data[data_slice] - tmp[tmp_slice]) ** 2),
+                          axis=0) / \
+                (np.nansum(self.data[data_slice] ** 2, axis=0) +
+                 np.nansum(tmp[tmp_slice] ** 2, axis=0))
 
-                scf_value = 1. - \
-                    np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
-                self._scf_surface[j, i] = scf_value
+            scf_value = 1. - \
+                np.sqrt(np.nansum(values) / np.sum(np.isfinite(values)))
+
+            if scf_value > 1:
+                raise ValueError("Cannot have a correlation above 1. Check "
+                                 "your input data. Contact the TurbuStat "
+                                 "authors if the problem persists.")
+
+            self._scf_surface[j, i] = scf_value
+
+            if show_progress:
+                bar.update(n + 1)
 
     def compute_spectrum(self, return_stddev=True,
                          **kwargs):
@@ -620,8 +638,8 @@ class SCF(BaseStatisticMixIn):
                             yerr=self.scf_spectrum_stddev,
                             fmt='D', color=data_color,
                             markersize=5, label="Data")
-                ax.set_xscale("log", nonposy='clip')
-                ax.set_yscale("log", nonposy='clip')
+                ax.set_xscale("log")  # , nonposy='clip')
+                ax.set_yscale("log")  # , nonposy='clip')
             else:
                 plt.loglog(self.lags, self.scf_spectrum, 'D',
                            markersize=5, label="Data",
@@ -655,7 +673,7 @@ class SCF(BaseStatisticMixIn):
             plt.show()
 
     def run(self, return_stddev=True, boundary='continuous',
-            xlow=None, xhigh=None, save_results=False, output_name=None,
+            show_progress=True, xlow=None, xhigh=None,
             fit_2D=True, fit_2D_kwargs={}, radialavg_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
@@ -668,14 +686,12 @@ class SCF(BaseStatisticMixIn):
         boundary : {"continuous", "cut"}
             Treat the boundary as continuous (wrap-around) or cut values
             beyond the edge (i.e., for most observational data).
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         xlow : `~astropy.Quantity`, optional
             See `~SCF.fit_plaw`.
         xhigh : `~astropy.Quantity`, optional
             See `~SCF.fit_plaw`.
-        save_results : bool, optional
-            Pickle the results.
-        output_name : str, optional
-            Name of the outputted pickle file.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D spectrum.
         fit_2D_kwargs : dict, optional
@@ -691,7 +707,7 @@ class SCF(BaseStatisticMixIn):
             Save the figure when a file name is given.
         '''
 
-        self.compute_surface(boundary=boundary)
+        self.compute_surface(boundary=boundary, show_progress=show_progress)
         self.compute_spectrum(return_stddev=return_stddev,
                               **radialavg_kwargs)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
@@ -699,9 +715,6 @@ class SCF(BaseStatisticMixIn):
         if fit_2D:
             self.fit_2Dplaw(xlow=xlow, xhigh=xhigh,
                             **fit_2D_kwargs)
-
-        if save_results:
-            self.save_results(output_name=output_name)
 
         if verbose:
             self.plot_fit(save_name=save_name, xunit=xunit)

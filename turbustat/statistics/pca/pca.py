@@ -65,6 +65,10 @@ class PCA(BaseStatisticMixIn):
         if distance is not None:
             self.distance = distance
 
+        # Try loading in the beam from the header
+
+
+
     @property
     def n_eigs(self):
         return self._n_eigs
@@ -77,7 +81,7 @@ class PCA(BaseStatisticMixIn):
         self._n_eigs = value
 
     def compute_pca(self, mean_sub=False, n_eigs='auto', min_eigval=None,
-                    eigen_cut_method='value'):
+                    eigen_cut_method='value', show_progress=True):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -105,7 +109,8 @@ class PCA(BaseStatisticMixIn):
             Set whether `min_eigval` is the proportion of variance determined
             up to the Nth eigenvalue (`proportion`) or the minimum value of
             variance (`value`).
-
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         '''
 
         # Define the decomposition-only flag, if not yet set. Will get
@@ -119,7 +124,8 @@ class PCA(BaseStatisticMixIn):
             raise ValueError("min_eigval must be given when using "
                              "n_eigs='auto'.")
 
-        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
+        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub,
+                                       progress_bar=show_progress)
 
         all_eigsvals, eigvecs = np.linalg.eigh(self.cov_matrix)
         all_eigsvals = np.real_if_close(all_eigsvals)
@@ -809,8 +815,8 @@ class PCA(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, save_name=None, mean_sub=False,
-            decomp_only=False, n_eigs='auto', min_eigval=None,
+    def run(self, show_progress=True, verbose=False, save_name=None,
+            mean_sub=False, decomp_only=False, n_eigs='auto', min_eigval=None,
             eigen_cut_method='value', spatial_method='contour',
             spectral_method='walk-down', fit_method='odr',
             beam_fwhm=None, brunt_beamcorrect=True,
@@ -820,6 +826,9 @@ class PCA(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
+            Enabled by default.
         verbose : bool, optional
             Enables plotting of the results.
         save_name : str,optional
@@ -856,9 +865,22 @@ class PCA(BaseStatisticMixIn):
             unit defined in the data cube.
         '''
 
+        # Check if the beam can be loaded. Otherwise, turn off the beam
+        # correction before computing the covariance matrix
+        if beam_fwhm is None and brunt_beamcorrect and not decomp_only:
+            try:
+                beam_fwhm = find_beam_width(self.header)
+            # Don't check for type. Otherwise I need to check if radio_beam
+            # is installed.
+            except Exception:
+                raise ValueError("Cannot load beam size from the header. "
+                                 "Please give the beam FWHM or set "
+                                 "`brunt_beamcorrect=False`.")
+
         self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
                          min_eigval=min_eigval,
-                         eigen_cut_method=eigen_cut_method)
+                         eigen_cut_method=eigen_cut_method,
+                         show_progress=show_progress)
 
         self._decomp_only = decomp_only
 
@@ -871,18 +893,21 @@ class PCA(BaseStatisticMixIn):
             self.fit_plaw(fit_method=fit_method)
 
         if verbose:
-            print('Proportion of Variance kept: %s' % (self.var_proportion))
-            print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.index, *self.index_error_range))
-            print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.gamma, *self.gamma_error_range))
 
-            # Compute sonic length assuming 10 K
-            T_k = 10. * u.K
-            sl, sl_range = self.sonic_length(T_k=T_k)
-            print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
-                  .format(sl.value, sl.unit.to_string(), T_k.value,
-                          T_k.unit.to_string(), *sl_range.value))
+            print('Proportion of Variance kept: %s' % (self.var_proportion))
+
+            if not decomp_only:
+                print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.index, *self.index_error_range))
+                print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.gamma, *self.gamma_error_range))
+
+                # Compute sonic length assuming 10 K
+                T_k = 10. * u.K
+                sl, sl_range = self.sonic_length(T_k=T_k)
+                print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
+                      .format(sl.value, sl.unit.to_string(), T_k.value,
+                              T_k.unit.to_string(), *sl_range.value))
 
             self.plot_fit(save_name=save_name, show_sl_fit=not decomp_only,
                           spatial_unit=spatial_output_unit,

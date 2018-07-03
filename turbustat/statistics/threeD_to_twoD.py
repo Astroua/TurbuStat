@@ -6,6 +6,7 @@ Routines for transforming data cubes to 2D representations
 '''
 
 import numpy as np
+from astropy.utils.console import ProgressBar
 
 
 def intensity_data(cube, p=0.2, noise_lim=-np.inf, norm=True):
@@ -104,7 +105,7 @@ def _format_data(cube, data_format='intensity', num_spec=1000,
     return data_matrix
 
 
-def var_cov_cube(cube, mean_sub=False):
+def var_cov_cube(cube, mean_sub=False, progress_bar=True):
     '''
     Compute the variance-covariance matrix of a data cube, with proper
     handling of NaNs.
@@ -115,6 +116,9 @@ def var_cov_cube(cube, mean_sub=False):
         PPV cube. Spectral dimension assumed to be 0th axis.
     mean_sub : bool, optional
         Subtract column means.
+    progress_bar : bool, optional
+        Show a progress bar, since this operation could be slow for large
+        cubes.
 
     Returns
     -------
@@ -126,23 +130,26 @@ def var_cov_cube(cube, mean_sub=False):
 
     cov_matrix = np.zeros((n_velchan, n_velchan))
 
+    if progress_bar:
+        bar = ProgressBar(n_velchan)
+
     for i, chan in enumerate(_iter_2D(cube)):
         norm_chan = chan
         if mean_sub:
             norm_chan -= np.nanmean(chan)
-        for j, chan2 in enumerate(_iter_2D(cube[:i+1, :, :])):
+        for j, chan2 in enumerate(_iter_2D(cube[:i + 1, :, :])):
             norm_chan2 = chan2
             if mean_sub:
                 norm_chan2 -= np.nanmean(chan2)
 
-            divisor = np.sum(np.isfinite(norm_chan*norm_chan2))
+            divisor = np.sum(np.isfinite(norm_chan * norm_chan2))
 
             # Apply Bessel's correction when mean subtracting
             if mean_sub:
                 divisor -= 1.0
 
             cov_matrix[i, j] = \
-                np.nansum(norm_chan*norm_chan2) / divisor
+                np.nansum(norm_chan * norm_chan2) / divisor
 
         # Variances
         # Divided in half to account for doubling in line below
@@ -151,7 +158,10 @@ def var_cov_cube(cube, mean_sub=False):
             var_divis -= 1.0
 
         cov_matrix[i, i] = 0.5 * \
-            np.nansum(norm_chan*norm_chan) / var_divis
+            np.nansum(norm_chan * norm_chan) / var_divis
+
+        if progress_bar:
+            bar.update(i + 1)
 
     cov_matrix = cov_matrix + cov_matrix.T
 
