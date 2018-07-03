@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #183 - Add progress bars for long operations. Addresses #180.
 * #182 - Separate out plotting functions that were implemented in the `run` functions of the statistics.
 * #181 - Add apodizing kernels and beam correction for spatial power-spectrum methods.
 * #177 - Add pyfftw as an optional dependency. Allow using pyfftw in all FFT-based statistics for multi-thread support.
