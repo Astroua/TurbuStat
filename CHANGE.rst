@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #182 - Separate out plotting functions that were implemented in the `run` functions of the statistics.
 * #181 - Add apodizing kernels and beam correction for spatial power-spectrum methods.
 * #177 - Add pyfftw as an optional dependency. Allow using pyfftw in all FFT-based statistics for multi-thread support.
 * #179 - Remove use of matplotlib._cntr (removed in their version 2.2) for PCA contours. Added scikit-image as a dependency to use their find_contours function.1
