@@ -165,25 +165,36 @@ class Tsallis(BaseStatisticMixIn):
         Parameters
         ----------
         sigma_clip : float
-            Sets the sigma value to clip data at.
+            Sets the sigma value to clip data at. If `None`,
+            no clipping is performed on the data. Defaults to 5.
         '''
 
         if not hasattr(self, 'lag_distribs'):
             raise Exception("Calculate the distributions first with "
                             "Tsallis.make_tsallis.")
 
+        self._sigma_clip = sigma_clip
+
         self._tsallis_params = np.empty((len(self.lags), 3))
         self._tsallis_stderrs = np.empty((len(self.lags), 3))
         self._tsallis_chisq = np.empty((len(self.lags), 1))
 
         for i, dist in enumerate(self.lag_distribs):
-            clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
+            if sigma_clip is None:
+                # Keep all finite data
+                finite_mask = np.logical_and(np.isfinite(dist[0]),
+                                             np.isfinite(dist[1]))
+                clipped = dist[0][finite_mask], dist[1][finite_mask]
+            else:
+                clipped = clip_to_sigma(dist[0], dist[1], sigma=sigma_clip)
+
             params, pcov = curve_fit(tsallis_function, clipped[0], clipped[1],
                                      p0=(-np.max(clipped[1]), 1., 2.),
                                      maxfev=100 * len(dist[0]))
+
             fitted_vals = tsallis_function(clipped[0], *params)
             self._tsallis_params[i] = params
-            self._tsallis_stderrs[i] = np.diag(pcov)
+            self._tsallis_stderrs[i] = np.sqrt(np.diag(pcov))
             self._tsallis_chisq[i] = chisquare(np.exp(fitted_vals),
                                                f_exp=np.exp(clipped[1]),
                                                ddof=3)[0]
@@ -224,14 +235,15 @@ class Tsallis(BaseStatisticMixIn):
 
         return Table(data, names=names)
 
-    def plot_parameters(self, save_name=None):
+    def plot_parameters(self, save_name=None, **kwargs):
         '''
         Plot the fit parameters as a function of lag.
 
         Parameters
         ----------
         save_name : str,optional
-            Save the figure when a file name is given.
+            Save name for the figure. Enables saving the plot.
+        kwargs : passed to `~matplotlib.pyplot.errorbar`.
         '''
 
         import matplotlib.pyplot as plt
@@ -239,21 +251,69 @@ class Tsallis(BaseStatisticMixIn):
 
         ax1 = axes[0]
         ax1.errorbar(self.lags.value, self.tsallis_table['logA'],
-                     yerr=self.tsallis_table['logA_stderr'])
+                     yerr=self.tsallis_table['logA_stderr'],
+                     **kwargs)
         ax1.set_ylabel(r"log A")
         ax1.grid()
 
         ax2 = axes[1]
         ax2.errorbar(self.lags.value, self.tsallis_table['w2'],
-                     yerr=self.tsallis_table['w2_stderr'])
+                     yerr=self.tsallis_table['w2_stderr'],
+                     **kwargs)
         ax2.set_ylabel(r"$w^2$")
         ax2.grid()
 
         ax3 = axes[2]
         ax3.errorbar(self.lags.value, self.tsallis_table['q'],
-                     yerr=self.tsallis_table['q_stderr'])
+                     yerr=self.tsallis_table['q_stderr'],
+                     **kwargs)
         ax3.set_ylabel(r"q")
         ax3.grid()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
+    def plot_fit(self, save_name=None, color='r',
+                 fit_color='k'):
+        '''
+        Plot the distributions and fits to the Tsallis function.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+
+        '''
+        import matplotlib.pyplot as plt
+
+        if fit_color is None:
+            fit_color = color
+
+        fig, axes = plt.subplots(len(self.lags), 1, sharex=True)
+
+        for vals in zip(self.lags, self.lag_distribs,
+                        self.lag_arrays, self.tsallis_params,
+                        axes):
+
+            lag, dist, arr, params, ax = vals
+
+            ax.plot(dist[0], dist[1], 'D', color=color,
+                    label="Lag {}".format(lag), alpha=0.5)
+            ax.plot(dist[0], tsallis_function(dist[0], *params),
+                    color=fit_color)
+
+            # Indicate which data was used for the fits.
+            # Only if sigma-clipping is applied.
+            if self._sigma_clip is not None:
+                ax.axvline(self._sigma_clip, color='r', linestyle='--',
+                           alpha=0.7)
+                ax.axvline(-self._sigma_clip, color='r', linestyle='--',
+                           alpha=0.7)
+
+            ax.legend(frameon=True, loc='best')
 
         if save_name is not None:
             plt.savefig(save_name)
@@ -287,34 +347,10 @@ class Tsallis(BaseStatisticMixIn):
         self.fit_tsallis(sigma_clip=sigma_clip)
 
         if verbose:
-            import matplotlib.pyplot as plt
-
             # print the table of parameters
             print(self.tsallis_table)
 
-            fig, axes = plt.subplots(len(self.lags), 1, sharex=True)
-
-            for vals in zip(self.lags, self.lag_distribs,
-                            self.lag_arrays, self.tsallis_params,
-                            axes):
-
-                lag, dist, arr, params, ax = vals
-
-                ax.plot(dist[0], dist[1], 'rD',
-                        label="Lag {}".format(lag), alpha=0.5)
-                ax.plot(dist[0], tsallis_function(dist[0], *params), "k")
-
-                # Indicate which data was used for the fits.
-                ax.axvline(sigma_clip, color='r', linestyle='--', alpha=0.7)
-                ax.axvline(-sigma_clip, color='r', linestyle='--', alpha=0.7)
-
-                ax.legend(frameon=True, loc='best')
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_fit(save_name=save_name)
 
         return self
 
@@ -439,5 +475,9 @@ def clip_to_sigma(x, y, sigma=2):
     '''
 
     clip_mask = np.logical_and(y < sigma, y > -sigma)
+    # And ensure all data is finite for fitting
+    finite_mask = np.logical_and(np.isfinite(y), np.isfinite(x))
 
-    return x[clip_mask], y[clip_mask]
+    all_mask = np.logical_and(clip_mask, finite_mask)
+
+    return x[all_mask], y[all_mask]

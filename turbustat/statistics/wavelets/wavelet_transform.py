@@ -334,18 +334,37 @@ class Wavelet(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_transform(self, xunit=u.pix, show=True,
-                       color='b', symbol='D', label=None):
+    def plot_transform(self, save_name=None, xunit=u.pix,
+                       color='b', symbol='D', fit_color=None,
+                       label=None):
         '''
         Plot the transform and the fit.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        color : {str, RGB tuple}, optional
+            Color to plot the wavelet curve.
+        symbol : str, optional
+            Symbol to use for the data.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        label : str, optional
+            Label to later be used in a legend.
         '''
 
         import matplotlib.pyplot as plt
 
+        if fit_color is None:
+            fit_color = color
+
         pix_scales = self._to_pixel(self.scales)
         scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        plt.loglog(scales, self.values, color + symbol)
+        plt.loglog(scales, self.values, symbol, color=color, label=label)
         # Plot the fit within the fitting range.
         low_lim = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
@@ -353,7 +372,8 @@ class Wavelet(BaseStatisticMixIn):
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
         plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
-                   color + '--', linewidth=8, label='Fit', alpha=0.75)
+                   '--', color=fit_color,
+                   linewidth=8, alpha=0.75)
 
         plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
         plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
@@ -363,7 +383,10 @@ class Wavelet(BaseStatisticMixIn):
 
         plt.grid()
 
-        if show:
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
             plt.show()
 
     def run(self, verbose=False, xunit=u.pix, use_pyfftw=False, threads=1,
@@ -413,15 +436,8 @@ class Wavelet(BaseStatisticMixIn):
 
             print(self.fit.summary())
 
-            import matplotlib.pyplot as plt
-
-            self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_transform(save_name=save_name, xunit=xunit,
+                                **plot_kwargs)
 
         return self
 
