@@ -9,6 +9,7 @@ from copy import copy
 import statsmodels.api as sm
 from astropy.extern.six import string_types
 from warnings import warn
+from astropy.utils.console import ProgressBar
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -48,7 +49,7 @@ class DeltaVariance(BaseStatisticMixIn):
     -------
     >>> from turbustat.statistics import DeltaVariance
     >>> from astropy.io import fits
-    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
+    >>> moment0 = fits.open("2D.fits") # doctest: +SKIP
     >>> delvar = DeltaVariance(moment0) # doctest: +SKIP
     >>> delvar.run(verbose=True) # doctest: +SKIP
     """
@@ -138,7 +139,8 @@ class DeltaVariance(BaseStatisticMixIn):
     def do_convolutions(self, allow_huge=False, boundary='wrap',
                         min_weight_frac=0.01, nan_interpolate=True,
                         use_pyfftw=False, threads=1,
-                        pyfftw_kwargs={}):
+                        pyfftw_kwargs={},
+                        show_progress=True):
         '''
         Perform the convolutions at all lags.
 
@@ -165,7 +167,12 @@ class DeltaVariance(BaseStatisticMixIn):
         pyfftw_kwargs : Passed to
             See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
             for a list of accepted kwargs.
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         '''
+
+        if show_progress:
+            bar = ProgressBar(len(self.lags))
 
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
@@ -225,6 +232,9 @@ class DeltaVariance(BaseStatisticMixIn):
             self.convolved_arrays.append((img_core / weights_core) -
                                          (img_annulus / weights_annulus))
             self.convolved_weights.append(weights_core * weights_annulus)
+
+            if show_progress:
+                bar.update(i + 1)
 
     def compute_deltavar(self):
         '''
@@ -497,8 +507,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, xunit=u.pix, nan_interpolate=True,
-            allow_huge=False, boundary='wrap',
+    def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            nan_interpolate=True, allow_huge=False, boundary='wrap',
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             xlow=None, xhigh=None,
             brk=None, fit_kwargs={},
@@ -508,6 +518,8 @@ class DeltaVariance(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Plot delta-variance transform.
         xunit : u.Unit, optional
@@ -544,7 +556,8 @@ class DeltaVariance(BaseStatisticMixIn):
                              nan_interpolate=nan_interpolate,
                              use_pyfftw=use_pyfftw,
                              threads=threads,
-                             pyfftw_kwargs=pyfftw_kwargs)
+                             pyfftw_kwargs=pyfftw_kwargs,
+                             show_progress=show_progress)
         self.compute_deltavar()
         self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose,
                       **fit_kwargs)

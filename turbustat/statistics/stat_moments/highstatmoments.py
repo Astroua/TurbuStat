@@ -4,6 +4,8 @@ from __future__ import print_function, absolute_import, division
 import numpy as np
 from astropy.wcs import WCS
 import astropy.units as u
+from astropy.utils.console import ProgressBar
+from itertools import product
 
 from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
                            common_scale, padwithnans)
@@ -98,7 +100,7 @@ class StatMoments(BaseStatisticMixIn):
             compute_moments(self.data, self.weights)
 
     def compute_spatial_distrib(self, radius=None, periodic=True,
-                                min_frac=0.8):
+                                min_frac=0.8, show_progress=True):
         '''
         Compute the moments over circular region with the specified radius.
 
@@ -112,6 +114,8 @@ class StatMoments(BaseStatisticMixIn):
             A number between 0 and 1 that sets the minimum fraction of data in
             each region that are finite. A value of 1.0 requires that no NaNs
             be in the region.
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         '''
 
         # Require the fraction to be > 0 and <=1
@@ -141,9 +145,15 @@ class StatMoments(BaseStatisticMixIn):
 
         circle_mask = circular_region(pix_rad)
 
+        if show_progress:
+            bar = ProgressBar((pad_img.shape[0] - 2 * pix_rad) *
+                              (pad_img.shape[1] - 2 * pix_rad))
+
         # Loop through every point within the non-padded shape.
-        for i in range(pix_rad, pad_img.shape[0] - pix_rad):
-            for j in range(pix_rad, pad_img.shape[1] - pix_rad):
+        prod = product(range(pix_rad, pad_img.shape[0] - pix_rad),
+                       range(pix_rad, pad_img.shape[1] - pix_rad))
+
+        for n, (i, j) in enumerate(prod):
                 img_slice = pad_img[i - pix_rad:i + pix_rad + 1,
                                     j - pix_rad:j + pix_rad + 1]
                 wgt_slice = pad_weights[i - pix_rad:i + pix_rad + 1,
@@ -170,6 +180,9 @@ class StatMoments(BaseStatisticMixIn):
                     self.variance_array[i - pix_rad, j - pix_rad] = moments[1]
                     self.skewness_array[i - pix_rad, j - pix_rad] = moments[2]
                     self.kurtosis_array[i - pix_rad, j - pix_rad] = moments[3]
+
+                if show_progress:
+                    bar.update(n + 1)
 
     @property
     def mean_array(self):
@@ -429,13 +442,15 @@ class StatMoments(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, save_name=None, radius=None, periodic=True,
-            min_frac=0.8, **hist_kwargs):
+    def run(self, show_progress=True, verbose=False, save_name=None,
+            radius=None, periodic=True, min_frac=0.8, **hist_kwargs):
         '''
         Compute the entire method.
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Enables plotting.
         save_name : str,optional
@@ -452,7 +467,8 @@ class StatMoments(BaseStatisticMixIn):
         '''
 
         self.array_moments()
-        self.compute_spatial_distrib(periodic=periodic, radius=radius)
+        self.compute_spatial_distrib(periodic=periodic, radius=radius,
+                                     show_progress=show_progress)
         self.make_spatial_histograms(**hist_kwargs)
 
         if verbose:

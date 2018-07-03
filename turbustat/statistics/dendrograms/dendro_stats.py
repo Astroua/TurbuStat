@@ -15,6 +15,7 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 import numpy as np
 from warnings import warn
 import statsmodels.api as sm
+from astropy.utils.console import ProgressBar
 
 try:
     from astrodendro import Dendrogram, periodic_neighbours
@@ -123,7 +124,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         self.min_deltas = np.linspace(min_delta, ptp, num + 1)[:-1]
 
-    def compute_dendro(self, verbose=False, save_dendro=False,
+    def compute_dendro(self, show_progress=False, save_dendro=False,
                        dendro_name=None, dendro_obj=None,
                        periodic_bounds=False):
         '''
@@ -132,7 +133,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         Parameters
         ----------
-        verbose : optional, bool
+        show_progress : optional, bool
             Enables the progress bar in astrodendro.
         save_dendro : optional, bool
             Saves the dendrogram in HDF5 format. **Requires pyHDF5**
@@ -161,7 +162,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             else:
                 neighbours = None
 
-            d = Dendrogram.compute(self.data, verbose=verbose,
+            d = Dendrogram.compute(self.data, verbose=show_progress,
                                    min_delta=self.min_deltas[0],
                                    min_value=self.dendro_params["min_value"],
                                    min_npix=self.dendro_params["min_npix"],
@@ -173,13 +174,20 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                                       d.all_structures]))
 
         if len(self.min_deltas) > 1:
+
+            # Another progress bar for pruning steps
+            if show_progress:
+                print("Pruning steps.")
+                bar = ProgressBar(len(self.min_deltas[1:]))
+
             for i, delta in enumerate(self.min_deltas[1:]):
-                if verbose:
-                    print("On %s of %s" % (i + 1, len(self.min_deltas[1:])))
                 d.prune(min_delta=delta)
                 self._numfeatures[i + 1] = len(d)
                 self._values.append(np.array([struct.vmax for struct in
                                               d.all_structures]))
+
+                if show_progress:
+                    bar.update(i + 1)
 
     @property
     def numfeatures(self):
@@ -394,7 +402,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             plt.show()
 
     def run(self, periodic_bounds=False, verbose=False, save_name=None,
-            dendro_verbose=False, dendro_obj=None, save_results=False,
+            show_progress=True, dendro_obj=None, save_results=False,
             output_name=None, fit_kwargs={}, make_hists=True, hist_kwargs={}):
         '''
 
@@ -410,8 +418,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable plotting of results.
         save_name : str,optional
             Save the figure when a file name is given.
-        dendro_verbose : optional, bool
-            Prints out updates while making the dendrogram.
+        show_progress : optional, bool
+            Enables progress bars while making the dendrogram.
         dendro_obj : Dendrogram, optional
             Pass a pre-computed dendrogram object. **MUST have min_delta set
             at or below the smallest value in`~Dendro_Statistics.min_deltas`.**
@@ -428,7 +436,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         hist_kwargs : dict, optional
             Passed to `~Dendro_Statistics.make_hists`.
         '''
-        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj,
+        self.compute_dendro(show_progress=show_progress, dendro_obj=dendro_obj,
                             periodic_bounds=periodic_bounds)
         self.fit_numfeat(verbose=verbose, **fit_kwargs)
 

@@ -6,6 +6,9 @@ import numpy.random as ra
 import astropy.units as u
 from scipy.stats import binned_statistic
 from warnings import warn
+from astropy.utils.console import ProgressBar
+from astropy.utils import NumpyRNGContext
+from itertools import product
 
 try:
     from pyfftw.interfaces.numpy_fft import fft2
@@ -55,14 +58,16 @@ class Bispectrum(BaseStatisticMixIn):
         # Set nans to min
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-    def compute_bispectrum(self, use_pyfftw=False, threads=1,
-                           nsamples=100, seed=1000, mean_subtract=False,
-                           **pyfftw_kwargs):
+    def compute_bispectrum(self, show_progress=True, use_pyfftw=False,
+                           threads=1, nsamples=100, seed=1000,
+                           mean_subtract=False, **pyfftw_kwargs):
         '''
         Do the computation.
 
         Parameters
         ----------
+        show_progress : optional, bool
+            Show progress bar while sampling the bispectrum.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -103,7 +108,6 @@ class Bispectrum(BaseStatisticMixIn):
             fftarr = np.fft.fft2(norm_data)
 
         conjfft = np.conj(fftarr)
-        ra.seed(seed)
 
         bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
 
@@ -113,8 +117,14 @@ class Bispectrum(BaseStatisticMixIn):
 
         biconorm = np.ones_like(self.bispectrum, dtype=float)
 
-        for k1mag in range(int(fftarr.shape[0] / 2.)):
-            for k2mag in range(int(fftarr.shape[1] / 2.)):
+        if show_progress:
+            bar = ProgressBar(np.prod(fftarr.shape) / 4.)
+
+        prod = product(range(int(fftarr.shape[0] / 2.)),
+                       range(int(fftarr.shape[1] / 2.)))
+
+        with NumpyRNGContext(seed):
+            for n, (k1mag, k2mag) in enumerate(prod):
                 phi1 = ra.uniform(0, 2 * np.pi, nsamples)
                 phi2 = ra.uniform(0, 2 * np.pi, nsamples)
 
@@ -144,6 +154,9 @@ class Bispectrum(BaseStatisticMixIn):
                 self._tracker[k1x, k1y] += 1
                 self._tracker[k2x, k2y] += 1
                 self._tracker[k3x, k3y] += 1
+
+                if show_progress:
+                    bar.update(n + 1)
 
         self._bicoherence = (np.abs(self.bispectrum) / biconorm)
         self._bispectrum_amp = np.log10(np.abs(self.bispectrum))
@@ -431,7 +444,8 @@ class Bispectrum(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, use_pyfftw=False, threads=1, nsamples=100, seed=1000,
+    def run(self, show_progress=True, use_pyfftw=False, threads=1,
+            nsamples=100, seed=1000,
             mean_subtract=False, verbose=False,
             save_name=None, **pyfftw_kwargs):
         '''
@@ -439,6 +453,8 @@ class Bispectrum(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : optional, bool
+            Show progress bar while sampling the bispectrum.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -459,8 +475,11 @@ class Bispectrum(BaseStatisticMixIn):
             for a list of accepted kwargs.
         '''
 
-        self.compute_bispectrum(use_pyfftw=use_pyfftw, threads=threads,
-                                nsamples=nsamples, mean_subtract=mean_subtract,
+        self.compute_bispectrum(show_progress=show_progress,
+                                use_pyfftw=use_pyfftw,
+                                threads=threads,
+                                nsamples=nsamples,
+                                mean_subtract=mean_subtract,
                                 seed=seed, **pyfftw_kwargs)
 
         if verbose:

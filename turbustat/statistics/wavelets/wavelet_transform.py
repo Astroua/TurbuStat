@@ -7,6 +7,7 @@ from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import astropy.units as u
 import statsmodels.api as sm
 from warnings import warn
+from astropy.utils.console import ProgressBar
 
 try:
     from pyfftw.interfaces.numpy_fft import fftn, ifftn
@@ -96,13 +97,15 @@ class Wavelet(BaseStatisticMixIn):
 
         self._scales = values
 
-    def compute_transform(self, scale_normalization=True, use_pyfftw=False,
-                          threads=1, pyfftw_kwargs={}):
+    def compute_transform(self, show_progress=True, scale_normalization=True,
+                          use_pyfftw=False, threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
@@ -141,6 +144,9 @@ class Wavelet(BaseStatisticMixIn):
 
         pix_scales = self._to_pixel(self.scales).value
 
+        if show_progress:
+            bar = ProgressBar(len(pix_scales))
+
         for i, an in enumerate(pix_scales):
             psi = MexicanHat2DKernel(an)
 
@@ -148,6 +154,9 @@ class Wavelet(BaseStatisticMixIn):
                 convolve_fft(self.data, psi, normalize_kernel=False,
                              fftn=use_fftn, ifftn=use_ifftn).real * \
                 an**factor
+
+            if show_progress:
+                bar.update(i + 1)
 
     @property
     def Wf(self):
@@ -389,7 +398,8 @@ class Wavelet(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, xunit=u.pix, use_pyfftw=False, threads=1,
+    def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, scale_normalization=True,
             xlow=None, xhigh=None, brk=None,
             save_name=None, **plot_kwargs):
@@ -398,6 +408,8 @@ class Wavelet(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Plot wavelet transform.
         xunit : u.Unit, optional
@@ -428,7 +440,8 @@ class Wavelet(BaseStatisticMixIn):
         '''
         self.compute_transform(scale_normalization=scale_normalization,
                                use_pyfftw=use_pyfftw, threads=threads,
-                               pyfftw_kwargs=pyfftw_kwargs)
+                               pyfftw_kwargs=pyfftw_kwargs,
+                               show_progress=show_progress)
         self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
 
