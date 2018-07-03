@@ -892,18 +892,21 @@ class PCA(BaseStatisticMixIn):
             self.fit_plaw(fit_method=fit_method)
 
         if verbose:
-            print('Proportion of Variance kept: %s' % (self.var_proportion))
-            print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.index, *self.index_error_range))
-            print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.gamma, *self.gamma_error_range))
 
-            # Compute sonic length assuming 10 K
-            T_k = 10. * u.K
-            sl, sl_range = self.sonic_length(T_k=T_k)
-            print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
-                  .format(sl.value, sl.unit.to_string(), T_k.value,
-                          T_k.unit.to_string(), *sl_range.value))
+            print('Proportion of Variance kept: %s' % (self.var_proportion))
+
+            if not decomp_only:
+                print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.index, *self.index_error_range))
+                print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.gamma, *self.gamma_error_range))
+
+                # Compute sonic length assuming 10 K
+                T_k = 10. * u.K
+                sl, sl_range = self.sonic_length(T_k=T_k)
+                print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
+                      .format(sl.value, sl.unit.to_string(), T_k.value,
+                              T_k.unit.to_string(), *sl_range.value))
 
             self.plot_fit(save_name=save_name, show_sl_fit=not decomp_only,
                           spatial_unit=spatial_output_unit,
