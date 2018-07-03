@@ -866,7 +866,7 @@ class PCA(BaseStatisticMixIn):
 
         # Check if the beam can be loaded. Otherwise, turn off the beam
         # correction before computing the covariance matrix
-        if beam_fwhm is None and brunt_beamcorrect:
+        if beam_fwhm is None and brunt_beamcorrect and not decomp_only:
             try:
                 beam_fwhm = find_beam_width(self.header)
             # Don't check for type. Otherwise I need to check if radio_beam
