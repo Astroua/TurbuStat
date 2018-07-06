@@ -67,6 +67,9 @@ def make_3dfield(imsize, powerlaw=2.0, amp=1.0,
             phases[0, 1:Np1, 0] = np.conj(phases[0, imsize:Np1 + 1:-1, 0])
             phases[-1, 1:Np1, -1] = np.conj(phases[-1, imsize:Np1 + 1:-1, -1])
 
+        # Rescale phases to an amplitude of unity
+        phases /= np.sqrt(np.sum(phases**2) / float(phases.size))
+
         powermap = amp * (rr**(-powerlaw / 2.)).astype('complex') * phases
 
     powermap[powermap != powermap] = 0
