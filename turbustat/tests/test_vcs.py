@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+import os
 
 try:
     import pyfftw
@@ -25,6 +26,18 @@ def test_VCS_method():
     npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
 
     npt.assert_allclose(tester.slope, computed_data['vcs_slopes'])
+
+    # Test loading and saving
+    tester.save_results("vcs_output.pkl", keep_data=False)
+
+    saved_tester = VCS.load_results("vcs_output.pkl")
+
+    # Remove the file
+    os.remove("vcs_output.pkl")
+
+    npt.assert_allclose(saved_tester.ps1D, computed_data['vcs_val'])
+
+    npt.assert_allclose(saved_tester.slope, computed_data['vcs_slopes'])
 
 
 def test_VCS_distance():

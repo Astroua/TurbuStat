@@ -5,6 +5,13 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 from warnings import warn
+import sys
+from copy import deepcopy
+
+if sys.version_info[0] >= 3:
+    import _pickle as pickle
+else:
+    import cPickle as pickle
 
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -36,7 +43,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, centroid, moment0, linewidth, header=None,
-                 distance=None):
+                 distance=None, beam=None):
 
         # data property not used here
         self.no_data_flag = True
@@ -76,6 +83,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        self.load_beam(beam=beam)
+
     @property
     def centroid(self):
         '''
@@ -97,7 +106,9 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         '''
         return self._linewidth
 
-    def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
+    def compute_pspec(self, beam_correct=False,
+                      apodize_kernel=None, alpha=0.3, beta=0.0,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
 
@@ -112,6 +123,17 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         Parameters
         ----------
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -123,31 +145,88 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         '''
 
+        if apodize_kernel is not None:
+            apod_kernel = self.apodizing_kernel(kernel_type=apodize_kernel,
+                                                alpha=alpha,
+                                                beta=beta)
+            term1_data = self.centroid * self.moment0 * apod_kernel
+            term2_data = self.linewidth**2 + self.centroid**2 * apod_kernel
+            mom0_data = self.moment0 * apod_kernel
+
+        else:
+            term1_data = self.centroid * self.moment0
+            term2_data = self.linewidth**2 + self.centroid**2
+            mom0_data = self.moment0
+
         if pyfftw_kwargs.get('threads') is not None:
             pyfftw_kwargs.pop('threads')
 
-        term1 = rfft_to_fft(self.centroid * self.moment0,
+        term1 = rfft_to_fft(term1_data,
                             use_pyfftw=use_pyfftw,
                             threads=threads,
                             **pyfftw_kwargs)
 
-        fft_mom0 = rfft_to_fft(self.moment0,
+        fft_mom0 = rfft_to_fft(mom0_data,
                                use_pyfftw=use_pyfftw,
                                threads=threads,
                                **pyfftw_kwargs)
 
         # Account for normalization in the line width.
-        term2 = np.nanmean(self.linewidth**2 + self.centroid**2)
+        term2 = np.nanmean(term2_data)
 
         mvc_fft = term1 - term2 * fft_mom0
 
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
+
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.centroid.shape[0],
+                                             x_size=self.centroid.shape[1])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._beam_pow = np.abs(beam_fft**2)
+
         self._ps2D = np.abs(mvc_fft) ** 2.
 
-    def run(self, verbose=False, use_pyfftw=False, threads=1,
-            pyfftw_kwargs={},
+        if beam_correct:
+            self._ps2D /= self._beam_pow
+
+    def save_results(self, output_name, keep_data=False):
+        '''
+        Save the results of the SCF to avoid re-computing.
+        The pickled file will not include the data cube by default.
+
+        Parameters
+        ----------
+        output_name : str
+            Name of the outputted pickle file.
+        keep_data : bool, optional
+            Save the data cube in the pickle file when enabled.
+        '''
+
+        if not output_name.endswith(".pkl"):
+            output_name += ".pkl"
+
+        self_copy = deepcopy(self)
+
+        # Don't keep the whole cube unless keep_data enabled.
+        if not keep_data:
+            self_copy._centroid = None
+            self_copy._moment0 = None
+            self_copy._linewidth = None
+
+        with open(output_name, 'wb') as output:
+                pickle.dump(self_copy, output, -1)
+
+    def run(self, verbose=False, beam_correct=False,
+            apodize_kernel=None, alpha=0.2, beta=0.0,
+            use_pyfftw=False, threads=1, pyfftw_kwargs={},
             return_stddev=True, radial_pspec_kwargs={},
             low_cut=None, high_cut=None,
             fit_2D=True, fit_kwargs={}, fit_2D_kwargs={},
@@ -195,7 +274,11 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         # Remove threads if in dict
         if pyfftw_kwargs.get('threads') is not None:
             pyfftw_kwargs.pop('threads')
-        self.compute_pspec(use_pyfftw=use_pyfftw, threads=threads,
+
+        self.compute_pspec(apodize_kernel=apodize_kernel,
+                           alpha=alpha, beta=beta,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
                            **pyfftw_kwargs)
 
         self.compute_radial_pspec(return_stddev=return_stddev,

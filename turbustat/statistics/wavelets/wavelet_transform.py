@@ -7,6 +7,7 @@ from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import astropy.units as u
 import statsmodels.api as sm
 from warnings import warn
+from astropy.utils.console import ProgressBar
 
 try:
     from pyfftw.interfaces.numpy_fft import fftn, ifftn
@@ -96,13 +97,15 @@ class Wavelet(BaseStatisticMixIn):
 
         self._scales = values
 
-    def compute_transform(self, scale_normalization=True, use_pyfftw=False,
-                          threads=1, pyfftw_kwargs={}):
+    def compute_transform(self, show_progress=True, scale_normalization=True,
+                          use_pyfftw=False, threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
@@ -141,6 +144,9 @@ class Wavelet(BaseStatisticMixIn):
 
         pix_scales = self._to_pixel(self.scales).value
 
+        if show_progress:
+            bar = ProgressBar(len(pix_scales))
+
         for i, an in enumerate(pix_scales):
             psi = MexicanHat2DKernel(an)
 
@@ -148,6 +154,9 @@ class Wavelet(BaseStatisticMixIn):
                 convolve_fft(self.data, psi, normalize_kernel=False,
                              fftn=use_fftn, ifftn=use_ifftn).real * \
                 an**factor
+
+            if show_progress:
+                bar.update(i + 1)
 
     @property
     def Wf(self):
@@ -334,18 +343,37 @@ class Wavelet(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_transform(self, xunit=u.pix, show=True,
-                       color='b', symbol='D', label=None):
+    def plot_transform(self, save_name=None, xunit=u.pix,
+                       color='b', symbol='D', fit_color=None,
+                       label=None):
         '''
         Plot the transform and the fit.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        color : {str, RGB tuple}, optional
+            Color to plot the wavelet curve.
+        symbol : str, optional
+            Symbol to use for the data.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        label : str, optional
+            Label to later be used in a legend.
         '''
 
         import matplotlib.pyplot as plt
 
+        if fit_color is None:
+            fit_color = color
+
         pix_scales = self._to_pixel(self.scales)
         scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        plt.loglog(scales, self.values, color + symbol)
+        plt.loglog(scales, self.values, symbol, color=color, label=label)
         # Plot the fit within the fitting range.
         low_lim = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
@@ -353,7 +381,8 @@ class Wavelet(BaseStatisticMixIn):
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
         plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
-                   color + '--', linewidth=8, label='Fit', alpha=0.75)
+                   '--', color=fit_color,
+                   linewidth=8, alpha=0.75)
 
         plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
         plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
@@ -363,10 +392,14 @@ class Wavelet(BaseStatisticMixIn):
 
         plt.grid()
 
-        if show:
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
             plt.show()
 
-    def run(self, verbose=False, xunit=u.pix, use_pyfftw=False, threads=1,
+    def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, scale_normalization=True,
             xlow=None, xhigh=None, brk=None,
             save_name=None, **plot_kwargs):
@@ -375,6 +408,8 @@ class Wavelet(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Plot wavelet transform.
         xunit : u.Unit, optional
@@ -405,7 +440,8 @@ class Wavelet(BaseStatisticMixIn):
         '''
         self.compute_transform(scale_normalization=scale_normalization,
                                use_pyfftw=use_pyfftw, threads=threads,
-                               pyfftw_kwargs=pyfftw_kwargs)
+                               pyfftw_kwargs=pyfftw_kwargs,
+                               show_progress=show_progress)
         self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
 
@@ -413,15 +449,8 @@ class Wavelet(BaseStatisticMixIn):
 
             print(self.fit.summary())
 
-            import matplotlib.pyplot as plt
-
-            self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_transform(save_name=save_name, xunit=xunit,
+                                **plot_kwargs)
 
         return self
 

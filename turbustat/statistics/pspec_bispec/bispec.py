@@ -6,6 +6,9 @@ import numpy.random as ra
 import astropy.units as u
 from scipy.stats import binned_statistic
 from warnings import warn
+from astropy.utils.console import ProgressBar
+from astropy.utils import NumpyRNGContext
+from itertools import product
 
 try:
     from pyfftw.interfaces.numpy_fft import fft2
@@ -18,7 +21,7 @@ from ...io import common_types, twod_types, input_data
 from ..psds import make_radial_arrays
 
 
-class BiSpectrum(BaseStatisticMixIn):
+class Bispectrum(BaseStatisticMixIn):
 
     """
     Computes the bispectrum (three-point correlation function) of the given
@@ -34,10 +37,10 @@ class BiSpectrum(BaseStatisticMixIn):
 
     Example
     -------
-    >>> from turbustat.statistics import BiSpectrum
+    >>> from turbustat.statistics import Bispectrum
     >>> from astropy.io import fits
     >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
-    >>> bispec = BiSpectrum(moment0) # doctest: +SKIP
+    >>> bispec = Bispectrum(moment0) # doctest: +SKIP
     >>> bispec.run(verbose=True, nsamples=1000) # doctest: +SKIP
 
     """
@@ -45,7 +48,6 @@ class BiSpectrum(BaseStatisticMixIn):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, img):
-        super(BiSpectrum, self).__init__()
 
         self.need_header_flag = False
         self.header = None
@@ -56,14 +58,16 @@ class BiSpectrum(BaseStatisticMixIn):
         # Set nans to min
         self.data[np.isnan(self.data)] = np.nanmin(self.data)
 
-    def compute_bispectrum(self, use_pyfftw=False, threads=1,
-                           nsamples=100, seed=1000, mean_subtract=False,
-                           **pyfftw_kwargs):
+    def compute_bispectrum(self, show_progress=True, use_pyfftw=False,
+                           threads=1, nsamples=100, seed=1000,
+                           mean_subtract=False, **pyfftw_kwargs):
         '''
         Do the computation.
 
         Parameters
         ----------
+        show_progress : optional, bool
+            Show progress bar while sampling the bispectrum.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -104,7 +108,6 @@ class BiSpectrum(BaseStatisticMixIn):
             fftarr = np.fft.fft2(norm_data)
 
         conjfft = np.conj(fftarr)
-        ra.seed(seed)
 
         bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
 
@@ -114,8 +117,14 @@ class BiSpectrum(BaseStatisticMixIn):
 
         biconorm = np.ones_like(self.bispectrum, dtype=float)
 
-        for k1mag in range(int(fftarr.shape[0] / 2.)):
-            for k2mag in range(int(fftarr.shape[1] / 2.)):
+        if show_progress:
+            bar = ProgressBar(np.prod(fftarr.shape) / 4.)
+
+        prod = product(range(int(fftarr.shape[0] / 2.)),
+                       range(int(fftarr.shape[1] / 2.)))
+
+        with NumpyRNGContext(seed):
+            for n, (k1mag, k2mag) in enumerate(prod):
                 phi1 = ra.uniform(0, 2 * np.pi, nsamples)
                 phi2 = ra.uniform(0, 2 * np.pi, nsamples)
 
@@ -145,6 +154,9 @@ class BiSpectrum(BaseStatisticMixIn):
                 self._tracker[k1x, k1y] += 1
                 self._tracker[k2x, k2y] += 1
                 self._tracker[k3x, k3y] += 1
+
+                if show_progress:
+                    bar.update(n + 1)
 
         self._bicoherence = (np.abs(self.bispectrum) / biconorm)
         self._bispectrum_amp = np.log10(np.abs(self.bispectrum))
@@ -382,7 +394,58 @@ class BiSpectrum(BaseStatisticMixIn):
 
         return radial_slices
 
-    def run(self, use_pyfftw=False, threads=1, nsamples=100, seed=1000,
+    def plot_surface(self, save_name=None, show_bicoh=True,
+                     cmap='viridis', contour_color='k'):
+        '''
+        Plot the bispectrum amplitude and (optionally) the bicoherence.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        show_bicoh : bool, optional
+            Plot the bicoherence surface. Enabled by default.
+        cmap : {str, matplotlib color map}, optional
+            Colormap to use in the plots. Default is viridis.
+        contour_color : {str, RGB tuple}, optional
+            Color of the amplitude contours.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if show_bicoh:
+            plt.subplot(1, 2, 1)
+        else:
+            plt.subplot(1, 1, 1)
+        plt.imshow(self.bispectrum_logamp, origin="lower",
+                   interpolation="nearest", cmap=cmap)
+        cbar1 = plt.colorbar()
+        cbar1.set_label(r"log$_{10}$ Bispectrum Amplitude")
+        plt.contour(self.bispectrum_logamp,
+                    colors=contour_color)
+        plt.xlabel(r"$k_1$")
+        plt.ylabel(r"$k_2$")
+
+        if show_bicoh:
+            plt.subplot(1, 2, 2)
+            plt.imshow(self.bicoherence, origin="lower",
+                       interpolation="nearest",
+                       cmap=cmap)
+            cbar2 = plt.colorbar()
+            cbar2.set_label("Bicoherence")
+            plt.xlabel(r"$k_1$")
+            plt.ylabel(r"$k_2$")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
+    def run(self, show_progress=True, use_pyfftw=False, threads=1,
+            nsamples=100, seed=1000,
             mean_subtract=False, verbose=False,
             save_name=None, **pyfftw_kwargs):
         '''
@@ -390,6 +453,8 @@ class BiSpectrum(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : optional, bool
+            Show progress bar while sampling the bispectrum.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -410,41 +475,33 @@ class BiSpectrum(BaseStatisticMixIn):
             for a list of accepted kwargs.
         '''
 
-        self.compute_bispectrum(use_pyfftw=use_pyfftw, threads=threads,
-                                nsamples=nsamples, mean_subtract=mean_subtract,
+        self.compute_bispectrum(show_progress=show_progress,
+                                use_pyfftw=use_pyfftw,
+                                threads=threads,
+                                nsamples=nsamples,
+                                mean_subtract=mean_subtract,
                                 seed=seed, **pyfftw_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            p.subplot(1, 2, 1)
-            p.title("Bispectrum")
-            p.imshow(self.bispectrum_logamp, origin="lower",
-                     interpolation="nearest")
-            p.colorbar()
-            p.contour(self.bispectrum_logamp, colors="k")
-            p.xlabel(r"$k_1$")
-            p.ylabel(r"$k_2$")
-
-            p.subplot(1, 2, 2)
-            p.title("Bicoherence")
-            p.imshow(self.bicoherence, origin="lower", interpolation="nearest")
-            p.colorbar()
-            p.xlabel(r"$k_1$")
-            p.ylabel(r"$k_2$")
-
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_surface(save_name=save_name)
 
         return self
 
 
-class BiSpectrum_Distance(object):
+def BiSpectrum(*args, **kwargs):
+    '''
+    Old name for the Bispectrum class.
+    '''
+
+    print("ASHAJ")
+
+    warn("Use the new 'Bispectrum' class. 'BiSpectrum' is deprecated and will"
+         " be removed in a future release.", Warning)
+
+    return Bispectrum(*args, **kwargs)
+
+
+class Bispectrum_Distance(object):
 
     '''
     Calculate the distance between two images based on their bicoherence.
@@ -465,15 +522,14 @@ class BiSpectrum_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
-        super(BiSpectrum_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
-            self.bispec1 = BiSpectrum(data1)
+            self.bispec1 = Bispectrum(data1)
             self.bispec1.run(nsamples=nsamples)
 
-        self.bispec2 = BiSpectrum(data2)
+        self.bispec2 = Bispectrum(data2)
         self.bispec2.run(nsamples=nsamples)
 
         self.distance = None
@@ -534,3 +590,15 @@ class BiSpectrum_Distance(object):
                 p.show()
 
         return self
+
+
+def BiSpectrum_Distance(*args, **kwargs):
+    '''
+    Old name for the Bispectrum class.
+    '''
+
+    warn("Use the new 'Bispectrum_Distance' class. 'BiSpectrum_Distance'"
+         " is deprecated and will be removed in a future release.",
+         Warning)
+
+    return Bispectrum_Distance(*args, **kwargs)

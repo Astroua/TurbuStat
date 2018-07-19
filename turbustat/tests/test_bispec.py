@@ -2,12 +2,14 @@
 from __future__ import print_function, absolute_import, division
 
 import pytest
+import warnings
 
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
 from scipy.stats import linregress
+import os
 
 try:
     import pyfftw
@@ -15,20 +17,32 @@ try:
 except ImportError:
     PYFFTW_INSTALLED = False
 
-from ..statistics import BiSpectrum, BiSpectrum_Distance
+from ..statistics import (Bispectrum, Bispectrum_Distance,
+                          BiSpectrum, BiSpectrum_Distance)
 from ._testing_data import dataset1,\
-    dataset2, computed_data, computed_distances, make_extended
+    dataset2, computed_data, computed_distances
+from .generate_test_images import make_extended
 
 
 def test_Bispec_method():
-    tester = BiSpectrum(dataset1["moment0"])
+    tester = Bispectrum(dataset1["moment0"])
     tester.run()
     assert np.allclose(tester.bicoherence,
                        computed_data['bispec_val'])
 
+    # Test the save and load
+    tester.save_results("bispec_output.pkl", keep_data=False)
+    saved_tester = Bispectrum.load_results("bispec_output.pkl")
+
+    # Remove the file
+    os.remove("bispec_output.pkl")
+
+    assert np.allclose(saved_tester.bicoherence,
+                       computed_data['bispec_val'])
+
 
 def test_Bispec_method_meansub():
-    tester = BiSpectrum(dataset1["moment0"])
+    tester = Bispectrum(dataset1["moment0"])
     tester.run(mean_subtract=True)
     assert np.allclose(tester.bicoherence,
                        computed_data['bispec_val_meansub'])
@@ -36,7 +50,7 @@ def test_Bispec_method_meansub():
 
 def test_Bispec_distance():
     tester_dist = \
-        BiSpectrum_Distance(dataset1["moment0"],
+        Bispectrum_Distance(dataset1["moment0"],
                             dataset2["moment0"])
     tester_dist.distance_metric()
 
@@ -46,7 +60,7 @@ def test_Bispec_distance():
 
 def test_bispec_azimuthal_slicing():
 
-    tester = BiSpectrum(dataset1["moment0"])
+    tester = Bispectrum(dataset1["moment0"])
     tester.run()
 
     azimuthal_slice = tester.azimuthal_slice(16, 10,
@@ -67,7 +81,7 @@ def test_bispec_radial_slicing(plaw):
 
     img = make_extended(256, powerlaw=plaw)
 
-    bispec = BiSpectrum(fits.PrimaryHDU(img))
+    bispec = Bispectrum(fits.PrimaryHDU(img))
     bispec.run(nsamples=100)
 
     # Extract a radial profile
@@ -79,7 +93,9 @@ def test_bispec_radial_slicing(plaw):
     rad_vals = rad_prof[45][1]
 
     # Remove empty bins and avoid the increased value at largest wavenumbers.
-    mask = np.isfinite(rad_vals) & (np.log10(rad_bins) < 2.)
+    mask = np.isfinite(rad_vals) & (rad_bins < 140.)
+    # Lack of power at small wavenumber?
+    mask = mask & (rad_bins > 3.)
 
     # Do a quick fit to get the slope and test against the expected value
     out = linregress(np.log10(rad_bins[mask]),
@@ -95,7 +111,31 @@ def test_bispec_radial_slicing(plaw):
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
 def test_Bispec_method_fftw():
-    tester = BiSpectrum(dataset1["moment0"])
+    tester = Bispectrum(dataset1["moment0"])
     tester.run(use_pyfftw=True, threads=1)
     assert np.allclose(tester.bicoherence,
                        computed_data['bispec_val'])
+
+
+def test_BiSpec_deprec():
+    '''
+    Check for deprecation warnings on old-named classes.
+    '''
+
+    with warnings.catch_warnings(record=True) as w:
+        bispec = BiSpectrum(dataset1['cube'])
+
+    assert len(w) == 1
+    assert w[0].category == Warning
+    assert str(w[0].message) == \
+        ("Use the new 'Bispectrum' class. 'BiSpectrum' is deprecated and will"
+         " be removed in a future release.")
+
+    with warnings.catch_warnings(record=True) as w:
+        bispec = BiSpectrum_Distance(dataset1['moment0'], dataset2['moment0'])
+
+    assert len(w) == 1
+    assert w[0].category == Warning
+    assert str(w[0].message) == \
+        ("Use the new 'Bispectrum_Distance' class. 'BiSpectrum_Distance' "
+         "is deprecated and will be removed in a future release.")

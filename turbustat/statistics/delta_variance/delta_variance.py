@@ -9,6 +9,7 @@ from copy import copy
 import statsmodels.api as sm
 from astropy.extern.six import string_types
 from warnings import warn
+from astropy.utils.console import ProgressBar
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -48,7 +49,7 @@ class DeltaVariance(BaseStatisticMixIn):
     -------
     >>> from turbustat.statistics import DeltaVariance
     >>> from astropy.io import fits
-    >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
+    >>> moment0 = fits.open("2D.fits") # doctest: +SKIP
     >>> delvar = DeltaVariance(moment0) # doctest: +SKIP
     >>> delvar.run(verbose=True) # doctest: +SKIP
     """
@@ -138,7 +139,8 @@ class DeltaVariance(BaseStatisticMixIn):
     def do_convolutions(self, allow_huge=False, boundary='wrap',
                         min_weight_frac=0.01, nan_interpolate=True,
                         use_pyfftw=False, threads=1,
-                        pyfftw_kwargs={}):
+                        pyfftw_kwargs={},
+                        show_progress=True):
         '''
         Perform the convolutions at all lags.
 
@@ -165,7 +167,12 @@ class DeltaVariance(BaseStatisticMixIn):
         pyfftw_kwargs : Passed to
             See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
             for a list of accepted kwargs.
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         '''
+
+        if show_progress:
+            bar = ProgressBar(len(self.lags))
 
         for i, lag in enumerate(self.lags.value):
             core = core_kernel(lag, self.data.shape[0], self.data.shape[1])
@@ -225,6 +232,9 @@ class DeltaVariance(BaseStatisticMixIn):
             self.convolved_arrays.append((img_core / weights_core) -
                                          (img_annulus / weights_annulus))
             self.convolved_weights.append(weights_core * weights_annulus)
+
+            if show_progress:
+                bar.update(i + 1)
 
     def compute_deltavar(self):
         '''
@@ -434,8 +444,71 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def run(self, verbose=False, xunit=u.pix, nan_interpolate=True,
-            allow_huge=False, boundary='wrap',
+    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None):
+        '''
+        Plot the delta-variance curve and the fit.
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        xunit : u.Unit, optional
+            The unit to show the x-axis in.
+        color : {str, RGB tuple}, optional
+            Color to show the delta-variance curve in.
+        fit_color : {str, RGB tuple}, optional
+            Color of the fitted line. Defaults to `color` when no input is
+            given.
+        '''
+
+        if fit_color is None:
+            fit_color = color
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.subplot(111)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+
+        lags = self._spatial_unit_conversion(self.lags, xunit).value
+
+        # Check for NaNs
+        fin_vals = np.logical_or(np.isfinite(self.delta_var),
+                                 np.isfinite(self.delta_var_error))
+        plt.errorbar(lags[fin_vals], self.delta_var[fin_vals],
+                     yerr=self.delta_var_error[fin_vals],
+                     fmt="D-", color=color, label="Data")
+
+        xvals = np.linspace(self._fit_range[0].value,
+                            self._fit_range[1].value,
+                            100) * self.lags.unit
+        xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
+
+        plt.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
+                 '--', color=fit_color, linewidth=2, label='Fit')
+
+        xlow = \
+            self._spatial_unit_conversion(self._fit_range[0], xunit).value
+        xhigh = \
+            self._spatial_unit_conversion(self._fit_range[1], xunit).value
+
+        plt.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
+        plt.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
+
+        plt.legend(loc='best')
+        ax.grid(True)
+
+        ax.set_xlabel("Lag ({})".format(xunit))
+        ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
+    def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            nan_interpolate=True, allow_huge=False, boundary='wrap',
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             xlow=None, xhigh=None,
             brk=None, fit_kwargs={},
@@ -445,6 +518,8 @@ class DeltaVariance(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Plot delta-variance transform.
         xunit : u.Unit, optional
@@ -481,52 +556,14 @@ class DeltaVariance(BaseStatisticMixIn):
                              nan_interpolate=nan_interpolate,
                              use_pyfftw=use_pyfftw,
                              threads=threads,
-                             pyfftw_kwargs=pyfftw_kwargs)
+                             pyfftw_kwargs=pyfftw_kwargs,
+                             show_progress=show_progress)
         self.compute_deltavar()
         self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose,
                       **fit_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
-            ax = p.subplot(111)
-            ax.set_xscale("log", nonposx="clip")
-            ax.set_yscale("log", nonposx="clip")
-
-            lags = self._spatial_unit_conversion(self.lags, xunit).value
-
-            # Check for NaNs
-            fin_vals = np.logical_or(np.isfinite(self.delta_var),
-                                     np.isfinite(self.delta_var_error))
-            p.errorbar(lags[fin_vals], self.delta_var[fin_vals],
-                       yerr=self.delta_var_error[fin_vals],
-                       fmt="bD-", label="Data")
-
-            xvals = np.linspace(self._fit_range[0].value,
-                                self._fit_range[1].value,
-                                100) * self.lags.unit
-            xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
-
-            p.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
-                   'r--', linewidth=2, label='Fit')
-
-            xlow = \
-                self._spatial_unit_conversion(self._fit_range[0], xunit).value
-            xhigh = \
-                self._spatial_unit_conversion(self._fit_range[1], xunit).value
-            p.axvline(xlow, color="r", alpha=0.5, linestyle='-.')
-            p.axvline(xhigh, color="r", alpha=0.5, linestyle='-.')
-
-            p.legend(loc='best')
-            ax.grid(True)
-
-            ax.set_xlabel("Lag ({})".format(xunit))
-            ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, xunit=xunit)
 
         return self
 

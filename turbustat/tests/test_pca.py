@@ -7,6 +7,7 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 import astropy.constants as const
+import os
 
 try:
     import emcee
@@ -17,8 +18,9 @@ except ImportError:
 from ..statistics import PCA, PCA_Distance
 from ..statistics.pca.width_estimate import WidthEstimate1D, WidthEstimate2D
 from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, generate_2D_array,
-                            generate_1D_array, assert_between)
+                            computed_distances)
+from .generate_test_images import generate_2D_array, generate_1D_array
+from .testing_utilities import assert_between
 
 
 def test_PCA_method():
@@ -27,15 +29,14 @@ def test_PCA_method():
                min_eigval=0.75,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='odr', brunt_beamcorrect=False,
-               spectral_output_unit=u.m / u.s)
+               fit_method='odr', brunt_beamcorrect=False)
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
 
-    npt.assert_allclose(tester.spatial_width.value,
+    npt.assert_allclose(tester.spatial_width().value,
                         computed_data['pca_spatial_widths'])
-    npt.assert_allclose(tester.spectral_width.value,
+    npt.assert_allclose(tester.spectral_width(unit=u.pix).value,
                         computed_data['pca_spectral_widths'])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
@@ -44,11 +45,39 @@ def test_PCA_method():
     assert_between(fit_values["gamma"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
     assert_between(fit_values["intercept"],
-                   tester.intercept_error_range[0].value,
-                   tester.intercept_error_range[1].value)
+                   tester.intercept_error_range(unit=u.pix)[0].value,
+                   tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
+
+    # Test loading and saving
+    tester.save_results("pca_output.pkl", keep_data=False)
+
+    saved_tester = PCA.load_results("pca_output.pkl")
+
+    # Remove the file
+    os.remove("pca_output.pkl")
+
+    npt.assert_allclose(saved_tester.eigvals[slice_used],
+                        computed_data['pca_val'][slice_used])
+
+    npt.assert_allclose(saved_tester.spatial_width().value,
+                        computed_data['pca_spatial_widths'])
+    npt.assert_allclose(saved_tester.spectral_width(unit=u.pix).value,
+                        computed_data['pca_spectral_widths'])
+
+    fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
+    assert_between(fit_values["index"], saved_tester.index_error_range[0],
+                   saved_tester.index_error_range[1])
+    assert_between(fit_values["gamma"], saved_tester.gamma_error_range[0],
+                   saved_tester.gamma_error_range[1])
+    assert_between(fit_values["intercept"],
+                   saved_tester.intercept_error_range(unit=u.pix)[0].value,
+                   saved_tester.intercept_error_range(unit=u.pix)[1].value)
+    assert_between(fit_values["sonic_length"],
+                   saved_tester.sonic_length()[1][0].value,
+                   saved_tester.sonic_length()[1][1].value)
 
 
 @pytest.mark.skipif("not EMCEE_INSTALLED")
@@ -64,9 +93,9 @@ def test_PCA_method_w_bayes():
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
 
-    npt.assert_allclose(tester.spatial_width.value,
+    npt.assert_allclose(tester.spatial_width().value,
                         computed_data['pca_spatial_widths'])
-    npt.assert_allclose(tester.spectral_width.value,
+    npt.assert_allclose(tester.spectral_width(unit=u.pix).value,
                         computed_data['pca_spectral_widths'])
 
     fit_values = computed_data["pca_fit_vals"].reshape(-1)[0]
@@ -75,8 +104,8 @@ def test_PCA_method_w_bayes():
     assert_between(fit_values["gamma_bayes"], tester.gamma_error_range[0],
                    tester.gamma_error_range[1])
     assert_between(fit_values["intercept_bayes"],
-                   tester.intercept_error_range[0].value,
-                   tester.intercept_error_range[1].value)
+                   tester.intercept_error_range(unit=u.pix)[0].value,
+                   tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length_bayes"],
                    tester.sonic_length()[1][0].value,
                    tester.sonic_length()[1][1].value)
@@ -93,8 +122,8 @@ def test_PCA_fitting(method):
     err = 0.02
 
     tester._spectral_width = (intercept * np.arange(10)**index +
-                              err * np.random.random(10)) * u.m / u.s
-    tester._spectral_width_error = np.array([err] * 10) * u.m / u.s
+                              err * np.random.random(10)) * u.pix
+    tester._spectral_width_error = np.array([err] * 10) * u.pix
     tester._spatial_width = (np.arange(10) + err * np.random.random(10)) * \
         u.pix
     tester._spatial_width_error = np.array([err] * 10) * u.pix
@@ -102,17 +131,18 @@ def test_PCA_fitting(method):
     tester.fit_plaw(fit_method=method)
 
     npt.assert_allclose(tester.index, index, atol=0.05)
-    npt.assert_allclose(tester.intercept.value, 1, atol=0.05)
+    npt.assert_allclose(tester.intercept(unit=u.pix).value, 1, atol=0.05)
     npt.assert_allclose(tester.gamma, (index - 0.03) / 1.07, atol=0.05)
 
     # Check the sonic length
     T_k = 10 * u.K
     mu = 1.36
     c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
-    c_s = c_s.to(u.m / u.s)
+    # Convert into number of spectral channel widths
+    c_s = c_s.to(u.m / u.s).value / np.abs(tester.header['CDELT3'])
     l_s = np.power(c_s / 1., 1. / index)
 
-    npt.assert_allclose(l_s.value,
+    npt.assert_allclose(l_s,
                         tester.sonic_length(use_gamma=False)[0].value,
                         atol=0.05)
 

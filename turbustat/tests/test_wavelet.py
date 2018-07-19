@@ -6,6 +6,8 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import astropy.units as u
+import os
+from astropy.io import fits
 
 try:
     import pyfftw
@@ -16,6 +18,7 @@ except ImportError:
 from ..statistics import Wavelet, Wavelet_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
+from .generate_test_images import make_extended
 
 
 def test_Wavelet_method():
@@ -24,6 +27,18 @@ def test_Wavelet_method():
     npt.assert_almost_equal(tester.values, computed_data['wavelet_val'])
 
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])
+
+    # Test loading and saving
+    tester.save_results("wave_output.pkl", keep_data=False)
+
+    saved_tester = Wavelet.load_results("wave_output.pkl")
+
+    # Remove the file
+    os.remove("wave_output.pkl")
+
+    npt.assert_almost_equal(saved_tester.values, computed_data['wavelet_val'])
+
+    npt.assert_almost_equal(saved_tester.slope, computed_data['wavelet_slope'])
 
 
 def test_Wavelet_method_withbreak():
@@ -113,3 +128,33 @@ def test_Wavelet_method_fftw():
     npt.assert_almost_equal(tester.values, computed_data['wavelet_val'])
 
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])
+
+
+@pytest.mark.parametrize(('plaw', 'ellip'),
+                         [(plaw, ellip) for plaw in [2, 3, 4]
+                          for ellip in [0.2, 0.75, 1.0]])
+def test_wavelet_plaw_img(plaw, ellip):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 256
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_psd=False)
+
+    test = Wavelet(fits.PrimaryHDU(img))
+    # The turn-over occurs near ~1/16 of the axis size.
+    test.run(xhigh=imsize / 16. * u.pix)
+
+    # Ensure slopes are consistent to within 2%
+    # Relation to the power law slope is (plaw - 2) / 2.
+
+    # Use an abs difference for cases where plaw - 2. = 0.
+    # Wavelets gives some scatter on scales smaller than 16 pix. Allow a
+    # reasonable range for the slope.
+    npt.assert_allclose(0.5 * (plaw - 2.), test.slope, atol=0.1)

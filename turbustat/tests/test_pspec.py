@@ -6,6 +6,8 @@ import numpy as np
 import numpy.testing as npt
 import astropy.units as u
 from astropy.io import fits
+from astropy.convolution import convolve_fft
+import os
 
 try:
     import pyfftw
@@ -13,9 +15,16 @@ try:
 except ImportError:
     PYFFTW_INSTALLED = False
 
+try:
+    from radio_beam.beam import Beam
+    RADIO_BEAM_INSTALLED = True
+except ImportError:
+    RADIO_BEAM_INSTALLED = False
+
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
-                            computed_distances, make_extended, assert_between)
+                            computed_distances)
+from .generate_test_images import make_extended
 
 
 def test_PSpec_method():
@@ -25,6 +34,18 @@ def test_PSpec_method():
     npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
     npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
     npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])
+
+    # Test loading and saving
+    tester.save_results("pspec_output.pkl", keep_data=False)
+
+    saved_tester = PowerSpectrum.load_results("pspec_output.pkl")
+
+    # Remove the file
+    os.remove("pspec_output.pkl")
+
+    npt.assert_allclose(saved_tester.ps1D, computed_data['pspec_val'])
+    npt.assert_allclose(saved_tester.slope, computed_data['pspec_slope'])
+    npt.assert_allclose(saved_tester.slope2D, computed_data['pspec_slope2D'])
 
 
 def test_Pspec_method_fitlimits():
@@ -109,10 +130,10 @@ def test_pspec_azimlimits(plaw, ellip):
               fit_kwargs={'weighted_fit': True},
               fit_2D=False)
 
-    # Ensure slopes are consistent to within 7%
-    assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
-    assert_between(test2.slope, - 1.07 * plaw, - 0.93 * plaw)
-    assert_between(test.slope, - 1.07 * plaw, - 0.93 * plaw)
+    # Ensure slopes are consistent to within 2%
+    npt.assert_allclose(-plaw, test3.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test2.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
 @pytest.mark.parametrize('theta',
@@ -142,6 +163,8 @@ def test_pspec_fit2D(theta):
         npt.assert_allclose(theta, test.theta2D - np.pi,
                             atol=0.08)
 
+    npt.assert_allclose(-plaw, test.slope2D, rtol=0.02)
+
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
 def test_PSpec_method_fftw():
@@ -151,3 +174,80 @@ def test_PSpec_method_fftw():
     npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
     npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
     npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])
+
+
+@pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
+def test_PSpec_beamcorrect():
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    beam = Beam(30 * u.arcsec)
+
+    plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                          theta=theta,
+                          return_psd=False)
+    plane = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
+                         boundary='wrap')
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(plane)
+
+    hdu.header['CDELT1'] = (10 * u.arcsec).to(u.deg).value
+    hdu.header['CDELT2'] = - (10 * u.arcsec).to(u.deg).value
+    hdu.header['BMAJ'] = beam.major.to(u.deg).value
+    hdu.header['BMIN'] = beam.major.to(u.deg).value
+    hdu.header['BPA'] = 0.0
+    hdu.header['CRPIX1'] = imsize / 2.,
+    hdu.header['CRPIX2'] = imsize / 2.,
+    hdu.header['CRVAL1'] = 0.0,
+    hdu.header['CRVAL2'] = 0.0,
+    hdu.header['CTYPE1'] = 'GLON-CAR',
+    hdu.header['CTYPE2'] = 'GLAT-CAR',
+    hdu.header['CUNIT1'] = 'deg',
+    hdu.header['CUNIT2'] = 'deg',
+
+    hdu.header.update(beam.to_header_keywords())
+
+    test = PowerSpectrum(hdu)
+    test.run(beam_correct=True,
+             low_cut=10**-1.5 / u.pix,
+             high_cut=1 / (6 * u.pix),
+             fit_2D=False)
+
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
+
+
+@pytest.mark.parametrize(('apod_type'),
+                         ['splitcosinebell', 'hanning', 'tukey',
+                          'cosinebell'])
+def test_PSpec_apod_kernel(apod_type):
+
+    imsize = 512
+    theta = 0
+    plaw = 3.0
+    ellip = 1.0
+
+    plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
+                          theta=theta,
+                          return_psd=False)
+
+    # Generate a header
+    hdu = fits.PrimaryHDU(plane)
+
+    test = PowerSpectrum(hdu)
+
+    # Effects large scales
+    if apod_type == 'cosinebell':
+        low_cut = 10**-1.8 / u.pix
+    else:
+        low_cut = None
+
+    low_cut = 10**-1.8 / u.pix
+
+    test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
+             low_cut=low_cut, verbose=False)
+
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)

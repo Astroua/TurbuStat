@@ -13,16 +13,9 @@ Requires the astrodendro package (http://github.com/astrodendro/dendro-core)
 '''
 
 import numpy as np
-from copy import deepcopy
 from warnings import warn
 import statsmodels.api as sm
-import sys
-
-if sys.version_info[0] >= 3:
-    import _pickle as pickle
-else:
-    import cPickle as pickle
-
+from astropy.utils.console import ProgressBar
 
 try:
     from astrodendro import Dendrogram, periodic_neighbours
@@ -42,7 +35,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
     """
     Dendrogram statistics as described in Burkhart et al. (2013)
     Two statistics are contained:
-    * number of leaves + branches vs. $\delta$ parameter
+    * number of leaves & branches vs. :math:`\delta` parameter
     * statistical moments of the intensity histogram
 
     Parameters
@@ -50,18 +43,22 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
     data : %(dtypes)s
         Data to create the dendrogram from.
-    min_deltas : numpy.ndarray or list
-        Minimum deltas of leaves in the dendrogram.
+    min_deltas : {`~numpy.ndarray`, 'auto', None}, optional
+        Minimum deltas of leaves in the dendrogram. Multiple values must
+        be given in increasing order to correctly prune the dendrogram.
+        The default estimates delta levels from percentiles in the data.
     dendro_params : dict
         Further parameters for the dendrogram algorithm
         (see www.dendrograms.org for more info).
-
+    num_deltas : int, optional
+        Number of min_delta values to use when `min_delta='auto'`.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, data, header=None, min_deltas=None, dendro_params=None):
+    def __init__(self, data, header=None, min_deltas='auto',
+                 dendro_params=None, num_deltas=10):
         super(Dendrogram_Stats, self).__init__()
 
         if not astrodendro_flag:
@@ -77,7 +74,10 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         else:
             self.dendro_params = dendro_params
 
-        self.min_deltas = min_deltas
+        if min_deltas == 'auto':
+            self.autoset_min_deltas(num=num_deltas)
+        else:
+            self.min_deltas = min_deltas
 
     @property
     def min_deltas(self):
@@ -91,12 +91,40 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         # In the case where only one min_delta is given
         if "min_delta" in self.dendro_params and value is None:
             self._min_deltas = np.array([self.dendro_params["min_delta"]])
-        elif not isinstance(value, np.ndarray):
-            self._min_deltas = np.array([value])
         else:
-            self._min_deltas = value
+            # Multiple values given. Ensure they are in increasing order
+            if not (np.diff(value) > 0).all():
+                raise ValueError("Multiple values of min_delta must be given "
+                                 "in increasing order.")
 
-    def compute_dendro(self, verbose=False, save_dendro=False,
+            if not isinstance(value, np.ndarray):
+                self._min_deltas = np.array([value])
+            else:
+                self._min_deltas = value
+
+    def autoset_min_deltas(self, num=10):
+        '''
+        Create an array delta values that the dendrogram will be pruned to.
+        Creates equally-spaced delta values between the minimum value set in
+        `~Dendrogram_Stats.dendro_params` and the maximum in the data. The last
+        delta (which would only occur at the peak in the data) is removed.
+
+        Parameters
+        ----------
+        num : int, optional
+            Number of delta values to create.
+        '''
+
+        min_val = self.dendro_params.get('min_value', -np.inf)
+
+        min_delta = self.dendro_params.get('min_delta', 1e-5)
+
+        # Calculate the ptp above the min_val
+        ptp = np.nanmax(self.data[self.data > min_val]) - min_val
+
+        self.min_deltas = np.linspace(min_delta, ptp, num + 1)[:-1]
+
+    def compute_dendro(self, show_progress=False, save_dendro=False,
                        dendro_name=None, dendro_obj=None,
                        periodic_bounds=False):
         '''
@@ -105,7 +133,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         Parameters
         ----------
-        verbose : optional, bool
+        show_progress : optional, bool
             Enables the progress bar in astrodendro.
         save_dendro : optional, bool
             Saves the dendrogram in HDF5 format. **Requires pyHDF5**
@@ -134,7 +162,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             else:
                 neighbours = None
 
-            d = Dendrogram.compute(self.data, verbose=verbose,
+            d = Dendrogram.compute(self.data, verbose=show_progress,
                                    min_delta=self.min_deltas[0],
                                    min_value=self.dendro_params["min_value"],
                                    min_npix=self.dendro_params["min_npix"],
@@ -146,13 +174,20 @@ class Dendrogram_Stats(BaseStatisticMixIn):
                                       d.all_structures]))
 
         if len(self.min_deltas) > 1:
+
+            # Another progress bar for pruning steps
+            if show_progress:
+                print("Pruning steps.")
+                bar = ProgressBar(len(self.min_deltas[1:]))
+
             for i, delta in enumerate(self.min_deltas[1:]):
-                if verbose:
-                    print("On %s of %s" % (i + 1, len(self.min_deltas[1:])))
                 d.prune(min_delta=delta)
                 self._numfeatures[i + 1] = len(d)
                 self._values.append(np.array([struct.vmax for struct in
                                               d.all_structures]))
+
+                if show_progress:
+                    bar.update(i + 1)
 
     @property
     def numfeatures(self):
@@ -225,9 +260,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
 
         if len(self.numfeatures) == 1:
-            warn("Multiple min_delta values must be provided to perform"
-                 " fitting. Only one value was given.")
-            return
+            raise ValueError("Multiple min_delta values must be provided to "
+                             "perform fitting. Only one value was given.")
 
         nums = self.numfeatures[self.numfeatures > 1]
         deltas = self.min_deltas[self.numfeatures > 1]
@@ -235,6 +269,11 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         # Find the position of the break
         break_pos = std_window(nums, size=size)
         self.break_pos = deltas[break_pos]
+
+        # Still enough point to fit to?
+        if len(deltas[break_pos:]) < 2:
+            raise ValueError("Too few points to fit. Try running with more "
+                             "min_deltas or lowering the std. window size.")
 
         # Remove points where there is only 1 feature or less.
         self._fitvals = [np.log10(deltas[break_pos:]),
@@ -281,43 +320,6 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         '''
         return self._tail_slope_err
 
-    def save_results(self, output_name=None, keep_data=False):
-        '''
-        Save the results of the dendrogram statistics to avoid re-computing.
-        The pickled file will not include the data cube by default.
-        '''
-
-        if output_name is None:
-            output_name = "dendrogram_stats_output.pkl"
-
-        if output_name[-4:] != ".pkl":
-            output_name += ".pkl"
-
-        self_copy = deepcopy(self)
-
-        # Don't keep the whole cube unless keep_data enabled.
-        if not keep_data:
-            self_copy.cube = None
-
-        with open(output_name, 'wb') as output:
-            pickle.dump(self_copy, output, -1)
-
-    @staticmethod
-    def load_results(pickle_file):
-        '''
-        Load in a saved pickle file.
-
-        Parameters
-        ----------
-        pickle_file : str
-            Name of filename to load in.
-        '''
-
-        with open(pickle_file, 'rb') as input:
-            self = pickle.load(input)
-
-        return self
-
     @staticmethod
     def load_dendrogram(hdf5_file, min_deltas=None):
         '''
@@ -340,9 +342,68 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         return self
 
+    def plot_fit(self, save_name=None, show_hists=True, color='r',
+                 fit_color=None):
+        '''
+
+        Parameters
+        ----------
+        save_name : str,optional
+            Save the figure when a file name is given.
+        xunit : u.Unit, optional
+            The unit to show the x-axis in.
+        show_hists : bool, optional
+            Plot the histograms of intensity. Requires
+            `~Dendrogram_Stats.make_hists` to be run first.
+        color : {str, RGB tuple}, optional
+            Color to show the delta-variance curve in.
+        fit_color : {str, RGB tuple}, optional
+            Color of the fitted line. Defaults to `color` when no input is
+            given.
+        '''
+
+        import matplotlib.pyplot as plt
+
+        if not show_hists:
+            ax1 = plt.subplot(111)
+        else:
+            ax1 = plt.subplot(121)
+
+        if fit_color is None:
+            fit_color = color
+
+        ax1.plot(self.fitvals[0], self.fitvals[1], 'D', color=color)
+        ax1.plot(self.fitvals[0], self.model.fittedvalues, color=fit_color)
+        plt.xlabel(r"log $\delta$")
+        plt.ylabel(r"log Number of Features")
+
+        if show_hists:
+            ax2 = plt.subplot(122)
+
+            if not hasattr(self, "_hists"):
+                raise ValueError("Histograms were not computed with "
+                                 "Dendrogram_Stats.make_hists. Cannot plot.")
+
+            for bins, vals in self.hists:
+                if bins.size < 1:
+                    continue
+                bin_width = np.abs(bins[1] - bins[0])
+                ax2.bar(bins, vals, align="center",
+                        width=bin_width, alpha=0.25,
+                        color=color)
+                plt.xlabel("Data Value")
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, periodic_bounds=False, verbose=False, save_name=None,
-            dendro_verbose=False, dendro_obj=None, save_results=False,
-            output_name=None, make_hists=True, **kwargs):
+            show_progress=True, dendro_obj=None, save_results=False,
+            output_name=None, fit_kwargs={}, make_hists=True, hist_kwargs={}):
         '''
 
         Compute dendrograms. Necessary to maintain the package format.
@@ -357,8 +418,8 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             Enable plotting of results.
         save_name : str,optional
             Save the figure when a file name is given.
-        dendro_verbose : optional, bool
-            Prints out updates while making the dendrogram.
+        show_progress : optional, bool
+            Enables progress bars while making the dendrogram.
         dendro_obj : Dendrogram, optional
             Pass a pre-computed dendrogram object. **MUST have min_delta set
             at or below the smallest value in`~Dendro_Statistics.min_deltas`.**
@@ -368,46 +429,22 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         output_name : str, optional
             Filename used when `save_results` is enabled. Must be given when
             saving.
+        fit_kwargs : dict, optional
+            Passed to `~Dendro_Statistics.fit_numfeat`.
         make_hists : bool, optional
             Enable computing histograms.
-        kwargs : Passed to `~Dendro_Statistics.make_hists`.
+        hist_kwargs : dict, optional
+            Passed to `~Dendro_Statistics.make_hists`.
         '''
-        self.compute_dendro(verbose=dendro_verbose, dendro_obj=dendro_obj,
+        self.compute_dendro(show_progress=show_progress, dendro_obj=dendro_obj,
                             periodic_bounds=periodic_bounds)
-        self.fit_numfeat(verbose=verbose)
+        self.fit_numfeat(verbose=verbose, **fit_kwargs)
 
         if make_hists:
-            self.make_hists(**kwargs)
+            self.make_hists(**hist_kwargs)
 
         if verbose:
-            import matplotlib.pyplot as p
-
-            if not make_hists:
-                ax1 = p.subplot(111)
-            else:
-                ax1 = p.subplot(121)
-
-            ax1.plot(self.fitvals[0], self.fitvals[1], 'bD')
-            ax1.plot(self.fitvals[0], self.model.fittedvalues, 'g')
-            p.xlabel(r"log $\delta$")
-            p.ylabel(r"log Number of Features")
-
-            if make_hists:
-                ax2 = p.subplot(122)
-
-                for bins, vals in self.hists:
-                    if bins.size < 1:
-                        continue
-                    bin_width = np.abs(bins[1] - bins[0])
-                    ax2.bar(bins, vals, align="center",
-                            width=bin_width, alpha=0.25)
-                    p.xlabel("Data Value")
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, show_hists=make_hists)
 
         if save_results:
             self.save_results(output_name=output_name)
