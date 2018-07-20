@@ -18,7 +18,9 @@ def test_ppv():
     density = np.ones_like(velocity.value) * u.cm**-3
 
     cube, spec_axis = make_ppv(velocity[:, :2, :2], density[:, :2, :2],
-                               vel_disp=np.std(velocity) / 2., T=10 * u.K)
+                               vel_disp=np.std(velocity), T=10 * u.K,
+                               return_hdu=False,
+                               chan_width=500 * u.m / u.s)
 
     NHI_exp = (1 * u.cm**-3) * (1 * u.pc).to(u.cm)
 
@@ -32,4 +34,4 @@ def test_ppv():
 
     assert NHI_exp.unit == NHI_cube.unit
 
-    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=1e-3)
+    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=2e-2)
