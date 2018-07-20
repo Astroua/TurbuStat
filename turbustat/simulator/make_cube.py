@@ -83,7 +83,7 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     # Length of one pixel
     pix_scale = los_length.to(u.cm) / float(vel_field.shape[los_axis])
 
-    shape = [*vel_field.shape]
+    shape = list(vel_field.shape)
     shape.pop(los_axis)
 
     spec_gen = ((vel_edges, vel_field[field_slice(y, x, los_axis)],
