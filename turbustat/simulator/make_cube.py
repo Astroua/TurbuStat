@@ -15,14 +15,6 @@ from ..io.sim_tools import create_cube_header
 SQRT_2PI = np.sqrt(2 * np.pi)
 
 
-def generate_velocity_field():
-    pass
-
-
-def generate_density_field():
-    pass
-
-
 def make_ppv(vel_field, dens_field, los_axis=0,
              m=1.4 * co.m_p, T=4000 * u.K, los_length=1 * u.pc,
              vel_disp=None, chan_width=None,
@@ -66,7 +58,7 @@ def make_ppv(vel_field, dens_field, los_axis=0,
 
         v_eff = np.sqrt(dv_sq + 2 * v_therm_sq).to(vel_field.unit)
 
-        N_chan = int(np.ceil(v_eff / 5.))
+        N_chan = int(np.ceil((v_eff / 5.).value))
 
     else:
         N_chan = int(np.ceil(del_v / chan_width))
