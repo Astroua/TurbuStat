@@ -6,8 +6,10 @@ from itertools import product
 from warnings import warn
 from multiprocessing import Pool
 from astropy.utils.console import ProgressBar
+from astropy.io import fits
 
 from .gen_field import make_3dfield
+from ..io.sim_tools import create_cube_header
 
 
 SQRT_2PI = np.sqrt(2 * np.pi)
@@ -23,7 +25,11 @@ def generate_density_field():
 
 def make_ppv(vel_field, dens_field, los_axis=0,
              m=1.4 * co.m_p, T=4000 * u.K, los_length=1 * u.pc,
-             vel_disp=None, threads=1):
+             vel_disp=None, chan_width=None,
+             threads=1, max_chan=1000,
+             vel_struct_index=0.5, verbose=False,
+             return_hdu=True, pixel_ang_scale=1 * u.arcmin,
+             restfreq=1.42 * u.GHz):
     '''
     Generate a mock, optically-thin PPV cube from a given velocity and
     density field.
@@ -42,16 +48,40 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     v_min = vel_field.min() - 4 * v_therm
     v_max = vel_field.max() + 4 * v_therm
 
-    N_chan = int(np.ceil((v_max - v_min) / vel_disp))
+    del_v = v_max - v_min
 
-    # Thin channel criteria from Esquivel+2003 requires
-    # Delta_v / vel_disp > 5~6
-    # Stricter requirements for VCS from Chepurnov & Lazarian 2009 are not
-    # used here to reduce computational requirements.
+    # m=1 assumption.
+    if vel_struct_index is None:
+        warn("Setting channels for velocity structure index of 0.5.")
+        vel_struct_index = 0.5
+
+    if chan_width is None:
+        # Eq. 13 from Esquivel+2003. Number of channels to recover the thin
+        # slice regime down to 2 pix.
+
+        # Take the effective width to be ~1/5 of the effective channel width
+        # given by Eq. 12 in Esquivel+2003, for scales down to 2 pix.
+        dv_sq = vel_disp**2 * \
+            (2. / float(vel_field.shape[los_axis]))**(vel_struct_index)
+
+        v_eff = np.sqrt(dv_sq + 2 * v_therm_sq).to(vel_field.unit)
+
+        N_chan = int(np.ceil(v_eff / 5.))
+
+    else:
+        N_chan = int(np.ceil(del_v / chan_width))
+
+    if verbose:
+        print("Number of spectral channels {}".format(N_chan))
+
     if N_chan < 6:
         warn("<6 channels will be used ({} channels). Recommend increasing the"
              " number of channels. See Esquivel et al. (2003) and Chepurnov & "
              "Lazarian (2009).")
+
+    if N_chan > max_chan:
+        raise ValueError("Number of channels larger than set maximum"
+                         " ({})".format(max_chan))
 
     # When computing the spectrum, we want the edges of the velocity channels
     vel_edges = np.linspace(v_min, v_max, N_chan + 1)
@@ -65,19 +95,17 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     shape.pop(los_axis)
 
     spec_gen = ((vel_edges, vel_field[field_slice(y, x, los_axis)],
-                 np.ones_like(vel_field[field_slice(y, x, los_axis)].value) * u.cm**-3,
+                 dens_field[field_slice(y, x, los_axis)],
                  v_therm_sq, pix_scale, y, x) for y, x in
                 product(range(shape[0]), range(shape[1])))
 
     if threads == 1:
         spectra = list(map(_mapper, spec_gen))
     else:
-        pool = Pool(threads)
 
-        spectra = pool.map(_mapper, spec_gen)
+        with Pool(threads) as pool:
 
-        pool.join()
-        pool.close()
+            spectra = pool.map(_mapper, spec_gen)
 
     # Map spectra into a cube
     cube = np.empty(vel_axis.shape + tuple(shape)) * u.K
@@ -85,6 +113,13 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     for out in spectra:
         spec, y, x = out
         cube[:, y, x] = spec
+
+    if return_hdu:
+        header = create_cube_header(pixel_ang_scale, np.diff(vel_axis)[0],
+                                    0.0 * u.arcsec, cube.shape, restfreq, u.K,
+                                    v0=vel_axis[0])
+
+        return fits.PrimaryHDU(cube.value, header)
 
     return cube, vel_axis
 
