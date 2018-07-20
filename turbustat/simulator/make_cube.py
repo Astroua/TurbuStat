@@ -76,7 +76,8 @@ def make_ppv(vel_field, dens_field, los_axis=0,
                          " ({})".format(max_chan))
 
     # When computing the spectrum, we want the edges of the velocity channels
-    vel_edges = np.linspace(v_min, v_max, N_chan + 1)
+    # numpy in py27 isn't handling the units correctly in linspace.
+    vel_edges = np.linspace(v_min.value, v_max.value, N_chan + 1) * v_min.unit
 
     vel_axis = 0.5 * (vel_edges[1:] + vel_edges[:-1])
 
