@@ -8,16 +8,16 @@ from multiprocessing import Pool
 from astropy.utils.console import ProgressBar
 from astropy.io import fits
 
-from .gen_field import make_3dfield
 from ..io.sim_tools import create_cube_header
 
 
 SQRT_2PI = np.sqrt(2 * np.pi)
+conv_to_K = 1.823e13 * u.cm**-2 / (u.K * u.cm / u.s)
 
 
 def make_ppv(vel_field, dens_field, los_axis=0,
              m=1.4 * co.m_p, T=4000 * u.K, los_length=1 * u.pc,
-             vel_disp=None, chan_width=None,
+             vel_disp=None, chan_width=None, v_min=None, v_max=None,
              threads=1, max_chan=1000,
              vel_struct_index=0.5, verbose=False,
              return_hdu=True, pixel_ang_scale=1 * u.arcmin,
@@ -36,9 +36,22 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     v_therm_sq = (co.k_B * T / m).to(vel_field.unit**2)
     v_therm = np.sqrt(v_therm_sq)
 
-    # Setup velocity axis
     v_min = vel_field.min() - 4 * v_therm
-    v_max = vel_field.max() + 4 * v_therm
+
+    # Setup velocity axis
+    if v_min is None:
+        v_min = vel_field.min() - 4 * v_therm
+    else:
+        if not v_min.unit.is_equivalent(u.km / u.s):
+            raise u.UnitsError("v_min must be given in velocity units.")
+    if v_max is None:
+        v_max = vel_field.max() + 4 * v_therm
+    else:
+        if not v_max.unit.is_equivalent(u.km / u.s):
+            raise u.UnitsError("v_max must be given in velocity units.")
+
+    if v_min > v_max:
+        raise ValueError("v_min > v_max is not allowed.")
 
     del_v = v_max - v_min
 
@@ -164,8 +177,6 @@ def _spectrum_maker(vel_edges, vel_slice, dens_slice, v_therm_sq, pix_scale,
             # plt.draw()
             # input("?")
             # plt.clf()
-
-        conv_to_K = 1.823e13 * u.cm**-2 / (u.K * u.cm / u.s)
 
     spectrum /= conv_to_K
 
