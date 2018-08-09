@@ -81,8 +81,6 @@ def make_ppv(vel_field, dens_field, los_axis=0,
         print("Max velocity {}".format(v_max))
         print("Channel width {}".format(chan_width))
 
-    return
-
     if N_chan < 6:
         warn("<6 channels will be used ({} channels). Recommend increasing the"
              " number of channels. See Esquivel et al. (2003) and Chepurnov & "
