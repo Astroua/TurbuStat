@@ -36,13 +36,12 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     v_therm_sq = (co.k_B * T / m).to(vel_field.unit**2)
     v_therm = np.sqrt(v_therm_sq)
 
-    v_min = vel_field.min() - 4 * v_therm
-
     # Setup velocity axis
     if v_min is None:
         v_min = vel_field.min() - 4 * v_therm
     else:
         if not v_min.unit.is_equivalent(u.km / u.s):
+
             raise u.UnitsError("v_min must be given in velocity units.")
     if v_max is None:
         v_max = vel_field.max() + 4 * v_therm
@@ -78,6 +77,11 @@ def make_ppv(vel_field, dens_field, los_axis=0,
 
     if verbose:
         print("Number of spectral channels {}".format(N_chan))
+        print("Min velocity {}".format(v_min))
+        print("Max velocity {}".format(v_max))
+        print("Channel width {}".format(chan_width))
+
+    return
 
     if N_chan < 6:
         warn("<6 channels will be used ({} channels). Recommend increasing the"
