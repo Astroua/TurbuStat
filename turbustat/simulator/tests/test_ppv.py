@@ -13,12 +13,12 @@ def test_ppv():
     '''
 
     # Need a large enough field to have good statistics
-    velocity = make_3dfield(128, powerlaw=3.5, amp=5.e4) * u.m / u.s
+    velocity = make_3dfield(128, powerlaw=3.5, amp=5.e3) * u.m / u.s
 
     density = np.ones_like(velocity.value) * u.cm**-3
 
     cube, spec_axis = make_ppv(velocity[:, :2, :2], density[:, :2, :2],
-                               vel_disp=np.std(velocity), T=10 * u.K,
+                               vel_disp=np.std(velocity), T=100 * u.K,
                                return_hdu=False,
                                chan_width=500 * u.m / u.s)
 
@@ -34,4 +34,4 @@ def test_ppv():
 
     assert NHI_exp.unit == NHI_cube.unit
 
-    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=2e-2)
+    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=1e-4)
