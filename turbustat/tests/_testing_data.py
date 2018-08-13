@@ -10,7 +10,7 @@ limit.
 '''
 
 # Need to create the property arrays
-from ..data_reduction import Mask_and_Moments
+from ..moments import Moments
 
 from spectral_cube import SpectralCube, LazyMask, Projection
 
@@ -33,8 +33,7 @@ hdr_path = os.path.join(turb_path, "data/header.fits")
 header = getheader(hdr_path)
 
 
-keywords = ["centroid", "centroid_error", "integrated_intensity",
-            "integrated_intensity_error", "linewidth",
+keywords = ["centroid", "centroid_error", "linewidth",
             "linewidth_error", "moment0", "moment0_error", "cube"]
 
 path1 = os.path.join(turb_path, "data/dataset1.npz")
@@ -56,8 +55,8 @@ sc1 = SpectralCube(data=cube1, wcs=WCS(header))
 mask = LazyMask(np.isfinite, sc1)
 sc1 = sc1.with_mask(mask)
 # Set the scale for the purposes of the tests
-props1 = Mask_and_Moments(sc1, scale=0.003031065017916262 * u.Unit(""))
-props1.make_mask(mask=mask)
+props1 = Moments(sc1, scale=0.003031065017916262 * u.Unit(""))
+# props1.make_mask(mask=mask)
 props1.make_moments()
 props1.make_moment_errors()
 
@@ -89,7 +88,7 @@ sc2 = SpectralCube(data=cube2, wcs=WCS(header))
 mask = LazyMask(np.isfinite, sc2)
 sc2 = sc2.with_mask(mask)
 # Set the scale for the purposes of the tests
-props2 = Mask_and_Moments(sc2, scale=0.003029658694658428 * u.Unit(""))
+props2 = Moments(sc2, scale=0.003029658694658428 * u.Unit(""))
 props2.make_moments()
 props2.make_moment_errors()
 
