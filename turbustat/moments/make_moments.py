@@ -138,14 +138,10 @@ class Moments(object):
         self._linewidth = \
             self.cube.linewidth_sigma(how=self.moment_how)
 
-        # The 'how' is set directly in the int intensity function.
-        # self._intint = self._get_int_intensity(axis=axis)
-
         if not units:
             self._moment0 = self._moment0.value
             self._moment1 = self._moment1.value
             self._moment2 = self._moment2.value
-            # self._intint = self._intint.value
 
     def make_moment_errors(self, axis=0, scale=None):
         '''
@@ -329,7 +325,7 @@ class Moments(object):
         else:
             self.save_name = save_name
 
-        labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
+        labels = ["_moment0", "_centroid", "_linewidth"]
 
         for i, (arr, err, hdr, hdr_err) in \
           enumerate(zip(self.all_moments(), self.all_moment_errs(),
@@ -350,7 +346,7 @@ class Moments(object):
     @staticmethod
     def from_fits(fits_name, moments_prefix=None, moments_path=None,
                   mask_name=None, moment0=None, centroid=None, linewidth=None,
-                  intint=None, scale=None):
+                  scale=None):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
         match the naming of the cube for the automatic loading to work
@@ -379,9 +375,6 @@ class Moments(object):
         linewidth : str, optional
             Filename of the linewidth array. Use if naming scheme is not valid
             for automatic loading.
-        intint : str, optional
-            Filename of the integrated intensity array. Use if naming scheme
-            is not valid for automatic loading.
         scale : `~astropy.units.Quantity`, optional
             The noise level in the cube. Overrides estimation using
             `signal_id <https://github.com/radio-astro-tools/signal-id>`_
@@ -457,22 +450,6 @@ class Moments(object):
                 self._linewidth_err = None
                 print(e)
                 print("Linewidth fits file not found.")
-
-        if intint is not None:
-            intint = fits.open(intint)
-            self._intint = intint[0].data
-            self._intint_err = intint[1].data
-        else:
-            try:
-                intint = fits.open(os.path.join(moments_path,
-                                                root_name + "_intint.fits"))
-                self._intint = intint[0].data
-                self._intint_err = intint[1].data
-            except IOError as e:
-                self._intint = None
-                self._intint_err = None
-                print(e)
-                print("Integrated intensity fits file not found.")
 
         return self
 
@@ -650,14 +627,10 @@ def _try_remove_unit(arr):
 #         self._linewidth = \
 #             self.cube.linewidth_sigma(how=self.moment_how)
 
-#         # The 'how' is set directly in the int intensity function.
-#         self._intint = self._get_int_intensity(axis=axis)
-
 #         if not units:
 #             self._moment0 = self._moment0.value
 #             self._moment1 = self._moment1.value
 #             self._moment2 = self._moment2.value
-#             self._intint = self._intint.value
 
 #     def make_moment_errors(self, axis=0):
 #         '''
@@ -680,8 +653,6 @@ def _try_remove_unit(arr):
 #                                 moment1=self.moment1,
 #                                 moment1_err=self.moment1_err)
 
-#         self._intint_err = self._get_int_intensity_err(axis=axis)
-
 #     @property
 #     def moment0(self):
 #         return self._moment0
@@ -695,10 +666,6 @@ def _try_remove_unit(arr):
 #         return self._linewidth
 
 #     @property
-#     def intint(self):
-#         return self._intint
-
-#     @property
 #     def moment0_err(self):
 #         return self._moment0_err
 
@@ -710,16 +677,11 @@ def _try_remove_unit(arr):
 #     def linewidth_err(self):
 #         return self._linewidth_err
 
-#     @property
-#     def intint_err(self):
-#         return self._intint_err
-
 #     def all_moments(self):
-#         return [self._moment0, self._moment1, self.linewidth, self._intint]
+#         return [self._moment0, self._moment1, self.linewidth]
 
 #     def all_moment_errs(self):
-#         return [self._moment0_err, self._moment1_err, self.linewidth_err,
-#                 self._intint_err]
+#         return [self._moment0_err, self._moment1_err, self.linewidth_err]
 
 #     def to_dict(self):
 #         '''
@@ -776,20 +738,6 @@ def _try_remove_unit(arr):
 #             prop_dict['linewidth_error'] = [self.linewidth_err,
 #                                             self.prop_err_headers[2]]
 
-#         if _try_remove_unit(self.intint):
-#             prop_dict['integrated_intensity'] = [self.intint.value,
-#                                                  self.prop_headers[3]]
-#         else:
-#             prop_dict['integrated_intensity'] = [self.intint,
-#                                                  self.prop_headers[3]]
-
-#         if _try_remove_unit(self.intint_err):
-#             prop_dict['integrated_intensity_error'] = \
-#                 [self.intint_err.value, self.prop_err_headers[3]]
-#         else:
-#             prop_dict['integrated_intensity_error'] = \
-#                 [self.intint_err, self.prop_err_headers[3]]
-
 #         return prop_dict
 
 #     def get_prop_hdrs(self):
@@ -844,7 +792,7 @@ def _try_remove_unit(arr):
 #         else:
 #             self.save_name = save_name
 
-#         labels = ["_moment0", "_centroid", "_linewidth", "_intint"]
+#         labels = ["_moment0", "_centroid", "_linewidth"]
 
 #         for i, (arr, err, hdr, hdr_err) in \
 #           enumerate(zip(self.all_moments(), self.all_moment_errs(),
@@ -865,7 +813,7 @@ def _try_remove_unit(arr):
 #     @staticmethod
 #     def from_fits(fits_name, moments_prefix=None, moments_path=None,
 #                   mask_name=None, moment0=None, centroid=None, linewidth=None,
-#                   intint=None, scale=None):
+#                   scale=None):
 #         '''
 #         Load pre-made moment arrays given a cube name. Saved moments must
 #         match the naming of the cube for the automatic loading to work
@@ -893,9 +841,6 @@ def _try_remove_unit(arr):
 #         linewidth : str, optional
 #             Filename of the linewidth array. Use if naming scheme is not valid
 #             for automatic loading.
-#         intint : str, optional
-#             Filename of the integrated intensity array. Use if naming scheme
-#             is not valid for automatic loading.
 #         scale : `~astropy.units.Quantity`, optional
 #             The noise level in the cube. Overrides estimation using
 #             `signal_id <https://github.com/radio-astro-tools/signal-id>`_
@@ -971,22 +916,6 @@ def _try_remove_unit(arr):
 #                 self._linewidth_err = None
 #                 print(e)
 #                 print("Linewidth fits file not found.")
-
-#         if intint is not None:
-#             intint = fits.open(intint)
-#             self._intint = intint[0].data
-#             self._intint_err = intint[1].data
-#         else:
-#             try:
-#                 intint = fits.open(os.path.join(moments_path,
-#                                                 root_name + "_intint.fits"))
-#                 self._intint = intint[0].data
-#                 self._intint_err = intint[1].data
-#             except IOError as e:
-#                 self._intint = None
-#                 self._intint_err = None
-#                 print(e)
-#                 print("Integrated intensity fits file not found.")
 
 #         return self
 
