@@ -24,7 +24,7 @@ except ImportError:
 from ..statistics import PowerSpectrum, PSpec_Distance
 from ._testing_data import (dataset1, dataset2, computed_data,
                             computed_distances)
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 
 
 def test_PSpec_method():
@@ -111,7 +111,7 @@ def test_pspec_azimlimits(plaw, ellip):
 
     # Generate a red noise model
     img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=False)
+                        return_fft=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
@@ -150,7 +150,7 @@ def test_pspec_fit2D(theta):
 
     # Generate a red noise model
     img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=False)
+                        return_fft=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(fit_2D=True,
@@ -188,7 +188,7 @@ def test_PSpec_beamcorrect():
 
     plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                           theta=theta,
-                          return_psd=False)
+                          return_fft=False)
     plane = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
                          boundary='wrap')
 
@@ -232,7 +232,7 @@ def test_PSpec_apod_kernel(apod_type):
 
     plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                           theta=theta,
-                          return_psd=False)
+                          return_fft=False)
 
     # Generate a header
     hdu = fits.PrimaryHDU(plane)

@@ -10,7 +10,7 @@ from ..statistics.elliptical_powerlaw import (fit_elliptical_powerlaw,
                                               LogEllipticalPowerLaw2D,
                                               interval_transform,
                                               inverse_interval_transform)
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 
 
 def test_simple_ellipplaw():
@@ -54,7 +54,7 @@ def test_simple_ellipplaw_2D(plaw, ellip, theta):
 
     # Generate a red noise model
     psd = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=True)
+                        return_fft=True)
 
     psd = np.abs(psd)**2
 

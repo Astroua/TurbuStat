@@ -8,7 +8,8 @@ from astropy.io import fits
 from spectral_cube import Projection
 import numpy as np
 
-from turbustat.tests.generate_test_images import make_extended
+from turbustat.simulator import make_extended
+
 from turbustat.io.sim_tools import create_fits_hdu
 
 from turbustat.statistics import PowerSpectrum

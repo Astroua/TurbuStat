@@ -15,7 +15,7 @@ except ImportError:
     PYFFTW_INSTALLED = False
 
 from ..statistics import DeltaVariance, DeltaVariance_Distance
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -145,7 +145,7 @@ def test_delvar_plaw_img(plaw, ellip):
 
     # Generate a red noise model
     img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=False)
+                        return_fft=False)
 
     test = DeltaVariance(fits.PrimaryHDU(img))
     test.run()
