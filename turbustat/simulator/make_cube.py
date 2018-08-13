@@ -34,17 +34,20 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     '''
 
     v_therm_sq = (co.k_B * T / m).to(vel_field.unit**2)
-    v_therm = np.sqrt(v_therm_sq)
+
+    # Make a line width estimate with thermal broadening for setting velocity
+    # extent
+    v_lim = np.sqrt(vel_disp**2 + v_therm_sq)
 
     # Setup velocity axis
     if v_min is None:
-        v_min = vel_field.min() - 4 * v_therm
+        v_min = vel_field.min() - 4 * v_lim
     else:
         if not v_min.unit.is_equivalent(u.km / u.s):
 
             raise u.UnitsError("v_min must be given in velocity units.")
     if v_max is None:
-        v_max = vel_field.max() + 4 * v_therm
+        v_max = vel_field.max() + 4 * v_lim
     else:
         if not v_max.unit.is_equivalent(u.km / u.s):
             raise u.UnitsError("v_max must be given in velocity units.")
