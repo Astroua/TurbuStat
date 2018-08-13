@@ -138,7 +138,7 @@ def make_3dfield(imsize, powerlaw=2.0, amp=1.0,
 
 
 def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
-                  return_fft=False, randomseed=32768324):
+                  return_fft=False, full_fft=True, randomseed=32768324):
     '''
 
     Generate a power-law image with a specified index and random phases.
@@ -162,6 +162,9 @@ def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
     return_fft : bool, optional
         Return the FFT instead of the image. The full FFT is
         returned, including the redundant negative phase phases for the RFFT.
+    full_fft : bool, optional
+        When `return_fft=True`, the full FFT, with negative frequencies, will
+        be returned. If `full_fft=False`, the RFFT is returned.
     randomseed: int, optional
         Seed for random number generator.
 
@@ -233,23 +236,24 @@ def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
 
     if return_fft:
 
-        return output
+        if not full_fft:
+            return output
 
-        # # Create the full power map, with the symmetric conjugate component
-        # if imsize % 2 == 0:
-        #     power_map_symm = np.conj(output[:, -2:0:-1])
-        # else:
-        #     power_map_symm = np.conj(output[:, -1:0:-1])
+        # Create the full power map, with the symmetric conjugate component
+        if imsize % 2 == 0:
+            power_map_symm = np.conj(output[:, -2:0:-1])
+        else:
+            power_map_symm = np.conj(output[:, -1:0:-1])
 
-        # power_map_symm[1::, :] = power_map_symm[:0:-1, :]
+        power_map_symm[1::, :] = power_map_symm[:0:-1, :]
 
-        # full_powermap = np.concatenate((output, power_map_symm), axis=1)
+        full_powermap = np.concatenate((output, power_map_symm), axis=1)
 
-        # if not full_powermap.shape[1] == imsize:
-        #     raise ValueError("The full output should have a square shape."
-        #                      " Instead has {}".format(full_powermap.shape))
+        if not full_powermap.shape[1] == imsize:
+            raise ValueError("The full output should have a square shape."
+                             " Instead has {}".format(full_powermap.shape))
 
-        # return np.fft.fftshift(full_powermap)
+        return np.fft.fftshift(full_powermap)
 
     newmap = np.fft.irfft2(output)
 

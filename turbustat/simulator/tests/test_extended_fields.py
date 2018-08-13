@@ -30,7 +30,7 @@ def test_3D_gen_field(shape, slope):
 
 @pytest.mark.parametrize(('shape', 'slope'), [(shape, slope) for shape in
                                               [32, 33] for slope in
-                                              np.arange(0.0, 5.5, 0.5)])
+                                              np.arange(0.0, 5.5, 1.0)])
 def test_2D_gen_field(shape, slope):
     '''
     Power needs to be conserved between the fft and real versions.
@@ -39,7 +39,7 @@ def test_2D_gen_field(shape, slope):
     seed = np.random.randint(0, 2**31 - 1)
 
     img_fft = make_extended(shape, powerlaw=slope, return_fft=True,
-                            randomseed=seed)
+                            randomseed=seed, full_fft=False)
 
     img = make_extended(shape, powerlaw=slope, return_fft=False,
                         randomseed=seed)
