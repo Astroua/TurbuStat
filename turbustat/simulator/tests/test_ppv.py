@@ -17,7 +17,6 @@ except ImportError:
 
 @pytest.mark.skipif("not SPECCUBE_INSTALL")
 @pytest.mark.parametrize('axis', [0, 1, 2])
-# @pytest.mark.parametrize('axis', [0])
 def test_ppv(axis):
     '''
     Ensure the column density matches the expected value in the output cube
