@@ -90,7 +90,7 @@ The smoothly-varying windows (Hanning and Cosine) have power-spectra that consis
 
 As an example, we will compare the effect each of the windows has on a red-noise image.
 
-    >>> from turbustat.tests.generate_test_images import make_extended
+    >>> from turbustat.simulator import make_extended
     >>> from turbustat.io.sim_tools import create_fits_hdu
     >>> from astropy import units as u
     >>> # Image drawn from red-noise
