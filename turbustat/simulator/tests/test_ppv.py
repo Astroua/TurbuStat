@@ -23,7 +23,7 @@ def test_ppv(axis):
     '''
 
     # Number of samples to take along each non-projected dimension
-    size = 2
+    size = 16
 
     twod_slice = [slice(0, size), slice(0, size)]
     threed_slice = [slice(0, size), slice(0, size)]
@@ -56,15 +56,7 @@ def test_ppv(axis):
     # Expected is 3.0854e18. Check if it is within 1e16
     npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=1e-4)
 
-    # Rough comparison of line width to the velocity field std.
-    # Very few samples, so this is only a rough check
     v_therm = np.sqrt(c.k_B * 100 * u.K / (1.4 * c.m_p)).to(u.km / u.s)
-
-    # Correct the measured line widths for thermal broadening
-    lwidth = np.sqrt(cube.linewidth_sigma().to(u.km / u.s)**2 - v_therm**2)
-    vel_std = np.std(velocity, axis=0)[twod_slice].to(u.km / u.s)
-
-    npt.assert_allclose(vel_std.value, lwidth.value, atol=v_therm.value)
 
     # Compare centroids
 
@@ -73,3 +65,12 @@ def test_ppv(axis):
     mom1 = cube.moment1().to(u.km / u.s)
 
     npt.assert_allclose(raw_centroid.value, mom1.value, atol=v_therm.value)
+
+    # Rough comparison of line width to the velocity field std.
+    # Very few samples, so this is only a rough check
+
+    # Correct the measured line widths for thermal broadening
+    lwidth = np.sqrt(cube.linewidth_sigma().to(u.km / u.s)**2 - v_therm**2)
+    vel_std = np.std(velocity, axis=axis)[twod_slice].to(u.km / u.s)
+
+    npt.assert_allclose(vel_std.value, lwidth.value, atol=v_therm.value)

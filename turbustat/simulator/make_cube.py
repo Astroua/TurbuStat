@@ -9,7 +9,7 @@ from astropy.utils.console import ProgressBar
 from astropy.io import fits
 
 from ..io.sim_tools import create_cube_header
-
+from .spectrum import generate_spectrum
 
 SQRT_2PI = np.sqrt(2 * np.pi)
 conv_to_K = 1.823e13 * u.cm**-2 / (u.K * u.cm / u.s)
@@ -147,41 +147,17 @@ def _spectrum_maker(vel_edges, vel_slice, dens_slice, v_therm_sq, pix_scale,
 
     dvdz = (np.gradient(vel_slice) / pix_scale).to(1 / u.s)
 
-    v_cents = 0.5 * (vel_edges[1:] + vel_edges[:-1])
+    v_cents = (0.5 * (vel_edges[1:] + vel_edges[:-1])).to(u.cm / u.s)
 
-    for i, (vel_l, vel_h) in enumerate(zip(vel_edges[:-1], vel_edges[1:])):
+    spectrum = generate_spectrum(vel_slice.to(u.cm / u.s).value,
+                                 dens_slice.to(u.cm**-3).value,
+                                 vel_edges.to(u.cm / u.s).value,
+                                 v_cents.value,
+                                 dvdz.value,
+                                 v_therm_sq.to(u.cm**2 / u.s**2).value,
+                                 pix_scale.to(u.cm).value)
 
-        # Find locations of all contributions at this velocity
-        contribs = np.logical_and(vel_slice > vel_l, vel_slice < vel_h)
-
-        if not contribs.any():
-            continue
-
-        sigma = np.sqrt((dvdz[contribs] * pix_scale)**2 +
-                        v_therm_sq).to(u.cm / u.s)
-
-        # from matplotlib import pyplot as plt
-
-        for jj, ni in enumerate(np.where(contribs)[0]):
-
-            # Column density normalized by Gaussian integral
-            # Output in units of u.cm**-2 / (u.cm / u.s)
-            term1 = (dens_slice[ni] * pix_scale) / (SQRT_2PI * sigma[jj])
-
-            term2 = ((v_cents - vel_slice[ni])**2 /
-                     (2 * sigma[jj]**2)).to(u.dimensionless_unscaled)
-
-            spectrum += (term1 * np.exp(-term2))
-
-            # print(vel_slice[ni], sigma[jj])
-
-            # print(dens_slice[ni] * pix_scale)
-            # print(spectrum.sum() * (vel_h - vel_l))
-
-            # plt.plot(v_cents, spectrum)
-            # plt.draw()
-            # input("?")
-            # plt.clf()
+    spectrum *= u.cm**-2 / (u.cm / u.s)
 
     spectrum /= conv_to_K
 
