@@ -157,7 +157,7 @@ def _spectrum_maker(vel_edges, vel_slice, dens_slice, v_therm_sq, pix_scale,
                                  v_therm_sq.to(u.cm**2 / u.s**2).value,
                                  pix_scale.to(u.cm).value)
 
-    spectrum *= u.cm**-2 / (u.cm / u.s)
+    spectrum = spectrum * u.cm**-2 / (u.cm / u.s)
 
     spectrum /= conv_to_K
 
