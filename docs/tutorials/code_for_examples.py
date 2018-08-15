@@ -29,8 +29,9 @@ col_pal = sb.color_palette('colorblind')
 fig_path = 'images'
 
 # Choose which methods to run
-run_apod_examples = False
-run_beamcorr_examples = False
+run_apod_examples = False  # applying_apodizing_functions.rst
+run_beamcorr_examples = False  # correcting_for_the_beam.rst
+run_plawfield_examples = False  # generating_test_data.rst
 
 if run_apod_examples:
 
@@ -235,4 +236,98 @@ if run_beamcorr_examples:
     plt.ylim([-2, 7.5])
     plt.tight_layout()
     plt.savefig("images/rednoise_pspec_slope3_beam_comparisons.png")
+    plt.close()
+
+
+if run_plawfield_examples:
+
+    # Use the same settings as above for the isotropic case
+
+    rnoise_img = make_extended(256, powerlaw=3.)
+
+    pixel_scale = 3 * u.arcsec
+    beamfwhm = 3 * u.arcsec
+    imshape = rnoise_img.shape
+    restfreq = 1.4 * u.GHz
+    bunit = u.K
+
+    # plaw_hdu = create_fits_hdu(rnoise_img, pixel_scale, beamfwhm, imshape,
+    #                            restfreq, bunit)
+
+    # pspec = PowerSpectrum(plaw_hdu)
+    # pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
+    #           fit_kwargs={'weighted_fit': False}, fit_2D=False,
+    #           low_cut=1. / (60 * u.pix),
+    #           save_name=osjoin(fig_path, "rednoise_pspec_slope3.png"))
+
+    # 2D anisotropic
+
+    rnoise_img = make_extended(256, powerlaw=3., ellip=0.5, theta=45 * u.deg)
+
+    plt.imshow(rnoise_img)
+    plt.savefig(osjoin(fig_path, "rednoise_slope3_ellip_05_theta_45.png"))
+    plt.close()
+
+    plaw_hdu = create_fits_hdu(rnoise_img, pixel_scale, beamfwhm, imshape,
+                               restfreq, bunit)
+
+    pspec = PowerSpectrum(plaw_hdu)
+    pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
+              fit_kwargs={'weighted_fit': False}, fit_2D=True,
+              low_cut=1. / (60 * u.pix),
+              save_name=osjoin(fig_path, "rednoise_pspec_slope3_ellip_05_theta_45.png"))
+
+    # 3D
+
+    from turbustat.simulator import make_3dfield
+
+    threeD_field = make_3dfield(128, powerlaw=3.)
+
+    plt.figure(figsize=[10, 3])
+    plt.subplot(131)
+    plt.imshow(threeD_field.mean(0), origin='lower')
+    plt.subplot(132)
+    plt.imshow(threeD_field.mean(1), origin='lower')
+    plt.subplot(133)
+    plt.imshow(threeD_field.mean(2), origin='lower')
+    plt.tight_layout()
+    plt.savefig(osjoin(fig_path, "rednoise_3D_slope3_projs.png"))
+    plt.close()
+
+    # PPV cube
+
+    from turbustat.simulator import make_ppv
+
+    velocity = make_3dfield(32, powerlaw=4., amp=1.,
+                            randomseed=98734) * u.km / u.s
+
+    # Deal with negative density values.
+    density = make_3dfield(32, powerlaw=3., amp=1.,
+                           randomseed=328764) * u.cm**-3
+    density += density.std()
+    density[density.value < 0.] = 0. * u.cm**-3
+
+    T = 100 * u.K
+
+    cube_hdu = make_ppv(velocity, density, los_axis=0,
+                        vel_disp=np.std(velocity, axis=0).mean(),
+                        T=T, chan_width=0.5 * u.km / u.s,
+                        v_min=-20 * u.km / u.s, v_max=20 * u.km / u.s)
+
+    from spectral_cube import SpectralCube
+
+    cube = SpectralCube.read(cube_hdu)
+
+    cube.moment0().quicklook()
+    plt.colorbar()
+    plt.savefig(osjoin(fig_path, "ppv_mom0.png"))
+    plt.close()
+
+    cube.moment1().quicklook()
+    plt.colorbar()
+    plt.savefig(osjoin(fig_path, "ppv_mom1.png"))
+    plt.close()
+
+    cube.mean(axis=(1, 2)).quicklook()
+    plt.savefig(osjoin(fig_path, "ppv_mean_spec.png"))
     plt.close()
