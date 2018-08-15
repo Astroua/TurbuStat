@@ -75,7 +75,7 @@ Anisotropic 2D images can also be produced:
 
 .. image:: tutorials/images/rednoise_slope3_ellip_05_theta_45.png
 
-The power-spectrum can then be calculated and fit in 1D and 2D (see :ref:``):
+The power-spectrum can then be calculated and fit in 1D and 2D (see :ref:`pspec_tutorial`):
 
     >>> pspec = PowerSpectrum(rnoise_hdu)
     >>> pspec.run(verbose=True, radial_pspec_kwargs={'binsize': 1.0},
