@@ -23,17 +23,82 @@ def make_ppv(vel_field, dens_field, los_axis=0,
              return_hdu=True, pixel_ang_scale=1 * u.arcmin,
              restfreq=1.42 * u.GHz):
     '''
-    Generate a mock, optically-thin PPV cube from a given velocity and
-    density field.
+    Generate a mock, optically-thin HI PPV cube from a given velocity and
+    density field. Currently, the conversion to K assumes the 21-cm column
+    density conversion.
 
     Parameters
     ----------
-    los_length : `~astropy.units.Unit` length, optional
+    vel_field : `~astropy.units.Quantity`
+        Three-dimensional isotropic, velocity field. Must have units of
+        velocity.
+    dens_field : `~astropy.units.Quantity`
+        Three-dimensional isotropic, velocity field. Must have units of number
+        density.
+    los_axis : int, optional
+        The axis used to produce the PPV cube.
+    m : `~astropy.units.Quantity`, optional
+        Average particle mass. Defaults to 1.4 time the proton mass,
+        appropriate for the neutral ISM at solar metallicity. Used to
+        calculate the thermal line width.
+    T : `~astropy.units.Quantity`, optional
+        Temperature of the gas. Defaults to 4000 K. Used to
+        calculate the thermal line width.
+    los_length : `~astropy.units.Quantity`, optional
         Set the total physical length of the density and velocity fields
         along the line-of-sight. Defaults to 1 pc.
+    vel_disp : `~astropy.units.Quantity`, optional
+        Velocity dispersion of the 3D velocity field. When none is given,
+        the mean of the projected standard deviation of the velocity field
+        along `los_axis` is used. Used to set the extent of the velocity
+        channels and estimate the channel widths, when not given.
+    chan_width : `~astropy.units.Quantity`, optional
+        Width of a velocity channel. When the width is not given, an
+        estimate is made based on Eq. 12 from
+        `Esquivel+2003 <https://ui.adsabs.harvard.edu/#abs/2003MNRAS.342..325E/abstract>`_.
+    v_min : `~astropy.units.Quantity`, optional
+        Minimum velocity channel. Set to `vel_field - 4 * v_lim`, where
+        `v_lim = sqrt(vel_disp**2 + v_therm**2)`, when a limit is not given.
+    v_max : `~astropy.units.Quantity`, optional
+        Maximum velocity channel. Set to `vel_field + 4 * v_lim`, where
+        `v_lim = sqrt(vel_disp**2 + v_therm**2)`, when a limit is not given.
+    threads : int, optional
+        Number of cores to run on. Defaults to 1.
+    max_chan : int, optional
+        Sets an upper limit on the number of velocity channels (default of
+        1000) to avoid using excessive amounts of memory. If the number of
+        channels exceeds this limit, a `ValueError` is raised.
+    vel_struct_index : float, optional
+        Index of the velocity field. Used when automatically determining
+        the channel width. Defaults to 0.5.
+    verbose : bool, optional
+        Print out the min and max velocity extents and the channel width
+        prior to computing the cube.
+    return_hdu : bool, optional
+        Return the cube as a FITS HDU. Enabled by default.
+    pixel_ang_scale : `~astropy.units.Quantity`, optional
+        Specify the angular scale of one spatial pixel to set values in the
+        FITS header. Defaults to 1 arcmin.
+    restfreq : `~astropy.units.Quantity`, optional
+        Rest frequency of the spectral line passed to the FITS header.
+        Defaults to 1.42 GHz, roughly the 21-cm HI rest frequency.
+
+    Returns
+    -------
+    cube : `~astropy.units.Quantity` or `~astropy.io.fits.PrimaryHDU`
+        The PPV cube as an array (`return_hdu=False`) or a FITS HDU
+        (`return_hdu=True`).
+    vel_axis : `~astropy.units.Quantity`
+        When `return_hdu=False` is returned, the values for the velocity axis
+        are returned.
     '''
 
     v_therm_sq = (co.k_B * T / m).to(vel_field.unit**2)
+
+    # Estimate the velocity dispersion when not given.
+    # Use the
+    if vel_disp is None:
+        vel_disp = np.std(vel_field, axis=los_axis).mean()
 
     # Make a line width estimate with thermal broadening for setting velocity
     # extent
@@ -165,10 +230,17 @@ def _spectrum_maker(vel_edges, vel_slice, dens_slice, v_therm_sq, pix_scale,
 
 
 def _mapper(inps):
+    '''
+    Use with `multiprocessing.Pool.map`.
+    '''
     return _spectrum_maker(*inps)
 
 
 def field_slice(y, x, los_axis):
+    '''
+    Slice out spatial slices of a 3D field without the axis along
+    the observer's LOS.
+    '''
 
     los_slice = slice(None)
 

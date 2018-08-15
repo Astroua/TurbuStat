@@ -22,6 +22,17 @@ def generate_spectrum(np.ndarray[np.float64_t, ndim=1] vel,
     '''
     Generate an optically-thin spectrum at one line-of-sight given the velocity
     and density fields.
+
+    Quantities MUST be given in CGS units:
+
+    * vel - cm/s
+    * dens - cm^-3
+    * vel_edges - cm/s
+    * v_cents - cm/s
+    * dvdz - 1 / s
+    * v_therm_sq - (cm/s)^2
+    * pix_scale - cm
+
     '''
 
     cdef int i, jj, ni
