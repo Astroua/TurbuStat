@@ -130,15 +130,17 @@ def make_ppv(vel_field, dens_field, los_axis=0,
     if chan_width is None:
         # Eq. 13 from Esquivel+2003. Number of channels to recover the thin
         # slice regime down to 2 pix.
+        # Note that the equation in the paper has a negative sign in the sqrt
+        # that should be a +.
 
-        # Take the effective width to be ~1/5 of the effective channel width
+        # Take the effective width to be ~1/2 of the effective channel width
         # given by Eq. 12 in Esquivel+2003, for scales down to 2 pix.
         dv_sq = vel_disp**2 * \
             (2. / float(vel_field.shape[los_axis]))**(vel_struct_index)
 
         v_eff = np.sqrt(dv_sq + 2 * v_therm_sq).to(vel_field.unit)
 
-        N_chan = int(np.ceil((v_eff / 5.).value))
+        N_chan = int(np.ceil(del_v / (v_eff / 2.)).value)
 
     else:
         N_chan = int(np.ceil(del_v / chan_width))

@@ -38,8 +38,8 @@ def test_ppv(axis):
                         los_axis=axis,
                         vel_disp=np.std(velocity, axis=axis)[twod_slice].max(),
                         T=100 * u.K,
-                        return_hdu=True,
-                        chan_width=500 * u.m / u.s)
+                        return_hdu=True)
+                        # chan_width=500 * u.m / u.s)
 
     cube = SpectralCube.read(cube_hdu)
 
