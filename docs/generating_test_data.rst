@@ -117,14 +117,14 @@ Three-dimensional power-law fields can also be produced with `make_3dfield`:
 Only isotropic fields can currently be created. Projections of this 3D field
 are shown below:
 
-    >>> plt.figure(figsize=[10, 3])
-    >>> plt.subplot(131)
-    >>> plt.imshow(threeD_field.mean(0), origin='lower')
-    >>> plt.subplot(132)
-    >>> plt.imshow(threeD_field.mean(1), origin='lower')
-    >>> plt.subplot(133)
-    >>> plt.imshow(threeD_field.mean(2), origin='lower')
-    >>> plt.tight_layout()
+    >>> plt.figure(figsize=[10, 3])  # doctest: +SKIP
+    >>> plt.subplot(131)  # doctest: +SKIP
+    >>> plt.imshow(threeD_field.mean(0), origin='lower')  # doctest: +SKIP
+    >>> plt.subplot(132)  # doctest: +SKIP
+    >>> plt.imshow(threeD_field.mean(1), origin='lower')  # doctest: +SKIP
+    >>> plt.subplot(133)  # doctest: +SKIP
+    >>> plt.imshow(threeD_field.mean(2), origin='lower')  # doctest: +SKIP
+    >>> plt.tight_layout()  # doctest: +SKIP
 
 .. image:: tutorials/images/rednoise_3D_slope3_projs.png
 
@@ -144,49 +144,49 @@ We need to create 3D velocity and density cubes. For this simple example, we wil
 small 32 pixel cubes so this is quick to compute:
 
     >>> velocity = make_3dfield(32, powerlaw=4., amp=1.,
-    ...                         randomseed=98734) * u.km / u.s
+    ...                         randomseed=98734) * u.km / u.s  # doctest: +SKIP
 
     # Deal with negative density values.
     >>> density = make_3dfield(32, powerlaw=3., amp=1.,
-    ...                        randomseed=328764) * u.cm**-3
+    ...                        randomseed=328764) * u.cm**-3  # doctest: +SKIP
 
 Both fields need to have appropriate units.
 
 There is an additional issue for the density field generated from a power-law in that it will contain negative values. There are numerous approaches to account for negative values, including adding the minimum to force all values to be positive or taking the exponential of this field to produce a log-normal field (`Brunt & Heyer 2002 <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Roman-Duval+2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). Here we use the approach from `Ossenkopf+2006 <https://ui.adsabs.harvard.edu/#abs/2006A&A...452..223O/abstract>`_, adding one standard deviation to all values and masking values that remain negative. Each of these approaches will distort the field properties to some extent.
 
-    >>> density += density.std()
-    >>> density[density.value < 0.] = 0. * u.cm**-3
+    >>> density += density.std()  # doctest: +SKIP
+    >>> density[density.value < 0.] = 0. * u.cm**-3  # doctest: +SKIP
 
 To produce a PPV cube from these fields, using the zeroth axis as the line-of-sight:
 
     >>> cube_hdu = make_ppv(velocity, density, los_axis=0,
     ...                     T=100 * u.K, chan_width=0.5 * u.km / u.s,
     ...                     v_min=-20 * u.km / u.s,
-    ...                     v_max=20 * u.km / u.s)
+    ...                     v_max=20 * u.km / u.s)  # doctest: +SKIP
 
 We will demonstrate the cube properties using `spectral-cube <https://spectral-cube.readthedocs.io>`_:
 
-    >>> from spectral_cube import SpectralCube
-    >>> cube = SpectralCube.read(cube_hdu)
+    >>> from spectral_cube import SpectralCube  # doctest: +SKIP
+    >>> cube = SpectralCube.read(cube_hdu)  # doctest: +SKIP
 
 The zeroth moment, integrated over the velocity axis:
 
-    >>> cube.moment0().quicklook()
-    >>> plt.colorbar()
+    >>> cube.moment0().quicklook()  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
 
 .. image:: tutorials/images/ppv_mom0.png
 
 The velocity centroid map:
 
-    >>> cube.moment1().quicklook()
-    >>> plt.colorbar()
+    >>> cube.moment1().quicklook()  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
 
 .. image:: tutorials/images/ppv_mom1.png
 
 And the mean spectra, averaged over the spatial dimensions:
 
-    >>> cube.mean(axis=(1, 2)).quicklook()
-    >>> plt.colorbar()
+    >>> cube.mean(axis=(1, 2)).quicklook()  # doctest: +SKIP
+    >>> plt.colorbar()  # doctest: +SKIP
 
 .. image:: tutorials/images/ppv_mean_spec.png
 
