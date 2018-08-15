@@ -16,7 +16,7 @@ conv_to_K = 1.823e13 * u.cm**-2 / (u.K * u.cm / u.s)
 
 
 def make_ppv(vel_field, dens_field, los_axis=0,
-             m=1.4 * co.m_p, T=4000 * u.K, los_length=1 * u.pc,
+             m=1.4 * co.m_p, T=100 * u.K, los_length=1 * u.pc,
              vel_disp=None, chan_width=None, v_min=None, v_max=None,
              threads=1, max_chan=1000,
              vel_struct_index=0.5, verbose=False,
@@ -42,7 +42,7 @@ def make_ppv(vel_field, dens_field, los_axis=0,
         appropriate for the neutral ISM at solar metallicity. Used to
         calculate the thermal line width.
     T : `~astropy.units.Quantity`, optional
-        Temperature of the gas. Defaults to 4000 K. Used to
+        Temperature of the gas. Defaults to 100 K. Used to
         calculate the thermal line width.
     los_length : `~astropy.units.Quantity`, optional
         Set the total physical length of the density and velocity fields
