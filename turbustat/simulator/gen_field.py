@@ -7,12 +7,9 @@ def make_3dfield(imsize, powerlaw=2.0, amp=1.0,
                  return_fft=False, randomseed=32768324):
     '''
 
-    Generate a power-law image with a specified index and random phases.
+    Generate a 3D power-law field with a specified index and random phases.
 
-    Adapted from https://github.com/keflavich/image_registration. Added ability
-    to make the power spectra elliptical. Also changed the random sampling so
-    the random phases are Hermitian (and the inverse FFT gives a real-valued
-    image).
+    Heavily adapted from https://github.com/keflavich/image_registration.
 
     Parameters
     ----------
@@ -141,7 +138,7 @@ def make_extended(imsize, powerlaw=2.0, theta=0., ellip=1.,
                   return_fft=False, full_fft=True, randomseed=32768324):
     '''
 
-    Generate a power-law image with a specified index and random phases.
+    Generate a 2D power-law image with a specified index and random phases.
 
     Adapted from https://github.com/keflavich/image_registration. Added ability
     to make the power spectra elliptical. Also changed the random sampling so
