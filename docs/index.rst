@@ -49,6 +49,7 @@ Contents:
    tutorials/index
    moments.rst
    cube_tools.rst
+   generating_test_data.rst
    statistics.rst
    helper_scripts.rst
    contributing.rst

@@ -24,7 +24,7 @@ except ImportError:
 from ..statistics import MVC, MVC_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 from .testing_utilities import assert_between
 
 
@@ -114,7 +114,7 @@ def test_mvc_azimlimits(plaw, ellip):
 
     # Generate a red noise model
     img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=False)
+                        return_fft=False)
 
     ones = np.ones_like(img)
 
@@ -171,7 +171,7 @@ def test_MVC_beamcorrect():
 
     plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                           theta=theta,
-                          return_psd=False)
+                          return_fft=False)
     plane = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
                          boundary='wrap')
 
@@ -219,7 +219,7 @@ def test_MVC_apod_kernel(apod_type):
 
     plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                           theta=theta,
-                          return_psd=False)
+                          return_fft=False)
 
     # Generate a header
     hdu = fits.PrimaryHDU(plane)

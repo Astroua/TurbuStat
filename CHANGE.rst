@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #186 - Generate mock PPV cubes and 3D power-law fields; added tests for generated power-law in 2D and 3D; renamed `data_reduction` to `moments`; removed masking procedures from `Mask_and_Moments` and renamed to `Moments`
 * #185 - Correct SCF weighting for the distance metric. Addresses #184.
 * #183 - Add progress bars for long operations. Addresses #180.
 * #182 - Separate out plotting functions that were implemented in the `run` functions of the statistics.

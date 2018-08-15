@@ -25,7 +25,7 @@ def create_fits_hdu(data, *header_args):
 
 
 def create_cube_header(pixel_scale, spec_pixel_scale, beamfwhm, imshape,
-                       restfreq, bunit):
+                       restfreq, bunit, v0=0 * u.km / u.s):
     '''
     Create a basic FITS header for a PPV cube.
 
@@ -49,6 +49,8 @@ def create_cube_header(pixel_scale, spec_pixel_scale, beamfwhm, imshape,
         Rest frequency of the spectral line.
     bunit : `~astropy.units.Unit`
         Unit of intensity.
+    v0 : `~astropy.units.Unit`, optional
+        The value of the spectral axis at the first pixel in the cube.
 
     Returns
     -------
@@ -72,7 +74,7 @@ def create_cube_header(pixel_scale, spec_pixel_scale, beamfwhm, imshape,
               'CTYPE2': 'GLAT-CAR',
               'CUNIT1': 'deg',
               'CUNIT2': 'deg',
-              'CRVAL3': 0.,
+              'CRVAL3': v0.to(spec_pixel_scale.unit).value,
               'CUNIT3': spec_pixel_scale.unit.to_string(),
               'CDELT3': spec_pixel_scale.value,
               'CRPIX3': 1,

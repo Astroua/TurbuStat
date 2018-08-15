@@ -13,7 +13,7 @@ important to note that the data will still be correlated beyond the FWHM. For ex
 consider a randomly-drawn image with a specified power-law index:
 
     >>> import matplotlib.pyplot as plt
-    >>> from turbustat.tests.generate_test_images import make_extended
+    >>> from turbustat.simulator import make_extended
     >>> from turbustat.io.sim_tools import create_fits_hdu
     >>> from astropy import units as u
     >>> # Image drawn from red-noise

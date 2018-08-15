@@ -64,6 +64,9 @@ def moment0_error(cube, scale, axis=0, how='auto'):
     else:
         raise ValueError("how must be 'cube' or 'slice'.")
 
+    # Multiply by spectral unit
+    moment0_err *= cube.spectral_axis.unit
+
     meta = {'moment_order': 0,
             'moment_axis': axis,
             'moment_method': how}

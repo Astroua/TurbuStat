@@ -28,7 +28,7 @@ from ..statistics.vca_vcs.slice_thickness import spectral_regrid_cube
 from ..io.input_base import to_spectral_cube
 from ._testing_data import (dataset1, dataset2, computed_data,
                             computed_distances)
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 from .testing_utilities import assert_between
 
 
@@ -149,7 +149,7 @@ def test_vca_azimlimits(plaw, ellip):
     for i in range(nchans):
         cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                                 theta=theta,
-                                return_psd=False)
+                                return_fft=False)
 
     # Use large bins to minimize shot noise since the number of samples is
     # limited
@@ -211,7 +211,7 @@ def test_VCA_beamcorrect():
     for i in range(nchans):
         plane = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                               theta=theta,
-                              return_psd=False)
+                              return_fft=False)
         cube[i] = convolve_fft(plane, beam.as_kernel(10 * u.arcsec),
                                boundary='wrap')
 
@@ -257,7 +257,7 @@ def test_VCA_apod_kernel(apod_type):
     for i in range(nchans):
         cube[i] = make_extended(imsize, powerlaw=plaw, ellip=ellip,
                                 theta=theta,
-                                return_psd=False)
+                                return_fft=False)
 
     # Generate a header
     hdu = fits.PrimaryHDU(cube)

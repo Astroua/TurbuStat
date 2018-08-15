@@ -18,7 +18,7 @@ except ImportError:
 from ..statistics import Wavelet, Wavelet_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
-from .generate_test_images import make_extended
+from ..simulator import make_extended
 
 
 def test_Wavelet_method():
@@ -145,7 +145,7 @@ def test_wavelet_plaw_img(plaw, ellip):
 
     # Generate a red noise model
     img = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
-                        return_psd=False)
+                        return_fft=False)
 
     test = Wavelet(fits.PrimaryHDU(img))
     # The turn-over occurs near ~1/16 of the axis size.
