@@ -27,6 +27,9 @@ def test_3D_gen_field(shape, slope):
 
     npt.assert_allclose(power, power_cube, rtol=1e-8)
 
+    # Std of cube should match the amplitude of 1.
+    npt.assert_allclose(1., np.std(cube), rtol=1e-5)
+
 
 @pytest.mark.parametrize(('shape', 'slope'), [(shape, slope) for shape in
                                               [32, 33] for slope in
