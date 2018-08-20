@@ -51,10 +51,7 @@ def make_3dfield(imsize, powerlaw=2.0, amp=1.0,
 
         phases = np.cos(angles) + 1j * np.sin(angles)
 
-    # Rescale phases to an amplitude of unity
-    phases /= np.sqrt(np.sum(phases**2) / float(phases.size))
-
-    output = amp * (rr**(-powerlaw / 2.)).astype('complex') * phases
+    output = (rr**(-powerlaw / 2.)).astype('complex') * phases
 
     output[np.isnan(output)] = 0. + 1j * 0.0
 
@@ -125,11 +122,14 @@ def make_3dfield(imsize, powerlaw=2.0, amp=1.0,
     output[0, 0, 0] = output[0, 0, 0].real + 1j * 0.0
     output[0, 0, -1] = output[0, 0, -1].real + 1j * 0.0
 
+    newmap = np.fft.irfftn(output)
+
+    # Normalize to the correct amplitude.
+    newmap /= (np.sqrt(np.sum(newmap**2)) / np.sqrt(newmap.size)) / amp
+
     if return_fft:
 
-        return output
-
-    newmap = np.fft.irfftn(output)
+        return np.fft.rfftn(newmap)
 
     return newmap
 
