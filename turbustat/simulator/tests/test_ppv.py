@@ -43,6 +43,8 @@ def test_ppv(axis):
 
     cube = SpectralCube.read(cube_hdu)
 
+    chan_width = np.abs(np.diff(cube.spectral_axis)[0]).to(u.m / u.s)
+
     NHI_exp = (1 * u.cm**-3) * (1 * u.pc).to(u.cm)
 
     # Moment 0 in K km/s
@@ -54,7 +56,7 @@ def test_ppv(axis):
     assert NHI_exp.unit == NHI_cube.unit
 
     # Expected is 3.0854e18. Check if it is within 1e16
-    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=1e-4)
+    npt.assert_allclose(NHI_exp.value, NHI_cube.value, rtol=1e-3)
 
     v_therm = np.sqrt(c.k_B * 100 * u.K / (1.4 * c.m_p)).to(u.km / u.s)
 
@@ -64,13 +66,16 @@ def test_ppv(axis):
                     (density[threed_slice]).sum(axis)).to(u.km / u.s)
     mom1 = cube.moment1().to(u.km / u.s)
 
-    npt.assert_allclose(raw_centroid.value, mom1.value, atol=v_therm.value)
+    npt.assert_allclose(raw_centroid.value, mom1.value,
+                        atol=chan_width.value / 2.)
 
     # Rough comparison of line width to the velocity field std.
     # Very few samples, so this is only a rough check
 
-    # Correct the measured line widths for thermal broadening
-    lwidth = np.sqrt(cube.linewidth_sigma().to(u.km / u.s)**2 - v_therm**2)
+    # Correct the measured line widths for thermal broadening and broadening
+    # from finite channel widths
+    lwidth = np.sqrt(cube.linewidth_sigma().to(u.km / u.s)**2 -
+                     chan_width**2 - v_therm**2)
     vel_std = np.std(velocity, axis=axis)[twod_slice].to(u.km / u.s)
 
-    npt.assert_allclose(vel_std.value, lwidth.value, atol=v_therm.value)
+    npt.assert_allclose(vel_std.value, lwidth.value, atol=0.2)
