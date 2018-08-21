@@ -320,7 +320,7 @@ class StatisticBase_PSpec2D(object):
             limit have been given.
         radial_weighting : bool, optional
             To account for the increasing number of samples at greater radii,
-            the fit can be weighted by :math:`1/{\rm radius}` to emphasize the
+            the fit can be weighted by :math:`1/\mathrm{radius}` to emphasize the
             points at small radii. DO NOT enabled weighting when the field is
             elliptical! This will bias the fit parameters! Default is False.
         fix_ellip_params : bool, optional
