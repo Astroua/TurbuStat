@@ -40,8 +40,8 @@ class StatisticBase_PSpec2D(object):
         1-sigma standard deviation of the 1D power spectrum.
         '''
         if not self._stddev_flag:
-            Warning("ps1D_stddev is only calculated when return_stddev"
-                    " is enabled.")
+            warnings.warn("ps1D_stddev is only calculated when return_stddev"
+                          " is enabled.")
 
         return self._ps1D_stddev
 
@@ -292,7 +292,8 @@ class StatisticBase_PSpec2D(object):
 
     def fit_2Dpspec(self, fit_method='LevMarq', p0=(), low_cut=None,
                     high_cut=None, bootstrap=True, niters=100,
-                    use_azimmask=False):
+                    use_azimmask=False, radial_weighting=False,
+                    fix_ellip_params=False):
         '''
         Model the 2D power-spectrum surface with an elliptical power-law model.
 
@@ -317,6 +318,16 @@ class StatisticBase_PSpec2D(object):
         use_azimmask : bool, optional
             Use the azimuthal mask defined for the 1D spectrum, when azimuthal
             limit have been given.
+        radial_weighting : bool, optional
+            To account for the increasing number of samples at greater radii,
+            the fit can be weighted by :math:`1/{\rm radius}` to emphasize the
+            points at small radii. DO NOT enabled weighting when the field is
+            elliptical! This will bias the fit parameters! Default is False.
+        fix_ellip_params : bool, optional
+            If the field is expected to be isotropic, the ellipticity and theta
+            parameters can be fixed in the fit. This will help the fit since
+            the isotropic case sits at the edge of the ellipticity parameter
+            space and can be difficult to correctly converge to.
         '''
 
         # Make the data to fit to
@@ -369,7 +380,9 @@ class StatisticBase_PSpec2D(object):
                                     yy_freq[mask], p0,
                                     fit_method=fit_method,
                                     bootstrap=bootstrap,
-                                    niters=niters)
+                                    niters=niters,
+                                    radial_weighting=radial_weighting,
+                                    fix_ellip_params=fix_ellip_params)
 
         self.fit2D = fit_2Dmodel
         self._fitter = fitter
@@ -384,6 +397,14 @@ class StatisticBase_PSpec2D(object):
         self._ellip2D = inverse_interval_transform(params[1], 0, 1)
         self._ellip2D_err = \
             inverse_interval_transform_stderr(stderrs[1], params[1], 0, 1)
+
+        # Add a warning that if ellip is close to 1 it may be worth fixing that
+        # parameter.
+        if self.ellip2D > 0.97:
+            warnings.warn("The elliptical parameter is close to 1. The field "
+                          "may be isotropic and the fit is not converging to "
+                          "1. Consider fitting with `fix_ellip_params=True`,"
+                          " which forces the ellipticity to 1.")
 
     @property
     def slope2D(self):
