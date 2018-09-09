@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #190 - Add spectral downsampling by averaging for VCA; remove downsampling for VCS.
 * #189 - Fixing elliptical p-law parameters for isotropic fields.
 * $187 - Correct normalization in 3D power-law fields.
 * #186 - Generate mock PPV cubes and 3D power-law fields; added tests for generated power-law in 2D and 3D; renamed `data_reduction` to `moments`; removed masking procedures from `Mask_and_Moments` and renamed to `Moments`
