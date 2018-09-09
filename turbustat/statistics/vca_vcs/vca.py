@@ -26,21 +26,23 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Data cube.
     header : FITS header, optional
         Corresponding FITS header.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
+    beam : `radio_beam.Beam`, optional
+        Beam object for correcting for the effect of a finite beam.
     channel_width : `~astropy.units.Quantity`, optional
         Set the width of channels to compute the VCA with. The channel width
         in the data is used by default. Given widths will be used to
         spectrally down-sample the data before calculating the VCA. Up-sampling
         to smaller channel sizes than the original is not supported.
-    distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
-    beam : `radio_beam.Beam`, optional
-        Beam object for correcting for the effect of a finite beam.
+    downsample_kwargs : dict, optional
+        Passed to `~turbustat.statistics.vca_vca.slice_thickness.spectral_regrid_cube`.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, channel_width=None, distance=None,
-                 beam=None):
+    def __init__(self, cube, header=None, distance=None, beam=None,
+                 channel_width=None, downsample_kwargs={}):
         super(VCA, self).__init__()
 
         self.input_data_header(cube, header)
@@ -49,7 +51,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if channel_width is not None:
             sc_cube = to_spectral_cube(self.data, self.header)
 
-            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
+            reg_cube = spectral_regrid_cube(sc_cube, channel_width,
+                                            **downsample_kwargs)
 
             # Don't pass the header. It will read the new one in reg_cube
             self.input_data_header(reg_cube, None)
