@@ -102,23 +102,29 @@ def test_VCA_distance():
                             computed_distances['vca_distance'])
 
 
-@pytest.mark.parametrize("channel_width",
-                         [2, 5, 10, 25] * u.pix)
-def test_spectral_regrid(channel_width):
+@pytest.mark.parametrize(("regrid_type", "channel_width"),
+                         [['downsample', 2 * u.pix], ['downsample', 2],
+                          ['downsample', 80.1 * u.m / u.s],
+                          ['regrid', 2 * u.pix],
+                          ['regrid', 80.1 * u.m / u.s]])
+def test_spectral_regrid(regrid_type, channel_width):
+
+    # All of the different choice should regrid the cube to channels of
+    # 2 pixels.
 
     sc_cube = to_spectral_cube(*dataset1['cube'])
 
-    # Convert those pixel widths into spectral units
-    spec_width = np.abs(sc_cube.header["CDELT3"]) * \
-        channel_width.value * u.m / u.s
-
     # Regrid to different factors of the channel width
-    sc_pix_regrid = spectral_regrid_cube(sc_cube, channel_width)
-    sc_spec_regrid = spectral_regrid_cube(sc_cube, spec_width)
+    sc_regrid = spectral_regrid_cube(sc_cube, channel_width,
+                                     method=regrid_type)
 
-    assert sc_pix_regrid.shape == sc_spec_regrid.shape
+    assert sc_regrid.shape[0] == sc_cube.shape[0] / 2
+    assert sc_regrid.shape[1] == sc_cube.shape[1]
+    assert sc_regrid.shape[2] == sc_cube.shape[2]
 
-    npt.assert_allclose(sc_pix_regrid.sum(), sc_spec_regrid.sum())
+    npt.assert_allclose(sc_regrid.sum() / float(sc_regrid.size),
+                        sc_cube.sum() / float(sc_cube.size),
+                        atol=1e-3)
 
     # Check if flux is conserved. The interpolation built into spectral-cube
     # (right now) will NOT. Avoid testing this until the improved
@@ -126,8 +132,9 @@ def test_spectral_regrid(channel_width):
     # npt.assert_allclose(sc_pix_regrid.sum() * channel_width.value,
     #                     sc_cube.sum())
 
-    npt.assert_allclose(sc_pix_regrid.header['CDELT3'],
-                        sc_spec_regrid.header["CDELT3"])
+    npt.assert_allclose(sc_regrid.header['CDELT3'],
+                        sc_cube.header["CDELT3"] * 2,
+                        atol=0.2)
 
 
 @pytest.mark.parametrize(('plaw', 'ellip'),

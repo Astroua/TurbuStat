@@ -51,18 +51,6 @@ def test_VCS_distance():
                             computed_distances['vcs_distance'])
 
 
-def test_VCS_method_change_chanwidth():
-
-    orig_width = np.abs(dataset1['cube'][1]["CDELT3"]) * u.m / u.s
-
-    tester = VCS(dataset1["cube"], channel_width=2 * orig_width)
-
-    # Should have 250 channels now
-    assert tester.data.shape[0] == 250
-
-    tester.run()
-
-
 def test_VCS_method_fitlimits():
 
     high_cut = 0.17 / u.pix
