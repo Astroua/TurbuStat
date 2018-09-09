@@ -28,11 +28,6 @@ class VCS(BaseStatisticMixIn):
         Corresponding FITS header.
     vel_units : bool, optional
         Convert frequencies to the spectral unit in the header.
-    channel_width : `~astropy.units.Quantity`, optional
-        Set the width of channels to compute the VCA with. The channel width
-        in the data is used by default. Given widths will be used to
-        spectrally down-sample the data before calculating the VCA. Up-sampling
-        to smaller channel sizes than the original is not supported.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -41,14 +36,6 @@ class VCS(BaseStatisticMixIn):
         super(VCS, self).__init__()
 
         self.input_data_header(cube, header)
-
-        if channel_width is not None:
-            sc_cube = to_spectral_cube(self.data, self.header)
-
-            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
-
-            # Don't pass the header. It will read the new one in reg_cube
-            self.input_data_header(reg_cube, None)
 
         self._has_nan_flag = False
         if np.isnan(self.data).any():
