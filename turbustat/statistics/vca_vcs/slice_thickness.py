@@ -42,13 +42,14 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
     cube : `~spectral_cube.SpectralCube`
         Spectral cube to regrid.
     channel_width : `~astropy.units.Quantity` or int
-        The width of the new channels. If `method='regrid'`, `channel_width`
-        should be given in equivalent spectral units used in the cube, or
-        in pixel units. For example, downsampling by a factor of 2 for a cube
+        The width of the new channels. `channel_width` should be given in
+        equivalent spectral units used in the cube, or in pixel units. For
+        example, downsampling by a factor of 2 for a cube
         with a channel width of 0.1 km/s can be achieved by setting
         `channel_width` to `2 * u.pix`
-        or `0.2 km /s`. If `method='downsample'`, `channel_width` must be
+        or `0.2 km /s`. If `method='downsample'`, `channel_width` can also be
         an integer. This sets the number of channels to downsample across.
+        Non-integer values will be rounded to the next nearest integer.
     method : {'downsample', 'regrid'}, optional
         Method to spectrally regrid the cube.
     downsamp_function : {function}, optional
@@ -71,8 +72,26 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
     if method == 'downsample':
 
         if not isinstance(channel_width, int):
-            raise TypeError("channel_width must be an integer when using "
-                            "method='downsample'.")
+
+            if not isinstance(channel_width, u.Quantity):
+                raise TypeError("channel_width must be a "
+                                "astropy.units.Quantity when a non-integer"
+                                " is given.")
+
+            warn("Non-integer channel width given. The channel width will be "
+                 "the next nearest integer value of the original channel"
+                 " width.")
+
+            # Sample the closest integer to the given width
+            orig_width = np.abs(np.diff(cube.spectral_axis[:2])[0])
+
+            if channel_width.unit.is_equivalent(u.pix):
+                channel_width = int((np.ceil(channel_width.value)))
+            elif channel_width.unit.is_equivalent(cube.spectral_axis.unit):
+                channel_width = int((np.ceil(channel_width / orig_width)).value)
+            else:
+                raise u.UnitsError("channel_width must be given in pixel units"
+                                   " or the same spectral unit as the cube.")
 
         return cube.downsample_axis(channel_width, axis=0)
 
