@@ -180,7 +180,7 @@ class VCS(BaseStatisticMixIn):
             while True:
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
-                self.fit.fit_model(verbose=fit_verbose)
+                self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
 
                 if self.fit.params.size == 5:
                     # Success!
@@ -198,7 +198,7 @@ class VCS(BaseStatisticMixIn):
 
         # Fit the final model with whichever breaks were passed.
         self.fit = Lm_Seg(x, y, breaks)
-        self.fit.fit_model(verbose=fit_verbose)
+        self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
 
     @property
     def slope(self):

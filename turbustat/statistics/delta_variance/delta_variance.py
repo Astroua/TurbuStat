@@ -333,6 +333,9 @@ class DeltaVariance(BaseStatisticMixIn):
 
             model = Lm_Seg(x, y, np.log10(pix_brk.value), weights=weights)
 
+            fit_kwargs['verbose'] = verbose
+            fit_kwargs['cov_type'] = 'HC3'
+
             model.fit_model(**fit_kwargs)
 
             self.fit = model.fit
@@ -381,7 +384,7 @@ class DeltaVariance(BaseStatisticMixIn):
             self._slope = self.fit.params[1]
             self._slope_err = self.fit.bse[1]
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
         if verbose:
             print(self.fit.summary())

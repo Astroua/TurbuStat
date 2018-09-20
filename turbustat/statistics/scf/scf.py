@@ -341,7 +341,7 @@ class SCF(BaseStatisticMixIn):
         else:
             model = sm.OLS(y, x, missing='drop')
 
-        self.fit = model.fit()
+        self.fit = model.fit(cov_type='HC3')
 
         if verbose:
             print(self.fit.summary())

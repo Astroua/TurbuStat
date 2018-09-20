@@ -178,7 +178,7 @@ class StatisticBase_PSpec2D(object):
 
             brk_fit = \
                 Lm_Seg(x, y, brk)
-            brk_fit.fit_model(verbose=verbose)
+            brk_fit.fit_model(verbose=verbose, cov_type='HC3')
 
             if brk_fit.params.size == 5:
 
@@ -219,7 +219,7 @@ class StatisticBase_PSpec2D(object):
             else:
                 model = sm.OLS(y, x, missing='drop')
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
             self._slope_err = self.fit.bse[1]

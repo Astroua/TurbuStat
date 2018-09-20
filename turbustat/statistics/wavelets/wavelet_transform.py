@@ -238,6 +238,8 @@ class Wavelet(BaseStatisticMixIn):
 
             model = Lm_Seg(x, y, np.log10(pix_brk.value))
 
+            fit_kwargs['cov_type'] = 'HC3'
+
             model.fit_model(**fit_kwargs)
 
             self.fit = model.fit
@@ -280,7 +282,7 @@ class Wavelet(BaseStatisticMixIn):
 
             model = sm.OLS(y, x, missing='drop')
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
             self._slope_err = self.fit.bse[1]

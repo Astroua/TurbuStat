@@ -70,7 +70,7 @@ class Lm_Seg(object):
             raise Warning("Not enough finite points to fit.")
 
     def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
-                  constant=True, verbose=True):
+                  constant=True, verbose=True, **fit_kwargs):
         '''
         '''
         # Fit a normal linear model to the data
@@ -84,7 +84,7 @@ class Lm_Seg(object):
             model = sm.OLS(self.y, x_const)
         else:
             model = sm.OLS(self.y, x_const, weights=self.weights)
-        init_lm = model.fit()
+        init_lm = model.fit(**fit_kwargs)
 
         if verbose:
             print(init_lm.summary())
