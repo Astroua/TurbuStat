@@ -115,9 +115,6 @@ class SCF(BaseStatisticMixIn):
         '''
         Standard deviation of the `~SCF.scf_spectrum`
         '''
-        if not self._stddev_flag:
-            Warning("scf_spectrum_stddev is only calculated when return_stddev"
-                    " is enabled.")
         return self._scf_spectrum_stddev
 
     @property
@@ -221,8 +218,7 @@ class SCF(BaseStatisticMixIn):
             if show_progress:
                 bar.update(n + 1)
 
-    def compute_spectrum(self, return_stddev=True,
-                         **kwargs):
+    def compute_spectrum(self, **kwargs):
         '''
         Compute the 1D spectrum as a function of lag. Can optionally
         use log-spaced bins. kwargs are passed into the pspec function,
@@ -231,8 +227,6 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins. Default is True.
         kwargs : passed to `turbustat.statistics.psds.pspec`
         '''
 
@@ -250,21 +244,16 @@ class SCF(BaseStatisticMixIn):
         else:
             azim_constraint_flag = False
 
-        out = pspec(self.scf_surface, return_stddev=return_stddev,
+        out = pspec(self.scf_surface, return_stddev=True,
                     logspacing=False, return_freqs=False, **kwargs)
 
-        self._stddev_flag = return_stddev
         self._azim_constraint_flag = azim_constraint_flag
 
-        if return_stddev and azim_constraint_flag:
+        if azim_constraint_flag:
             self._lags, self._scf_spectrum, self._scf_spectrum_stddev, \
                 self._azim_mask = out
-        elif return_stddev:
-            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = out
-        elif azim_constraint_flag:
-            self._lags, self._scf_spectrum, self._azim_mask = out
         else:
-            self._lags, self._scf_spectrum = out
+            self._lags, self._scf_spectrum, self._scf_spectrum_stddev = out
 
         roll_lag_diff = np.abs(self.roll_lags[1] - self.roll_lags[0])
 
@@ -330,16 +319,12 @@ class SCF(BaseStatisticMixIn):
         x = sm.add_constant(x)
 
         # If the std were computed, use them as weights
-        if self._stddev_flag:
+        # Converting to the log stds doesn't matter since the weights
+        # remain proportional to 1/sigma^2, and an overal normalization is
+        # applied in the fitting routine.
+        weights = self.scf_spectrum_stddev[within_limits] ** -2
 
-            # Converting to the log stds doesn't matter since the weights
-            # remain proportional to 1/sigma^2, and an overal normalization is
-            # applied in the fitting routine.
-            weights = self.scf_spectrum_stddev[within_limits] ** -2
-
-            model = sm.WLS(y, x, missing='drop', weights=weights)
-        else:
-            model = sm.OLS(y, x, missing='drop')
+        model = sm.WLS(y, x, missing='drop', weights=weights)
 
         self.fit = model.fit(cov_type='HC3')
 
@@ -672,7 +657,7 @@ class SCF(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, return_stddev=True, boundary='continuous',
+    def run(self, boundary='continuous',
             show_progress=True, xlow=None, xhigh=None,
             fit_2D=True, fit_2D_kwargs={}, radialavg_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
@@ -681,8 +666,6 @@ class SCF(BaseStatisticMixIn):
 
         Parameters
         ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         boundary : {"continuous", "cut"}
             Treat the boundary as continuous (wrap-around) or cut values
             beyond the edge (i.e., for most observational data).
@@ -708,8 +691,7 @@ class SCF(BaseStatisticMixIn):
         '''
 
         self.compute_surface(boundary=boundary, show_progress=show_progress)
-        self.compute_spectrum(return_stddev=return_stddev,
-                              **radialavg_kwargs)
+        self.compute_spectrum(**radialavg_kwargs)
         self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
 
         if fit_2D:
@@ -795,12 +777,12 @@ class SCF_Distance(object):
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1,
                             distance=phys_distance)
-            self.scf1.run(return_stddev=True, boundary=boundary[0],
+            self.scf1.run(boundary=boundary[0],
                           fit_2D=False)
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2,
                         distance=phys_distance)
-        self.scf2.run(return_stddev=True, boundary=boundary[1],
+        self.scf2.run(boundary=boundary[1],
                       fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,

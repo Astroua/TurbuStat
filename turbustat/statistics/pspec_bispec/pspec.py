@@ -157,8 +157,6 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
             `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
             for a list of accepted kwargs.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional

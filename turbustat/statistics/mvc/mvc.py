@@ -227,7 +227,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
     def run(self, verbose=False, beam_correct=False,
             apodize_kernel=None, alpha=0.2, beta=0.0,
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
-            return_stddev=True, radial_pspec_kwargs={},
+            radial_pspec_kwargs={},
             low_cut=None, high_cut=None,
             fit_2D=True, fit_kwargs={}, fit_2D_kwargs={},
             save_name=None, xunit=u.pix**-1, use_wavenumber=False):
@@ -247,8 +247,6 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
             `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
             `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
             for a list of accepted kwargs.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         radial_pspec_kwargs : dict, optional
             Passed to `~PowerSpectrum.compute_radial_pspec`.
         low_cut : `~astropy.units.Quantity`, optional
@@ -281,8 +279,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
                            use_pyfftw=use_pyfftw, threads=threads,
                            **pyfftw_kwargs)
 
-        self.compute_radial_pspec(return_stddev=return_stddev,
-                                  **radial_pspec_kwargs)
+        self.compute_radial_pspec(**radial_pspec_kwargs)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
         if fit_2D:
