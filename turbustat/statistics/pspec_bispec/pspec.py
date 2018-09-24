@@ -125,7 +125,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
     def run(self, verbose=False, beam_correct=False,
             apodize_kernel=None, alpha=0.2, beta=0.0,
             use_pyfftw=False, threads=1,
-            pyfftw_kwargs={}, return_stddev=True,
+            pyfftw_kwargs={},
             low_cut=None, high_cut=None,
             fit_2D=True, radial_pspec_kwargs={}, fit_kwargs={},
             fit_2D_kwargs={},
@@ -190,8 +190,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                            use_pyfftw=use_pyfftw, threads=threads,
                            **pyfftw_kwargs)
 
-        self.compute_radial_pspec(return_stddev=return_stddev,
-                                  **radial_pspec_kwargs)
+        self.compute_radial_pspec(**radial_pspec_kwargs)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
