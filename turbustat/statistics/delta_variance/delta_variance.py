@@ -447,7 +447,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None):
+    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None,
+                 show_residual=True):
         '''
         Plot the delta-variance curve and the fit.
 
@@ -462,6 +463,8 @@ class DeltaVariance(BaseStatisticMixIn):
         fit_color : {str, RGB tuple}, optional
             Color of the fitted line. Defaults to `color` when no input is
             given.
+        show_residual : bool, optional
+            Plot the fit residuals.
         '''
 
         if fit_color is None:
@@ -469,7 +472,16 @@ class DeltaVariance(BaseStatisticMixIn):
 
         import matplotlib.pyplot as plt
 
-        ax = plt.subplot(111)
+        fig = plt.figure()
+
+        if show_residual:
+            ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+            ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                    rowspan=1,
+                                    sharex=ax)
+        else:
+            ax = plt.subplot(111)
+
         ax.set_xscale("log")
         ax.set_yscale("log")
 
@@ -478,31 +490,55 @@ class DeltaVariance(BaseStatisticMixIn):
         # Check for NaNs
         fin_vals = np.logical_or(np.isfinite(self.delta_var),
                                  np.isfinite(self.delta_var_error))
-        plt.errorbar(lags[fin_vals], self.delta_var[fin_vals],
-                     yerr=self.delta_var_error[fin_vals],
-                     fmt="D-", color=color, label="Data")
+        ax.errorbar(lags[fin_vals], self.delta_var[fin_vals],
+                    yerr=self.delta_var_error[fin_vals],
+                    fmt="D-", color=color)
 
         xvals = np.linspace(self._fit_range[0].value,
                             self._fit_range[1].value,
                             100) * self.lags.unit
         xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
 
-        plt.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
-                 '--', color=fit_color, linewidth=2, label='Fit')
+        ax.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
+                '--', color=fit_color, linewidth=2, label='Fit')
 
         xlow = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
         xhigh = \
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-        plt.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
-        plt.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
+        ax.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
+        ax.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
 
-        plt.legend(loc='best')
+        ax.legend(loc='best')
         ax.grid(True)
 
-        ax.set_xlabel("Lag ({})".format(xunit))
+        if show_residual:
+            resids = self.delta_var - 10**self.fitted_model(np.log10(lags))
+            ax_r.errorbar(lags[fin_vals], resids[fin_vals],
+                          yerr=self.delta_var_error[fin_vals],
+                          fmt="D-", color=color)
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel("Lag ({})".format(xunit))
+
+            ax_r.axhline(0., color=fit_color, linestyle='--')
+
+            ax_r.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
+            ax_r.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
+            ax_r.grid()
+
+            ax.get_xaxis().set_ticks([])
+
+        else:
+            ax.set_xlabel("Lag ({})".format(xunit))
+
         ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)
