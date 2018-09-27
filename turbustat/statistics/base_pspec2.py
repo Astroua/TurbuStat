@@ -446,6 +446,8 @@ class StatisticBase_PSpec2D(object):
         show_2D : bool, optional
             Plot the 2D power spectrum with contours for the masked regions
             and 2D fit contours (if the 2D power spectrum was fit).
+        show_residual : bool, optional
+            Plot the residuals for the 1D power-spectrum fit.
         color : str, optional
             Color to use in the plotted points.
         fit_color : str, optional
