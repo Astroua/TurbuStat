@@ -537,6 +537,7 @@ class SCF(BaseStatisticMixIn):
         return self._ellip2D_err
 
     def plot_fit(self, save_name=None, show_radial=True,
+                 show_residual=True,
                  show_surface=True, contour_color='k',
                  cmap='viridis', data_color='k', fit_color=None,
                  xunit=u.pix):
@@ -551,6 +552,8 @@ class SCF(BaseStatisticMixIn):
             Show the azimuthally-averaged 1D SCF spectrum and fit.
         show_surface : bool, optional
             Show the SCF surface and (if performed) fit.
+        show_residual : bool, optional
+            Plot the residuals for the 1D SCF fit.
         contour_color : {str, RGB tuple}, optional
             Color of the 2D fit contours.
         cmap : {str, matplotlib color map}, optional
@@ -564,15 +567,28 @@ class SCF(BaseStatisticMixIn):
         '''
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        if show_surface and show_radial:
+            fig = plt.figure(figsize=(8.9, 4.8))
+        else:
+            fig = plt.figure(figsize=(6.4, 4.8))
 
         if show_surface:
 
-            plt.subplot(1, 2, 1)
+            if show_radial:
+                ax = plt.subplot2grid((4, 4), (0, 2), colspan=2, rowspan=4)
+            else:
+                ax = plt.subplot2grid((4, 4), (0, 0), colspan=4, rowspan=4)
 
-            plt.imshow(self.scf_surface, origin="lower",
-                       interpolation="nearest",
-                       cmap=cmap)
-            cb = plt.colorbar()
+            im1 = ax.imshow(self.scf_surface, origin="lower",
+                            interpolation="nearest",
+                            cmap=cmap)
+
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", "5%", pad="3%")
+            cb = plt.colorbar(im1, cax=cax)
+
             cb.set_label("SCF Value")
 
             yy, xx = make_radial_arrays(self.scf_surface.shape)
@@ -586,70 +602,96 @@ class SCF(BaseStatisticMixIn):
             mask = clip_func(dists, xlow_pix, xhigh_pix)
 
             if not mask.all():
-                plt.contour(mask, colors='b', linestyles='-.', levels=[0.5])
+                ax.contour(mask, colors='b', linestyles='-.', levels=[0.5])
 
             if self._fit2D_flag:
 
-                plt.contour(self.fit2D(xx, yy)[::-1], colors=contour_color,
-                            linestyles='-')
+                ax.contour(self.fit2D(xx, yy)[::-1], colors=contour_color,
+                           linestyles='-')
 
             if self._azim_constraint_flag:
                 if not np.all(self._azim_mask):
-                    plt.contour(self._azim_mask, colors='b', linestyles='-.',
-                                levels=[0.5])
+                    ax.contour(self._azim_mask, colors='b', linestyles='-.',
+                               levels=[0.5])
                 else:
                     warn("Azimuthal mask includes all data. No contours will "
                          "be drawn.")
 
-            if show_radial:
-                plt.subplot(2, 2, 2)
-            else:
-                plt.subplot(1, 2, 2)
-
-            plt.hist(self.scf_surface.ravel(), bins='auto')
-            plt.xlabel("SCF Value")
-
         if show_radial:
+
             if show_surface:
-                ax = plt.subplot(2, 2, 4)
+                if show_residual:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
+                                           rowspan=3)
+                    ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=2,
+                                            rowspan=1, sharex=ax2)
+                else:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
+                                           rowspan=4)
             else:
-                ax = plt.subplot(1, 1, 1)
+                if show_residual:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
+                                           rowspan=3)
+                    ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=4,
+                                            rowspan=1, sharex=ax2)
+                else:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
+                                           rowspan=4)
 
             pix_lags = self._to_pixel(self.lags)
             lags = self._spatial_unit_conversion(pix_lags, xunit).value
 
-            if self._stddev_flag:
-                ax.errorbar(lags, self.scf_spectrum,
-                            yerr=self.scf_spectrum_stddev,
-                            fmt='D', color=data_color,
-                            markersize=5, label="Data")
-                ax.set_xscale("log")  # , nonposy='clip')
-                ax.set_yscale("log")  # , nonposy='clip')
-            else:
-                plt.loglog(self.lags, self.scf_spectrum, 'D',
-                           markersize=5, label="Data",
-                           color=data_color)
+            ax2.errorbar(lags, self.scf_spectrum,
+                         yerr=self.scf_spectrum_stddev,
+                         fmt='D', color=data_color,
+                         markersize=5)
+            ax2.set_xscale("log")  # , nonposy='clip')
+            ax2.set_yscale("log")  # , nonposy='clip')
 
-            ax.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
-            ax.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
-                        np.nanmax(self.scf_spectrum) * 1.25)
+            ax2.set_xlim(lags.min() * 0.75, lags.max() * 1.25)
+            ax2.set_ylim(np.nanmin(self.scf_spectrum) * 0.75,
+                         np.nanmax(self.scf_spectrum) * 1.25)
 
             # Overlay the fit. Use points 5% lower than the min and max.
             xvals = np.linspace(lags.min() * 0.95,
                                 lags.max() * 1.05, 50) * xunit
-            plt.loglog(xvals, self.fitted_model(xvals), '--', linewidth=2,
+            ax2.loglog(xvals, self.fitted_model(xvals), '--', linewidth=2,
                        label='Fit', color=fit_color)
             # Show the fit limits
             xlow = self._spatial_unit_conversion(self._xlow, xunit).value
             xhigh = self._spatial_unit_conversion(self._xhigh, xunit).value
-            plt.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
-            plt.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
+            ax2.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+            ax2.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
 
-            plt.legend()
+            ax2.legend()
 
-            ax.set_xlabel("Lag ({})".format(xunit))
+            ax2.set_ylabel("SCF Value")
+
+            if show_residual:
+                resids = self.scf_spectrum - self.fitted_model(pix_lags)
+
+                ax_r.errorbar(lags, resids,
+                              yerr=self.scf_spectrum_stddev,
+                              fmt='D', color=data_color,
+                              markersize=5)
+
+                ax_r.axvline(xlow, color='b', alpha=0.5, linestyle='-.')
+                ax_r.axvline(xhigh, color='b', alpha=0.5, linestyle='-.')
+
+                ax_r.axhline(0., color=fit_color, linestyle='--')
+
+                ax_r.set_ylabel("Residuals")
+
+                ax_r.set_xlabel("Lag ({})".format(xunit))
+
+                ax2.get_xaxis().set_ticks([])
+
+            else:
+                ax2.set_xlabel("Lag ({})".format(xunit))
 
         plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)
