@@ -739,11 +739,9 @@ class PCA(BaseStatisticMixIn):
         if show_cov_bar:
             if show_sl_fit:
                 plt.subplot2grid((4, 4), (0, 0), rowspan=2, colspan=2)
-                # plt.subplot(221)
 
             else:
                 plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)
-                # plt.subplot(121)
 
             im1 = plt.imshow(self.cov_matrix, origin="lower",
                              interpolation="nearest", cmap=cov_cmap)
@@ -755,10 +753,8 @@ class PCA(BaseStatisticMixIn):
 
             if show_sl_fit:
                 plt.subplot2grid((4, 4), (2, 0), rowspan=2, colspan=2)
-                # plt.subplot(223)
             else:
                 plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)
-                # plt.subplot(122)
 
             if n_eigs is None:
                 n_eigs = self.n_eigs
