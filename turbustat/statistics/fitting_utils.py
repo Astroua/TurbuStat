@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import astropy.units as u
+from astropy.utils import NumpyRNGContext
 
 '''
 Routines for fitting a line with errors in both variables.
@@ -310,3 +311,51 @@ def check_fit_limits(xlow, xhigh):
 
 def clip_func(arr, low, high):
     return np.logical_and(arr > low, arr <= high)
+
+
+def residual_bootstrap(fit_model, nboot=1000, seed=38574895,
+                       return_samps=False, debug=False,
+                       **fit_kwargs):
+    '''
+    Bootstrap with residual resampling.
+    '''
+
+    y = fit_model.model.wendog
+    y_res = fit_model.wresid
+
+    resamps = []
+
+    if debug:
+        import matplotlib.pyplot as plt
+
+    with NumpyRNGContext(seed):
+
+        for _ in range(nboot):
+
+            y_resamp = y + y_res[np.random.choice(y_res.size - 1, y_res.size)]
+
+            resamp_mod = fit_model.model.__class__(y_resamp,
+                                                   fit_model.model.exog)
+            resamp_fit = resamp_mod.fit(**fit_kwargs)
+
+            if debug:
+                plt.plot(fit_model.model.exog[:, 1], y, label='Data')
+                plt.plot(fit_model.model.exog[:, 1], y_resamp, label='Resamp')
+                plt.plot(resamp_fit.model.exog[:, 1], resamp_fit.model.endog,
+                         label='Resamp Model')
+                plt.legend()
+                plt.draw()
+
+                print(resamp_fit.params)
+
+                input("?")
+                plt.clf()
+
+            resamps.append(resamp_fit.params)
+
+    resamps = np.array(resamps).squeeze()
+
+    if return_samps:
+        return resamps
+
+    return np.std(resamps, axis=0)
