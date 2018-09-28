@@ -205,6 +205,9 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if verbose:
 
             print(self.fit.summary())
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
             self.plot_fit(show=True, show_2D=True,
                           xunit=xunit, save_name=save_name,

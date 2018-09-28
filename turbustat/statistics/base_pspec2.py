@@ -8,7 +8,7 @@ import astropy.units as u
 
 from .lm_seg import Lm_Seg
 from .psds import pspec, make_radial_freq_arrays
-from .fitting_utils import clip_func
+from .fitting_utils import clip_func, residual_bootstrap
 from .elliptical_powerlaw import (fit_elliptical_powerlaw,
                                   inverse_interval_transform,
                                   inverse_interval_transform_stderr)
@@ -87,6 +87,7 @@ class StatisticBase_PSpec2D(object):
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, weighted_fit=False,
+                  bootstrap=False, bootstrap_kwargs={},
                   verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -117,9 +118,17 @@ class StatisticBase_PSpec2D(object):
             Fit using weighted least-squares. Requires `return_stddev` to be
             enabled when computing the radial power-spectrum. The weights are
             the inverse-squared standard deviations in each radial bin.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
+
+        self._bootstrap_flag = bootstrap
 
         # Make the data to fit to
         if low_cut is None:
@@ -178,11 +187,21 @@ class StatisticBase_PSpec2D(object):
                     y = y[good_pts]
 
                     self._brk = 10**brk_fit.brk / u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        brk_fit.brk_err / u.pix
 
                     self._slope = brk_fit.slopes
-                    self._slope_err = brk_fit.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(brk_fit.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = brk_fit.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            brk_fit.brk_err / u.pix
 
                     self.fit = brk_fit.fit
 
@@ -206,7 +225,14 @@ class StatisticBase_PSpec2D(object):
             self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
+
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
 
     @property
     def slope(self):
