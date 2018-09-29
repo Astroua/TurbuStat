@@ -204,6 +204,7 @@ class StatisticBase_PSpec2D(object):
                             brk_fit.brk_err / u.pix
 
                     self.fit = brk_fit.fit
+                    self._model = brk_fit
 
             else:
                 self._brk = None
@@ -564,8 +565,13 @@ class StatisticBase_PSpec2D(object):
         y_fit = self.fit.fittedvalues
 
         if show_residual:
-            y_res = self.fit.predict(sm.add_constant(np.log10(self.freqs.value))) - \
-                np.log10(self.ps1D)
+            if isinstance(self.slope, np.ndarray):
+                # Broken linear model
+                y_res = np.log10(self.ps1D) - \
+                    self._model.model(np.log10(self.freqs.value))
+            else:
+                y_res = np.log10(self.ps1D) - \
+                    self.fit.predict(sm.add_constant(np.log10(self.freqs.value)))
 
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
