@@ -14,7 +14,7 @@ from astropy.utils.console import ProgressBar
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..stats_utils import common_scale, padwithzeros
-from ..fitting_utils import check_fit_limits
+from ..fitting_utils import check_fit_limits, residual_bootstrap
 from .kernels import core_kernel, annulus_kernel
 from ..stats_warnings import TurbuStatMetricWarning
 from ..lm_seg import Lm_Seg
@@ -274,6 +274,7 @@ class DeltaVariance(BaseStatisticMixIn):
         return self._delta_var_error
 
     def fit_plaw(self, xlow=None, xhigh=None, brk=None, verbose=False,
+                 bootstrap=False, bootstrap_kwargs={},
                  **fit_kwargs):
         '''
         Fit a power-law to the Delta-variance spectrum.
@@ -287,6 +288,11 @@ class DeltaVariance(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         verbose : bool, optional
             Show fit summary when enabled.
         '''
@@ -353,12 +359,22 @@ class DeltaVariance(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk * u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        model.brk_err * u.pix
+                    self._brk = 10**model.brk / u.pix
 
                     self._slope = model.slopes
-                    self._slope_err = model.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(model.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = model.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            model.brk_err / u.pix
 
                     self.fit = model.fit
 
@@ -379,15 +395,26 @@ class DeltaVariance(BaseStatisticMixIn):
             # model = sm.OLS(y, x, missing='drop')
             model = sm.WLS(y, x, missing='drop', weights=weights)
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
 
-            self.fit = model.fit(cov_type='HC3')
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
+
+        self._bootstrap_flag = bootstrap
 
         if verbose:
             print(self.fit.summary())
+
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
         self._model = model
 

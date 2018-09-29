@@ -14,7 +14,7 @@ from ..psds import pspec, make_radial_arrays
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types, input_data
 from ..stats_utils import common_scale, fourier_shift, pixel_shift
-from ..fitting_utils import clip_func
+from ..fitting_utils import clip_func, residual_bootstrap
 from ..elliptical_powerlaw import (fit_elliptical_powerlaw,
                                    inverse_interval_transform,
                                    inverse_interval_transform_stderr)
@@ -259,7 +259,8 @@ class SCF(BaseStatisticMixIn):
 
         self._lags = self._lags * roll_lag_diff
 
-    def fit_plaw(self, xlow=None, xhigh=None, verbose=False):
+    def fit_plaw(self, xlow=None, xhigh=None, verbose=False, bootstrap=False,
+                 **bootstrap_kwargs):
         '''
         Fit a power-law to the SCF spectrum.
 
@@ -328,11 +329,24 @@ class SCF(BaseStatisticMixIn):
 
         self.fit = model.fit(cov_type='HC3')
 
+        self._slope = self.fit.params[1]
+
+        if bootstrap:
+            stderrs = residual_bootstrap(self.fit,
+                                         **bootstrap_kwargs)
+            self._slope_err = stderrs[1]
+
+        else:
+            self._slope_err = self.fit.bse[1]
+
+        self._bootstrap_flag = bootstrap
+
         if verbose:
             print(self.fit.summary())
 
-        self._slope = self.fit.params[1]
-        self._slope_err = self.fit.bse[1]
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
     @property
     def slope(self):
@@ -684,7 +698,7 @@ class SCF(BaseStatisticMixIn):
 
                 ax_r.set_xlabel("Lag ({})".format(xunit))
 
-                ax2.get_xaxis().set_ticks([])
+                # ax2.get_xaxis().set_ticks([])
 
             else:
                 ax2.set_xlabel("Lag ({})".format(xunit))
@@ -701,7 +715,8 @@ class SCF(BaseStatisticMixIn):
 
     def run(self, boundary='continuous',
             show_progress=True, xlow=None, xhigh=None,
-            fit_2D=True, fit_2D_kwargs={}, radialavg_kwargs={},
+            fit_kwargs={}, fit_2D=True,
+            fit_2D_kwargs={}, radialavg_kwargs={},
             verbose=False, xunit=u.pix, save_name=None):
         '''
         Computes all SCF outputs.
@@ -717,10 +732,13 @@ class SCF(BaseStatisticMixIn):
             See `~SCF.fit_plaw`.
         xhigh : `~astropy.Quantity`, optional
             See `~SCF.fit_plaw`.
+        fit_kwargs : dict, optional
+            Keyword arguments for `SCF.fit_plaw`. Use the
+            `xlow` and `xhigh` keywords to provide fit limits.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D spectrum.
         fit_2D_kwargs : dict, optional
-            Keyword arguments for `SCF.fit_plaw`. Use the
+            Keyword arguments for `SCF.fit_2Dplaw`. Use the
             `xlow` and `xhigh` keywords to provide fit limits.
         radialavg_kwargs : dict, optional
             Passed to `~SCF.compute_spectrum`.
@@ -734,7 +752,7 @@ class SCF(BaseStatisticMixIn):
 
         self.compute_surface(boundary=boundary, show_progress=show_progress)
         self.compute_spectrum(**radialavg_kwargs)
-        self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh)
+        self.fit_plaw(verbose=verbose, xlow=xlow, xhigh=xhigh, **fit_kwargs)
 
         if fit_2D:
             self.fit_2Dplaw(xlow=xlow, xhigh=xhigh,
