@@ -14,7 +14,7 @@ from astropy.utils.console import ProgressBar
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
 from ..stats_utils import common_scale, padwithzeros
-from ..fitting_utils import check_fit_limits
+from ..fitting_utils import check_fit_limits, residual_bootstrap
 from .kernels import core_kernel, annulus_kernel
 from ..stats_warnings import TurbuStatMetricWarning
 from ..lm_seg import Lm_Seg
@@ -274,6 +274,7 @@ class DeltaVariance(BaseStatisticMixIn):
         return self._delta_var_error
 
     def fit_plaw(self, xlow=None, xhigh=None, brk=None, verbose=False,
+                 bootstrap=False, bootstrap_kwargs={},
                  **fit_kwargs):
         '''
         Fit a power-law to the Delta-variance spectrum.
@@ -287,6 +288,11 @@ class DeltaVariance(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         verbose : bool, optional
             Show fit summary when enabled.
         '''
@@ -333,6 +339,9 @@ class DeltaVariance(BaseStatisticMixIn):
 
             model = Lm_Seg(x, y, np.log10(pix_brk.value), weights=weights)
 
+            fit_kwargs['verbose'] = verbose
+            fit_kwargs['cov_type'] = 'HC3'
+
             model.fit_model(**fit_kwargs)
 
             self.fit = model.fit
@@ -350,12 +359,22 @@ class DeltaVariance(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk * u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        model.brk_err * u.pix
+                    self._brk = 10**model.brk / u.pix
 
                     self._slope = model.slopes
-                    self._slope_err = model.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(model.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = model.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            model.brk_err / u.pix
 
                     self.fit = model.fit
 
@@ -376,15 +395,26 @@ class DeltaVariance(BaseStatisticMixIn):
             # model = sm.OLS(y, x, missing='drop')
             model = sm.WLS(y, x, missing='drop', weights=weights)
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
 
-            self.fit = model.fit()
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
+
+        self._bootstrap_flag = bootstrap
 
         if verbose:
             print(self.fit.summary())
+
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
         self._model = model
 
@@ -444,7 +474,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None):
+    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None,
+                 show_residual=True):
         '''
         Plot the delta-variance curve and the fit.
 
@@ -459,6 +490,8 @@ class DeltaVariance(BaseStatisticMixIn):
         fit_color : {str, RGB tuple}, optional
             Color of the fitted line. Defaults to `color` when no input is
             given.
+        show_residual : bool, optional
+            Plot the fit residuals.
         '''
 
         if fit_color is None:
@@ -466,7 +499,16 @@ class DeltaVariance(BaseStatisticMixIn):
 
         import matplotlib.pyplot as plt
 
-        ax = plt.subplot(111)
+        fig = plt.figure()
+
+        if show_residual:
+            ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+            ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                    rowspan=1,
+                                    sharex=ax)
+        else:
+            ax = plt.subplot(111)
+
         ax.set_xscale("log")
         ax.set_yscale("log")
 
@@ -475,31 +517,55 @@ class DeltaVariance(BaseStatisticMixIn):
         # Check for NaNs
         fin_vals = np.logical_or(np.isfinite(self.delta_var),
                                  np.isfinite(self.delta_var_error))
-        plt.errorbar(lags[fin_vals], self.delta_var[fin_vals],
-                     yerr=self.delta_var_error[fin_vals],
-                     fmt="D-", color=color, label="Data")
+        ax.errorbar(lags[fin_vals], self.delta_var[fin_vals],
+                    yerr=self.delta_var_error[fin_vals],
+                    fmt="D-", color=color)
 
         xvals = np.linspace(self._fit_range[0].value,
                             self._fit_range[1].value,
                             100) * self.lags.unit
         xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
 
-        plt.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
-                 '--', color=fit_color, linewidth=2, label='Fit')
+        ax.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
+                '--', color=fit_color, linewidth=2, label='Fit')
 
         xlow = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
         xhigh = \
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-        plt.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
-        plt.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
+        ax.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
+        ax.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
 
-        plt.legend(loc='best')
+        ax.legend(loc='best')
         ax.grid(True)
 
-        ax.set_xlabel("Lag ({})".format(xunit))
+        if show_residual:
+            resids = self.delta_var - 10**self.fitted_model(np.log10(lags))
+            ax_r.errorbar(lags[fin_vals], resids[fin_vals],
+                          yerr=self.delta_var_error[fin_vals],
+                          fmt="D-", color=color)
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel("Lag ({})".format(xunit))
+
+            ax_r.axhline(0., color=fit_color, linestyle='--')
+
+            ax_r.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
+            ax_r.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
+            ax_r.grid()
+
+            ax.get_xaxis().set_ticks([])
+
+        else:
+            ax.set_xlabel("Lag ({})".format(xunit))
+
         ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)

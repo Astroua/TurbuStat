@@ -24,6 +24,10 @@ from ..simulator import make_extended
 def test_Wavelet_method():
     tester = Wavelet(dataset1["moment0"])
     tester.run()
+
+    # Test fitting with bootstrapping
+    tester.fit_transform(bootstrap=True)
+
     npt.assert_almost_equal(tester.values, computed_data['wavelet_val'])
 
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])

@@ -493,8 +493,6 @@ def BiSpectrum(*args, **kwargs):
     Old name for the Bispectrum class.
     '''
 
-    print("ASHAJ")
-
     warn("Use the new 'Bispectrum' class. 'BiSpectrum' is deprecated and will"
          " be removed in a future release.", Warning)
 

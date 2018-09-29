@@ -35,6 +35,9 @@ def test_MVC_method():
                  dataset1["centroid"][1])
     tester.run()
 
+    # Test fit with bootstrap resampling
+    tester.fit_pspec(bootstrap=True)
+
     # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
     npt.assert_allclose(tester.ps1D, computed_data['mvc_val'], rtol=1e-3)
     npt.assert_allclose(tester.slope, computed_data['mvc_slope'], rtol=1e-4)

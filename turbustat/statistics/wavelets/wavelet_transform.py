@@ -17,7 +17,7 @@ except ImportError:
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types
-from ..fitting_utils import check_fit_limits
+from ..fitting_utils import check_fit_limits, residual_bootstrap
 from ..lm_seg import Lm_Seg
 
 
@@ -183,6 +183,7 @@ class Wavelet(BaseStatisticMixIn):
         return self._values
 
     def fit_transform(self, xlow=None, xhigh=None, brk=None, min_fits_pts=3,
+                      bootstrap=False, bootstrap_kwargs={},
                       **fit_kwargs):
         '''
         Perform a fit to the transform in log-log space.
@@ -196,6 +197,11 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         fit_kwargs : Passed to `turbustat.statistics.Lm_Seg.fit_model`
         '''
 
@@ -238,6 +244,8 @@ class Wavelet(BaseStatisticMixIn):
 
             model = Lm_Seg(x, y, np.log10(pix_brk.value))
 
+            fit_kwargs['cov_type'] = 'HC3'
+
             model.fit_model(**fit_kwargs)
 
             self.fit = model.fit
@@ -255,12 +263,22 @@ class Wavelet(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk * u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        model.brk_err * u.pix
+                    self._brk = 10**model.brk / u.pix
 
                     self._slope = model.slopes
-                    self._slope_err = model.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(model.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = model.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            model.brk_err / u.pix
 
                     self.fit = model.fit
 
@@ -280,12 +298,21 @@ class Wavelet(BaseStatisticMixIn):
 
             model = sm.OLS(y, x, missing='drop')
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
+
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
 
         self._model = model
+
+        self._bootstrap_flag = bootstrap
 
     @property
     def slope(self):
@@ -345,7 +372,7 @@ class Wavelet(BaseStatisticMixIn):
 
     def plot_transform(self, save_name=None, xunit=u.pix,
                        color='b', symbol='D', fit_color=None,
-                       label=None):
+                       label=None, show_residual=True):
         '''
         Plot the transform and the fit.
 
@@ -363,6 +390,8 @@ class Wavelet(BaseStatisticMixIn):
             Color of the 1D fit.
         label : str, optional
             Label to later be used in a legend.
+        show_residual : bool, optional
+            Plot the fit residuals.
         '''
 
         import matplotlib.pyplot as plt
@@ -370,27 +399,62 @@ class Wavelet(BaseStatisticMixIn):
         if fit_color is None:
             fit_color = color
 
+        fig = plt.figure()
+
+        if show_residual:
+            ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+            ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                    rowspan=1,
+                                    sharex=ax)
+        else:
+            ax = plt.subplot(111)
+
         pix_scales = self._to_pixel(self.scales)
         scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        plt.loglog(scales, self.values, symbol, color=color, label=label)
+        ax.loglog(scales, self.values, symbol, color=color, label=label)
         # Plot the fit within the fitting range.
         low_lim = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
         high_lim = \
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-        plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
-                   '--', color=fit_color,
-                   linewidth=8, alpha=0.75)
+        ax.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
+                  '--', color=fit_color,
+                  linewidth=8, alpha=0.75)
 
-        plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
-        plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
+        ax.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
+        ax.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
 
-        plt.ylabel(r"$T_g$")
-        plt.xlabel("Scales ({})".format(xunit))
+        ax.grid()
 
-        plt.grid()
+        ax.set_ylabel(r"$T_g$")
+
+        if show_residual:
+            resids = self.values - \
+                10**self.fitted_model(np.log10(pix_scales.value))
+
+            ax_r.plot(scales, resids, symbol, color=color, label=label)
+
+            ax_r.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
+            ax_r.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
+
+            ax_r.axhline(0., color=fit_color, linestyle='--')
+
+            ax_r.grid()
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel("Scales ({})".format(xunit))
+
+            ax.get_xaxis().set_ticks([])
+
+        else:
+            ax.set_xlabel("Scales ({})".format(xunit))
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)
@@ -401,7 +465,7 @@ class Wavelet(BaseStatisticMixIn):
     def run(self, show_progress=True, verbose=False, xunit=u.pix,
             use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, scale_normalization=True,
-            xlow=None, xhigh=None, brk=None,
+            xlow=None, xhigh=None, brk=None, fit_kwargs={},
             save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
@@ -434,6 +498,8 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        fit_kwargs : dict, optional
+            Passed to `~Wavelet.fit_transform`
         save_name : str,optional
             Save the figure when a file name is given.
         plot_kwargs : Passed to `~Wavelet.plot_transform`.
@@ -443,11 +509,14 @@ class Wavelet(BaseStatisticMixIn):
                                pyfftw_kwargs=pyfftw_kwargs,
                                show_progress=show_progress)
         self.make_1D_transform()
-        self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
+        self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk, **fit_kwargs)
 
         if verbose:
-
             print(self.fit.summary())
+
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
             self.plot_transform(save_name=save_name, xunit=xunit,
                                 **plot_kwargs)

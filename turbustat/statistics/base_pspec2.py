@@ -8,7 +8,7 @@ import astropy.units as u
 
 from .lm_seg import Lm_Seg
 from .psds import pspec, make_radial_freq_arrays
-from .fitting_utils import clip_func
+from .fitting_utils import clip_func, residual_bootstrap
 from .elliptical_powerlaw import (fit_elliptical_powerlaw,
                                   inverse_interval_transform,
                                   inverse_interval_transform_stderr)
@@ -39,9 +39,6 @@ class StatisticBase_PSpec2D(object):
         '''
         1-sigma standard deviation of the 1D power spectrum.
         '''
-        if not self._stddev_flag:
-            warnings.warn("ps1D_stddev is only calculated when return_stddev"
-                          " is enabled.")
 
         return self._ps1D_stddev
 
@@ -56,15 +53,12 @@ class StatisticBase_PSpec2D(object):
     def wavenumbers(self):
         return self._freqs * min(self._ps2D.shape)
 
-    def compute_radial_pspec(self, return_stddev=True,
-                             logspacing=False, max_bin=None, **kwargs):
+    def compute_radial_pspec(self, logspacing=False, max_bin=None, **kwargs):
         '''
         Computes the radially averaged power spectrum.
 
         Parameters
         ----------
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         logspacing : bool, optional
             Return logarithmically spaced bins for the lags.
         max_bin : float, optional
@@ -78,26 +72,22 @@ class StatisticBase_PSpec2D(object):
         else:
             azim_constraint_flag = False
 
-        out = pspec(self.ps2D, return_stddev=return_stddev,
+        out = pspec(self.ps2D, return_stddev=True,
                     logspacing=logspacing, max_bin=max_bin, **kwargs)
 
-        self._stddev_flag = return_stddev
         self._azim_constraint_flag = azim_constraint_flag
 
-        if return_stddev and azim_constraint_flag:
+        if azim_constraint_flag:
             self._freqs, self._ps1D, self._ps1D_stddev, self._azim_mask = out
-        elif return_stddev:
-            self._freqs, self._ps1D, self._ps1D_stddev = out
-        elif azim_constraint_flag:
-            self._freqs, self._ps1D, self._azim_mask = out
         else:
-            self._freqs, self._ps1D = out
+            self._freqs, self._ps1D, self._ps1D_stddev = out
 
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
     def fit_pspec(self, brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, weighted_fit=False,
+                  bootstrap=False, bootstrap_kwargs={},
                   verbose=False):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
@@ -128,9 +118,17 @@ class StatisticBase_PSpec2D(object):
             Fit using weighted least-squares. Requires `return_stddev` to be
             enabled when computing the radial power-spectrum. The weights are
             the inverse-squared standard deviations in each radial bin.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the parameter
+            standard errors. This tends to give more realistic intervals than
+            the covariance matrix.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         verbose : bool, optional
             Enables verbose mode in Lm_Seg.
         '''
+
+        self._bootstrap_flag = bootstrap
 
         # Make the data to fit to
         if low_cut is None:
@@ -156,11 +154,6 @@ class StatisticBase_PSpec2D(object):
                 raise ValueError("Weighted least-squares fitting cannot be "
                                  "used when fitting a break-point.")
 
-            if not self._stddev_flag:
-                raise ValueError("'return_stddev' must be enabled when "
-                                 "computing the radial power spectrum. "
-                                 "The WLS fit requires uncertainties.")
-
             y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
                                                         self.low_cut.value,
                                                         self.high_cut.value)])
@@ -178,7 +171,7 @@ class StatisticBase_PSpec2D(object):
 
             brk_fit = \
                 Lm_Seg(x, y, brk)
-            brk_fit.fit_model(verbose=verbose)
+            brk_fit.fit_model(verbose=verbose, cov_type='HC3')
 
             if brk_fit.params.size == 5:
 
@@ -194,13 +187,24 @@ class StatisticBase_PSpec2D(object):
                     y = y[good_pts]
 
                     self._brk = 10**brk_fit.brk / u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        brk_fit.brk_err / u.pix
 
                     self._slope = brk_fit.slopes
-                    self._slope_err = brk_fit.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(brk_fit.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = brk_fit.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            brk_fit.brk_err / u.pix
 
                     self.fit = brk_fit.fit
+                    self._model = brk_fit
 
             else:
                 self._brk = None
@@ -219,10 +223,17 @@ class StatisticBase_PSpec2D(object):
             else:
                 model = sm.OLS(y, x, missing='drop')
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
+
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
 
     @property
     def slope(self):
@@ -448,8 +459,8 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._ellip2D_err
 
-    def plot_fit(self, show=True, show_2D=False, color='r', fit_color=None,
-                 label=None,
+    def plot_fit(self, show=True, show_2D=False, show_residual=True,
+                 color='r', fit_color=None, label=None,
                  fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
@@ -462,6 +473,8 @@ class StatisticBase_PSpec2D(object):
         show_2D : bool, optional
             Plot the 2D power spectrum with contours for the masked regions
             and 2D fit contours (if the 2D power spectrum was fit).
+        show_residual : bool, optional
+            Plot the residuals for the 1D power-spectrum fit.
         color : str, optional
             Color to use in the plotted points.
         fit_color : str, optional
@@ -487,7 +500,7 @@ class StatisticBase_PSpec2D(object):
             Convert spatial frequencies to a wavenumber.
         '''
 
-        import matplotlib.pyplot as p
+        import matplotlib.pyplot as plt
 
         if use_wavenumber:
             xlab = r"k / (" + xunit.to_string() + ")"
@@ -496,6 +509,13 @@ class StatisticBase_PSpec2D(object):
 
         if fit_color is None:
             fit_color = color
+
+        if show_2D:
+            sizes = (16., 6.6)
+        else:
+            sizes = (8., 6.6)
+
+        fig = plt.figure(figsize=sizes)
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -510,29 +530,49 @@ class StatisticBase_PSpec2D(object):
             vmax = np.log10(self.ps2D[mask]).max()
             vmin = np.log10(self.ps2D[mask]).min()
 
-            p.subplot(122)
-            p.imshow(np.log10(self.ps2D), interpolation="nearest",
-                     origin="lower", vmax=vmax, vmin=vmin)
-            cbar = p.colorbar()
+            ax = fig.add_axes((0.5, 0.1, 0.4, 0.8))
+
+            im1 = ax.imshow(np.log10(self.ps2D), interpolation="nearest",
+                            origin="lower", vmax=vmax, vmin=vmin)
+
+            cbaxes = fig.add_axes([0.9, 0.1, 0.03, 0.8])
+            cbar = plt.colorbar(im1, cax=cbaxes)
             cbar.set_label(r"log $P_2 \ (K_x,\ K_y)$")
 
-            p.contour(mask, colors=[color], linestyles='--')
+            ax.contour(mask, colors=[color], linestyles='--')
 
             # Plot fit contours
             if hasattr(self, 'fit2D'):
-                p.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
+                ax.contour(self.fit2D(xx_freq, yy_freq), cmap='viridis')
 
             if hasattr(self, "_azim_mask"):
-                p.contour(self._azim_mask, colors=[color], linestyles='--')
+                ax.contour(self._azim_mask, colors=[color], linestyles='--')
 
-            ax = p.subplot(121)
+        if show_2D:
+            oned_width = 0.4
         else:
-            ax = p.subplot(111)
+            oned_width = 0.8
+
+        if show_residual:
+            ax_1D = fig.add_axes((0.1, 0.3, oned_width, 0.6))
+            ax_1D_res = fig.add_axes((0.1, 0.1, oned_width, 0.2))
+        else:
+            ax_1D = fig.add_axes((0.1, 0.1, oned_width, 0.8))
 
         good_interval = clip_func(self.freqs.value, self.low_cut.value,
                                   self.high_cut.value)
 
         y_fit = self.fit.fittedvalues
+
+        if show_residual:
+            if isinstance(self.slope, np.ndarray):
+                # Broken linear model
+                y_res = np.log10(self.ps1D) - \
+                    self._model.model(np.log10(self.freqs.value))
+            else:
+                y_res = np.log10(self.ps1D) - \
+                    self.fit.predict(sm.add_constant(np.log10(self.freqs.value)))
+
         fit_index = np.logical_and(np.isfinite(self.ps1D), good_interval)
 
         # Set the x-values to use (freqs or k)
@@ -543,54 +583,63 @@ class StatisticBase_PSpec2D(object):
 
         xvals = self._spatial_freq_unit_conversion(xvals, xunit).value
 
-        if self._stddev_flag:
+        # Axis limits to highlight the fitted region
+        vmax = 1.1 * \
+            np.max((self.ps1D + self.ps1D_stddev)
+                   [self.freqs <= self.high_cut])
 
-            # Axis limits to highlight the fitted region
-            vmax = 1.1 * \
-                np.max((self.ps1D + self.ps1D_stddev)
-                       [self.freqs <= self.high_cut])
+        logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
 
-            logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
+        if fillin_errs:
+            # Implementation by R. Boyden
+            ax_1D.fill_between(np.log10(xvals),
+                               np.log10(self.ps1D) - logyerrs,
+                               np.log10(self.ps1D) + logyerrs,
+                               color=color,
+                               alpha=0.5)
 
-            if fillin_errs:
-                # Implementation by R. Boyden
-                ax.fill_between(np.log10(xvals),
-                                np.log10(self.ps1D) - logyerrs,
-                                np.log10(self.ps1D) + logyerrs,
-                                color=color,
-                                alpha=0.5)
+            ax_1D.plot(np.log10(xvals), np.log10(self.ps1D), symbol,
+                       color=color, markersize=5, alpha=0.8)
 
-                ax.plot(np.log10(xvals), np.log10(self.ps1D), symbol,
-                        color=color, markersize=5, alpha=0.8)
+            if show_residual:
+                ax_1D_res.fill_between(np.log10(xvals),
+                                       y_res - logyerrs,
+                                       y_res + logyerrs,
+                                       color=color,
+                                       alpha=0.5)
 
-            else:
-                ax.errorbar(np.log10(xvals),
-                            np.log10(self.ps1D),
-                            yerr=logyerrs,
-                            color=color,
-                            fmt=symbol, markersize=5, alpha=0.5, capsize=10,
-                            elinewidth=3)
-
-            ax.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
-                    label=label, linewidth=3, color=fit_color)
-            ax.set_xlabel("log " + xlab)
-            ax.set_ylabel(r"log P$_2(K)$")
-
-            ax.set_ylim(top=np.log10(vmax))
+                ax_1D_res.plot(np.log10(xvals), y_res,
+                               symbol, color=color, markersize=5, alpha=0.8)
 
         else:
-            vmax = 1.1 * np.max(self.ps1D[self.freqs <= self.high_cut])
+            ax_1D.errorbar(np.log10(xvals),
+                           np.log10(self.ps1D),
+                           yerr=logyerrs,
+                           color=color,
+                           fmt=symbol, markersize=5, alpha=0.5, capsize=10,
+                           elinewidth=3)
 
-            ax.loglog(self.xvals, 10**y_fit, linestyle='-',
-                      label=label, linewidth=2, color=fit_color)
+            if show_residual:
+                ax_1D_res.errorbar(np.log10(xvals),
+                                   y_res,
+                                   yerr=logyerrs,
+                                   color=color,
+                                   fmt=symbol, markersize=5, alpha=0.5,
+                                   capsize=10, elinewidth=3)
 
-            ax.loglog(self.xvals, self.ps1D, symbol, alpha=0.5,
-                      markersize=5, color=color)
+        ax_1D.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
+                   label=label, linewidth=3, color=fit_color)
 
-            ax.set_xlabel(xlab)
-            ax.set_ylabel(r"P$_2(K)$")
+        if show_residual:
+            ax_1D_res.set_xlabel("log " + xlab)
 
-            ax.set_ylim(top=vmax)
+            ax_1D.get_xaxis().set_ticks([])
+        else:
+            ax_1D.set_xlabel("log " + xlab)
+
+        ax_1D.set_ylabel(r"log P$_2(K)$")
+
+        ax_1D.set_ylim(top=np.log10(vmax))
 
         # Show the fitting extents
         low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value
@@ -600,13 +649,23 @@ class StatisticBase_PSpec2D(object):
             low_cut * min(self._ps2D.shape)
         high_cut = high_cut if not use_wavenumber else \
             high_cut * min(self._ps2D.shape)
-        p.axvline(np.log10(low_cut), color=color, alpha=0.5, linestyle='--')
-        p.axvline(np.log10(high_cut), color=color, alpha=0.5, linestyle='--')
+        ax_1D.axvline(np.log10(low_cut), color=color, alpha=0.5,
+                      linestyle='--')
+        ax_1D.axvline(np.log10(high_cut), color=color, alpha=0.5,
+                      linestyle='--')
+        ax_1D.grid(True)
 
-        p.grid(True)
+        if show_residual:
+            ax_1D_res.axvline(np.log10(low_cut), color=color, alpha=0.5,
+                              linestyle='--')
+            ax_1D_res.axvline(np.log10(high_cut), color=color, alpha=0.5,
+                              linestyle='--')
+            ax_1D_res.grid(True)
+
+            ax_1D_res.set_xlim(ax_1D.get_xlim())
 
         if save_name is not None:
-            p.savefig(save_name)
+            plt.savefig(save_name)
 
         if show:
-            p.show()
+            plt.show()

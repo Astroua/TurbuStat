@@ -11,7 +11,7 @@ from ..rfft_to_fft import rfft_to_fft
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
 from ...io.input_base import to_spectral_cube
-from ..fitting_utils import clip_func
+from ..fitting_utils import clip_func, residual_bootstrap
 from .slice_thickness import spectral_regrid_cube
 
 
@@ -88,7 +88,8 @@ class VCS(BaseStatisticMixIn):
         return self._ps1D
 
     def fit_pspec(self, breaks=None, log_break=True, low_cut=None,
-                  high_cut=None, fit_verbose=False):
+                  high_cut=None, fit_verbose=False, bootstrap=False,
+                  **bootstrap_kwargs):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -110,6 +111,11 @@ class VCS(BaseStatisticMixIn):
             Highest frequency to consider in the fit.
         fit_verbose : bool, optional
             Enables verbose mode in Lm_Seg.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         '''
 
         # Make the data to fit to
@@ -180,10 +186,11 @@ class VCS(BaseStatisticMixIn):
             while True:
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
-                self.fit.fit_model(verbose=fit_verbose)
+                self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
 
                 if self.fit.params.size == 5:
                     # Success!
+                    breaks = breaks[i]
                     break
                 i += 1
                 if i >= breaks.size:
@@ -191,28 +198,40 @@ class VCS(BaseStatisticMixIn):
                                    does not include a break!")
                     break
 
-            return self
+            # return self
 
         if not log_break:
             breaks = np.log10(breaks)
 
         # Fit the final model with whichever breaks were passed.
         self.fit = Lm_Seg(x, y, breaks)
-        self.fit.fit_model(verbose=fit_verbose)
+        self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
+
+        if bootstrap:
+            stderrs = residual_bootstrap(self.fit.fit,
+                                         **bootstrap_kwargs)
+
+            self._slope_errs = stderrs[1:-1]
+        else:
+            self._slope_errs = self.fit.slope_errs
+
+        self._slope = self.fit.slopes
+
+        self._bootstrap_flag = bootstrap
 
     @property
     def slope(self):
         '''
         Power spectrum slope(s).
         '''
-        return self.fit.slopes
+        return self._slope
 
     @property
     def slope_err(self):
         '''
         1-sigma error on the power spectrum slope(s).
         '''
-        return self.fit.slope_errs
+        return self._slope_errs
 
     @property
     def brk(self):
@@ -229,7 +248,7 @@ class VCS(BaseStatisticMixIn):
         return self.fit.brk_err
 
     def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
-                 fit_color=None):
+                 fit_color=None, show_residual=True):
         '''
         Plot the VCS curve and the associated fit.
 
@@ -243,11 +262,16 @@ class VCS(BaseStatisticMixIn):
             Color to plot the VCS curve.
         fit_color : {str, RGB tuple}, optional
             Color of the 1D fit.
+        show_residual : bool, optional
+            Plot the residuals for the 1D power-spectrum fit.
+
         '''
         import matplotlib.pyplot as plt
 
         if fit_color is None:
             fit_color = color
+
+        fig = plt.figure()
 
         xlab = r"log $( k_v / $ (" + str(xunit**-1) + \
             ")$^{-1})$"
@@ -264,21 +288,45 @@ class VCS(BaseStatisticMixIn):
         y_fit = \
             10**self.fit.model(np.log10(rfreqs.value[good_interval]))
 
+        if show_residual:
+            ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
+            ax_r = plt.subplot2grid((4, 1), (3, 0), rowspan=1, sharex=ax)
+        else:
+            ax = plt.subplot(111)
+
         # Points in dark red
-        plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
-                   color=color)
-        plt.loglog(freq[good_interval], y_fit, color=fit_color,
-                   label='Fit', linewidth=4)
-        plt.xlabel(xlab)
-        plt.ylabel(r"log P$_{1}$(k$_{v}$)")
-        plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
-                                                        xunit).value,
-                    linestyle="--", color='r', alpha=0.5)
-        plt.axvline(self._spectral_freq_unit_conversion(self.high_cut,
-                                                        xunit).value,
-                    linestyle="--", color='r', alpha=0.5)
-        plt.grid(True)
-        plt.legend(loc='best', frameon=True)
+        ax.loglog(freq, ps1D, "D", alpha=0.3, label='Data',
+                  color=color)
+        ax.loglog(freq[good_interval], y_fit, color=fit_color,
+                  linewidth=4)
+
+        ax.set_ylabel(r"log P$_{1}$(k$_{v}$)")
+
+        ax.axvline(self._spectral_freq_unit_conversion(self.low_cut,
+                                                       xunit).value,
+                   linestyle="--", color='r', alpha=0.5)
+        ax.axvline(self._spectral_freq_unit_conversion(self.high_cut,
+                                                       xunit).value,
+                   linestyle="--", color='r', alpha=0.5)
+        ax.grid(True)
+        ax.legend(loc='best', frameon=True)
+
+        if show_residual:
+            resids = ps1D - 10**self.fit.model(np.log10(rfreqs.value))
+            ax_r.semilogx(freq, resids, "D", color=color)
+            ax_r.axhline(0., color=fit_color)
+
+            ax_r.grid()
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel(xlab)
+        else:
+            ax.set_xlabel(xlab)
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)
@@ -323,6 +371,9 @@ class VCS(BaseStatisticMixIn):
             # Print the final fitted model when fit_verbose is not enabled.
             if not fit_kwargs.get("fit_verbose"):
                 print(self.fit.fit.summary())
+                if self._bootstrap_flag:
+                    print("Bootstrapping used to find stderrs! "
+                          "Errors may not equal those shown above.")
 
             self.plot_fit(save_name=save_name, xunit=xunit)
 

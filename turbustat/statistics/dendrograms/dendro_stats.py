@@ -281,7 +281,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
 
         x = sm.add_constant(self.fitvals[0])
 
-        self._model = sm.OLS(self.fitvals[1], x).fit()
+        self._model = sm.OLS(self.fitvals[1], x).fit(cov_type='HC3')
 
         if verbose:
             print(self.model.summary())

@@ -702,7 +702,7 @@ class PCA(BaseStatisticMixIn):
 
     def plot_fit(self, save_name=None, show_cov_bar=True, show_sl_fit=True,
                  n_eigs=None, color='r', fit_color='k', cov_cmap='viridis',
-                 spatial_unit=u.pix, spectral_unit=u.pix):
+                 spatial_unit=u.pix, spectral_unit=u.pix, show_residual=True):
         '''
         Plot the covariance matrix, bar plot of eigenvalues, and the fitted
         size-line width relation.
@@ -725,6 +725,8 @@ class PCA(BaseStatisticMixIn):
             given.
         cov_cmap : {str, matplotlib colormap}, optional
             Colormap to show the covariance matrix in.
+        show_residual : bool, optional
+            Plot the fit residuals.
         '''
 
         if self._decomp_only and show_sl_fit:
@@ -732,20 +734,27 @@ class PCA(BaseStatisticMixIn):
             show_sl_fit = False
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         if show_cov_bar:
             if show_sl_fit:
-                plt.subplot(221)
+                plt.subplot2grid((4, 4), (0, 0), rowspan=2, colspan=2)
+
             else:
-                plt.subplot(121)
-            plt.imshow(self.cov_matrix, origin="lower",
-                       interpolation="nearest", cmap=cov_cmap)
-            plt.colorbar()
+                plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)
+
+            im1 = plt.imshow(self.cov_matrix, origin="lower",
+                             interpolation="nearest", cmap=cov_cmap)
+            divider = make_axes_locatable(plt.gca())
+            cax = divider.append_axes("right", "5%", pad="3%")
+            cb = plt.colorbar(im1, cax=cax)
+
+            cb.set_label("Covariance")
 
             if show_sl_fit:
-                plt.subplot(223)
+                plt.subplot2grid((4, 4), (2, 0), rowspan=2, colspan=2)
             else:
-                plt.subplot(122)
+                plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)
 
             if n_eigs is None:
                 n_eigs = self.n_eigs
@@ -761,9 +770,15 @@ class PCA(BaseStatisticMixIn):
                 fit_color = color
 
             if show_cov_bar:
-                plt.subplot(122)
+                if show_residual:
+                    plt.subplot2grid((4, 4), (0, 2), rowspan=3, colspan=2)
+                else:
+                    plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)
             else:
-                plt.subplot(111)
+                if show_residual:
+                    plt.subplot2grid((4, 1), (0, 0), rowspan=3, colspan=1)
+                else:
+                    plt.subplot(111)
 
             spatial_width = self.spatial_width(unit=spatial_unit)
             spatial_width_error = self.spatial_width_error(unit=spatial_unit)
@@ -780,8 +795,8 @@ class PCA(BaseStatisticMixIn):
                          spectral_width, fmt='o', color=color)
             plt.ylabel("log Linewidth / "
                        "{}".format(spectral_width.unit.to_string()))
-            plt.xlabel("log Spatial Length / "
-                       "{}".format(spatial_width.unit.to_string()))
+            plt.grid()
+
             xvals = np.linspace(np.log10(np.nanmin(spatial_width).value),
                                 np.log10(np.nanmax(spatial_width).value),
                                 spatial_width.size * 10)
@@ -806,6 +821,34 @@ class PCA(BaseStatisticMixIn):
                       x_range / 4,
                       np.log10(np.nanmax(spectral_width.value)) +
                       x_range / 4])
+
+            if show_residual:
+                if show_cov_bar:
+                    plt.subplot2grid((4, 4), (3, 2), rowspan=1, colspan=2)
+                else:
+                    plt.subplot2grid((4, 1), (3, 0), rowspan=1, colspan=1)
+
+                resids = np.log10(spectral_width.value) - \
+                    (self.index * np.log10(spatial_width.value) +
+                     np.log10(intercept.value))
+
+                plt.errorbar(np.log10(spatial_width.value), resids,
+                             xerr=0.434 * spatial_width_error /
+                             spatial_width,
+                             yerr=0.434 * spectral_width_error /
+                             spectral_width, fmt='o', color=color)
+                plt.grid()
+
+                plt.axhline(0., color=fit_color)
+                plt.ylabel("Residuals")
+
+                plt.xlim([np.log10(np.nanmin(spatial_width.value)) -
+                          y_range / 4,
+                          np.log10(np.nanmax(spatial_width.value)) +
+                          y_range / 4])
+
+            plt.xlabel("log Spatial Length / "
+                       "{}".format(spatial_width.unit.to_string()))
 
         plt.tight_layout()
 

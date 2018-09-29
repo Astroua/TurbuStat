@@ -102,7 +102,7 @@ class PDF(BaseStatisticMixIn):
         # norm_weights = np.ones_like(self.data) / self.data.shape[0]
 
         self._pdf, bin_edges = np.histogram(self.data, bins=self.bins,
-                                            density=True)#,
+                                            density=True)
                                             # weights=norm_weights)
 
         self._bins = (bin_edges[:-1] + bin_edges[1:]) / 2

@@ -28,6 +28,10 @@ def test_DelVar_method():
         DeltaVariance(dataset1["moment0"],
                       weights=dataset1["moment0_error"][0])
     tester.run(xhigh=11. * u.pix)
+
+    # Run the fit again with bootstrap resampling
+    tester.fit_plaw(bootstrap=True, xhigh=11. * u.pix)
+
     # The slice is again to restrict where the convolution functions both give
     # the same value
     npt.assert_allclose(tester.delta_var[:-7],

@@ -125,7 +125,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
     def run(self, verbose=False, beam_correct=False,
             apodize_kernel=None, alpha=0.2, beta=0.0,
             use_pyfftw=False, threads=1,
-            pyfftw_kwargs={}, return_stddev=True,
+            pyfftw_kwargs={},
             low_cut=None, high_cut=None,
             fit_2D=True, radial_pspec_kwargs={}, fit_kwargs={},
             fit_2D_kwargs={},
@@ -157,8 +157,6 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
             `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
             `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
             for a list of accepted kwargs.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
         low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional
@@ -190,8 +188,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                            use_pyfftw=use_pyfftw, threads=threads,
                            **pyfftw_kwargs)
 
-        self.compute_radial_pspec(return_stddev=return_stddev,
-                                  **radial_pspec_kwargs)
+        self.compute_radial_pspec(**radial_pspec_kwargs)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
@@ -201,6 +198,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         if verbose:
             print(self.fit.summary())
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
+
             self.plot_fit(show=True, show_2D=True,
                           xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
