@@ -20,6 +20,9 @@ def test_SCF_method():
     tester = SCF(dataset1["cube"], size=11)
     tester.run(boundary='continuous')
 
+    # Test fitting with bootstrapping
+    tester.fit_plaw(bootstrap=True)
+
     assert np.allclose(tester.scf_surface, computed_data['scf_val'])
     npt.assert_array_almost_equal(tester.scf_spectrum,
                                   computed_data["scf_spectrum"])

@@ -23,6 +23,11 @@ def test_VCS_method():
     tester = VCS(dataset1["cube"]).run(high_cut=0.3 / u.pix,
                                        low_cut=3e-2 / u.pix)
 
+    # Test fitting with bootstrapping
+    tester.fit_pspec(bootstrap=True,
+                     high_cut=0.3 / u.pix,
+                     low_cut=3e-2 / u.pix)
+
     npt.assert_allclose(tester.ps1D, computed_data['vcs_val'])
 
     npt.assert_allclose(tester.slope, computed_data['vcs_slopes'])

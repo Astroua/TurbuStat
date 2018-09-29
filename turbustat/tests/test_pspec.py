@@ -31,6 +31,10 @@ def test_PSpec_method():
     tester = \
         PowerSpectrum(dataset1["moment0"])
     tester.run()
+
+    # Test fitting with bootstrapping
+    tester.fit_pspec(bootstrap=True)
+
     npt.assert_allclose(tester.ps1D, computed_data['pspec_val'])
     npt.assert_allclose(tester.slope, computed_data['pspec_slope'])
     npt.assert_allclose(tester.slope2D, computed_data['pspec_slope2D'])

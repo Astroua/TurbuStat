@@ -35,6 +35,10 @@ from .testing_utilities import assert_between
 def test_VCA_method():
     tester = VCA(dataset1["cube"])
     tester.run()
+
+    # Test fitting with bootstrapping
+    tester.fit_pspec(bootstrap=True)
+
     npt.assert_allclose(tester.ps1D, computed_data['vca_val'])
     npt.assert_almost_equal(tester.slope, computed_data['vca_slope'],
                             decimal=3)
