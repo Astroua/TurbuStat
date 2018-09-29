@@ -83,7 +83,7 @@ class Lm_Seg(object):
         if self.weights is None:
             model = sm.OLS(self.y, x_const)
         else:
-            model = sm.OLS(self.y, x_const, weights=self.weights)
+            model = sm.WLS(self.y, x_const, weights=self.weights)
         init_lm = model.fit(**fit_kwargs)
 
         if verbose:
