@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #192 - Add stddev and weighted fitting for `Wavelet`. Correct bug in fitting weights for `StatisticBase_PSpec2D`.
 * #191 - Use robust covariance for linear models. Add residual plots. Add residual bootstrapping for linear models.
 * #190 - Add spectral downsampling by averaging for VCA; remove downsampling for VCS.
 * #189 - Fixing elliptical p-law parameters for isotropic fields.
