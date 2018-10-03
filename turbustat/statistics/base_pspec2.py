@@ -144,14 +144,21 @@ class StatisticBase_PSpec2D(object):
 
         x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut.value,
                                           self.high_cut.value)].value)
-        y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut.value,
-                                         self.high_cut.value)])
+
+        clipped_ps1D = self.ps1D[clip_func(self.freqs.value,
+                                           self.low_cut.value,
+                                           self.high_cut.value)]
+        y = np.log10(clipped_ps1D)
 
         if weighted_fit:
 
-            y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
+            clipped_stddev = self.ps1D_stddev[clip_func(self.freqs.value,
                                                         self.low_cut.value,
-                                                        self.high_cut.value)])
+                                                        self.high_cut.value)]
+
+            clipped_stddev[clipped_stddev == 0.] = np.NaN
+
+            y_err = 0.434 * clipped_stddev / clipped_ps1D
 
         if brk is not None:
             # Try the fit with a break in it.
