@@ -115,8 +115,7 @@ class StatisticBase_PSpec2D(object):
             Sets the minimum number of points needed to fit. If not met, the
             break found is rejected.
         weighted_fit : bool, optional
-            Fit using weighted least-squares. Requires `return_stddev` to be
-            enabled when computing the radial power-spectrum. The weights are
+            Fit using weighted least-squares. The weights are
             the inverse-squared standard deviations in each radial bin.
         bootstrap : bool, optional
             Bootstrap using the model residuals to estimate the parameter
@@ -145,18 +144,21 @@ class StatisticBase_PSpec2D(object):
 
         x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut.value,
                                           self.high_cut.value)].value)
-        y = np.log10(self.ps1D[clip_func(self.freqs.value, self.low_cut.value,
-                                         self.high_cut.value)])
+
+        clipped_ps1D = self.ps1D[clip_func(self.freqs.value,
+                                           self.low_cut.value,
+                                           self.high_cut.value)]
+        y = np.log10(clipped_ps1D)
 
         if weighted_fit:
 
-            if brk is not None:
-                raise ValueError("Weighted least-squares fitting cannot be "
-                                 "used when fitting a break-point.")
-
-            y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
+            clipped_stddev = self.ps1D_stddev[clip_func(self.freqs.value,
                                                         self.low_cut.value,
-                                                        self.high_cut.value)])
+                                                        self.high_cut.value)]
+
+            clipped_stddev[clipped_stddev == 0.] = np.NaN
+
+            y_err = 0.434 * clipped_stddev / clipped_ps1D
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -169,8 +171,12 @@ class StatisticBase_PSpec2D(object):
                     assert brk.unit == u.dimensionless_unscaled
                     brk = brk.value
 
-            brk_fit = \
-                Lm_Seg(x, y, brk)
+            if weighted_fit:
+                weights = 1 / y_err**2
+            else:
+                weights = None
+
+            brk_fit = Lm_Seg(x, y, brk, weights=weights)
             brk_fit.fit_model(verbose=verbose, cov_type='HC3')
 
             if brk_fit.params.size == 5:

@@ -183,8 +183,8 @@ def test_SCF_azimlimits():
 
 @pytest.mark.parametrize(('theta', 'ellip'),
                          [(theta, ellip) for theta in
-                         [0., np.pi / 4., np.pi / 2., 7 * np.pi / 8.]
-                         for ellip in [0.2, 0.5, 0.8]])
+                         [0., np.pi / 4., 7 * np.pi / 8.]
+                          for ellip in [0.2, 0.8]])
 def test_scf_fit2D(theta, ellip):
     '''
     Since test_elliplaw tests everything, only check for consistent theta
@@ -192,7 +192,7 @@ def test_scf_fit2D(theta, ellip):
     '''
 
     nchans = 10
-    imsize = 256
+    imsize = 128
     plaw = 4.
 
     # Generate a red noise model

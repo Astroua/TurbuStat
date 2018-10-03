@@ -110,7 +110,7 @@ def test_pspec_azimlimits(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 128
     theta = 0
 
     # Generate a red noise model
@@ -120,23 +120,46 @@ def test_pspec_azimlimits(plaw, ellip):
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
-             fit_kwargs={'weighted_fit': True},
+             fit_kwargs={'weighted_fit': False},
              fit_2D=False)
 
     test2 = PowerSpectrum(fits.PrimaryHDU(img))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
-              fit_kwargs={'weighted_fit': True},
+              fit_kwargs={'weighted_fit': False},
               fit_2D=False)
 
     test3 = PowerSpectrum(fits.PrimaryHDU(img))
     test3.run(radial_pspec_kwargs={},
-              fit_kwargs={'weighted_fit': True},
+              fit_kwargs={'weighted_fit': False},
               fit_2D=False)
 
     # Ensure slopes are consistent to within 2%
     npt.assert_allclose(-plaw, test3.slope, rtol=0.02)
     npt.assert_allclose(-plaw, test2.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
+
+
+@pytest.mark.parametrize('plaw', [2, 3, 4])
+def test_pspec_weightfit(plaw):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 64
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=1., theta=theta,
+                        return_fft=False)
+
+    test = PowerSpectrum(fits.PrimaryHDU(img))
+    test.run(fit_kwargs={'weighted_fit': True},
+             fit_2D=False)
+
+    # Ensure slopes are consistent to within 2%
     npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
@@ -148,7 +171,7 @@ def test_pspec_fit2D(theta):
     here.
     '''
 
-    imsize = 256
+    imsize = 64
     ellip = 0.5
     plaw = 4.
 
@@ -157,8 +180,7 @@ def test_pspec_fit2D(theta):
                         return_fft=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
-    test.run(fit_2D=True,
-             fit_kwargs={'weighted_fit': True})
+    test.run(fit_2D=True)
 
     try:
         npt.assert_allclose(theta, test.theta2D,
@@ -183,7 +205,7 @@ def test_PSpec_method_fftw():
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 def test_PSpec_beamcorrect():
 
-    imsize = 512
+    imsize = 128
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -229,7 +251,7 @@ def test_PSpec_beamcorrect():
                           'cosinebell'])
 def test_PSpec_apod_kernel(apod_type):
 
-    imsize = 512
+    imsize = 256
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -244,11 +266,6 @@ def test_PSpec_apod_kernel(apod_type):
     test = PowerSpectrum(hdu)
 
     # Effects large scales
-    if apod_type == 'cosinebell':
-        low_cut = 10**-1.8 / u.pix
-    else:
-        low_cut = None
-
     low_cut = 10**-1.8 / u.pix
 
     test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,

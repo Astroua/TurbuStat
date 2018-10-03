@@ -113,7 +113,10 @@ class DeltaVariance(BaseStatisticMixIn):
             raise ValueError("At least one of the lags is smaller than one "
                              "pixel. Remove these lags from the array.")
 
-        if np.any(pix_lags.value > min(self.data.shape) / 2.):
+        # Catch floating point issues in comparing to half the image shape
+        half_comp = (np.floor(pix_lags.value) - min(self.data.shape) / 2.)
+
+        if np.any(half_comp > 1e-10):
             raise ValueError("At least one of the lags is larger than half of"
                              " the image size. Remove these lags from the "
                              "array.")

@@ -79,7 +79,7 @@ def test_bispec_azimuthal_slicing():
                          [plaw for plaw in [2, 3, 4]])
 def test_bispec_radial_slicing(plaw):
 
-    img = make_extended(256, powerlaw=plaw)
+    img = make_extended(128, powerlaw=plaw)
 
     bispec = Bispectrum(fits.PrimaryHDU(img))
     bispec.run(nsamples=100)
