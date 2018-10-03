@@ -70,7 +70,7 @@ class Lm_Seg(object):
             raise Warning("Not enough finite points to fit.")
 
     def fit_model(self, tol=1e-3, iter_max=100, h_step=2.0, epsil_0=10,
-                  constant=True, verbose=True, **fit_kwargs):
+                  constant=True, verbose=True, missing='drop', **fit_kwargs):
         '''
         '''
         # Fit a normal linear model to the data
@@ -81,9 +81,10 @@ class Lm_Seg(object):
             x_const = self.x
 
         if self.weights is None:
-            model = sm.OLS(self.y, x_const)
+            model = sm.OLS(self.y, x_const, missing=missing)
         else:
-            model = sm.WLS(self.y, x_const, weights=self.weights)
+            model = sm.WLS(self.y, x_const, weights=self.weights,
+                           missing=missing)
         init_lm = model.fit(**fit_kwargs)
 
         if verbose:
@@ -117,9 +118,10 @@ class Lm_Seg(object):
                 X_all = sm.add_constant(X_all)
 
             if self.weights is None:
-                model = sm.OLS(self.y, X_all)
+                model = sm.OLS(self.y, X_all, missing=missing)
             else:
-                model = sm.WLS(self.y, X_all, weights=self.weights)
+                model = sm.WLS(self.y, X_all, weights=self.weights,
+                               missing=missing)
             fit = model.fit()
 
             beta = fit.params[2]  # Get coef
@@ -188,9 +190,10 @@ class Lm_Seg(object):
             X_all = sm.add_constant(X_all)
 
         if self.weights is None:
-            model = sm.OLS(self.y, X_all)
+            model = sm.OLS(self.y, X_all, missing=missing)
         else:
-            model = sm.WLS(self.y, X_all, weights=self.weights)
+            model = sm.WLS(self.y, X_all, weights=self.weights,
+                           missing=missing)
 
         self.fit = model.fit()
         self._params = self.fit.params
