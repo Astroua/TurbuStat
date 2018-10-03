@@ -134,17 +134,18 @@ def test_Wavelet_method_fftw():
     npt.assert_almost_equal(tester.slope, computed_data['wavelet_slope'])
 
 
-@pytest.mark.parametrize(('plaw', 'ellip'),
-                         [(plaw, ellip) for plaw in [2, 3, 4]
-                          for ellip in [0.2, 0.75, 1.0]])
-def test_wavelet_plaw_img(plaw, ellip):
+@pytest.mark.parametrize(('plaw', 'ellip', 'weight'),
+                         [(plaw, ellip, weight) for plaw in [2, 3, 4]
+                          for ellip in [0.2, 1.0]
+                          for weight in [False, True]])
+def test_wavelet_plaw_img(plaw, ellip, weight):
     '''
     The slopes with azimuthal constraints should be the same. When elliptical,
     the power will be different along the different directions, but the slope
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 128
     theta = 0
 
     # Generate a red noise model
@@ -153,7 +154,7 @@ def test_wavelet_plaw_img(plaw, ellip):
 
     test = Wavelet(fits.PrimaryHDU(img))
     # The turn-over occurs near ~1/16 of the axis size.
-    test.run(xhigh=imsize / 16. * u.pix)
+    test.run(xhigh=imsize / 16. * u.pix, fit_kwargs={'weighted_fit': weight})
 
     # Ensure slopes are consistent to within 2%
     # Relation to the power law slope is (plaw - 2) / 2.
