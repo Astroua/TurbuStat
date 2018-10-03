@@ -151,7 +151,7 @@ def test_vca_azimlimits(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 512
+    imsize = 128
     theta = 0
 
     nchans = 10
@@ -171,22 +171,22 @@ def test_vca_azimlimits(plaw, ellip):
                                   "theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
              fit_2D=False,
-             fit_kwargs={'weighted_fit': True},
-             low_cut=10**-2 / u.pix)
+             fit_kwargs={'weighted_fit': False},
+             low_cut=(4. / imsize) / u.pix)
 
     test2 = VCA(fits.PrimaryHDU(cube))
     test2.run(radial_pspec_kwargs={'binsize': 8.,
                                    "theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
               fit_2D=False,
-              fit_kwargs={'weighted_fit': True},
-              low_cut=10**-2 / u.pix)
+              fit_kwargs={'weighted_fit': False},
+              low_cut=(4. / imsize) / u.pix)
 
     test3 = VCA(fits.PrimaryHDU(cube))
     test3.run(radial_pspec_kwargs={'binsize': 8.},
               fit_2D=False,
-              fit_kwargs={'weighted_fit': True},
-              low_cut=10**-2 / u.pix)
+              fit_kwargs={'weighted_fit': False},
+              low_cut=(4. / imsize) / u.pix)
 
     # Ensure slopes are consistent to within 0.1. Shot noise with the
     # limited number of points requires checking within a range.
@@ -209,7 +209,7 @@ def test_VCA_method_fftw():
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 def test_VCA_beamcorrect():
 
-    imsize = 512
+    imsize = 128
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -257,7 +257,7 @@ def test_VCA_beamcorrect():
                           'cosinebell'])
 def test_VCA_apod_kernel(apod_type):
 
-    imsize = 512
+    imsize = 256
     theta = 0
     plaw = 3.0
     ellip = 1.0

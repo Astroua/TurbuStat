@@ -144,7 +144,7 @@ def test_delvar_plaw_img(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 128
     theta = 0
 
     # Generate a red noise model
@@ -152,14 +152,10 @@ def test_delvar_plaw_img(plaw, ellip):
                         return_fft=False)
 
     test = DeltaVariance(fits.PrimaryHDU(img))
-    test.run()
+    test.run(xhigh=imsize / 4. * u.pix)
 
     # Ensure slopes are consistent to within 2%
     # Relation to the power law slope is plaw - 2
     # Highly elliptical structure (0.2) leads to ~3% deviations
 
-    # Use an abs difference when the delvar should be 0.
-    if plaw == 2.:
-        npt.assert_allclose(plaw - 2., test.slope, atol=0.01)
-    else:
-        npt.assert_allclose(plaw - 2., test.slope, rtol=0.03)
+    npt.assert_allclose(plaw, test.slope + 2., rtol=0.04)

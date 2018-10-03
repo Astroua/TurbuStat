@@ -112,7 +112,7 @@ def test_mvc_azimlimits(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 128
     theta = 0
 
     # Generate a red noise model
@@ -126,20 +126,20 @@ def test_mvc_azimlimits(plaw, ellip):
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
              fit_2D=False,
-             fit_kwargs={'weighted_fit': True})
+             fit_kwargs={'weighted_fit': False})
 
     test2 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                 fits.PrimaryHDU(ones))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
               fit_2D=False,
-              fit_kwargs={'weighted_fit': True})
+              fit_kwargs={'weighted_fit': False})
 
     test3 = MVC(fits.PrimaryHDU(img), fits.PrimaryHDU(ones),
                 fits.PrimaryHDU(ones))
     test3.run(radial_pspec_kwargs={},
               fit_2D=False,
-              fit_kwargs={'weighted_fit': True})
+              fit_kwargs={'weighted_fit': False})
 
     # Ensure slopes are consistent to within 7%
     assert_between(test3.slope, - 1.07 * plaw, - 0.93 * plaw)
@@ -165,7 +165,7 @@ def test_MVC_method_fftw():
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 def test_MVC_beamcorrect():
 
-    imsize = 512
+    imsize = 128
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -215,7 +215,7 @@ def test_MVC_beamcorrect():
                           'cosinebell'])
 def test_MVC_apod_kernel(apod_type):
 
-    imsize = 512
+    imsize = 256
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -234,7 +234,7 @@ def test_MVC_apod_kernel(apod_type):
 
     # Avoid shot noise scatter at large scales
     if apod_type == 'cosinebell':
-        low_cut = 10**-1.1 / u.pix
+        low_cut = 10**-0.8 / u.pix
     else:
         low_cut = 10**-1.4 / u.pix
 

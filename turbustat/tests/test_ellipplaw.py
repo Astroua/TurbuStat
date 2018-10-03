@@ -53,7 +53,7 @@ def test_simple_ellipplaw_2D_anisotropic(plaw, ellip, theta):
     # Must have ellip < 1 for this test. Just be sure...
     assert ellip < 1.
 
-    imsize = 256
+    imsize = 128
 
     # Generate a red noise model
     psd = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
