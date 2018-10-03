@@ -149,10 +149,6 @@ class StatisticBase_PSpec2D(object):
 
         if weighted_fit:
 
-            if brk is not None:
-                raise ValueError("Weighted least-squares fitting cannot be "
-                                 "used when fitting a break-point.")
-
             y_err = np.log10(self.ps1D_stddev[clip_func(self.freqs.value,
                                                         self.low_cut.value,
                                                         self.high_cut.value)])
