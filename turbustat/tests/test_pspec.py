@@ -110,7 +110,7 @@ def test_pspec_azimlimits(plaw, ellip):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 128
     theta = 0
 
     # Generate a red noise model
@@ -148,7 +148,7 @@ def test_pspec_weightfit(plaw):
     should remain the same.
     '''
 
-    imsize = 256
+    imsize = 64
     theta = 0
 
     # Generate a red noise model
@@ -171,7 +171,7 @@ def test_pspec_fit2D(theta):
     here.
     '''
 
-    imsize = 256
+    imsize = 64
     ellip = 0.5
     plaw = 4.
 
@@ -205,7 +205,7 @@ def test_PSpec_method_fftw():
 @pytest.mark.skipif("not RADIO_BEAM_INSTALLED")
 def test_PSpec_beamcorrect():
 
-    imsize = 512
+    imsize = 128
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -251,7 +251,7 @@ def test_PSpec_beamcorrect():
                           'cosinebell'])
 def test_PSpec_apod_kernel(apod_type):
 
-    imsize = 512
+    imsize = 256
     theta = 0
     plaw = 3.0
     ellip = 1.0
@@ -266,11 +266,6 @@ def test_PSpec_apod_kernel(apod_type):
     test = PowerSpectrum(hdu)
 
     # Effects large scales
-    if apod_type == 'cosinebell':
-        low_cut = 10**-1.8 / u.pix
-    else:
-        low_cut = None
-
     low_cut = 10**-1.8 / u.pix
 
     test.run(apodize_kernel=apod_type, alpha=0.3, beta=0.8, fit_2D=False,
