@@ -120,23 +120,46 @@ def test_pspec_azimlimits(plaw, ellip):
     test = PowerSpectrum(fits.PrimaryHDU(img))
     test.run(radial_pspec_kwargs={"theta_0": 0 * u.deg,
                                   "delta_theta": 40 * u.deg},
-             fit_kwargs={'weighted_fit': True},
+             fit_kwargs={'weighted_fit': False},
              fit_2D=False)
 
     test2 = PowerSpectrum(fits.PrimaryHDU(img))
     test2.run(radial_pspec_kwargs={"theta_0": 90 * u.deg,
                                    "delta_theta": 40 * u.deg},
-              fit_kwargs={'weighted_fit': True},
+              fit_kwargs={'weighted_fit': False},
               fit_2D=False)
 
     test3 = PowerSpectrum(fits.PrimaryHDU(img))
     test3.run(radial_pspec_kwargs={},
-              fit_kwargs={'weighted_fit': True},
+              fit_kwargs={'weighted_fit': False},
               fit_2D=False)
 
     # Ensure slopes are consistent to within 2%
     npt.assert_allclose(-plaw, test3.slope, rtol=0.02)
     npt.assert_allclose(-plaw, test2.slope, rtol=0.02)
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
+
+
+@pytest.mark.parametrize('plaw', [2, 3, 4])
+def test_pspec_weightfit(plaw):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 256
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=1., theta=theta,
+                        return_fft=False)
+
+    test = PowerSpectrum(fits.PrimaryHDU(img))
+    test.run(fit_kwargs={'weighted_fit': True},
+             fit_2D=False)
+
+    # Ensure slopes are consistent to within 2%
     npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
@@ -157,8 +180,7 @@ def test_pspec_fit2D(theta):
                         return_fft=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
-    test.run(fit_2D=True,
-             fit_kwargs={'weighted_fit': True})
+    test.run(fit_2D=True)
 
     try:
         npt.assert_allclose(theta, test.theta2D,
