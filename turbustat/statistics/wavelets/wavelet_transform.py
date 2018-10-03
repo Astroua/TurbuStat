@@ -98,6 +98,7 @@ class Wavelet(BaseStatisticMixIn):
         self._scales = values
 
     def compute_transform(self, show_progress=True, scale_normalization=True,
+                          keep_convolved_arrays=False,
                           use_pyfftw=False, threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
@@ -109,6 +110,9 @@ class Wavelet(BaseStatisticMixIn):
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
+        keep_convolved_arrays: bool, optional
+            Keep the image convolved at all wavelet scales. For large images,
+            this can require a large amount memory. Default is False.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -133,7 +137,13 @@ class Wavelet(BaseStatisticMixIn):
         n0, m0 = self.data.shape
         A = len(self.scales)
 
-        self._Wf = np.zeros((A, n0, m0), dtype=np.float)
+        if keep_convolved_arrays:
+            self._Wf = np.zeros((A, n0, m0), dtype=np.float)
+        else:
+            self._Wf = None
+
+        self._values = np.empty_like(self.scales.value)
+        self._stddev = np.empty_like(self.scales.value)
 
         factor = 2
         if not scale_normalization:
@@ -150,10 +160,16 @@ class Wavelet(BaseStatisticMixIn):
         for i, an in enumerate(pix_scales):
             psi = MexicanHat2DKernel(an)
 
-            self._Wf[i] = \
+            conv_arr = \
                 convolve_fft(self.data, psi, normalize_kernel=False,
                              fftn=use_fftn, ifftn=use_ifftn).real * \
                 an**factor
+
+            if keep_convolved_arrays:
+                self._Wf[i] = conv_arr
+
+            self._values[i] = (conv_arr[conv_arr > 0]).mean()
+            self._stddev[i] = (conv_arr[conv_arr > 0]).std()
 
             if show_progress:
                 bar.update(i + 1)
@@ -164,16 +180,11 @@ class Wavelet(BaseStatisticMixIn):
         The wavelet transforms of the image. Each plane is the transform at
         different wavelet sizes.
         '''
+        if self._Wf is None:
+            warn("`keep_convolved_arrays` was disabled in "
+                 "`compute_transform`.")
+
         return self._Wf
-
-    def make_1D_transform(self):
-        '''
-        Create the 1D transform.
-        '''
-
-        self._values = np.empty_like(self.scales.value)
-        for i, plane in enumerate(self.Wf):
-            self._values[i] = (plane[plane > 0]).mean()
 
     @property
     def values(self):
@@ -182,9 +193,16 @@ class Wavelet(BaseStatisticMixIn):
         '''
         return self._values
 
+    @property
+    def stddev(self):
+        '''
+        Standard deviation of the 1-dimensional wavelet transform.
+        '''
+        return self._stddev
+
     def fit_transform(self, xlow=None, xhigh=None, brk=None, min_fits_pts=3,
-                      bootstrap=False, bootstrap_kwargs={},
-                      **fit_kwargs):
+                      weighted_fit=False, bootstrap=False,
+                      bootstrap_kwargs={}, **fit_kwargs):
         '''
         Perform a fit to the transform in log-log space.
 
@@ -197,6 +215,12 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        min_fits_pts : int, optional
+            Minimum number of points required above or below the fitted break
+            for it to be considered a valid fit. Only used when a segmented
+            line is fit, i.e. when a value for `brk` is given.
+        weighted_fit: bool, optional
+            Use the `~Wavelet.stddev` to perform a weighted fit.
         bootstrap : bool, optional
             Bootstrap using the model residuals to estimate the standard
             errors.
@@ -208,6 +232,14 @@ class Wavelet(BaseStatisticMixIn):
         pix_scales = self._to_pixel(self.scales)
         x = np.log10(pix_scales.value)
         y = np.log10(self.values)
+
+        if weighted_fit:
+            y_err = 0.434 * self.stddev / self.values
+            y_err[y_err == 0.] = np.NaN
+
+            weights = y_err**-2
+        else:
+            weights = None
 
         if xlow is not None:
             xlow = self._to_pixel(xlow)
@@ -234,6 +266,9 @@ class Wavelet(BaseStatisticMixIn):
         y = y[within_limits]
         x = x[within_limits]
 
+        if weighted_fit:
+            weights = weights[within_limits]
+
         if brk is not None:
             # Try fitting a segmented model
 
@@ -242,7 +277,7 @@ class Wavelet(BaseStatisticMixIn):
             if pix_brk < xlow or pix_brk > xhigh:
                 raise ValueError("brk must be within xlow and xhigh.")
 
-            model = Lm_Seg(x, y, np.log10(pix_brk.value))
+            model = Lm_Seg(x, y, np.log10(pix_brk.value), weights=weights)
 
             fit_kwargs['cov_type'] = 'HC3'
 
@@ -296,7 +331,10 @@ class Wavelet(BaseStatisticMixIn):
 
             x = sm.add_constant(x)
 
-            model = sm.OLS(y, x, missing='drop')
+            if weighted_fit:
+                model = sm.WLS(y, x, missing='drop', weights=weights)
+            else:
+                model = sm.OLS(y, x, missing='drop')
 
             self.fit = model.fit(cov_type='HC3')
 
@@ -508,7 +546,6 @@ class Wavelet(BaseStatisticMixIn):
                                use_pyfftw=use_pyfftw, threads=threads,
                                pyfftw_kwargs=pyfftw_kwargs,
                                show_progress=show_progress)
-        self.make_1D_transform()
         self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk, **fit_kwargs)
 
         if verbose:
