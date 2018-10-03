@@ -169,7 +169,13 @@ class Wavelet(BaseStatisticMixIn):
                 self._Wf[i] = conv_arr
 
             self._values[i] = (conv_arr[conv_arr > 0]).mean()
-            self._stddev[i] = (conv_arr[conv_arr > 0]).std()
+
+            # The standard deviation should take into account the number of
+            # kernel elements at that scale.
+            kern_area = np.ceil(0.5 * np.pi * np.log(2) * an**2).astype(int)
+            nindep = np.sqrt(np.isfinite(conv_arr).sum() // kern_area)
+
+            self._stddev[i] = (conv_arr[conv_arr > 0]).std() / nindep
 
             if show_progress:
                 bar.update(i + 1)
@@ -447,10 +453,20 @@ class Wavelet(BaseStatisticMixIn):
         else:
             ax = plt.subplot(111)
 
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+
         pix_scales = self._to_pixel(self.scales)
         scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        ax.loglog(scales, self.values, symbol, color=color, label=label)
+        # Check for NaNs
+        fin_vals = np.logical_or(np.isfinite(self.values),
+                                 np.isfinite(self.stddev))
+        ax.errorbar(scales[fin_vals], self.values[fin_vals],
+                    yerr=self.stddev[fin_vals],
+                    fmt=symbol + "-", color=color,
+                    label=label)
+
         # Plot the fit within the fitting range.
         low_lim = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
@@ -472,7 +488,8 @@ class Wavelet(BaseStatisticMixIn):
             resids = self.values - \
                 10**self.fitted_model(np.log10(pix_scales.value))
 
-            ax_r.plot(scales, resids, symbol, color=color, label=label)
+            ax_r.errorbar(scales, resids, yerr=self.stddev[fin_vals],
+                          fmt=symbol + "-", color=color, label=label)
 
             ax_r.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
             ax_r.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
