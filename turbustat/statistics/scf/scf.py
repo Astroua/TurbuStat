@@ -588,12 +588,45 @@ class SCF(BaseStatisticMixIn):
         else:
             fig = plt.figure(figsize=(6.4, 4.8))
 
-        if show_surface:
-
-            if show_radial:
-                ax = plt.subplot2grid((4, 4), (0, 2), colspan=2, rowspan=4)
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+        if len(axes) == 3:
+            ax, ax2, ax_r = axes
+        elif len(axes) == 2:
+            if show_surface and not show_residual:
+                ax, ax2 = axes
             else:
-                ax = plt.subplot2grid((4, 4), (0, 0), colspan=4, rowspan=4)
+                ax2, ax_r = axes
+        elif len(axes) == 1:
+            if show_radial:
+                ax = axes[0]
+            else:
+                ax2 = axes[0]
+        else:
+            if show_surface:
+                if show_radial:
+                    ax = plt.subplot2grid((4, 4), (0, 2), colspan=2, rowspan=4)
+                    if show_residual:
+                        ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
+                                               rowspan=3)
+                        ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=2,
+                                                rowspan=1, sharex=ax2)
+                    else:
+                        ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
+                                               rowspan=4)
+                else:
+                    ax = plt.subplot2grid((4, 4), (0, 0), colspan=4, rowspan=4)
+            else:
+                if show_residual:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
+                                           rowspan=3)
+                    ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=4,
+                                            rowspan=1, sharex=ax2)
+                else:
+                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
+                                           rowspan=4)
+
+        if show_surface:
 
             im1 = ax.imshow(self.scf_surface, origin="lower",
                             interpolation="nearest",
@@ -632,25 +665,6 @@ class SCF(BaseStatisticMixIn):
                          "be drawn.")
 
         if show_radial:
-
-            if show_surface:
-                if show_residual:
-                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
-                                           rowspan=3)
-                    ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=2,
-                                            rowspan=1, sharex=ax2)
-                else:
-                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=2,
-                                           rowspan=4)
-            else:
-                if show_residual:
-                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
-                                           rowspan=3)
-                    ax_r = plt.subplot2grid((4, 4), (3, 0), colspan=4,
-                                            rowspan=1, sharex=ax2)
-                else:
-                    ax2 = plt.subplot2grid((4, 4), (0, 0), colspan=4,
-                                           rowspan=4)
 
             pix_lags = self._to_pixel(self.lags)
             lags = self._spatial_unit_conversion(pix_lags, xunit).value
@@ -777,8 +791,10 @@ class SCF_Distance(object):
         Data cube.
     cube2 : %(dtypes)s
         Data cube.
-    size : `~astropy.units.Quantity`, optional
-        Maximum size roll over which SCF will be calculated.
+    size : int, optional
+        Maximum size roll, in pixels, over which SCF will be calculated. If
+        the angular scale is different between the data cubes, the lags are
+        scaled to have the same angular scales.
     boundary : {"continuous", "cut"}
         Treat the boundary as continuous (wrap-around) or cut values
         beyond the edge (i.e., for most observational data). A two element
@@ -794,7 +810,7 @@ class SCF_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, size=21 * u.pix, boundary='continuous',
+    def __init__(self, cube1, cube2, size=11, boundary='continuous',
                  fiducial_model=None, weighted=True, phys_distance=None):
         super(SCF_Distance, self).__init__()
         self.weighted = weighted
@@ -846,7 +862,7 @@ class SCF_Distance(object):
                       fit_2D=False)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        ang_units=False, unit=u.deg, save_name=None):
+                        xunit=u.pix, save_name=None):
         '''
         Compute the distance between the surfaces.
 
@@ -858,10 +874,9 @@ class SCF_Distance(object):
             Object or region name for cube1
         label2 : str, optional
             Object or region name for cube2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : `~astropy.units.Unit`, optional
-            Choose the angular unit to convert to when ang_units is enabled.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
         save_name : str,optional
             Save the figure when a file name is given.
         '''
@@ -885,34 +900,39 @@ class SCF_Distance(object):
         self.distance = np.sqrt(np.sum(difference) / np.sum(dist_weight))
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
+
+            if label1 is None:
+                label1 = "1"
+            if label2 is None:
+                label2 = "2"
 
             # print "Distance: %s" % (self.distance)
 
-            p.subplot(2, 2, 1)
-            p.imshow(
-                self.scf1.scf_surface, origin="lower", interpolation="nearest")
-            p.title(label1)
-            p.colorbar()
-            p.subplot(2, 2, 2)
-            p.imshow(
-                self.scf2.scf_surface, origin="lower", interpolation="nearest",
-                label=label2)
-            p.title(label2)
-            p.colorbar()
-            p.subplot(2, 2, 3)
-            p.imshow(difference, origin="lower", interpolation="nearest")
-            p.title("Weighted Difference")
-            p.colorbar()
-            ax = p.subplot(2, 2, 4)
-            if ang_units:
-                lags1 = \
-                    self.scf1.lags.to(unit, self.scf1.angular_equiv).value
-                lags2 = \
-                    self.scf2.lags.to(unit, self.scf2.angular_equiv).value
-            else:
-                lags1 = self.scf1.lags.value
-                lags2 = self.scf2.lags.value
+            plt.subplot(2, 2, 1)
+            plt.imshow(self.scf1.scf_surface, origin="lower",
+                       interpolation="nearest")
+            plt.title(label1)
+            plt.colorbar()
+
+            plt.subplot(2, 2, 2)
+            plt.imshow(self.scf2.scf_surface, origin="lower",
+                       interpolation="nearest",
+                       label=label2)
+            plt.title(label2)
+            plt.colorbar()
+
+            plt.subplot(2, 2, 3)
+            plt.imshow(difference, origin="lower", interpolation="nearest")
+            plt.title("Weighted Difference")
+            plt.colorbar()
+
+            ax = plt.subplot(2, 2, 4)
+            pix_lags1 = self.scf1._to_pixel(self.scf1.lags)
+            lags1 = self.scf1._spatial_unit_conversion(pix_lags1, xunit).value
+
+            pix_lags2 = self.scf2._to_pixel(self.scf2.lags)
+            lags2 = self.scf2._spatial_unit_conversion(pix_lags2, xunit).value
 
             ax.errorbar(lags1, self.scf1.scf_spectrum,
                         yerr=self.scf1.scf_spectrum_stddev,
@@ -920,8 +940,8 @@ class SCF_Distance(object):
             ax.errorbar(lags2, self.scf2.scf_spectrum,
                         yerr=self.scf2.scf_spectrum_stddev,
                         fmt='o', color='g', markersize=5, label=label2)
-            ax.set_xscale("log", nonposy='clip')
-            ax.set_yscale("log", nonposy='clip')
+            ax.set_xscale("log")  # , nonposy='clip')
+            ax.set_yscale("log")  # , nonposy='clip')
 
             ax.set_xlim(min(lags1.min(), lags2.min()) * 0.75,
                         max(lags1.max(), lags2.max()) * 1.25)
@@ -935,16 +955,21 @@ class SCF_Distance(object):
                                              lags2.min()) * 0.95),
                                 np.log10(max(lags1.max(),
                                              lags2.max()) * 1.05), 50)
-            p.plot(10**xvals, 10**self.scf1.fitted_model(xvals), 'b--',
-                   linewidth=2)
-            p.plot(10**xvals, 10**self.scf2.fitted_model(xvals), 'g--',
-                   linewidth=2)
-            ax.legend(loc='upper right')
-            p.tight_layout()
+            plt.plot(10**xvals * xunit,
+                     10**self.scf1.fitted_model(xvals * xunit), 'b--',
+                     linewidth=2)
+            plt.plot(10**xvals * xunit,
+                     10**self.scf2.fitted_model(xvals * xunit), 'g--',
+                     linewidth=2)
+            ax.legend(loc='best', frameon=True)
+            ax.grid(True)
+
+            ax.set_xlabel("Lags ({})".format(xunit))
+
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+                plt.savefig(save_name)
+                plt.close()
+
         return self
