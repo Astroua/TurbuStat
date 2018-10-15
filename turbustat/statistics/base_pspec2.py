@@ -507,6 +507,7 @@ class StatisticBase_PSpec2D(object):
         '''
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         if use_wavenumber:
             xlab = r"k / (" + xunit.to_string() + ")"
@@ -516,12 +517,46 @@ class StatisticBase_PSpec2D(object):
         if fit_color is None:
             fit_color = color
 
-        if show_2D:
-            sizes = (16., 6.6)
-        else:
-            sizes = (8., 6.6)
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
 
-        fig = plt.figure(figsize=sizes)
+        # Setup axes
+        if len(axes) == 3:
+            # Setup for all 3 axes
+            ax = axes[0]
+            ax_1D = axes[1]
+            ax_1D_res = axes[2]
+        elif len(axes) == 2:
+            if show_2D:
+                ax = axes[0]
+                ax_1D = axes[1]
+            elif show_residual:
+                ax_1D = axes[0]
+                ax_1D_res = axes[1]
+        elif len(axes) == 1:
+            ax_1D = axes[0]
+        else:
+            # If there are none, setup the initial axes
+            if show_2D:
+                ax = plt.subplot2grid((4, 2), (0, 1), colspan=1, rowspan=4)
+
+                if show_residual:
+                    ax_1D = plt.subplot2grid((4, 2), (0, 0), colspan=1,
+                                             rowspan=3)
+                    ax_1D_res = plt.subplot2grid((4, 2), (3, 0), colspan=1,
+                                                 rowspan=1, sharex=ax_1D)
+                else:
+                    ax_1D = plt.subplot2grid((4, 2), (0, 0), colspan=1,
+                                             rowspan=4)
+            else:
+                if show_residual:
+                    ax_1D = plt.subplot2grid((4, 1), (0, 0), colspan=1,
+                                             rowspan=3)
+                    ax_1D_res = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                                 rowspan=1, sharex=ax_1D)
+                else:
+                    ax_1D = plt.subplot2grid((4, 1), (0, 0), colspan=1,
+                                             rowspan=4)
 
         # 2D Spectrum is shown alongside 1D. Otherwise only 1D is returned.
         if show_2D:
@@ -536,14 +571,13 @@ class StatisticBase_PSpec2D(object):
             vmax = np.log10(self.ps2D[mask]).max()
             vmin = np.log10(self.ps2D[mask]).min()
 
-            ax = fig.add_axes((0.5, 0.1, 0.4, 0.8))
-
             im1 = ax.imshow(np.log10(self.ps2D), interpolation="nearest",
                             origin="lower", vmax=vmax, vmin=vmin)
 
-            cbaxes = fig.add_axes([0.9, 0.1, 0.03, 0.8])
-            cbar = plt.colorbar(im1, cax=cbaxes)
-            cbar.set_label(r"log $P_2 \ (K_x,\ K_y)$")
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", "5%", pad="3%")
+            cb = plt.colorbar(im1, cax=cax)
+            cb.set_label(r"log $P_2 \ (K_x,\ K_y)$")
 
             ax.contour(mask, colors=[color], linestyles='--')
 
@@ -553,17 +587,6 @@ class StatisticBase_PSpec2D(object):
 
             if hasattr(self, "_azim_mask"):
                 ax.contour(self._azim_mask, colors=[color], linestyles='--')
-
-        if show_2D:
-            oned_width = 0.4
-        else:
-            oned_width = 0.8
-
-        if show_residual:
-            ax_1D = fig.add_axes((0.1, 0.3, oned_width, 0.6))
-            ax_1D_res = fig.add_axes((0.1, 0.1, oned_width, 0.2))
-        else:
-            ax_1D = fig.add_axes((0.1, 0.1, oned_width, 0.8))
 
         good_interval = clip_func(self.freqs.value, self.low_cut.value,
                                   self.high_cut.value)
@@ -639,7 +662,7 @@ class StatisticBase_PSpec2D(object):
         if show_residual:
             ax_1D_res.set_xlabel("log " + xlab)
 
-            ax_1D.get_xaxis().set_ticks([])
+            # ax_1D.get_xaxis().set_ticks([])
         else:
             ax_1D.set_xlabel("log " + xlab)
 
@@ -669,6 +692,10 @@ class StatisticBase_PSpec2D(object):
             ax_1D_res.grid(True)
 
             ax_1D_res.set_xlim(ax_1D.get_xlim())
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
 
         if save_name is not None:
             plt.savefig(save_name)
