@@ -583,11 +583,6 @@ class SCF(BaseStatisticMixIn):
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-        if show_surface and show_radial:
-            fig = plt.figure(figsize=(8.9, 4.8))
-        else:
-            fig = plt.figure(figsize=(6.4, 4.8))
-
         fig = plt.gcf()
         axes = plt.gcf().get_axes()
         if len(axes) == 3:
