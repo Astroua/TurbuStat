@@ -385,8 +385,9 @@ class MVC_Distance(object):
                       low_cut=low_cut[1],
                       fit_kwargs={'brk': breaks[1]}, fit_2D=False)
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.pix**-1, save_name=None,
+    def distance_metric(self, verbose=False, xunit=u.pix**-1,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={},
                         use_wavenumber=False):
         '''
 
@@ -399,16 +400,17 @@ class MVC_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        xunit : u.Unit, optional
-            Choose the unit to convert the x-axis to in the plot.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.MVC.plot_fit`
+            for `data1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.MVC.plot_fit`
+            for `data2`.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -423,20 +425,37 @@ class MVC_Distance(object):
             print(self.mvc1.fit.summary())
             print(self.mvc2.fit.summary())
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            self.mvc1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               xunit=xunit,
-                               use_wavenumber=use_wavenumber)
-            self.mvc2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               xunit=xunit,
-                               use_wavenumber=use_wavenumber)
-            p.legend(loc='best')
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.mvc1.plot_fit(xunit=xunit,
+                               use_wavenumber=use_wavenumber,
+                               **plot_kwargs1)
+            self.mvc2.plot_fit(xunit=xunit,
+                               use_wavenumber=use_wavenumber,
+                               **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
