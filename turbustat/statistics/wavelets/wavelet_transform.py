@@ -630,7 +630,7 @@ class Wavelet_Distance(object):
         self.wt2 = Wavelet(dataset2, scales=scales)
         self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
-    def distance_metric(self, verbose=False, xunit=u.deg,
+    def distance_metric(self, verbose=False, xunit=u.pix,
                         save_name=None, plot_kwargs1={},
                         plot_kwargs2={}):
         '''
@@ -687,7 +687,8 @@ class Wavelet_Distance(object):
                                     **plot_kwargs1)
             self.wt2.plot_transform(xunit=xunit,
                                     **plot_kwargs2)
-            plt.legend(loc='best')
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
                 plt.savefig(save_name)
