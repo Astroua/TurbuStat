@@ -659,8 +659,7 @@ class StatisticBase_PSpec2D(object):
 
         if show_residual:
             ax_1D_res.set_xlabel("log " + xlab)
-
-            # ax_1D.get_xaxis().set_ticks([])
+            ax_1D.get_xaxis().set_ticklabels([])
         else:
             ax_1D.set_xlabel("log " + xlab)
 
