@@ -465,7 +465,7 @@ class StatisticBase_PSpec2D(object):
         '''
         return self._ellip2D_err
 
-    def plot_fit(self, show=True, show_2D=False, show_residual=True,
+    def plot_fit(self, show_2D=False, show_residual=True,
                  color='r', fit_color=None, label=None,
                  fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
@@ -474,8 +474,6 @@ class StatisticBase_PSpec2D(object):
 
         Parameters
         ----------
-        show : bool, optional
-            Call `plt.show()` after plotting.
         show_2D : bool, optional
             Plot the 2D power spectrum with contours for the masked regions
             and 2D fit contours (if the 2D power spectrum was fit).
@@ -699,6 +697,3 @@ class StatisticBase_PSpec2D(object):
 
         if save_name is not None:
             plt.savefig(save_name)
-
-        if show:
-            plt.show()
