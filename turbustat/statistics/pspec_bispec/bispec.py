@@ -5,6 +5,7 @@ import numpy as np
 import numpy.random as ra
 import astropy.units as u
 from scipy.stats import binned_statistic
+from warnings import warn
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types, input_data
@@ -424,21 +425,35 @@ class BiSpectrum_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
+    def __init__(self, data1, data2, stat_kwargs={}, fiducial_model=None):
         super(BiSpectrum_Distance, self).__init__()
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
             self.bispec1 = BiSpectrum(data1)
-            self.bispec1.run(nsamples=nsamples)
+            self.bispec1.run(**stat_kwargs)
 
         self.bispec2 = BiSpectrum(data2)
-        self.bispec2.run(nsamples=nsamples)
+        self.bispec2.run(**stat_kwargs)
 
         self.distance = None
 
-    def distance_metric(self, metric='average', verbose=False, label1=None,
+    @property
+    def surface_distance(self):
+        '''
+        L2 distance between the bicoherence surfaces.
+        '''
+        return self._surface_distance
+
+    @property
+    def mean_distance(self):
+        '''
+        Absolute difference between the mean bicoherence.
+        '''
+        return self._mean_distance
+
+    def distance_metric(self, verbose=False, label1=None,
                         label2=None, save_name=None):
         '''
         verbose : bool, optional
@@ -451,46 +466,51 @@ class BiSpectrum_Distance(object):
             Save the figure when a file name is given.
         '''
 
-        if metric is 'surface':
-            self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
-                                           self.bispec2.bicoherence.ravel())
-        elif metric is 'average':
-            self.distance = np.abs(self.bispec1.bicoherence.mean() -
-                                   self.bispec2.bicoherence.mean())
+        if self.bispec1.bicoherence.shape == self.bispec2.bicoherence.shape:
+            self._surface_distance = \
+                np.linalg.norm(self.bispec1.bicoherence.ravel() -
+                               self.bispec2.bicoherence.ravel())
         else:
-            raise ValueError("metric must be 'surface' or 'average'.")
+            warn("Bicoherence surface must have equal shapes for the surface"
+                 " distance metric.")
+            self._surface_distance = np.NaN
+
+        self._mean_distance = np.abs(self.bispec1.bicoherence.mean() -
+                                     self.bispec2.bicoherence.mean())
 
         if verbose:
-            import matplotlib.pyplot as p
-            p.ion()
+            import matplotlib.pyplot as plt
 
-            fig = p.figure()
+            if label1 is None:
+                label1 = "1"
+            if label2 is None:
+                label2 = "2"
+
+            fig = plt.figure()
             ax1 = fig.add_subplot(121)
             ax1.set_title(label1)
-            ax1.imshow(
-                self.bispec1.bicoherence, origin="lower",
-                interpolation="nearest", vmax=1.0, vmin=0.0)
+            ax1.imshow(self.bispec1.bicoherence, origin="lower",
+                       interpolation="nearest", vmax=1.0, vmin=0.0)
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
 
             ax2 = fig.add_subplot(122)
             ax2.set_title(label2)
-            im = p.imshow(
-                self.bispec2.bicoherence, origin="lower",
-                interpolation="nearest", vmax=1.0, vmin=0.0)
+            im = plt.imshow(self.bispec2.bicoherence, origin="lower",
+                            interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
-            # ax2.set_ylabel(r"$k_2$")
             ax2.set_yticklabels([])
 
             fig.subplots_adjust(right=0.8)
             cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
             fig.colorbar(im, cax=cbar_ax)
 
-            # p.tight_layout()
+            plt.tight_layout()
+
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
