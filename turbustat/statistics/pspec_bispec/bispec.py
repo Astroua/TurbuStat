@@ -555,11 +555,16 @@ class Bispectrum_Distance(object):
             raise ValueError("metric must be 'surface' or 'average'.")
 
         if verbose:
-            import matplotlib.pyplot as p
-            p.ion()
+            import matplotlib.pyplot as plt
 
-            fig = p.figure()
-            ax1 = fig.add_subplot(121)
+            fig = plt.gcf()
+
+            if label1 is None:
+                label1 = "1"
+            if label2 is None:
+                label2 = "2"
+
+            ax1 = plt.subplot(121)
             ax1.set_title(label1)
             ax1.imshow(
                 self.bispec1.bicoherence, origin="lower",
@@ -567,25 +572,24 @@ class Bispectrum_Distance(object):
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
 
-            ax2 = fig.add_subplot(122)
+            ax2 = plt.subplot(122)
             ax2.set_title(label2)
-            im = p.imshow(
+            im = plt.imshow(
                 self.bispec2.bicoherence, origin="lower",
                 interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
-            # ax2.set_ylabel(r"$k_2$")
             ax2.set_yticklabels([])
 
             fig.subplots_adjust(right=0.8)
             cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
             fig.colorbar(im, cax=cbar_ax)
 
-            # p.tight_layout()
+            # plt.tight_layout()
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 

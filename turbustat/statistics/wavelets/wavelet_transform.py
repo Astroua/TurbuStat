@@ -443,15 +443,22 @@ class Wavelet(BaseStatisticMixIn):
         if fit_color is None:
             fit_color = color
 
-        fig = plt.figure()
-
-        if show_residual:
-            ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
-            ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
-                                    rowspan=1,
-                                    sharex=ax)
+        # Check for already existing subplots
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+        if len(axes) == 0:
+            if show_residual:
+                ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+                ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                        rowspan=1,
+                                        sharex=ax)
+            else:
+                ax = plt.subplot(111)
+        elif len(axes) == 1:
+            ax = axes[0]
         else:
-            ax = plt.subplot(111)
+            ax = axes[0]
+            ax_r = axes[1]
 
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -623,9 +630,9 @@ class Wavelet_Distance(object):
         self.wt2 = Wavelet(dataset2, scales=scales)
         self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
-    def distance_metric(self, verbose=False, label1=None,
-                        label2=None, xunit=u.deg,
-                        save_name=None):
+    def distance_metric(self, verbose=False, xunit=u.pix,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -634,16 +641,17 @@ class Wavelet_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for
+            `dataset1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for
+            `dataset2`.
         '''
 
         # Construct t-statistic
@@ -659,11 +667,28 @@ class Wavelet_Distance(object):
 
             import matplotlib.pyplot as plt
 
-            self.wt1.plot_transform(xunit=xunit, show=False,
-                                    color='b', symbol='D', label=label1)
-            self.wt2.plot_transform(xunit=xunit, show=False,
-                                    color='g', symbol='o', label=label1)
-            plt.legend(loc='best')
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.wt1.plot_transform(xunit=xunit,
+                                    **plot_kwargs1)
+            self.wt2.plot_transform(xunit=xunit,
+                                    **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
                 plt.savefig(save_name)

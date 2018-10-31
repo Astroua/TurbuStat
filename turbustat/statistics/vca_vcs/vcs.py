@@ -10,9 +10,7 @@ from ..lm_seg import Lm_Seg
 from ..rfft_to_fft import rfft_to_fft
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
-from ...io.input_base import to_spectral_cube
 from ..fitting_utils import clip_func, residual_bootstrap
-from .slice_thickness import spectral_regrid_cube
 
 
 class VCS(BaseStatisticMixIn):
@@ -248,7 +246,7 @@ class VCS(BaseStatisticMixIn):
         return self.fit.brk_err
 
     def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
-                 fit_color=None, show_residual=True):
+                 symbol='D', fit_color=None, label=None, show_residual=True):
         '''
         Plot the VCS curve and the associated fit.
 
@@ -260,8 +258,12 @@ class VCS(BaseStatisticMixIn):
             Choose the angular unit to convert to when ang_units is enabled.
         color : {str, RGB tuple}, optional
             Color to plot the VCS curve.
+        symbol : str, optional
+            Symbol to use for the data.
         fit_color : {str, RGB tuple}, optional
             Color of the 1D fit.
+        label : str, optional
+            Label to later be used in a legend.
         show_residual : bool, optional
             Plot the residuals for the 1D power-spectrum fit.
 
@@ -271,7 +273,19 @@ class VCS(BaseStatisticMixIn):
         if fit_color is None:
             fit_color = color
 
-        fig = plt.figure()
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+
+        if len(axes) == 2:
+            ax, ax_r = axes
+        elif len(axes) == 1:
+            ax = axes[0]
+        else:
+            if show_residual:
+                ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
+                ax_r = plt.subplot2grid((4, 1), (3, 0), rowspan=1, sharex=ax)
+            else:
+                ax = plt.subplot(111)
 
         xlab = r"log $( k_v / $ (" + str(xunit**-1) + \
             ")$^{-1})$"
@@ -288,14 +302,8 @@ class VCS(BaseStatisticMixIn):
         y_fit = \
             10**self.fit.model(np.log10(rfreqs.value[good_interval]))
 
-        if show_residual:
-            ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
-            ax_r = plt.subplot2grid((4, 1), (3, 0), rowspan=1, sharex=ax)
-        else:
-            ax = plt.subplot(111)
-
         # Points in dark red
-        ax.loglog(freq, ps1D, "D", alpha=0.3, label='Data',
+        ax.loglog(freq, ps1D, symbol, alpha=0.3, label=label,
                   color=color)
         ax.loglog(freq[good_interval], y_fit, color=fit_color,
                   linewidth=4)
@@ -304,16 +312,16 @@ class VCS(BaseStatisticMixIn):
 
         ax.axvline(self._spectral_freq_unit_conversion(self.low_cut,
                                                        xunit).value,
-                   linestyle="--", color='r', alpha=0.5)
+                   linestyle="--", color=color, alpha=0.5)
         ax.axvline(self._spectral_freq_unit_conversion(self.high_cut,
                                                        xunit).value,
-                   linestyle="--", color='r', alpha=0.5)
+                   linestyle="--", color=color, alpha=0.5)
         ax.grid(True)
         ax.legend(loc='best', frameon=True)
 
         if show_residual:
             resids = ps1D - 10**self.fit.model(np.log10(rfreqs.value))
-            ax_r.semilogx(freq, resids, "D", color=color)
+            ax_r.semilogx(freq, resids, symbol, color=color)
             ax_r.axhline(0., color=fit_color)
 
             ax_r.grid()
@@ -423,8 +431,9 @@ class VCS_Distance(object):
                         channel_width=channel_width).run(breaks=breaks[1],
                                                          **fit_kwargs)
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        save_name=None, xunit=u.pix**-1):
+    def distance_metric(self, verbose=False, xunit=u.pix**-1,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -472,26 +481,29 @@ class VCS_Distance(object):
 
         if verbose:
 
-            print("Fit 1")
             print(self.vcs1.fit.fit.summary())
-            print("Fit 2")
             print(self.vcs2.fit.fit.summary())
-
-            xlab = r"log $( k_v / $" + str(xunit**-1) + \
-                "$^{-1})$"
 
             import matplotlib.pyplot as plt
 
-            plt.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
-                     label=label1)
-            plt.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
-            plt.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
-                     label=label2)
-            plt.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
-            plt.grid(True)
-            plt.legend()
-            plt.xlabel(xlab)
-            plt.ylabel(r"$P_{1}(k_v)$")
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.vcs1.plot_fit(xunit=xunit, **plot_kwargs1)
+            self.vcs2.plot_fit(xunit=xunit, **plot_kwargs2)
 
             if save_name is not None:
                 plt.savefig(save_name)

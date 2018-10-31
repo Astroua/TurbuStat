@@ -477,7 +477,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_fit(self, save_name=None, xunit=u.pix, color='r', fit_color=None,
+    def plot_fit(self, save_name=None, xunit=u.pix, symbol='D', color='r',
+                 fit_color=None, label=None,
                  show_residual=True):
         '''
         Plot the delta-variance curve and the fit.
@@ -488,11 +489,15 @@ class DeltaVariance(BaseStatisticMixIn):
             Save the figure when a file name is given.
         xunit : u.Unit, optional
             The unit to show the x-axis in.
+        symbol : str, optional
+            Shape to plot the data points with.
         color : {str, RGB tuple}, optional
             Color to show the delta-variance curve in.
         fit_color : {str, RGB tuple}, optional
             Color of the fitted line. Defaults to `color` when no input is
             given.
+        label : str, optional
+            Label to later be used in a legend.
         show_residual : bool, optional
             Plot the fit residuals.
         '''
@@ -502,15 +507,21 @@ class DeltaVariance(BaseStatisticMixIn):
 
         import matplotlib.pyplot as plt
 
-        fig = plt.figure()
-
-        if show_residual:
-            ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
-            ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
-                                    rowspan=1,
-                                    sharex=ax)
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+        if len(axes) == 0:
+            if show_residual:
+                ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+                ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                        rowspan=1,
+                                        sharex=ax)
+            else:
+                ax = plt.subplot(111)
+        elif len(axes) == 1:
+            ax = axes[0]
         else:
-            ax = plt.subplot(111)
+            ax = axes[0]
+            ax_r = axes[1]
 
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -522,7 +533,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                  np.isfinite(self.delta_var_error))
         ax.errorbar(lags[fin_vals], self.delta_var[fin_vals],
                     yerr=self.delta_var_error[fin_vals],
-                    fmt="D-", color=color)
+                    fmt="{}-".format(symbol), color=color,
+                    label=label)
 
         xvals = np.linspace(self._fit_range[0].value,
                             self._fit_range[1].value,
@@ -530,7 +542,7 @@ class DeltaVariance(BaseStatisticMixIn):
         xvals_conv = self._spatial_unit_conversion(xvals, xunit).value
 
         ax.plot(xvals_conv, 10**self.fitted_model(np.log10(xvals.value)),
-                '--', color=fit_color, linewidth=2, label='Fit')
+                '--', color=fit_color, linewidth=2)
 
         xlow = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
@@ -540,14 +552,14 @@ class DeltaVariance(BaseStatisticMixIn):
         ax.axvline(xlow, color=color, alpha=0.5, linestyle='-.')
         ax.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
 
-        ax.legend(loc='best')
+        # ax.legend(loc='best')
         ax.grid(True)
 
         if show_residual:
             resids = self.delta_var - 10**self.fitted_model(np.log10(lags))
             ax_r.errorbar(lags[fin_vals], resids[fin_vals],
                           yerr=self.delta_var_error[fin_vals],
-                          fmt="D-", color=color)
+                          fmt="{}-".format(symbol), color=color)
 
             ax_r.set_ylabel("Residuals")
 
@@ -746,8 +758,9 @@ class DeltaVariance_Distance(object):
                                      diam_ratio=diam_ratio, lags=lags2)
         self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary[1])
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.pix, save_name=None):
+    def distance_metric(self, verbose=False, xunit=u.pix,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
         Applies the Euclidean distance to the delta-variance curves.
 
@@ -755,16 +768,17 @@ class DeltaVariance_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.DeltaVariance.plot_fit` for
+            `dataset1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.DeltaVariance.plot_fit` for
+            `dataset2`.
         '''
 
         # Check for NaNs and negatives
@@ -815,83 +829,35 @@ class DeltaVariance_Distance(object):
             np.sqrt(self.delvar1.slope_err**2 + self.delvar2.slope_err**2)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            ax = p.subplot(111)
-            ax.set_xscale("log", nonposx="clip")
-            ax.set_yscale("log", nonposx="clip")
+            print(self.delvar1.fit.summary())
+            print(self.delvar2.fit.summary())
 
-            lags1 = self.delvar1._spatial_unit_conversion(self.delvar1.lags,
-                                                          xunit).value
-            lags2 = self.delvar2._spatial_unit_conversion(self.delvar2.lags,
-                                                          xunit).value
-            lags1 = lags1[~all_nans]
-            lags2 = lags2[~all_nans]
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
 
-            # Normalize the errors for when plotting. NOT log-scaled.
-            deltavar1_err = \
-                self.delvar1.delta_var_error[~all_nans] / deltavar1_sum
-            deltavar2_err = \
-                self.delvar2.delta_var_error[~all_nans] / deltavar2_sum
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
 
-            p.errorbar(lags1, self.delvar1.delta_var[~all_nans] / deltavar1_sum,
-                       yerr=deltavar1_err, fmt="bD-",
-                       label=label1)
-            p.errorbar(lags2, self.delvar2.delta_var[~all_nans] / deltavar2_sum,
-                       yerr=deltavar2_err, fmt="go-",
-                       label=label2)
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
 
-            xvals1 = np.linspace(self.delvar1.fit_range[0].value,
-                                 self.delvar1.fit_range[1].value,
-                                 100) * self.delvar1.lags.unit
-            xvals_conv1 = \
-                self.delvar1._spatial_unit_conversion(xvals1, xunit).value
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
 
-            xvals2 = np.linspace(self.delvar2.fit_range[0].value,
-                                 self.delvar2.fit_range[1].value,
-                                 100) * self.delvar2.lags.unit
-            xvals_conv2 = \
-                self.delvar2._spatial_unit_conversion(xvals2, xunit).value
-
-            p.plot(xvals_conv1,
-                   10**self.delvar1.fitted_model(np.log10(xvals1.value)) /
-                   deltavar1_sum,
-                   'b--', linewidth=8, alpha=0.75)
-            p.plot(xvals_conv2,
-                   10**self.delvar2.fitted_model(np.log10(xvals2.value)) /
-                   deltavar2_sum,
-                   'g--', linewidth=8, alpha=0.75)
-
-            # Vertical lines to indicate fit region
-            xlow1 = \
-                self.delvar1._spatial_unit_conversion(fit_range1[0],
-                                                      xunit).value
-            xhigh1 = \
-                self.delvar1._spatial_unit_conversion(fit_range1[1],
-                                                      xunit).value
-            fit_range2 = self.delvar2.fit_range
-            xlow2 = \
-                self.delvar2._spatial_unit_conversion(fit_range2[0],
-                                                      xunit).value
-            xhigh2 = \
-                self.delvar2._spatial_unit_conversion(fit_range2[1],
-                                                      xunit).value
-            p.axvline(xlow1, color="b", alpha=0.5, linestyle='-.')
-            p.axvline(xhigh1, color="b", alpha=0.5, linestyle='-.')
-
-            p.axvline(xlow2, color="g", alpha=0.5, linestyle='-.')
-            p.axvline(xhigh2, color="g", alpha=0.5, linestyle='-.')
-
-            ax.legend(loc='best')
-            ax.grid(True)
-            ax.set_xlabel("Lag ({})".format(xunit))
-            ax.set_ylabel(r"$\sigma^{2}_{\Delta}$")
+            self.delvar1.plot_fit(xunit=xunit, **plot_kwargs1)
+            self.delvar2.plot_fit(xunit=xunit, **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+                plt.savefig(save_name)
+                plt.close()
 
         return self
 
