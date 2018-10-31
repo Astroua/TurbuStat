@@ -5,11 +5,12 @@ import numpy as np
 from scipy.stats import binned_statistic
 import astropy.units as u
 from astropy.coordinates import Angle
+from scipy.stats import t as t_dist
 
 
 def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
           logspacing=True, max_bin=None, min_bin=None, return_freqs=True,
-          theta_0=None, delta_theta=None):
+          theta_0=None, delta_theta=None, boot_iter=None):
     '''
     Calculate the radial profile using scipy.stats.binned_statistic.
 
@@ -38,6 +39,9 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     delta_theta : `~astropy.units.Quantity`, optional
         The width of the azimuthal mask. This must be given when
         a `theta_0` is given. Must have angular units.
+    boot_iter : int, optional
+        Number of bootstrap iterations for estimating the standard deviation
+        in each bin. Require `return_stddev=True`.
 
     Returns
     -------
@@ -134,12 +138,46 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         else:
             return bin_cents, ps1D
     else:
+
+        if boot_iter is None:
+
+            stat_func = lambda x: np.nanstd(x, ddof=1)
+
+        else:
+            from astropy.stats import bootstrap
+
+            stat_func = lambda data: np.mean(bootstrap(data, boot_iter,
+                                                       bootfunc=np.std))
+
         ps1D_stddev = binned_statistic(dist_arr[azim_mask].ravel(),
                                        psd2[azim_mask].ravel(),
                                        bins=bins,
-                                       statistic=np.nanstd)[0]
+                                       statistic=stat_func)[0]
 
-        ps1D_stddev[ps1D_stddev == 0.] = np.NaN
+        # We're dealing with variations in the number of samples for each bin.
+        # Add a correction based on the t distribution
+        bin_cts = binned_statistic(dist_arr[azim_mask].ravel(),
+                                   psd2[azim_mask].ravel(),
+                                   bins=bins,
+                                   statistic='count')[0]
+
+        # Two-tail CI for 85% (~1 sigma)
+        alpha = 1 - (0.15 / 2.)
+
+        # Correction factor to convert to the standard error
+        A = t_dist.ppf(alpha, bin_cts - 1) / np.sqrt(bin_cts)
+
+        # If the standard error is larger than the standard deviation,
+        # use it instead
+        ps1D_stddev[A > 1] *= A[A > 1]
+
+        # Mask out bins that have 1 or fewer points
+        mask = bin_cts <= 1
+
+        ps1D_stddev[mask] = np.NaN
+        ps1D[mask] = np.NaN
+
+        # ps1D_stddev[ps1D_stddev == 0.] = np.NaN
 
         if theta_0 is not None:
             return bin_cents, ps1D, ps1D_stddev, azim_mask

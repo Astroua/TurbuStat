@@ -6,10 +6,18 @@ import warnings
 from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import astropy.units as u
 import statsmodels.api as sm
+from warnings import warn
+from astropy.utils.console import ProgressBar
+
+try:
+    from pyfftw.interfaces.numpy_fft import fftn, ifftn
+    PYFFTW_FLAG = True
+except ImportError:
+    PYFFTW_FLAG = False
 
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, twod_types
-from ..fitting_utils import check_fit_limits
+from ..fitting_utils import check_fit_limits, residual_bootstrap
 from ..lm_seg import Lm_Seg
 
 
@@ -89,22 +97,53 @@ class Wavelet(BaseStatisticMixIn):
 
         self._scales = values
 
-    def compute_transform(self, scale_normalization=True):
+    def compute_transform(self, show_progress=True, scale_normalization=True,
+                          keep_convolved_arrays=False,
+                          use_pyfftw=False, threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
-
+        keep_convolved_arrays: bool, optional
+            Keep the image convolved at all wavelet scales. For large images,
+            this can require a large amount memory. Default is False.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
+
+        if use_pyfftw:
+            if PYFFTW_FLAG:
+                use_fftn = fftn
+                use_ifftn = ifftn
+            else:
+                warn("pyfftw not installed. Using numpy.fft functions.")
+                use_fftn = np.fft.fftn
+                use_ifftn = np.fft.ifftn
+        else:
+            use_fftn = np.fft.fftn
+            use_ifftn = np.fft.ifftn
 
         n0, m0 = self.data.shape
         A = len(self.scales)
 
-        self._Wf = np.zeros((A, n0, m0), dtype=np.float)
+        if keep_convolved_arrays:
+            self._Wf = np.zeros((A, n0, m0), dtype=np.float)
+        else:
+            self._Wf = None
+
+        self._values = np.empty_like(self.scales.value)
+        self._stddev = np.empty_like(self.scales.value)
 
         factor = 2
         if not scale_normalization:
@@ -115,12 +154,31 @@ class Wavelet(BaseStatisticMixIn):
 
         pix_scales = self._to_pixel(self.scales).value
 
+        if show_progress:
+            bar = ProgressBar(len(pix_scales))
+
         for i, an in enumerate(pix_scales):
             psi = MexicanHat2DKernel(an)
 
-            self._Wf[i] = \
-                convolve_fft(self.data, psi, normalize_kernel=False).real * \
+            conv_arr = \
+                convolve_fft(self.data, psi, normalize_kernel=False,
+                             fftn=use_fftn, ifftn=use_ifftn).real * \
                 an**factor
+
+            if keep_convolved_arrays:
+                self._Wf[i] = conv_arr
+
+            self._values[i] = (conv_arr[conv_arr > 0]).mean()
+
+            # The standard deviation should take into account the number of
+            # kernel elements at that scale.
+            kern_area = np.ceil(0.5 * np.pi * np.log(2) * an**2).astype(int)
+            nindep = np.sqrt(np.isfinite(conv_arr).sum() // kern_area)
+
+            self._stddev[i] = (conv_arr[conv_arr > 0]).std() / nindep
+
+            if show_progress:
+                bar.update(i + 1)
 
     @property
     def Wf(self):
@@ -128,16 +186,11 @@ class Wavelet(BaseStatisticMixIn):
         The wavelet transforms of the image. Each plane is the transform at
         different wavelet sizes.
         '''
+        if self._Wf is None:
+            warn("`keep_convolved_arrays` was disabled in "
+                 "`compute_transform`.")
+
         return self._Wf
-
-    def make_1D_transform(self):
-        '''
-        Create the 1D transform.
-        '''
-
-        self._values = np.empty_like(self.scales.value)
-        for i, plane in enumerate(self.Wf):
-            self._values[i] = (plane[plane > 0]).mean()
 
     @property
     def values(self):
@@ -146,8 +199,16 @@ class Wavelet(BaseStatisticMixIn):
         '''
         return self._values
 
+    @property
+    def stddev(self):
+        '''
+        Standard deviation of the 1-dimensional wavelet transform.
+        '''
+        return self._stddev
+
     def fit_transform(self, xlow=None, xhigh=None, brk=None, min_fits_pts=3,
-                      **fit_kwargs):
+                      weighted_fit=False, bootstrap=False,
+                      bootstrap_kwargs={}, **fit_kwargs):
         '''
         Perform a fit to the transform in log-log space.
 
@@ -160,12 +221,31 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
+        min_fits_pts : int, optional
+            Minimum number of points required above or below the fitted break
+            for it to be considered a valid fit. Only used when a segmented
+            line is fit, i.e. when a value for `brk` is given.
+        weighted_fit: bool, optional
+            Use the `~Wavelet.stddev` to perform a weighted fit.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         fit_kwargs : Passed to `turbustat.statistics.Lm_Seg.fit_model`
         '''
 
         pix_scales = self._to_pixel(self.scales)
         x = np.log10(pix_scales.value)
         y = np.log10(self.values)
+
+        if weighted_fit:
+            y_err = 0.434 * self.stddev / self.values
+            y_err[y_err == 0.] = np.NaN
+
+            weights = y_err**-2
+        else:
+            weights = None
 
         if xlow is not None:
             xlow = self._to_pixel(xlow)
@@ -192,6 +272,9 @@ class Wavelet(BaseStatisticMixIn):
         y = y[within_limits]
         x = x[within_limits]
 
+        if weighted_fit:
+            weights = weights[within_limits]
+
         if brk is not None:
             # Try fitting a segmented model
 
@@ -200,7 +283,9 @@ class Wavelet(BaseStatisticMixIn):
             if pix_brk < xlow or pix_brk > xhigh:
                 raise ValueError("brk must be within xlow and xhigh.")
 
-            model = Lm_Seg(x, y, np.log10(pix_brk.value))
+            model = Lm_Seg(x, y, np.log10(pix_brk.value), weights=weights)
+
+            fit_kwargs['cov_type'] = 'HC3'
 
             model.fit_model(**fit_kwargs)
 
@@ -219,12 +304,22 @@ class Wavelet(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk * u.pix
-                    self._brk_err = np.log(10) * self.brk.value * \
-                        model.brk_err * u.pix
+                    self._brk = 10**model.brk / u.pix
 
                     self._slope = model.slopes
-                    self._slope_err = model.slope_errs
+
+                    if bootstrap:
+                        stderrs = residual_bootstrap(model.fit,
+                                                     **bootstrap_kwargs)
+
+                        self._slope_err = stderrs[1:-1]
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            stderrs[-1] / u.pix
+
+                    else:
+                        self._slope_err = model.slope_errs
+                        self._brk_err = np.log(10) * self.brk.value * \
+                            model.brk_err / u.pix
 
                     self.fit = model.fit
 
@@ -242,14 +337,26 @@ class Wavelet(BaseStatisticMixIn):
 
             x = sm.add_constant(x)
 
-            model = sm.OLS(y, x, missing='drop')
+            if weighted_fit:
+                model = sm.WLS(y, x, missing='drop', weights=weights)
+            else:
+                model = sm.OLS(y, x, missing='drop')
 
-            self.fit = model.fit()
+            self.fit = model.fit(cov_type='HC3')
 
             self._slope = self.fit.params[1]
-            self._slope_err = self.fit.bse[1]
+
+            if bootstrap:
+                stderrs = residual_bootstrap(self.fit,
+                                             **bootstrap_kwargs)
+                self._slope_err = stderrs[1]
+
+            else:
+                self._slope_err = self.fit.bse[1]
 
         self._model = model
+
+        self._bootstrap_flag = bootstrap
 
     @property
     def slope(self):
@@ -307,50 +414,145 @@ class Wavelet(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_transform(self, xunit=u.pix, show=True,
-                       color='b', symbol='D', label=None):
+    def plot_transform(self, save_name=None, xunit=u.pix,
+                       color='b', symbol='D', fit_color=None,
+                       label=None, show_residual=True):
         '''
         Plot the transform and the fit.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        color : {str, RGB tuple}, optional
+            Color to plot the wavelet curve.
+        symbol : str, optional
+            Symbol to use for the data.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        label : str, optional
+            Label to later be used in a legend.
+        show_residual : bool, optional
+            Plot the fit residuals.
         '''
 
         import matplotlib.pyplot as plt
 
+        if fit_color is None:
+            fit_color = color
+
+        # Check for already existing subplots
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+        if len(axes) == 0:
+            if show_residual:
+                ax = plt.subplot2grid((4, 1), (0, 0), colspan=1, rowspan=3)
+                ax_r = plt.subplot2grid((4, 1), (3, 0), colspan=1,
+                                        rowspan=1,
+                                        sharex=ax)
+            else:
+                ax = plt.subplot(111)
+        elif len(axes) == 1:
+            ax = axes[0]
+        else:
+            ax = axes[0]
+            ax_r = axes[1]
+
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+
         pix_scales = self._to_pixel(self.scales)
         scales = self._spatial_unit_conversion(pix_scales, xunit).value
 
-        plt.loglog(scales, self.values, color + symbol)
+        # Check for NaNs
+        fin_vals = np.logical_or(np.isfinite(self.values),
+                                 np.isfinite(self.stddev))
+        ax.errorbar(scales[fin_vals], self.values[fin_vals],
+                    yerr=self.stddev[fin_vals],
+                    fmt=symbol + "-", color=color,
+                    label=label)
+
         # Plot the fit within the fitting range.
         low_lim = \
             self._spatial_unit_conversion(self._fit_range[0], xunit).value
         high_lim = \
             self._spatial_unit_conversion(self._fit_range[1], xunit).value
 
-        plt.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
-                   color + '--', linewidth=8, label='Fit', alpha=0.75)
+        ax.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
+                  '--', color=fit_color,
+                  linewidth=8, alpha=0.75)
 
-        plt.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
-        plt.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
+        ax.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
+        ax.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
 
-        plt.ylabel(r"$T_g$")
-        plt.xlabel("Scales ({})".format(xunit))
+        ax.grid()
 
-        plt.grid()
+        ax.set_ylabel(r"$T_g$")
 
-        if show:
+        if show_residual:
+            resids = self.values - \
+                10**self.fitted_model(np.log10(pix_scales.value))
+
+            ax_r.errorbar(scales, resids, yerr=self.stddev[fin_vals],
+                          fmt=symbol + "-", color=color, label=label)
+
+            ax_r.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
+            ax_r.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
+
+            ax_r.axhline(0., color=fit_color, linestyle='--')
+
+            ax_r.grid()
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel("Scales ({})".format(xunit))
+
+            ax.get_xaxis().set_ticks([])
+
+        else:
+            ax.set_xlabel("Scales ({})".format(xunit))
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
             plt.show()
 
-    def run(self, verbose=False, xunit=u.pix,
-            xlow=None, xhigh=None, brk=None, scale_normalization=True,
+    def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            use_pyfftw=False, threads=1,
+            pyfftw_kwargs={}, scale_normalization=True,
+            xlow=None, xhigh=None, brk=None, fit_kwargs={},
             save_name=None, **plot_kwargs):
         '''
         Compute the Wavelet transform.
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         verbose : bool, optional
             Plot wavelet transform.
         xunit : u.Unit, optional
             Choose the unit to convert to when ang_units is enabled.
+        scale_normalization: bool, optional
+            Compute the transform with the correct scale-invariant
+            normalization.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
+        scale_normalization: bool, optional
+            Multiply the wavelet transform by the correct normalization
+            factor.
         xlow : `~astropy.units.Quantity`, optional
             Lower scale value to consider in the fit.
         xhigh : `~astropy.units.Quantity`, optional
@@ -358,30 +560,27 @@ class Wavelet(BaseStatisticMixIn):
         brk : `~astropy.units.Quantity`, optional
             Give an initial guess for a break point. This enables fitting
             with a `turbustat.statistics.Lm_Seg`.
-        scale_normalization: bool, optional
-            Multiply the wavelet transform by the correct normalization
-            factor.
+        fit_kwargs : dict, optional
+            Passed to `~Wavelet.fit_transform`
         save_name : str,optional
             Save the figure when a file name is given.
         plot_kwargs : Passed to `~Wavelet.plot_transform`.
         '''
-        self.compute_transform(scale_normalization=scale_normalization)
-        self.make_1D_transform()
-        self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk)
+        self.compute_transform(scale_normalization=scale_normalization,
+                               use_pyfftw=use_pyfftw, threads=threads,
+                               pyfftw_kwargs=pyfftw_kwargs,
+                               show_progress=show_progress)
+        self.fit_transform(xlow=xlow, xhigh=xhigh, brk=brk, **fit_kwargs)
 
         if verbose:
-
             print(self.fit.summary())
 
-            import matplotlib.pyplot as plt
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
-            self.plot_transform(xunit=xunit, show=True, **plot_kwargs)
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_transform(save_name=save_name, xunit=xunit,
+                                **plot_kwargs)
 
         return self
 
@@ -431,9 +630,9 @@ class Wavelet_Distance(object):
         self.wt2 = Wavelet(dataset2, scales=scales)
         self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
 
-    def distance_metric(self, verbose=False, label1=None,
-                        label2=None, xunit=u.deg,
-                        save_name=None):
+    def distance_metric(self, verbose=False, xunit=u.pix,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
         Implements the distance metric for 2 wavelet transforms.
         We fit the linear portion of the transform to represent the powerlaw
@@ -442,16 +641,17 @@ class Wavelet_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        unit : u.Unit, optional
-            Choose the angular unit to convert to when ang_units is enabled.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for
+            `dataset1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for
+            `dataset2`.
         '''
 
         # Construct t-statistic
@@ -467,11 +667,28 @@ class Wavelet_Distance(object):
 
             import matplotlib.pyplot as plt
 
-            self.wt1.plot_transform(xunit=xunit, show=False,
-                                    color='b', symbol='D', label=label1)
-            self.wt2.plot_transform(xunit=xunit, show=False,
-                                    color='g', symbol='o', label=label1)
-            plt.legend(loc='best')
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.wt1.plot_transform(xunit=xunit,
+                                    **plot_kwargs1)
+            self.wt2.plot_transform(xunit=xunit,
+                                    **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
                 plt.savefig(save_name)

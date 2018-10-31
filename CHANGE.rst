@@ -1,6 +1,19 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #192 - Add stddev and weighted fitting for `Wavelet`. Correct bug in fitting weights for `StatisticBase_PSpec2D`.
+* #191 - Use robust covariance for linear models. Add residual plots. Add residual bootstrapping for linear models.
+* #190 - Add spectral downsampling by averaging for VCA; remove downsampling for VCS.
+* #189 - Fixing elliptical p-law parameters for isotropic fields.
+* $187 - Correct normalization in 3D power-law fields.
+* #186 - Generate mock PPV cubes and 3D power-law fields; added tests for generated power-law in 2D and 3D; renamed `data_reduction` to `moments`; removed masking procedures from `Mask_and_Moments` and renamed to `Moments`
+* #185 - Correct SCF weighting for the distance metric. Addresses #184.
+* #183 - Add progress bars for long operations. Addresses #180.
+* #182 - Separate out plotting functions that were implemented in the `run` functions of the statistics.
+* #181 - Add apodizing kernels and beam correction for spatial power-spectrum methods.
+* #177 - Add pyfftw as an optional dependency. Allow using pyfftw in all FFT-based statistics for multi-thread support.
+* #179 - Remove use of matplotlib._cntr (removed in their version 2.2) for PCA contours. Added scikit-image as a dependency to use their find_contours function.1
+* #174 - Set the fraction of valid data points to compute the moments in a region for `StatsMoments`. Updated those test values for the default setting of `min_frac=0.8`.
 * #171 - Fix issues with NaN interpolation in Delta-Variance for observational data; added a min. weighting for Delta-Variance; allow segmented fitting for Delta-Variance; added support for weights and WLS in Lm_Seg
 * #165 - Added azimuthal constraints when creating 1D power-spectra. Also added radial and azimuthal slicing for the bispectrum. Fixed a critical bug in the bootstrapping for the 2D elliptical power-law model.
 * #166 - Removed testing python 2.7 with the dev version of astropy.

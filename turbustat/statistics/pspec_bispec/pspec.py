@@ -5,6 +5,7 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 
+
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
 from ..base_statistic import BaseStatisticMixIn
@@ -27,11 +28,14 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Weights to be applied to the image.
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
+    beam : `radio_beam.Beam`, optional
+        Beam object for correcting for the effect of a finite beam.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, header=None, weights=None, distance=None):
+    def __init__(self, img, header=None, weights=None, distance=None,
+                 beam=None):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
@@ -51,23 +55,82 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
+        self.load_beam(beam=beam)
+
         if distance is not None:
             self.distance = distance
 
-    def compute_pspec(self):
+    def compute_pspec(self, beam_correct=False,
+                      apodize_kernel=None, alpha=0.3, beta=0.0,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
+
+        Parameters
+        ----------
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`__
+            for a list of accepted kwargs.
         '''
 
-        fft = fftshift(rfft_to_fft(self.weighted_data))
+        if apodize_kernel is not None:
+            apod_kernel = self.apodizing_kernel(kernel_type=apodize_kernel,
+                                                alpha=alpha,
+                                                beta=beta)
+            data = self.weighted_data * apod_kernel
+        else:
+            data = self.weighted_data
+
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        fft = fftshift(rfft_to_fft(data, use_pyfftw=use_pyfftw,
+                                   threads=threads,
+                                   **pyfftw_kwargs))
+
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
+
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.data.shape[0],
+                                             x_size=self.data.shape[1])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._beam_pow = np.abs(beam_fft**2)
 
         self._ps2D = np.power(fft, 2.)
 
-    def run(self, verbose=False, logspacing=False,
-            return_stddev=True, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
+        if beam_correct:
+            self._ps2D /= self._beam_pow
+
+    def run(self, verbose=False, beam_correct=False,
+            apodize_kernel=None, alpha=0.2, beta=0.0,
+            use_pyfftw=False, threads=1,
+            pyfftw_kwargs={},
+            low_cut=None, high_cut=None,
+            fit_2D=True, radial_pspec_kwargs={}, fit_kwargs={},
+            fit_2D_kwargs={},
             xunit=u.pix**-1, save_name=None,
-            use_wavenumber=False, **fit_kwargs):
+            use_wavenumber=False):
         '''
         Full computation of the spatial power spectrum.
 
@@ -75,34 +138,57 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose: bool, optional
             Enables plotting.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
         low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D power spectrum.
+        radial_pspec_kwargs : dict, optional
+            Passed to `~PowerSpectrum.compute_radial_pspec`.
+        fit_kwargs : dict, optional
+            Passed to `~PowerSpectrum.fit_pspec`.
         fit_2D_kwargs : dict, optional
             Keyword arguments for `PowerSpectrum.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
-        radial_pspec_kwargs : dict, optional
-            Passed to `~PowerSpectrum.compute_radial_pspec`.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis to in the plot.
         save_name : str,optional
             Save the figure when a file name is given.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
-        fit_kwargs : Passed to `~PowerSpectrum.fit_pspec`.
         '''
 
-        self.compute_pspec()
-        self.compute_radial_pspec(logspacing=logspacing,
-                                  return_stddev=return_stddev,
-                                  **radial_pspec_kwargs)
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        self.compute_pspec(apodize_kernel=apodize_kernel,
+                           alpha=alpha, beta=beta,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
+        self.compute_radial_pspec(**radial_pspec_kwargs)
 
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
@@ -112,6 +198,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         if verbose:
             print(self.fit.summary())
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
+
             self.plot_fit(show=True, show_2D=True,
                           xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
@@ -174,7 +264,8 @@ class PSpec_Distance(object):
             self.pspec1 = PowerSpectrum(data1, weights=weights1,
                                         distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            logspacing=logspacing, brk=breaks[0],
+                            radial_pspec_kwargs={"logspacing": logspacing},
+                            fit_kwargs={'brk': breaks[0]},
                             fit_2D=False)
         else:
             self.pspec1 = fiducial_model
@@ -182,14 +273,16 @@ class PSpec_Distance(object):
         self.pspec2 = PowerSpectrum(data2, weights=weights2,
                                     distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        brk=breaks[1],
-                        logspacing=logspacing, fit_2D=False)
+                        fit_kwargs={'brk': breaks[1]},
+                        radial_pspec_kwargs={"logspacing": logspacing},
+                        fit_2D=False)
 
         self.results = None
         self.distance = None
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.pix**-1, save_name=None,
+    def distance_metric(self, verbose=False, xunit=u.pix**-1,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={},
                         use_wavenumber=False):
         '''
 
@@ -202,14 +295,17 @@ class PSpec_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for data1
-        label2 : str, optional
-            Object or region name for data2
-        xunit : u.Unit, optional
-            Choose the unit to convert the x-axis to in the plot.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.PowerSpectrum.plot_fit`
+            for `data1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.PowerSpectrum.plot_fit`
+            for `data2`.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -223,22 +319,37 @@ class PSpec_Distance(object):
             print(self.pspec1.fit.summary())
             print(self.pspec2.fit.summary())
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            self.pspec1.plot_fit(show=False, color='b',
-                                 label=label1, symbol='D',
-                                 xunit=xunit,
-                                 use_wavenumber=use_wavenumber)
-            self.pspec2.plot_fit(show=False, color='g',
-                                 label=label2, symbol='o',
-                                 xunit=xunit,
-                                 use_wavenumber=use_wavenumber)
-            p.legend(loc='best')
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.pspec1.plot_fit(xunit=xunit,
+                                 use_wavenumber=use_wavenumber,
+                                 **plot_kwargs1)
+            self.pspec2.plot_fit(xunit=xunit,
+                                 use_wavenumber=use_wavenumber,
+                                 **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self

@@ -65,6 +65,10 @@ class PCA(BaseStatisticMixIn):
         if distance is not None:
             self.distance = distance
 
+        # Try loading in the beam from the header
+
+
+
     @property
     def n_eigs(self):
         return self._n_eigs
@@ -77,7 +81,7 @@ class PCA(BaseStatisticMixIn):
         self._n_eigs = value
 
     def compute_pca(self, mean_sub=False, n_eigs='auto', min_eigval=None,
-                    eigen_cut_method='value'):
+                    eigen_cut_method='value', show_progress=True):
         '''
         Create the covariance matrix and its eigenvalues.
 
@@ -105,14 +109,23 @@ class PCA(BaseStatisticMixIn):
             Set whether `min_eigval` is the proportion of variance determined
             up to the Nth eigenvalue (`proportion`) or the minimum value of
             variance (`value`).
-
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
         '''
+
+        # Define the decomposition-only flag, if not yet set. Will get
+        # overridden later if the size-line width relation is fit.
+        if not hasattr(self, "_decomp_only"):
+            self._decomp_only = True
+        else:
+            self._decomp_only = True
 
         if n_eigs == 'auto' and min_eigval is None:
             raise ValueError("min_eigval must be given when using "
                              "n_eigs='auto'.")
 
-        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub)
+        self.cov_matrix = var_cov_cube(self.data, mean_sub=mean_sub,
+                                       progress_bar=show_progress)
 
         all_eigsvals, eigvecs = np.linalg.eigh(self.cov_matrix)
         all_eigsvals = np.real_if_close(all_eigsvals)
@@ -328,7 +341,7 @@ class PCA(BaseStatisticMixIn):
 
     def find_spatial_widths(self, method='contour',
                             brunt_beamcorrect=True, beam_fwhm=None,
-                            output_unit=u.pix, distance=None,
+                            distance=None,
                             diagnosticplots=False, **fit_kwargs):
         '''
         Derive the spatial widths using the autocorrelation of the
@@ -351,9 +364,6 @@ class PCA(BaseStatisticMixIn):
         beam_fwhm : None of `~astropy.units.Quantity`, optional
             When beam correction is enabled, the FWHM beam size can be given
             here.
-        output_unit : `~astropy.units.Unit`, optional
-            Specify the units to convert the spatial widths to. Defaults to
-            pixel units.
         distance : `~astropy.units.Quantity`, optional
             Distance to object in physical units. The output spatial widths
             will be converted to the units given here.
@@ -384,32 +394,33 @@ class PCA(BaseStatisticMixIn):
         self._spatial_width = self._spatial_width * u.pix
         self._spatial_width_error = self._spatial_width_error * u.pix
 
-        # Convert into the unit given in `output_unit`
-        # If no distance has been given, the conversion will to physical units
-        # will fail.
-        self._spatial_width = \
-            self._spatial_unit_conversion(self._spatial_width, output_unit)
-        self._spatial_width_error = \
-            self._spatial_unit_conversion(self._spatial_width_error,
-                                          output_unit)
-
-    @property
-    def spatial_width(self):
+    def spatial_width(self, unit=u.pix):
         '''
         Spatial widths for the first `~PCA.n_eigs` components.
-        '''
-        return self._spatial_width
 
-    @property
-    def spatial_width_error(self):
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spatial unit to convert the widths to. Can be in pixels,
+            an angular unit, or (if distance is given) a physical unit.
+        '''
+        return self._spatial_unit_conversion(self._spatial_width, unit)
+
+    def spatial_width_error(self, unit=u.pix):
         '''
         The 1-sigma error bounds on the spatial widths for the first
         `~PCA.n_eigs` components.
-        '''
-        return self._spatial_width_error
 
-    def find_spectral_widths(self, method='walk-down',
-                             output_unit=u.pix):
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spatial unit to convert the widths to. Can be in pixels,
+            an angular unit, or (if distance is given) a physical unit.
+        '''
+
+        return self._spatial_unit_conversion(self._spatial_width_error, unit)
+
+    def find_spectral_widths(self, method='walk-down'):
         '''
         Derive the spectral widths using the autocorrelation of the
         eigenvectors.
@@ -422,11 +433,6 @@ class PCA(BaseStatisticMixIn):
             this is the method used by the Heyer & Brunt works). See
             `~turbustat.statistics.pca.WidthEstimate1D` for a description
             of all methods.
-        output_unit : `~astropy.units.Unit`, optional
-            Specify the units to convert the spectral widths to. Defaults to
-            pixel units. If specifying something other than pixels,
-            `output_unit` *MUST* be equivalent to the spectral unit attached
-            to the given data cube.
         '''
 
         acorr_spec = self.autocorr_spec(n_eigs=self.n_eigs)
@@ -437,25 +443,34 @@ class PCA(BaseStatisticMixIn):
         self._spectral_width = self._spectral_width * u.pix
         self._spectral_width_error = self._spectral_width_error * u.pix
 
-        self._spectral_width = \
-            self._to_spectral(self._spectral_width, output_unit)
-        self._spectral_width_error = \
-            self._to_spectral(self._spectral_width_error, output_unit)
-
-    @property
-    def spectral_width(self):
+    def spectral_width(self, unit=u.pix):
         '''
         Spectral widths for the first `~PCA.n_eigs` components.
-        '''
-        return self._spectral_width
 
-    @property
-    def spectral_width_error(self):
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spectral unit to convert the widths to. Can be in pixels,
+            or a spectral unit equivalent to the unit specified in the
+            `~PCA.header`.
+        '''
+
+        return self._to_spectral(self._spectral_width, unit)
+
+    def spectral_width_error(self, unit=u.pix):
         '''
         The error bounds on the spectral widths for the first
         `~PCA.n_eigs` components.
+
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spectral unit to convert the widths to. Can be in pixels,
+            or a spectral unit equivalent to the unit specified in the
+            `~PCA.header`.
         '''
-        return self._spectral_width_error
+
+        return self._to_spectral(self._spectral_width_error, unit)
 
     def fit_plaw(self, fit_method='odr', verbose=False, **kwargs):
         '''
@@ -477,6 +492,12 @@ class PCA(BaseStatisticMixIn):
             when fit_method is bayes.
         '''
 
+        # Set the decomposition flag to False if not defined yet
+        if not hasattr(self, "_decomp_only"):
+            self._decomp_only = False
+        else:
+            self._decomp_only = False
+
         if fit_method != 'odr' and fit_method != 'bayes':
             raise TypeError("fit_method must be 'odr' or 'bayes'.")
 
@@ -486,26 +507,26 @@ class PCA(BaseStatisticMixIn):
         self._fit_method = fit_method
 
         # Only keep the width estimations that worked
-        are_finite = np.isfinite(self.spectral_width) * \
-            np.isfinite(self.spatial_width) * \
-            np.isfinite(self.spatial_width_error) * \
-            np.isfinite(self.spectral_width_error)
+        are_finite = np.isfinite(self.spectral_width()) * \
+            np.isfinite(self.spatial_width()) * \
+            np.isfinite(self.spatial_width_error()) * \
+            np.isfinite(self.spectral_width_error())
 
         # Check to make sure there are enough points to fit to (minimum 2).
-        num_pts = self.spectral_width.size - (~are_finite).sum()
+        num_pts = self.spectral_width().size - (~are_finite).sum()
         if num_pts < 2:
             raise Warning("Less then 2 valid points. Cannot fit model.")
         elif num_pts < 5:
             warn("There are less than 5 points to fit to. The fit will not be"
                  " well constrained and results should be closely examined.")
 
-        y = np.log10(self.spectral_width[are_finite].value)
-        x = np.log10(self.spatial_width[are_finite].value)
+        y = np.log10(self.spectral_width()[are_finite].value)
+        x = np.log10(self.spatial_width()[are_finite].value)
 
-        y_err = 0.434 * self.spectral_width_error[are_finite].value / \
-            self.spectral_width[are_finite].value
-        x_err = 0.434 * self.spatial_width_error[are_finite].value / \
-            self.spatial_width[are_finite].value
+        y_err = 0.434 * self.spectral_width_error()[are_finite].value / \
+            self.spectral_width()[are_finite].value
+        x_err = 0.434 * self.spatial_width_error()[are_finite].value / \
+            self.spatial_width()[are_finite].value
 
         if fit_method == 'odr':
             params, errors = leastsq_linear(x, y, x_err, y_err,
@@ -556,19 +577,31 @@ class PCA(BaseStatisticMixIn):
         return np.array([brunt_index_correct(val) for val in
                          self.index_error_range])
 
-    @property
-    def intercept(self):
+    def intercept(self, unit=u.pix):
         '''
         Intercept from the fits, converted out of the log value.
-        '''
-        return self._intercept
 
-    @property
-    def intercept_error_range(self):
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spectral unit to convert the widths to. Can be in pixels,
+            or a spectral unit equivalent to the unit specified in the
+            `~PCA.header`.
+        '''
+        return self._to_spectral(self._intercept, unit)
+
+    def intercept_error_range(self, unit=u.pix):
         '''
         One-sigma error bounds on the intercept.
+
+        Parameters
+        ----------
+        unit : `~astropy.units.Unit`, optional
+            The spectral unit to convert the widths to. Can be in pixels,
+            or a spectral unit equivalent to the unit specified in the
+            `~PCA.header`.
         '''
-        return self._intercept_error_range
+        return self._to_spectral(self._intercept_error_range, unit)
 
     def model(self, x):
         '''
@@ -576,7 +609,8 @@ class PCA(BaseStatisticMixIn):
         '''
         return self.index * x + np.log10(self.intercept)
 
-    def sonic_length(self, T_k=10 * u.K, mu=1.36, use_gamma=True):
+    def sonic_length(self, T_k=10 * u.K, mu=1.36, use_gamma=True,
+                     unit=u.pix):
         '''
         Estimate of the sonic length based on a given temperature. Uses the
         intercept from the fit.
@@ -604,6 +638,9 @@ class PCA(BaseStatisticMixIn):
             be in pixel units.
         lambd_error_range : `~astropy.units.Quantity`
             The 1-sigma bounds on the sonic length. The units will match lambd.
+        unit : `~astropy.units.Unit`, optional
+            The spatial unit to convert the widths to. Can be in pixels,
+            an angular unit, or (if distance is given) a physical unit.
         '''
 
         import astropy.constants as const
@@ -616,7 +653,7 @@ class PCA(BaseStatisticMixIn):
         # Sound speed in m/s
         c_s = np.sqrt(const.k_B.decompose() * T_k / (mu * const.m_p))
         # Convert to the same spectral unit
-        c_s = self._to_spectral(c_s, self.spectral_width.unit)
+        c_s = self._to_spectral(c_s, u.pix)
 
         if use_gamma:
             index = self.gamma
@@ -625,18 +662,18 @@ class PCA(BaseStatisticMixIn):
             index = self.index
             index_error_range = self.index_error_range
 
-        lambd = np.power(c_s / self.intercept, 1. / index)
+        lambd = np.power(c_s / self.intercept(), 1. / index).value
 
         if self._fit_method == 'odr':
             # Added in quadrature and simplified
             index_err = np.abs(index - index_error_range[0])
-            intercept_err = 0.434 * np.abs(self.intercept -
-                                           self.intercept_error_range[0]) / \
-                self.intercept
+            intercept_err = 0.434 * np.abs(self.intercept() -
+                                           self.intercept_error_range()[0]) / \
+                self.intercept()
 
-            term1 = np.log10(c_s / self.intercept) * \
+            term1 = np.log10(c_s / self.intercept()) * \
                 (index_err / index)
-            term2 = intercept_err / self.intercept
+            term2 = intercept_err / self.intercept()
             lambd_error = (lambd / index) * \
                 np.sqrt(term1.value**2 + term2.value**2)
             lambd_error_range = np.array([lambd - lambd_error,
@@ -656,13 +693,173 @@ class PCA(BaseStatisticMixIn):
 
             lambd_error_range = np.percentile(all_lambds, percentiles)
 
-        lambd = lambd * self.spatial_width.unit
-        lambd_error_range = lambd_error_range * self.spatial_width.unit
+        # Convert to specified units.
+        lambd = self._spatial_unit_conversion(lambd * u.pix, unit)
+        lambd_error_range = \
+            self._spatial_unit_conversion(lambd_error_range * u.pix, unit)
 
         return lambd, lambd_error_range
 
-    def run(self, verbose=False, save_name=None, mean_sub=False,
-            decomp_only=False, n_eigs='auto', min_eigval=None,
+    def plot_fit(self, save_name=None, show_cov_bar=True, show_sl_fit=True,
+                 n_eigs=None, color='r', fit_color='k', cov_cmap='viridis',
+                 spatial_unit=u.pix, spectral_unit=u.pix, show_residual=True):
+        '''
+        Plot the covariance matrix, bar plot of eigenvalues, and the fitted
+        size-line width relation.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        show_cov_bar : bool, optional
+            Show the covariance matrix and eigenvalue variance bar plot.
+        show_sl_fit : bool, optional
+            Show the size-line width relation, if fit.
+        n_eigs : int, optional
+            Number of eigenvalues to show in the bar plot. Defaults to the
+            automatically-set value (`PCA.n_eigs`).
+        color : {str, RGB tuple}, optional
+            Color to use in the plots. Defaults to red.
+        fit_color : {str, RBG tuple}, optional
+            Colour to show the fit line in. Defaults to `color` when `None` is
+            given.
+        cov_cmap : {str, matplotlib colormap}, optional
+            Colormap to show the covariance matrix in.
+        show_residual : bool, optional
+            Plot the fit residuals.
+        '''
+
+        if self._decomp_only and show_sl_fit:
+            warn("Size-line width fit not performed. Disabling show_sl_fit.")
+            show_sl_fit = False
+
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        if show_cov_bar:
+            if show_sl_fit:
+                plt.subplot2grid((4, 4), (0, 0), rowspan=2, colspan=2)
+
+            else:
+                plt.subplot2grid((4, 4), (0, 0), rowspan=4, colspan=2)
+
+            im1 = plt.imshow(self.cov_matrix, origin="lower",
+                             interpolation="nearest", cmap=cov_cmap)
+            divider = make_axes_locatable(plt.gca())
+            cax = divider.append_axes("right", "5%", pad="3%")
+            cb = plt.colorbar(im1, cax=cax)
+
+            cb.set_label("Covariance")
+
+            if show_sl_fit:
+                plt.subplot2grid((4, 4), (2, 0), rowspan=2, colspan=2)
+            else:
+                plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)
+
+            if n_eigs is None:
+                n_eigs = self.n_eigs
+
+            plt.bar(np.arange(1, self.n_eigs + 1), self.eigvals[:n_eigs],
+                    0.5, color=color)
+            plt.xlim([0, n_eigs + 1])
+            plt.xlabel('Eigenvalues')
+            plt.ylabel('Variance')
+
+        if show_sl_fit:
+            if fit_color is None:
+                fit_color = color
+
+            if show_cov_bar:
+                if show_residual:
+                    plt.subplot2grid((4, 4), (0, 2), rowspan=3, colspan=2)
+                else:
+                    plt.subplot2grid((4, 4), (0, 2), rowspan=4, colspan=2)
+            else:
+                if show_residual:
+                    plt.subplot2grid((4, 1), (0, 0), rowspan=3, colspan=1)
+                else:
+                    plt.subplot(111)
+
+            spatial_width = self.spatial_width(unit=spatial_unit)
+            spatial_width_error = self.spatial_width_error(unit=spatial_unit)
+
+            spectral_width = self.spectral_width(unit=spectral_unit)
+            spectral_width_error = \
+                self.spectral_width_error(unit=spectral_unit)
+
+            plt.errorbar(np.log10(spatial_width.value),
+                         np.log10(spectral_width.value),
+                         xerr=0.434 * spatial_width_error /
+                         spatial_width,
+                         yerr=0.434 * spectral_width_error /
+                         spectral_width, fmt='o', color=color)
+            plt.ylabel("log Linewidth / "
+                       "{}".format(spectral_width.unit.to_string()))
+            plt.grid()
+
+            xvals = np.linspace(np.log10(np.nanmin(spatial_width).value),
+                                np.log10(np.nanmax(spatial_width).value),
+                                spatial_width.size * 10)
+
+            intercept = self.intercept(unit=spectral_unit)
+
+            plt.plot(xvals, self.index * xvals + np.log10(intercept.value),
+                     '-', color=fit_color)
+            # Some very large error bars makes it difficult to see the model
+            # Limit the range shown in the plot.
+            x_range = \
+                np.ptp(np.log10(spatial_width.value)
+                       [np.isfinite(spatial_width)])
+            y_range = \
+                np.ptp(np.log10(spectral_width.value)
+                       [np.isfinite(spectral_width)])
+            plt.xlim([np.log10(np.nanmin(spatial_width.value)) -
+                      y_range / 4,
+                      np.log10(np.nanmax(spatial_width.value)) +
+                      y_range / 4])
+            plt.ylim([np.log10(np.nanmin(spectral_width.value)) -
+                      x_range / 4,
+                      np.log10(np.nanmax(spectral_width.value)) +
+                      x_range / 4])
+
+            if show_residual:
+                if show_cov_bar:
+                    plt.subplot2grid((4, 4), (3, 2), rowspan=1, colspan=2)
+                else:
+                    plt.subplot2grid((4, 1), (3, 0), rowspan=1, colspan=1)
+
+                resids = np.log10(spectral_width.value) - \
+                    (self.index * np.log10(spatial_width.value) +
+                     np.log10(intercept.value))
+
+                plt.errorbar(np.log10(spatial_width.value), resids,
+                             xerr=0.434 * spatial_width_error /
+                             spatial_width,
+                             yerr=0.434 * spectral_width_error /
+                             spectral_width, fmt='o', color=color)
+                plt.grid()
+
+                plt.axhline(0., color=fit_color)
+                plt.ylabel("Residuals")
+
+                plt.xlim([np.log10(np.nanmin(spatial_width.value)) -
+                          y_range / 4,
+                          np.log10(np.nanmax(spatial_width.value)) +
+                          y_range / 4])
+
+            plt.xlabel("log Spatial Length / "
+                       "{}".format(spatial_width.unit.to_string()))
+
+        plt.tight_layout()
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
+    def run(self, show_progress=True, verbose=False, save_name=None,
+            mean_sub=False, decomp_only=False, n_eigs='auto', min_eigval=None,
             eigen_cut_method='value', spatial_method='contour',
             spectral_method='walk-down', fit_method='odr',
             beam_fwhm=None, brunt_beamcorrect=True,
@@ -672,6 +869,9 @@ class PCA(BaseStatisticMixIn):
 
         Parameters
         ----------
+        show_progress : bool, optional
+            Show a progress bar during the creation of the covariance matrix.
+            Enabled by default.
         verbose : bool, optional
             Enables plotting of the results.
         save_name : str,optional
@@ -699,94 +899,62 @@ class PCA(BaseStatisticMixIn):
         brunt_beamcorrect : bool, optional
             See `~PCA.fit_spatial_widths`.
         spatial_output_unit : `astropy.units.Unit`, optional
-            Pixel, anglular, or physical unit to convert the spatial sizes to.
-            Defaults to pixels. Physical unit conversion requires a distance
-            to be given.
+            Pixel, anglular, or physical unit to convert the spatial sizes to
+            when plotting. Defaults to pixels. Physical unit conversion
+            requires a distance to be given.
         spectral_output_unit : `astropy.units.Unit`, optional
-            Pixel or spectral unit to convert spectral sizes to. Defaults to
-            pixels. The spectral unit *MUST* match the spectral unit defined
-            in the data cube.
+            Pixel or spectral unit to convert spectral sizes to when plotting.
+            Defaults to pixels. The spectral unit *MUST* match the spectral
+            unit defined in the data cube.
         '''
+
+        # Check if the beam can be loaded. Otherwise, turn off the beam
+        # correction before computing the covariance matrix
+        if beam_fwhm is None and brunt_beamcorrect and not decomp_only:
+            try:
+                beam_fwhm = find_beam_width(self.header)
+            # Don't check for type. Otherwise I need to check if radio_beam
+            # is installed.
+            except Exception:
+                raise ValueError("Cannot load beam size from the header. "
+                                 "Please give the beam FWHM or set "
+                                 "`brunt_beamcorrect=False`.")
 
         self.compute_pca(mean_sub=mean_sub, n_eigs=n_eigs,
                          min_eigval=min_eigval,
-                         eigen_cut_method=eigen_cut_method)
+                         eigen_cut_method=eigen_cut_method,
+                         show_progress=show_progress)
+
+        self._decomp_only = decomp_only
 
         # Run rest of the analysis
         if not decomp_only:
             self.find_spatial_widths(method=spatial_method,
                                      beam_fwhm=beam_fwhm,
-                                     brunt_beamcorrect=brunt_beamcorrect,
-                                     output_unit=spatial_output_unit)
-            self.find_spectral_widths(method=spectral_method,
-                                      output_unit=spectral_output_unit)
+                                     brunt_beamcorrect=brunt_beamcorrect)
+            self.find_spectral_widths(method=spectral_method)
             self.fit_plaw(fit_method=fit_method)
 
         if verbose:
-            import matplotlib.pyplot as p
 
             print('Proportion of Variance kept: %s' % (self.var_proportion))
-            print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.index, *self.index_error_range))
-            print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
-                  .format(self.gamma, *self.gamma_error_range))
 
-            # Compute sonic length assuming 10 K
-            T_k = 10. * u.K
-            sl, sl_range = self.sonic_length(T_k=T_k)
-            print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
-                  .format(sl.value, sl.unit.to_string(), T_k.value,
-                          T_k.unit.to_string(), *sl_range.value))
+            if not decomp_only:
+                print("Index: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.index, *self.index_error_range))
+                print("Gamma: {0:.2f} ({1:.2f}, {2:.2f})"
+                      .format(self.gamma, *self.gamma_error_range))
 
-            p.subplot(221)
-            p.imshow(self.cov_matrix, origin="lower", interpolation="nearest")
-            p.colorbar()
-            p.subplot(223)
-            p.bar(np.arange(1, self.n_eigs + 1), self.eigvals[:self.n_eigs],
-                  0.5, color='r')
-            p.xlim([0, self.n_eigs + 1])
-            p.xlabel('Eigenvalues')
-            p.ylabel('Variance')
+                # Compute sonic length assuming 10 K
+                T_k = 10. * u.K
+                sl, sl_range = self.sonic_length(T_k=T_k)
+                print("Sonic length: {0:.3e} ({4:.3e}, {5:.3e}) {1} at {2} {3}"
+                      .format(sl.value, sl.unit.to_string(), T_k.value,
+                              T_k.unit.to_string(), *sl_range.value))
 
-            p.subplot(122)
-            p.errorbar(np.log10(self.spatial_width.value),
-                       np.log10(self.spectral_width.value),
-                       xerr=0.434 * self.spatial_width_error /
-                       self.spatial_width,
-                       yerr=0.434 * self.spectral_width_error /
-                       self.spectral_width, fmt='o', color='k')
-            p.ylabel("log Linewidth / "
-                     "{}".format(self.spectral_width.unit.to_string()))
-            p.xlabel("log Spatial Length / "
-                     "{}".format(self.spatial_width.unit.to_string()))
-            xvals = np.linspace(np.log10(np.nanmin(self.spatial_width).value),
-                                np.log10(np.nanmax(self.spatial_width).value),
-                                self.spatial_width.size * 10)
-            p.plot(xvals, self.index * xvals + np.log10(self.intercept.value),
-                   'r-')
-            # Some very large error bars makes it difficult to see the model
-            x_range = \
-                np.ptp(np.log10(self.spatial_width.value)
-                       [np.isfinite(self.spatial_width)])
-            y_range = \
-                np.ptp(np.log10(self.spectral_width.value)
-                       [np.isfinite(self.spectral_width)])
-            p.xlim([np.log10(np.nanmin(self.spatial_width.value)) -
-                    y_range / 4,
-                    np.log10(np.nanmax(self.spatial_width.value)) +
-                    y_range / 4])
-            p.ylim([np.log10(np.nanmin(self.spectral_width.value)) -
-                    x_range / 4,
-                    np.log10(np.nanmax(self.spectral_width.value)) +
-                    x_range / 4])
-
-            p.tight_layout()
-
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
+            self.plot_fit(save_name=save_name, show_sl_fit=not decomp_only,
+                          spatial_unit=spatial_output_unit,
+                          spectral_unit=spectral_output_unit)
 
         return self
 

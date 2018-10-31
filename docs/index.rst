@@ -52,6 +52,7 @@ Contents:
    moments.rst
    cube_tools.rst
    tutorials/index
+   generating_test_data.rst
    statistics.rst
    helper_scripts.rst
    contributing.rst
@@ -61,6 +62,7 @@ Papers using TurbuStat
 
 * `Boyden et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJ...833..233B>`_
 * `Koch et al. (2017 <https://ui.adsabs.harvard.edu/#abs/2017arXiv170705415K/abstract>`_
+* `Boyden et al. (2018) <https://ui.adsabs.harvard.edu/#abs/2018arXiv180509775B/abstract>`_
 
 
 

@@ -8,7 +8,8 @@ from warnings import warn
 
 def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
                             bootstrap=False, niters=100, alpha=0.6827,
-                            debug=False):
+                            debug=False, radial_weighting=False,
+                            fix_ellip_params=False):
     '''
     General function for fitting the 2D elliptical power-law model.
 
@@ -18,6 +19,58 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
     offset by pi / 2 from the original guess. Whichever fit has the lowest
     residuals is returned.
 
+    Parameters
+    ----------
+    values : `~numpy.ndarray`
+        Values to be fitted. Should be in log10 scale.
+    x : `~numpy.ndarray`
+        x-position values.
+    y : `~numpy.ndarray`
+        y-position values.
+    p0 : tuple
+        Initial parameter estimates. Should contain:
+        (log amplitude, ellip_transf, theta, slope).
+    fit_method : {"LevMarq"}, optional
+        Fitting method. The Levenberg-Marquardt fitter is the only option
+        currently implemented.
+    bootstrap : bool, optional
+        Estimate parameter standard errors using bootstrap residual sampling.
+        This method is only valid if the model is correct for the data, and
+        the errors are uncorrelated.
+    niters : int, optional
+        Number of bootstrap iterations.
+    alpha : float, optional
+        Two-sided confidence interval for estimating standard errors from the
+        bootstrap. Must be within 0 and 1. The default corresponds to a 1-sigma
+        interval (~68%).
+    debug : bool, optional
+        Enable plotting histograms of the bootstrap parameter distributions.
+    radial_weighting : bool, optional
+        To account for the increasing number of samples at greater radii, the
+        fit can be weighted by :math:`1/{\rm radius}` to emphasize the points
+        at small radii. DO NOT enabled weighting when the field is elliptical!
+        This will bias the fit parameters! Default is False.
+    fix_ellip_params : bool, optional
+        If the field is expected to be isotropic, the ellipticity and theta
+        parameters can be fixed in the fit. This will help the fit since
+        the isotropic case sits at the edge of the ellipticity parameter space
+        and can be difficult to correctly converge to.
+
+    Returns
+    -------
+    params : `~numpy.ndarray`
+        Fitted parameters.
+    stderrs : `~numpy.ndarray`
+        Standard errors from the covariance matrix, or from bootstrapping.
+     fit_model : `~LogEllipticalPowerLaw2D`
+        The fitted power-law model.
+     fitter : `~astropy.modeling.fitting.LevMarLSQFitter`
+        The astropy fitter class.
+
+    .. note:: `ellip_transf` is the ellipticity transformed by
+    :math:`1 / (1 + exp(-ellip))`, which transforms the ellipticity from the
+    bounded interval of [0, 1] onto [0, inf].
+
     '''
 
     # All values must be finite.
@@ -26,28 +79,47 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
 
     if fit_method == 'LevMarq':
 
+        if radial_weighting:
+            weights = 1 / np.sqrt(x**2 + y**2)
+        else:
+            weights = None
+
+        if radial_weighting and not fix_ellip_params:
+            warn("Radial weighting with the elliptical parameters left free "
+                 "can bias the fit! Check the fit results carefully!")
+
+        p0 = list(p0)
+        if fix_ellip_params:
+            p0[1] = np.inf
+
         model = LogEllipticalPowerLaw2D(*p0)
 
+        if fix_ellip_params:
+            model.ellip_transf.fixed = True
+            model.theta.fixed = True
+
         fitter = fitting.LevMarLSQFitter()
-        fit_model = fitter(model, x, y, values)
+        fit_model = fitter(model, x, y, values, weights=weights)
 
         resids = np.sum(np.abs(values - fit_model(x, y)))
 
-        # Fit again w/ theta offset by pi / 2
-        p0_f = list(p0)
-        p0_f[2] = (p0[2] + np.pi / 2.) % np.pi
-        model_f = LogEllipticalPowerLaw2D(*p0_f)
+        if not fix_ellip_params:
+            # Fit again w/ theta offset by pi / 2
+            # This is the dumbest way I found to get a good fit in theta
+            p0_f = list(p0)
+            p0_f[2] = (p0[2] + np.pi / 2.) % np.pi
+            model_f = LogEllipticalPowerLaw2D(*p0_f)
 
-        fitter_f = fitting.LevMarLSQFitter()
-        fit_model_f = fitter(model_f, x, y, values)
+            fitter_f = fitting.LevMarLSQFitter()
+            fit_model_f = fitter(model_f, x, y, values, weights=weights)
 
-        resids_f = np.sum(np.abs(values - fit_model_f(x, y)))
+            resids_f = np.sum(np.abs(values - fit_model_f(x, y)))
 
-        if resids > resids_f:
-            if debug:
-                print("Using theta flipped model fit!")
-            fitter = fitter_f
-            fit_model = fit_model_f
+            if resids > resids_f:
+                if debug:
+                    print("Using theta flipped model fit!")
+                fitter = fitter_f
+                fit_model = fit_model_f
 
         # Use bootstrap re-sampling of the model residuals to estimate
         # 1-sigma CIs.
@@ -76,19 +148,19 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
 
                 plt.subplot(221)
                 plt.title("log Amp")
-                _ = plt.hist(params[0], bins=10)
+                _ = plt.hist(params[0], bins='auto')
                 plt.axvline(fit_model.parameters[0])
                 plt.subplot(222)
                 plt.title("trans ellip")
-                _ = plt.hist(params[1], bins=10)
+                _ = plt.hist(params[1], bins='auto')
                 plt.axvline(fit_model.parameters[1])
                 plt.subplot(223)
                 plt.title("theta")
-                _ = plt.hist(params[2], bins=10)
+                _ = plt.hist(params[2], bins='auto')
                 plt.axvline(fit_model.parameters[2])
                 plt.subplot(224)
                 plt.title("gamma")
-                _ = plt.hist(params[3], bins=10)
+                _ = plt.hist(params[3], bins='auto')
                 plt.axvline(fit_model.parameters[3])
 
             stderrs = 0.5 * (percentiles[1] - percentiles[0])

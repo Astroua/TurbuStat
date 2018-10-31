@@ -10,9 +10,7 @@ from ..lm_seg import Lm_Seg
 from ..rfft_to_fft import rfft_to_fft
 from ..base_statistic import BaseStatisticMixIn
 from ...io import common_types, threed_types
-from ...io.input_base import to_spectral_cube
-from ..fitting_utils import clip_func
-from .slice_thickness import spectral_regrid_cube
+from ..fitting_utils import clip_func, residual_bootstrap
 
 
 class VCS(BaseStatisticMixIn):
@@ -28,11 +26,6 @@ class VCS(BaseStatisticMixIn):
         Corresponding FITS header.
     vel_units : bool, optional
         Convert frequencies to the spectral unit in the header.
-    channel_width : `~astropy.units.Quantity`, optional
-        Set the width of channels to compute the VCA with. The channel width
-        in the data is used by default. Given widths will be used to
-        spectrally down-sample the data before calculating the VCA. Up-sampling
-        to smaller channel sizes than the original is not supported.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
@@ -41,14 +34,6 @@ class VCS(BaseStatisticMixIn):
         super(VCS, self).__init__()
 
         self.input_data_header(cube, header)
-
-        if channel_width is not None:
-            sc_cube = to_spectral_cube(self.data, self.header)
-
-            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
-
-            # Don't pass the header. It will read the new one in reg_cube
-            self.input_data_header(reg_cube, None)
 
         self._has_nan_flag = False
         if np.isnan(self.data).any():
@@ -60,9 +45,20 @@ class VCS(BaseStatisticMixIn):
         self.freqs = \
             np.abs(fftfreq(self.data.shape[0])) / u.pix
 
-    def compute_pspec(self):
+    def compute_pspec(self, use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Take the FFT of each spectrum in the velocity dimension and average.
+
+        Parameters
+        ----------
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         '''
 
         if self._has_nan_flag:
@@ -72,9 +68,15 @@ class VCS(BaseStatisticMixIn):
             good_pixel_count = \
                 float(self.data.shape[1] * self.data.shape[2])
 
-        ps3D = np.power(rfft_to_fft(self.data), 2.)
-        self._ps1D = np.nansum(ps3D, axis=(1, 2)) /\
-            good_pixel_count
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        fft = rfft_to_fft(self.data, use_pyfftw=use_pyfftw,
+                          keep_rfft=False,
+                          threads=threads,
+                          **pyfftw_kwargs)
+        ps3D = np.power(fft, 2.)
+        self._ps1D = np.nansum(ps3D, axis=(1, 2)) / good_pixel_count
 
     @property
     def ps1D(self):
@@ -84,7 +86,8 @@ class VCS(BaseStatisticMixIn):
         return self._ps1D
 
     def fit_pspec(self, breaks=None, log_break=True, low_cut=None,
-                  high_cut=None, fit_verbose=False):
+                  high_cut=None, fit_verbose=False, bootstrap=False,
+                  **bootstrap_kwargs):
         '''
         Fit the 1D Power spectrum using a segmented linear model. Note that
         the current implementation allows for only 1 break point in the
@@ -106,6 +109,11 @@ class VCS(BaseStatisticMixIn):
             Highest frequency to consider in the fit.
         fit_verbose : bool, optional
             Enables verbose mode in Lm_Seg.
+        bootstrap : bool, optional
+            Bootstrap using the model residuals to estimate the standard
+            errors.
+        bootstrap_kwargs : dict, optional
+            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.
         '''
 
         # Make the data to fit to
@@ -176,10 +184,11 @@ class VCS(BaseStatisticMixIn):
             while True:
                 self.fit = \
                     Lm_Seg(x, y, breaks[i])
-                self.fit.fit_model(verbose=fit_verbose)
+                self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
 
                 if self.fit.params.size == 5:
                     # Success!
+                    breaks = breaks[i]
                     break
                 i += 1
                 if i >= breaks.size:
@@ -187,28 +196,40 @@ class VCS(BaseStatisticMixIn):
                                    does not include a break!")
                     break
 
-            return self
+            # return self
 
         if not log_break:
             breaks = np.log10(breaks)
 
         # Fit the final model with whichever breaks were passed.
         self.fit = Lm_Seg(x, y, breaks)
-        self.fit.fit_model(verbose=fit_verbose)
+        self.fit.fit_model(verbose=fit_verbose, cov_type='HC3')
+
+        if bootstrap:
+            stderrs = residual_bootstrap(self.fit.fit,
+                                         **bootstrap_kwargs)
+
+            self._slope_errs = stderrs[1:-1]
+        else:
+            self._slope_errs = self.fit.slope_errs
+
+        self._slope = self.fit.slopes
+
+        self._bootstrap_flag = bootstrap
 
     @property
     def slope(self):
         '''
         Power spectrum slope(s).
         '''
-        return self.fit.slopes
+        return self._slope
 
     @property
     def slope_err(self):
         '''
         1-sigma error on the power spectrum slope(s).
         '''
-        return self.fit.slope_errs
+        return self._slope_errs
 
     @property
     def brk(self):
@@ -224,7 +245,105 @@ class VCS(BaseStatisticMixIn):
         '''
         return self.fit.brk_err
 
+    def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
+                 symbol='D', fit_color=None, label=None, show_residual=True):
+        '''
+        Plot the VCS curve and the associated fit.
+
+        Parameters
+        ----------
+        save_name : str, optional
+            Save name for the figure. Enables saving the plot.
+        xunit : `~astropy.units.Unit`, optional
+            Choose the angular unit to convert to when ang_units is enabled.
+        color : {str, RGB tuple}, optional
+            Color to plot the VCS curve.
+        symbol : str, optional
+            Symbol to use for the data.
+        fit_color : {str, RGB tuple}, optional
+            Color of the 1D fit.
+        label : str, optional
+            Label to later be used in a legend.
+        show_residual : bool, optional
+            Plot the residuals for the 1D power-spectrum fit.
+
+        '''
+        import matplotlib.pyplot as plt
+
+        if fit_color is None:
+            fit_color = color
+
+        fig = plt.gcf()
+        axes = plt.gcf().get_axes()
+
+        if len(axes) == 2:
+            ax, ax_r = axes
+        elif len(axes) == 1:
+            ax = axes[0]
+        else:
+            if show_residual:
+                ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
+                ax_r = plt.subplot2grid((4, 1), (3, 0), rowspan=1, sharex=ax)
+            else:
+                ax = plt.subplot(111)
+
+        xlab = r"log $( k_v / $ (" + str(xunit**-1) + \
+            ")$^{-1})$"
+
+        shape = self.freqs.size
+        rfreqs = self.freqs[1:shape // 2]
+        ps1D = self.ps1D[1:shape // 2]
+
+        good_interval = clip_func(rfreqs.value, self.low_cut.value,
+                                  self.high_cut.value)
+
+        freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
+
+        y_fit = \
+            10**self.fit.model(np.log10(rfreqs.value[good_interval]))
+
+        # Points in dark red
+        ax.loglog(freq, ps1D, symbol, alpha=0.3, label=label,
+                  color=color)
+        ax.loglog(freq[good_interval], y_fit, color=fit_color,
+                  linewidth=4)
+
+        ax.set_ylabel(r"log P$_{1}$(k$_{v}$)")
+
+        ax.axvline(self._spectral_freq_unit_conversion(self.low_cut,
+                                                       xunit).value,
+                   linestyle="--", color=color, alpha=0.5)
+        ax.axvline(self._spectral_freq_unit_conversion(self.high_cut,
+                                                       xunit).value,
+                   linestyle="--", color=color, alpha=0.5)
+        ax.grid(True)
+        ax.legend(loc='best', frameon=True)
+
+        if show_residual:
+            resids = ps1D - 10**self.fit.model(np.log10(rfreqs.value))
+            ax_r.semilogx(freq, resids, symbol, color=color)
+            ax_r.axhline(0., color=fit_color)
+
+            ax_r.grid()
+
+            ax_r.set_ylabel("Residuals")
+
+            ax_r.set_xlabel(xlab)
+        else:
+            ax.set_xlabel(xlab)
+
+        plt.tight_layout()
+
+        fig.subplots_adjust(hspace=0.1)
+
+        if save_name is not None:
+            plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()
+
     def run(self, verbose=False, save_name=None, xunit=u.pix**-1,
+            use_pyfftw=False, threads=1, pyfftw_kwargs={},
             **fit_kwargs):
         '''
         Run the entire computation.
@@ -237,55 +356,34 @@ class VCS(BaseStatisticMixIn):
             Save the figure when a file name is given.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis in the plot to.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
+            for a list of accepted kwargs.
         fit_kwargs : Passed to `~VCS.fit_pspec`.
-
         '''
-        self.compute_pspec()
+
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+        self.compute_pspec(use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
         self.fit_pspec(**fit_kwargs)
 
         if verbose:
             # Print the final fitted model when fit_verbose is not enabled.
             if not fit_kwargs.get("fit_verbose"):
                 print(self.fit.fit.summary())
+                if self._bootstrap_flag:
+                    print("Bootstrapping used to find stderrs! "
+                          "Errors may not equal those shown above.")
 
-            import matplotlib.pyplot as plt
-
-            xlab = r"log $( k_v / $" + str(xunit**-1) + \
-                "$^{-1})$"
-
-            shape = self.freqs.size
-            rfreqs = self.freqs[1:shape // 2]
-            ps1D = self.ps1D[1:shape // 2]
-
-            good_interval = clip_func(rfreqs.value, self.low_cut.value,
-                                      self.high_cut.value)
-
-            freq = self._spectral_freq_unit_conversion(rfreqs, xunit)
-
-            y_fit = \
-                10**self.fit.model(np.log10(rfreqs.value[good_interval]))
-
-            # Points in dark red
-            plt.loglog(freq, ps1D, "D", label='Data', alpha=0.3,
-                       color='#8B0000')
-            plt.loglog(freq[good_interval], y_fit, 'r',
-                       label='Fit', linewidth=4)
-            plt.xlabel(xlab)
-            plt.ylabel(r"log P$_{1}$(k$_{v}$)")
-            plt.axvline(self._spectral_freq_unit_conversion(self.low_cut,
-                                                            xunit).value,
-                        linestyle="--", color='r', alpha=0.5)
-            plt.axvline(self._spectral_freq_unit_conversion(self.high_cut,
-                                                            xunit).value,
-                        linestyle="--", color='r', alpha=0.5)
-            plt.grid(True)
-            plt.legend(loc='best', frameon=True)
-
-            if save_name is not None:
-                plt.savefig(save_name)
-                plt.close()
-            else:
-                plt.show()
+            self.plot_fit(save_name=save_name, xunit=xunit)
 
         return self
 
@@ -333,8 +431,9 @@ class VCS_Distance(object):
                         channel_width=channel_width).run(breaks=breaks[1],
                                                          **fit_kwargs)
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        save_name=None, xunit=u.pix**-1):
+    def distance_metric(self, verbose=False, xunit=u.pix**-1,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
 
         Implements the distance metric for 2 VCS transforms.
@@ -382,26 +481,29 @@ class VCS_Distance(object):
 
         if verbose:
 
-            print("Fit 1")
             print(self.vcs1.fit.fit.summary())
-            print("Fit 2")
             print(self.vcs2.fit.fit.summary())
-
-            xlab = r"log $( k_v / $" + str(xunit**-1) + \
-                "$^{-1})$"
 
             import matplotlib.pyplot as plt
 
-            plt.plot(self.vcs1.fit.x, self.vcs1.fit.y, 'bD', alpha=0.5,
-                     label=label1)
-            plt.plot(self.vcs1.fit.x, self.vcs1.fit.model(self.vcs1.fit.x), 'b')
-            plt.plot(self.vcs2.fit.x, self.vcs2.fit.y, 'go', alpha=0.5,
-                     label=label2)
-            plt.plot(self.vcs2.fit.x, self.vcs2.fit.model(self.vcs2.fit.x), 'g')
-            plt.grid(True)
-            plt.legend()
-            plt.xlabel(xlab)
-            plt.ylabel(r"$P_{1}(k_v)$")
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.vcs1.plot_fit(xunit=xunit, **plot_kwargs1)
+            self.vcs2.plot_fit(xunit=xunit, **plot_kwargs2)
 
             if save_name is not None:
                 plt.savefig(save_name)

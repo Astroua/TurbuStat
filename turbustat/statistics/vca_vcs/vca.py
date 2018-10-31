@@ -26,18 +26,23 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Data cube.
     header : FITS header, optional
         Corresponding FITS header.
+    distance : `~astropy.units.Quantity`, optional
+        Physical distance to the region in the data.
+    beam : `radio_beam.Beam`, optional
+        Beam object for correcting for the effect of a finite beam.
     channel_width : `~astropy.units.Quantity`, optional
         Set the width of channels to compute the VCA with. The channel width
         in the data is used by default. Given widths will be used to
         spectrally down-sample the data before calculating the VCA. Up-sampling
         to smaller channel sizes than the original is not supported.
-    distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
+    downsample_kwargs : dict, optional
+        Passed to `~turbustat.statistics.vca_vca.slice_thickness.spectral_regrid_cube`.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, channel_width=None, distance=None):
+    def __init__(self, cube, header=None, distance=None, beam=None,
+                 channel_width=None, downsample_kwargs={}):
         super(VCA, self).__init__()
 
         self.input_data_header(cube, header)
@@ -46,7 +51,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if channel_width is not None:
             sc_cube = to_spectral_cube(self.data, self.header)
 
-            reg_cube = spectral_regrid_cube(sc_cube, channel_width)
+            reg_cube = spectral_regrid_cube(sc_cube, channel_width,
+                                            **downsample_kwargs)
 
             # Don't pass the header. It will read the new one in reg_cube
             self.input_data_header(reg_cube, None)
@@ -59,19 +65,78 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self._ps1D_stddev = None
 
-    def compute_pspec(self):
+        self.load_beam(beam=beam)
+
+    def compute_pspec(self, beam_correct=False,
+                      apodize_kernel=None, alpha=0.3, beta=0.0,
+                      use_pyfftw=False, threads=1, **pyfftw_kwargs):
         '''
         Compute the 2D power spectrum.
+
+        Parameters
+        ----------
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfftw_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`__
+            for a list of accepted kwargs.
         '''
 
-        vca_fft = fftshift(rfft_to_fft(self.data))
+        if apodize_kernel is not None:
+            apod_kernel = self.apodizing_kernel(kernel_type=apodize_kernel,
+                                                alpha=alpha,
+                                                beta=beta)
+            data = self.data * apod_kernel
+        else:
+            data = self.data
 
-        self._ps2D = np.power(vca_fft, 2.).sum(axis=0)
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
 
-    def run(self, verbose=False, save_name=None, return_stddev=True,
-            logspacing=False, low_cut=None, high_cut=None,
-            fit_2D=True, fit_2D_kwargs={}, radial_pspec_kwargs={},
-            xunit=u.pix**-1, use_wavenumber=False, **fit_kwargs):
+        fft = fftshift(rfft_to_fft(data, use_pyfftw=use_pyfftw,
+                                   threads=threads,
+                                   **pyfftw_kwargs))
+
+        if beam_correct:
+            if not hasattr(self, '_beam'):
+                raise AttributeError("Beam correction cannot be applied since"
+                                     " no beam object was given.")
+
+            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+                                             y_size=self.data.shape[1],
+                                             x_size=self.data.shape[2])
+
+            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+            self._beam_pow = np.abs(beam_fft**2)
+
+        self._ps2D = np.power(fft, 2.).sum(axis=0)
+
+        if beam_correct:
+            self._ps2D /= self._beam_pow
+
+    def run(self, verbose=False, beam_correct=False,
+            apodize_kernel=None, alpha=0.2, beta=0.0,
+            use_pyfftw=False, threads=1,
+            pyfftw_kwargs={},
+            radial_pspec_kwargs={},
+            low_cut=None, high_cut=None,
+            fit_2D=True, fit_kwargs={}, fit_2D_kwargs={},
+            save_name=None, xunit=u.pix**-1, use_wavenumber=False):
         '''
         Full computation of VCA.
 
@@ -79,23 +144,40 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         ----------
         verbose : bool, optional
             Enables plotting.
-        save_name : str,optional
-            Save the figure when a file name is given.
-        return_stddev : bool, optional
-            Return the standard deviation in the 1D bins.
-        logspacing : bool, optional
-            Return logarithmically spaced bins for the lags.
+        beam_correct : bool, optional
+            If a beam object was given, divide the 2D FFT by the beam response.
+        apodize_kernel : None or 'splitcosinebell', 'hanning', 'tukey', 'cosinebell', 'tophat'
+            If None, no apodization kernel is applied. Otherwise, the type of
+            apodizing kernel is given.
+        alpha : float, optional
+            alpha shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        beta : float, optional
+            beta shape parameter of the apodization kernel. See
+            `~turbustat.apodizing_kernel` for more information.
+        use_pyfftw : bool, optional
+            Enable to use pyfftw, if it is installed.
+        threads : int, optional
+            Number of threads to use in FFT when using pyfftw.
+        pyfft_kwargs : Passed to
+            `~turbustat.statistics.rfft_to_fft.rfft_to_fft`. See
+            `here <https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args>`_
+            for a list of accepted kwargs.
+        radial_pspec_kwargs : dict, optional
+            Passed to `~PowerSpectrum.compute_radial_pspec`.
         low_cut : `~astropy.units.Quantity`, optional
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
         fit_2D : bool, optional
             Fit an elliptical power-law model to the 2D power spectrum.
+        fit_kwargs : dict, optional
+            Passed to `~PowerSpectrum.fit_pspec`.
         fit_2D_kwargs : dict, optional
             Keyword arguments for `~VCA.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
-        radial_pspec_kwargs : dict, optional
-            Passed to `~PowerSpectrum.compute_radial_pspec`.
+        save_name : str,optional
+            Save the figure when a file name is given.
         xunit : u.Unit, optional
             Choose the unit to convert the x-axis in the plot to.
         use_wavenumber : bool, optional
@@ -103,10 +185,17 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         fit_kwargs : Passed to `~VCA.fit_pspec`.
         '''
 
-        self.compute_pspec()
-        self.compute_radial_pspec(return_stddev=return_stddev,
-                                  logspacing=logspacing,
-                                  **radial_pspec_kwargs)
+        # Remove threads if in dict
+        if pyfftw_kwargs.get('threads') is not None:
+            pyfftw_kwargs.pop('threads')
+
+        self.compute_pspec(apodize_kernel=apodize_kernel,
+                           alpha=alpha, beta=beta,
+                           beam_correct=beam_correct,
+                           use_pyfftw=use_pyfftw, threads=threads,
+                           **pyfftw_kwargs)
+
+        self.compute_radial_pspec(**radial_pspec_kwargs)
         self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
 
         if fit_2D:
@@ -116,6 +205,9 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if verbose:
 
             print(self.fit.summary())
+            if self._bootstrap_flag:
+                print("Bootstrapping used to find stderrs! "
+                      "Errors may not equal those shown above.")
 
             self.plot_fit(show=True, show_2D=True,
                           xunit=xunit, save_name=save_name,
@@ -176,18 +268,23 @@ class VCA_Distance(object):
         else:
             self.vca1 = VCA(cube1, channel_width=channel_width,
                             distance=phys_distance)
-            self.vca1.run(brk=breaks[0], low_cut=low_cut[0],
-                          high_cut=high_cut[0], logspacing=logspacing,
+            self.vca1.run(fit_kwargs={'brk': breaks[0]},
+                          low_cut=low_cut[0],
+                          high_cut=high_cut[0],
+                          radial_pspec_kwargs={'logspacing': logspacing},
                           fit_2D=False)
 
         self.vca2 = VCA(cube2, channel_width=channel_width,
                         distance=phys_distance)
 
-        self.vca2.run(brk=breaks[1], low_cut=low_cut[1], high_cut=high_cut[1],
-                      logspacing=logspacing, fit_2D=False)
+        self.vca2.run(fit_kwargs={'brk': breaks[1]},
+                      low_cut=low_cut[1], high_cut=high_cut[1],
+                      radial_pspec_kwargs={'logspacing': logspacing},
+                      fit_2D=False)
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
-                        xunit=u.pix**-1, save_name=None,
+    def distance_metric(self, verbose=False, xunit=u.pix**-1,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={},
                         use_wavenumber=False):
         '''
 
@@ -199,16 +296,17 @@ class VCA_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for cube1
-        label2 : str, optional
-            Object or region name for cube2
-        ang_units : bool, optional
-            Convert frequencies to angular units using the given header.
-        xunit : u.Unit, optional
-            Choose the unit to convert the x-axis to in the plot.
-        save_name : str,optional
-            Save the figure when a file name is given.
+        xunit : `~astropy.units.Unit`, optional
+            Unit of the x-axis in the plot in pixel, angular, or
+            physical units.
+        save_name : str, optional
+            Name of the save file. Enables saving the figure.
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~turbustat.statistics.VCA.plot_fit`
+            for `data1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~turbustat.statistics.VCA.plot_fit`
+            for `data2`.
         use_wavenumber : bool, optional
             Plot the x-axis as the wavenumber rather than spatial frequency.
         '''
@@ -221,24 +319,39 @@ class VCA_Distance(object):
 
         if verbose:
 
-            print("Fit to %s" % (label1))
             print(self.vca1.fit.summary())
-            print("Fit to %s" % (label2))
             print(self.vca2.fit.summary())
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            self.vca1.plot_fit(show=False, color='b', label=label1, symbol='D',
-                               xunit=xunit,
-                               use_wavenumber=use_wavenumber)
-            self.vca2.plot_fit(show=False, color='g', label=label2, symbol='o',
-                               xunit=xunit,
-                               use_wavenumber=use_wavenumber)
-            p.legend(loc='upper right')
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
+            self.vca1.plot_fit(xunit=xunit,
+                               use_wavenumber=use_wavenumber,
+                               **plot_kwargs1)
+            self.vca2.plot_fit(xunit=xunit,
+                               use_wavenumber=use_wavenumber,
+                               **plot_kwargs2)
+            axes = plt.gcf().get_axes()
+            axes[0].legend(loc='best', frameon=True)
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
         return self

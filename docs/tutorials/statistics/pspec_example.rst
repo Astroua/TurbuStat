@@ -101,7 +101,8 @@ The slope is moderately steeper than in the 1D model, but within the respective 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
+    ...           fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False}, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.996
@@ -136,7 +137,9 @@ Note that the 2D fitting was disabled in this last example. The 2D model cannot 
 There may be cases where you want to limit the azimuthal angles used to create the 1D averaged power-spectrum. This may be useful if, for example, you want to find a measure of anistropy but the 2D power-law fit is not performing well. We will add extra constraints to the previous example with a break point:
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
+    ...           fit_2D=False, fit_kwargs={'brk': 0.1 / u.pix, 'log_break': False},
+    ...           radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.990
@@ -169,7 +172,8 @@ The azimuthal mask has been added onto the plot of the two-dimensional power spe
 The default fit uses Ordinary Least Squares. A Weighted Least Squares can be enabled with `weighted_fit=True` *if* the segmented linear fit is not used:
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
-    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix, weighted_fit=True)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,
+    ...           fit_kwargs={'weighted_fit': True})  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.969
@@ -196,6 +200,11 @@ The default fit uses Ordinary Least Squares. A Weighted Least Squares can be ena
 .. image:: images/design4_pspec_limitedfreq_weightfit.png
 
 The fit has not changed significantly, but may in certain cases.
+
+
+If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. This effect and the use of apodizing kernels to taper the data is covered :ref:`here <apodkerns>`.
+
+Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales.  To account for this, the 2D power spectrum can be divided by the beam response. This is demonstrated :ref:`here <correcting_for_beam>` for spatial power-spectra.
 
 
 References
