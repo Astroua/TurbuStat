@@ -601,8 +601,6 @@ class Bispectrum_Distance(object):
             cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
             fig.colorbar(im, cax=cbar_ax)
 
-            plt.tight_layout()
-
             if save_name is not None:
                 plt.savefig(save_name)
                 plt.close()
