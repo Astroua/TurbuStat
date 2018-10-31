@@ -1,3 +1,4 @@
+.. _bispec_tutorial:
 
 **********
 Bispectrum
@@ -29,9 +30,9 @@ Using
 
 **The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
-We need to import the `~turbustat.statistics.BiSpectrum` code, along with a few other common packages:
+We need to import the `~turbustat.statistics.Bispectrum` code, along with a few other common packages:
 
-    >>> from turbustat.statistics import BiSpectrum
+    >>> from turbustat.statistics import Bispectrum
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
 
@@ -41,21 +42,21 @@ And we load in the data:
 
 While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation is performed on an integrated intensity or column density map.
 
-First, the `~turbustat.statistics.BiSpectrum` class is initialized:
+First, the `~turbustat.statistics.Bispectrum` class is initialized:
 
-    >>> bispec = BiSpectrum(moment0)  # doctest: +SKIP
+    >>> bispec = Bispectrum(moment0)  # doctest: +SKIP
 
 The bispectrum requires only the image, not a header, so passing any arbitrary 2D array will work.
 
 Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run!**
 
-The computing the bispectrum and bicoherence maps is performed through `~turbustat.statistics.BiSpectrum.run`:
+The computing the bispectrum and bicoherence maps is performed through `~turbustat.statistics.Bispectrum.run`:
 
     >>> bispec.run(verbose=True, nsamples=10000)  # doctest: +SKIP
 
 .. image:: images/bispectrum_design4.png
 
-`~turbustat.statistics.BiSpectrum.run` really only performs a single step: `~turbustat.statistics.BiSpectrum.compute_bispectrum`. For this, there are two optional inputs that may be set:
+`~turbustat.statistics.Bispectrum.run` really only performs a single step: `~turbustat.statistics.Bispectrum.compute_bispectrum`. For this, there are two optional inputs that may be set:
 
     >>> bispec.run(nsamples=10000, mean_subtract=True, seed=4242424)  # doctest: +SKIP
 
