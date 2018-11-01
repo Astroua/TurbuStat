@@ -54,8 +54,11 @@ def test_Bispec_distance():
                             dataset2["moment0"])
     tester_dist.distance_metric()
 
-    npt.assert_almost_equal(tester_dist.distance,
-                            computed_distances['bispec_distance'])
+    npt.assert_almost_equal(tester_dist.surface_distance,
+                            computed_distances['bispec_surface_distance'])
+
+    npt.assert_almost_equal(tester_dist.mean_distance,
+                            computed_distances['bispec_mean_distance'])
 
 
 def test_bispec_azimuthal_slicing():

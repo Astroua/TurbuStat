@@ -530,8 +530,6 @@ class Bispectrum_Distance(object):
         self.bispec2 = BiSpectrum(data2)
         self.bispec2.run(**stat_kwargs)
 
-        self.distance = None
-
     @property
     def surface_distance(self):
         '''
