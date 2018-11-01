@@ -106,7 +106,7 @@ class Cramer_Distance(object):
                         np.random.choice(self.data_matrix2[i, :], samps1,
                                          replace=False)
 
-                self.data_matrix2 = new_data
+                self._data_matrix2 = new_data
 
             else:
 
@@ -117,7 +117,7 @@ class Cramer_Distance(object):
                         np.random.choice(self.data_matrix1[i, :], samps2,
                                          replace=False)
 
-                self.data_matrix1 = new_data
+                self._data_matrix1 = new_data
 
     def cramer_statistic(self, n_jobs=1):
         '''
