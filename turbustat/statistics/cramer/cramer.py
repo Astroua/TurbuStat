@@ -41,9 +41,23 @@ class Cramer_Distance(object):
         self.noise_value1 = noise_value1
         self.noise_value2 = noise_value2
 
-        self.data_matrix1 = None
-        self.data_matrix2 = None
-        self.distance = None
+    @property
+    def data_matrix1(self):
+        '''
+        2D representation of `cube1`. Each column contains the
+        brightest N pixels in a spectral channel, set in
+        `~Cramer_Distance.format_data`.
+        '''
+        return self._data_matrix1
+
+    @property
+    def data_matrix2(self):
+        '''
+        2D representation of `cube2`. Each column contains the
+        brightest N pixels in a spectral channel, set in
+        `~Cramer_Distance.format_data`.
+        '''
+        return self._data_matrix2
 
     def format_data(self, data_format='intensity', seed=13024, normalize=True,
                     **kwargs):
@@ -67,12 +81,12 @@ class Cramer_Distance(object):
         kwargs : Passed to `~turbustat.statistics.threeD_to_twoD._format_data`.
         '''
 
-        self.data_matrix1 = _format_data(self.cube1, data_format=data_format,
-                                         noise_lim=self.noise_value1,
-                                         normalize=normalize, **kwargs)
-        self.data_matrix2 = _format_data(self.cube2, data_format=data_format,
-                                         noise_lim=self.noise_value2,
-                                         normalize=normalize, **kwargs)
+        self._data_matrix1 = _format_data(self.cube1, data_format=data_format,
+                                          noise_lim=self.noise_value1,
+                                          normalize=normalize, **kwargs)
+        self._data_matrix2 = _format_data(self.cube2, data_format=data_format,
+                                          noise_lim=self.noise_value2,
+                                          normalize=normalize, **kwargs)
 
         # Need to check if the same number of samples is taken
         samps1 = self.data_matrix1.shape[1]
@@ -111,7 +125,6 @@ class Cramer_Distance(object):
 
         Parameters
         ----------
-
         n_jobs : int, optional
             Sets the number of cores to use to calculate
             pairwise distances. Default is 1.
@@ -129,13 +142,12 @@ class Cramer_Distance(object):
             larger = self.data_matrix2
             smaller = self.data_matrix1
 
-        pairdist11 = pairwise_distances(
-            larger, metric="euclidean", n_jobs=n_jobs)
-        pairdist22 = pairwise_distances(
-            smaller, metric="euclidean", n_jobs=n_jobs)
-        pairdist12 = pairwise_distances(
-            larger, smaller,
-            metric="euclidean", n_jobs=n_jobs)
+        pairdist11 = pairwise_distances(larger, metric="euclidean",
+                                        n_jobs=n_jobs)
+        pairdist22 = pairwise_distances(smaller, metric="euclidean",
+                                        n_jobs=n_jobs)
+        pairdist12 = pairwise_distances(larger, smaller,
+                                        metric="euclidean", n_jobs=n_jobs)
 
         # Take sqrt of each
         # We default to using the Cramer kernel in Baringhaus & Franz (2004)
@@ -164,23 +176,72 @@ class Cramer_Distance(object):
         term2 *= (1 / (2 * m ** 2.))
         term3 *= (1 / (2 * n ** 2.))
 
-        self.distance = (m * n / (m + n)) * (term1 - term2 - term3)
+        self._distance = (m * n / (m + n)) * (term1 - term2 - term3)
 
-    def distance_metric(self, normalize=True, n_jobs=1):
+    @property
+    def distance(self):
+        '''
+        Cramer distance between `cube1` and `cube2`.
+        '''
+        return self._distance
+
+    def distance_metric(self, verbose=False, normalize=True, n_jobs=1,
+                        label1="1", label2="2", save_name=None):
         '''
 
-        Run the whole Cramer statistic.
+        Run the Cramer statistic.
 
         Parameters
         ----------
+        verbose : bool, optional
+            Enable plotting of the data matrices.
         normalize : bool, optional
             See `Cramer_Distance.format_data`.
-
         n_jobs : int, optional
             See `Cramer_Distance.cramer_statistic`.
+        label1 : str, optional
+            Object or region name for data1
+        label2 : str, optional
+            Object or region name for data2
+        save_name : str,optional
+            Save the figure when a file name is given.
         '''
 
         self.format_data(normalize=normalize)
         self.cramer_statistic(n_jobs=n_jobs)
+
+        if verbose:
+
+            import matplotlib.pyplot as plt
+
+            all_max = max(self.data_matrix1.max(),
+                          self.data_matrix2.max())
+            all_min = min(self.data_matrix1.min(),
+                          self.data_matrix2.min())
+
+            plt.subplot(121)
+            plt.title(label1)
+            plt.imshow(self.data_matrix1.T, origin='lower',
+                       vmin=all_min, vmax=all_max)
+            plt.yticks([])
+            plt.xticks([0, self.data_matrix1.shape[0]])
+            plt.xlabel("Channel")
+
+            plt.subplot(122)
+            plt.title(label2)
+            plt.imshow(self.data_matrix2.T, origin='lower',
+                       vmin=all_min, vmax=all_max)
+            plt.colorbar()
+            plt.yticks([])
+            plt.xticks([0, self.data_matrix2.shape[0]])
+            plt.xlabel("Channel")
+
+            plt.tight_layout()
+
+            if save_name is not None:
+                plt.savefig(save_name)
+                plt.close()
+            else:
+                plt.show()
 
         return self
