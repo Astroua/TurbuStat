@@ -1,3 +1,4 @@
+.. _dendro_tutorial:
 
 ***********
 Dendrograms
@@ -119,7 +120,7 @@ Computing dendrograms can be time-consuming when working with large datasets. We
 Saving the dendrogram structure is explained in the `astrodendro documentation <http://dendrograms.org/>`_. **The saved dendrogram must have `min_delta` set to the minimum of the given `min_deltas`. Otherwise pruning is ineffective.**
 
 
-If the dendrogram isn't saved (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`:
+If the dendrogram is not saved (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`:
     >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.01, min_npix=50, verbose=True)  # doctest: +SKIP
     >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
     >>> dend_stat.run(verbose=True, dendro_obj=d)  # doctest: +SKIP

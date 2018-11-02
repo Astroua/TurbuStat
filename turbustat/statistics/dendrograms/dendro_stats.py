@@ -639,6 +639,8 @@ class Dendrogram_Distance(object):
             plt.ylabel("log Number of Features")
             plt.legend(loc='best')
 
+            plt.tight_layout()
+
             if save_name is not None:
                 plt.savefig(save_name)
                 plt.close()
@@ -791,8 +793,8 @@ class Dendrogram_Distance(object):
             # Distinguish name for the two plots
             base_name, extens = os.path.splitext(save_name)
 
-            save_name_hist = "{0}.hist_distance.{1}".format(base_name, extens)
-            save_name_num = "{0}.num_distance.{1}".format(base_name, extens)
+            save_name_hist = "{0}.hist_distance{1}".format(base_name, extens)
+            save_name_num = "{0}.num_distance{1}".format(base_name, extens)
         else:
             save_name_hist = None
             save_name_num = None
