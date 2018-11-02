@@ -450,7 +450,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             self.save_results(output_name=output_name)
 
 
-class DendroDistance(object):
+class Dendrogram_Distance(object):
 
     """
     Calculate the distance between 2 cubes using dendrograms. The number of
@@ -760,6 +760,17 @@ class DendroDistance(object):
         self.numfeature_stat(verbose=verbose, label1=label1, label2=label2)
 
         return self
+
+
+def DendroDistance(*args, **kwargs):
+    '''
+    Old name for the Dendrogram_Distance class.
+    '''
+
+    warn("Use the new 'Dendrogram_Distance' class. 'DendroDistance' is deprecated and will"
+         " be removed in a future release.", Warning)
+
+    return Dendrogram_Distance(*args, **kwargs)
 
 
 def hellinger_stat(x, y):
