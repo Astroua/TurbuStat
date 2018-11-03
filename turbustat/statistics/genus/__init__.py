@@ -1,2 +1,2 @@
 
-from .genus import Genus, GenusDistance
+from .genus import Genus, Genus_Distance, GenusDistance
