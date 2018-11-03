@@ -329,25 +329,67 @@ class Genus(BaseStatisticMixIn):
 class Genus_Distance(object):
 
     """
-
     Distance Metric for the Genus Statistic.
 
     Parameters
     ----------
-
     img1 : %(dtypes)s
         2D image.
     img2 : %(dtypes)s
         2D image.
     smoothing_radii : list, optional
-        Kernel radii to smooth data to.
+        Kernel radii to smooth data to. See `~Genus`.
+    numpts : int, optional
+        Number of thresholds to calculate statistic at. See `~Genus`.
+    min_value : `~astropy.units.Quantity` or float or list, optional
+        Minimum value to use for Genus statistic. When a two-element list is
+        given, the first item is used for `img1` and the second for
+        `img2`. See `~Genus`.
+    max_value : `~astropy.units.Quantity` or float, optional
+        Maximum value to use for Genus statistic. When a two-element list is
+        given, the first item is used for `img1` and the second for
+        `img2`. See `~Genus`.
+    lowdens_percent : float, optional
+        Lowest percentile of the data to use for Genus statistic.
+        When a two-element list is given, the first item is used for
+        `img1` and the second for `img2`. See `~Genus`.
+    highdens_percent : float, optional
+        Highest percentile of the data to use for Genus statistic.
+        When a two-element list is given, the first item is used for
+        `img1` and the second for `img2`. See `~Genus`.
+    genus_kwargs : dict, optional
+        Dictionary passed to `~Genus.run`.
+    genus2_kwargs : None or dict, optional
+        Dictionary passed to `~Genus.run` for `img2`. When `None` is given,
+        settings from `genus_kwargs` are used  for `img2`.
     fiducial_model : Genus
         Computed Genus object. Use to avoid recomputing.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
+    def __init__(self, img1, img2, smoothing_radii=None, numpts=100,
+                 min_value=None, max_value=None, lowdens_percent=0,
+                 highdens_percent=100,
+                 genus_kwargs={}, genus2_kwargs=None,
+                 fiducial_model=None):
+
+        # Check if list for inputs, where first is for img1 and second is
+        # for img2
+        if not isinstance(min_value, list):
+            min_value = [min_value] * 2
+
+        if not isinstance(max_value, list):
+            max_value = [max_value] * 2
+
+        if not isinstance(lowdens_percent, list):
+            lowdens_percent = [lowdens_percent] * 2
+
+        if not isinstance(highdens_percent, list):
+            highdens_percent = [highdens_percent] * 2
+
+        if genus2_kwargs is None:
+            genus2_kwargs = genus_kwargs
 
         # Standardize the intensity values in the images
 
@@ -360,13 +402,17 @@ class Genus_Distance(object):
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
-            self.genus1 = \
-                Genus(img1, smoothing_radii=smoothing_radii,
-                      lowdens_percent=20).run()
+            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii,
+                                min_value=min_value[0], max_value=max_value[0],
+                                lowdens_percent=lowdens_percent[0],
+                                highdens_percent=highdens_percent[0])
+            self.genus1.run(**genus_kwargs)
 
-        self.genus2 = \
-            Genus(img2, smoothing_radii=smoothing_radii,
-                  lowdens_percent=20).run()
+        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii,
+                            min_value=min_value[1], max_value=max_value[1],
+                            lowdens_percent=lowdens_percent[1],
+                            highdens_percent=highdens_percent[1])
+        self.genus2.run(**genus2_kwargs)
 
         # When normalizing the genus curves for the distance metric, find
         # the scaling between the angular size of the grids.
