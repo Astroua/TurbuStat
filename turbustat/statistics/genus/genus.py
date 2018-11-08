@@ -129,11 +129,9 @@ class Genus(BaseStatisticMixIn):
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
         if smoothing_radii is None:
-            self.smoothing_radii = \
-                np.linspace(1.0, 0.1 * min(self.data.shape), 5)
+            self.smoothing_radii = [1.0] * u.pix
         else:
             if isinstance(smoothing_radii, u.Quantity):
-                print(smoothing_radii)
                 self.smoothing_radii = self._to_pixel(smoothing_radii).value
             else:
                 self.smoothing_radii = smoothing_radii
@@ -419,7 +417,8 @@ class Genus_Distance(object):
         self.scale = common_scale(WCS(hdr1), WCS(hdr2))
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        save_name=None):
+                        save_name=None, color1='b', color2='g',
+                        marker1='D', marker2='o'):
         '''
 
         Data is centered and normalized (via normalize).
@@ -472,26 +471,26 @@ class Genus_Distance(object):
                                        interp2(points))
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.plot(self.genus1.thresholds,
-                   genus1, "bD",
-                   label=label1)
-            p.plot(self.genus2.thresholds,
-                   genus2, "go",
-                   label=label2)
-            p.plot(points, interp1(points), "b")
-            p.plot(points, interp2(points), "g")
-            p.xlabel("z-score")
-            p.ylabel("Genus Score")
-            p.grid(True)
-            p.legend(loc="best")
+            plt.plot(self.genus1.thresholds, genus1, color=color1,
+                     marker=marker1,
+                     label=label1)
+            plt.plot(self.genus2.thresholds, genus2, color=color2,
+                     marker=marker2,
+                     label=label2)
+            plt.plot(points, interp1(points), "b")
+            plt.plot(points, interp2(points), "g")
+            plt.xlabel("z-score")
+            plt.ylabel("Genus Score")
+            plt.grid(True)
+            plt.legend(loc="best")
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 

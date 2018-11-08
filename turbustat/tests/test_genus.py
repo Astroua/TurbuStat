@@ -18,7 +18,10 @@ from ._testing_data import \
 
 def test_Genus_method():
 
-    tester = Genus(dataset1["moment0"])
+    smooth_scales = np.linspace(1.0, 0.1 * min(dataset1["moment0"][0].shape), 5)
+
+    tester = Genus(dataset1["moment0"],
+                   smoothing_radii=smooth_scales)
     tester.run(match_kernel=True)
 
     assert np.allclose(tester.genus_stats,
@@ -42,8 +45,9 @@ def test_Genus_method_headerbeam():
     mom0[1]["BMAJ"] = 1.0
 
     # Just ensuring these run without issue.
+    smooth_scales = np.linspace(1.0, 0.1 * min(mom0[0].shape), 5)
 
-    tester = Genus(mom0)
+    tester = Genus(mom0, smoothing_radii=smooth_scales)
     tester.run(use_beam=True, match_kernel=True)
 
     tester2 = Genus(mom0)
@@ -61,12 +65,17 @@ def test_Genus_method_value_vs_perc():
     max_perc1 = 90
     max_val1 = np.percentile(dataset1['moment0'][0], max_perc1)
 
+    smooth_scales = np.linspace(1.0, 0.1 * min(dataset1["moment0"][0].shape),
+                                5)
+
     tester = Genus(dataset1['moment0'], lowdens_percent=min_perc1,
-                   highdens_percent=max_perc1)
+                   highdens_percent=max_perc1,
+                   smoothing_radii=smooth_scales)
     tester.run(match_kernel=True)
 
     tester2 = Genus(dataset1['moment0'], min_value=min_val1,
-                    max_value=max_val1)
+                    max_value=max_val1,
+                    smoothing_radii=smooth_scales)
     tester2.run(match_kernel=True)
 
     npt.assert_allclose(tester.genus_stats, tester2.genus_stats)
