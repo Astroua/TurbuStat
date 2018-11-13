@@ -12,13 +12,13 @@ The distance metric for MVC is based on the t-statistics of teh difference betwe
     d_{\rm MVC} = \left| \beta_1 - \beta_2 \right| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
 :math:`\beta_i` and :math:`\sigma_{\beta_i}` is the index and index uncertainty, respectively.
 
-More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
+More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_.
 
 
 Using
 -----
 
-    **The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
+**The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
 We need to import the `~turbustat.statistics.MVC_Distance` class, along with a few other common packages:
 
@@ -167,6 +167,7 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> from turbustat.statistics import MVC
     >>> mvc_fid = MVC(data_fid['centroid'], data_fid['moment0'],
     ...               data_fid['linewidth'])  # doctest: +SKIP
+    >>> mvc_fid.run()
     >>> mvc = MVC_Distance(data_fid, data, fiducial_model=mvc_fid)  # doctest: +SKIP
 
 Note that the data still needs to be passed to `~turbustat.statistics.MVC_Distance`.
