@@ -242,8 +242,11 @@ class PSpec_Distance(object):
     high_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The upper frequency fitting limit. See `low_cut` above. Defaults to
         0.5.
-    logspacing : bool, optional
-        Enable to use logarithmically-spaced bins.
+    pspec_kwargs : dict, optional
+        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run`.
+    pspec2_kwargs : dict or None, optional
+        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `data2`.
+        When `None` is given, setting from `pspec_kwargs` are used for `data2`.
     phys_distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
     """
@@ -251,20 +254,23 @@ class PSpec_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 breaks=None, fiducial_model=None, low_cut=None,
-                 high_cut=0.5 / u.pix, logspacing=False, phys_distance=None):
-        super(PSpec_Distance, self).__init__()
+                 fiducial_model=None, breaks=None, low_cut=None,
+                 high_cut=0.5 / u.pix, pspec_kwargs={},
+                 pspec2_kwargs=None, phys_distance=None):
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
 
+        if pspec2_kwargs is None:
+            pspec2_kwargs = pspec_kwargs
+
         if fiducial_model is None:
             self.pspec1 = PowerSpectrum(data1, weights=weights1,
                                         distance=phys_distance)
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            radial_pspec_kwargs={"logspacing": logspacing},
+                            radial_pspec_kwargs=pspec_kwargs,
                             fit_kwargs={'brk': breaks[0]},
                             fit_2D=False)
         else:
@@ -274,7 +280,7 @@ class PSpec_Distance(object):
                                     distance=phys_distance)
         self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
                         fit_kwargs={'brk': breaks[1]},
-                        radial_pspec_kwargs={"logspacing": logspacing},
+                        radial_pspec_kwargs=pspec2_kwargs,
                         fit_2D=False)
 
         self.results = None
