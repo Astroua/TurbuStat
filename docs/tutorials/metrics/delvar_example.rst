@@ -49,7 +49,7 @@ The error maps are saved in the second extension of these FITS files. These can 
 
 The images (and optionally the error maps) are passed to the `~turbustat.statistics.DeltaVariance_Distance` class:
 
-    >>>     delvar = DeltaVariance_Distance(moment0_fid, moment0, weights1=moment0_err,
+    >>> delvar = DeltaVariance_Distance(moment0_fid, moment0, weights1=moment0_err,
     ...                                weights2=moment0_fid_err)  # doctest: +SKIP
     >>> delvar.distance_metric(verbose=True, xunit=u.pix)  # doctest: +SKIP
                                 WLS Regression Results
