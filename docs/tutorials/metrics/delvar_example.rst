@@ -5,7 +5,7 @@
 Delta-Variance Distance
 ***********************
 
-See :ref:`the tutorial <delvar_tutorial>` for a description of Delta-Bariance.
+See :ref:`the tutorial <delvar_tutorial>` for a description of Delta-Variance.
 
 The distance metric for Delta-Variance is `~turbustat.statistics.DeltaVariance_Distance`. There are two definitions of a distance:
 

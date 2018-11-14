@@ -68,9 +68,9 @@ The distances between these images are:
 
 If a `~turbustat.statistics.Bispectrum` has been previously defined, it can be passed to `~turbustat.statistics.Bispectrum_Distance` without recomputing by passing it as `fiducial_model`:
 
-    >>> from turbustat.statistics import Bispectrum
-    >>> bispec_moment0 = Bispectrum(moment0_fid).run()
-    >>> bispec = Bispectrum_Distance(moment0_fid, moment0, fiducial_model=bispec_moment0)
+    >>> from turbustat.statistics import Bispectrum  # doctest: +SKIP
+    >>> bispec_moment0 = Bispectrum(moment0_fid).run()  # doctest: +SKIP
+    >>> bispec = Bispectrum_Distance(moment0_fid, moment0, fiducial_model=bispec_moment0)  # doctest: +SKIP
 
 `fiducial_model` will be set to `~turbustat.statistics.Bispectrum_Distance.bispec1`. This is useful when comparing a number of images to a common (i.e., fiducial) image. Note that the data (`moment0`) must still be passed.
 
