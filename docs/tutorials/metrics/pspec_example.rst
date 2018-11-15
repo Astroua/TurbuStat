@@ -92,7 +92,7 @@ To find the distance between these two images, we run:
 The fit summaries and a plot of the power-spectra with their fits are returned when `verbose=True`. Colours, labels, and symbols can be altered in the plot with the keywords `plot_kwargs1` and `plot_kwargs2` in `~turbustat.statistics.Pspec_Distance.distance_metric`.
 
 The distance between these two images is:
-    >>> pspec.distance
+    >>> pspec.distance  # doctest: +SKIP
     3.0952798493530262
 
 When comparing many images to a fiducial image, recomputing the power-spectrum of the fiducial can be avoided by passing a pre-computed `~turbustat.statistics.PowerSpectrum` to `fiducial_model`

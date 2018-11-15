@@ -30,9 +30,9 @@ We need to import the `~turbustat.statistics.SCF_Distance` class, along with a f
 
 `~turbustat.statistics.SCF_Distance` takes two data cubes as input:
 
-    >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]
-    >>> cube_fid = fits.open("Fiducial0_flatrho_0021_00_radmc.fits")[0]
-    >>> scf = SCF_Distance(cube_fid, cube, size=11)
+    >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
+    >>> cube_fid = fits.open("Fiducial0_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
+    >>> scf = SCF_Distance(cube_fid, cube, size=11)  # doctest: +SKIP
 
 This call runs `~turbustat.statistics.SCF` for the two cubes, which can be accessed with `~turbustat.statistics.SCF_Distance.scf1` and `~turbustat.statistics.SCF_Distance.scf2`.
 
@@ -40,7 +40,7 @@ The default setting assumes that the boundaries are continuous (e.g., simulated 
 
 To calculate the distance between the cubes:
 
-    >>> scf.distance_metric(verbose=True)
+    >>> scf.distance_metric(verbose=True)  # doctest: +SKIP
 
 .. image:: images/scf_distmet.png
 
@@ -48,7 +48,7 @@ With `verbose=True`, this function creates a plot of the SCF correlation surface
 
 The distance between the SCF surfaces is:
 
-    >>> scf.distance
+    >>> scf.distance  # doctest: +SKIP
     0.08101015924738914
 
 By default, the distance between the surfaces is weighted by the lag (see equation above). This weighting can be disabled by setting `weighted=False` in `~turbustat.statistics.SCF_Distance.distance_metric`, and the distance metrics reduces to the L2 norm between the surfaces.
