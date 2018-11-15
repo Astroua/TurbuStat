@@ -797,8 +797,6 @@ class SCF_Distance(object):
         between the given cubes.
     fiducial_model : SCF
         Computed SCF object. Use to avoid recomputing.
-    weighted : bool, optional
-        Sets whether to apply the 1/r^2 weighting to the distance.
     phys_distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
     '''
@@ -806,10 +804,8 @@ class SCF_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=11, boundary='continuous',
-                 fiducial_model=None, weighted=True,
+                 fiducial_model=None,
                  show_progress=True, phys_distance=None):
-
-        self.weighted = weighted
 
         dataset1 = input_data(cube1, no_header=False)
         dataset2 = input_data(cube2, no_header=False)
@@ -851,25 +847,39 @@ class SCF_Distance(object):
                             distance=phys_distance)
             self.scf1.compute_surface(boundary=boundary[0],
                                       show_progress=show_progress)
+            # This is for the plot, not the distance, so stick with default
+            # params
+            self.scf1.compute_spectrum()
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2,
                         distance=phys_distance)
         self.scf2.compute_surface(boundary=boundary[1],
                                   show_progress=show_progress)
+        # This is for the plot, not the distance, so stick with default
+        # params
+        self.scf2.compute_spectrum()
 
-    def distance_metric(self, verbose=False, label1=None, label2=None,
+    def distance_metric(self, weighted=True, verbose=False,
+                        plot_kwargs1={'color': 'b', 'marker': 'D',
+                                      'label': '1'},
+                        plot_kwargs2={'color': 'g', 'marker': 'o',
+                                      'label': '2'},
                         xunit=u.pix, save_name=None):
         '''
         Compute the distance between the surfaces.
 
         Parameters
         ----------
+        weighted : bool, optional
+            Sets whether to apply the 1/r weighting to the distance.
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for cube1
-        label2 : str, optional
-            Object or region name for cube2
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~matplotlib.pyplot.plot` for
+            `cube1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~matplotlib.pyplot.plot` for
+            `cube2`.
         xunit : `~astropy.units.Unit`, optional
             Unit of the x-axis in the plot in pixel, angular, or
             physical units.
@@ -884,7 +894,7 @@ class SCF_Distance(object):
         dy = np.arange(self.size) - self.size // 2
 
         a, b = np.meshgrid(dx, dy)
-        if self.weighted:
+        if weighted:
             dist_weight = 1 / np.sqrt(a ** 2 + b ** 2)
             # Centre pixel set to 1
             dist_weight[np.where((a == 0) & (b == 0))] = 1.
@@ -898,69 +908,72 @@ class SCF_Distance(object):
         if verbose:
             import matplotlib.pyplot as plt
 
-            if label1 is None:
-                label1 = "1"
-            if label2 is None:
-                label2 = "2"
+            defaults1 = {'color': 'b', 'marker': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'marker': 'o', 'label': '2'}
 
-            # print "Distance: %s" % (self.distance)
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
 
-            plt.subplot(2, 2, 1)
-            plt.imshow(self.scf1.scf_surface, origin="lower",
-                       interpolation="nearest")
-            plt.title(label1)
-            plt.colorbar()
+            fig = plt.figure()
 
-            plt.subplot(2, 2, 2)
-            plt.imshow(self.scf2.scf_surface, origin="lower",
-                       interpolation="nearest",
-                       label=label2)
-            plt.title(label2)
-            plt.colorbar()
+            ax0 = fig.add_subplot(2, 2, 1)
+            ax1 = fig.add_subplot(2, 2, 2, sharex=ax0, sharey=ax0)
+            ax2 = fig.add_subplot(2, 2, 3, sharex=ax0, sharey=ax0)
+            ax3 = fig.add_subplot(2, 2, 4)
 
-            plt.subplot(2, 2, 3)
-            plt.imshow(difference, origin="lower", interpolation="nearest")
-            plt.title("Weighted Difference")
-            plt.colorbar()
+            vmin = min(self.scf1.scf_surface.min(),
+                       self.scf2.scf_surface.min())
 
-            ax = plt.subplot(2, 2, 4)
+            im0 = ax0.imshow(self.scf1.scf_surface, origin="lower",
+                             interpolation="nearest", vmin=vmin)
+            ax0.set_title(plot_kwargs1['label'])
+            fig.colorbar(im0, ax=ax0)
+
+            im1 = ax1.imshow(self.scf2.scf_surface, origin="lower",
+                             interpolation="nearest", vmin=vmin)
+            ax1.set_title(plot_kwargs2['label'])
+            fig.colorbar(im1, ax=ax1)
+
+            im2 = ax2.imshow(difference, origin="lower",
+                             interpolation="nearest")
+            ax2.set_title("")
+            fig.colorbar(im2, ax=ax2)
+
             pix_lags1 = self.scf1._to_pixel(self.scf1.lags)
             lags1 = self.scf1._spatial_unit_conversion(pix_lags1, xunit).value
 
             pix_lags2 = self.scf2._to_pixel(self.scf2.lags)
             lags2 = self.scf2._spatial_unit_conversion(pix_lags2, xunit).value
 
-            ax.errorbar(lags1, self.scf1.scf_spectrum,
-                        yerr=self.scf1.scf_spectrum_stddev,
-                        fmt='D', color='b', markersize=5, label=label1)
-            ax.errorbar(lags2, self.scf2.scf_spectrum,
-                        yerr=self.scf2.scf_spectrum_stddev,
-                        fmt='o', color='g', markersize=5, label=label2)
-            ax.set_xscale("log")  # , nonposy='clip')
-            ax.set_yscale("log")  # , nonposy='clip')
+            ax3.errorbar(lags1, self.scf1.scf_spectrum,
+                         yerr=self.scf1.scf_spectrum_stddev,
+                         fmt=plot_kwargs1['marker'],
+                         color=plot_kwargs1['color'],
+                         markersize=5,
+                         label=plot_kwargs1['label'])
+            ax3.errorbar(lags2, self.scf2.scf_spectrum,
+                         yerr=self.scf2.scf_spectrum_stddev,
+                         fmt=plot_kwargs2['marker'],
+                         color=plot_kwargs2['color'],
+                         markersize=5,
+                         label=plot_kwargs2['label'])
+            ax3.set_xscale("log")
+            ax3.set_yscale("log")
 
-            ax.set_xlim(min(lags1.min(), lags2.min()) * 0.75,
-                        max(lags1.max(), lags2.max()) * 1.25)
-            ax.set_ylim(min(self.scf1.scf_spectrum.min(),
-                            self.scf2.scf_spectrum.min()) * 0.75,
-                        max(self.scf1.scf_spectrum.max(),
-                            self.scf2.scf_spectrum.max()) * 1.25)
+            ax3.set_xlim(min(lags1.min(), lags2.min()) * 0.75,
+                         max(lags1.max(), lags2.max()) * 1.25)
+            ax3.set_ylim(min(self.scf1.scf_spectrum.min(),
+                             self.scf2.scf_spectrum.min()) * 0.75,
+                         max(self.scf1.scf_spectrum.max(),
+                             self.scf2.scf_spectrum.max()) * 1.25)
 
-            # Overlay the fit. Use points 5% lower than the min and max.
-            xvals = np.linspace(np.log10(min(lags1.min(),
-                                             lags2.min()) * 0.95),
-                                np.log10(max(lags1.max(),
-                                             lags2.max()) * 1.05), 50)
-            plt.plot(10**xvals * xunit,
-                     10**self.scf1.fitted_model(xvals * xunit), 'b--',
-                     linewidth=2)
-            plt.plot(10**xvals * xunit,
-                     10**self.scf2.fitted_model(xvals * xunit), 'g--',
-                     linewidth=2)
-            ax.legend(loc='best', frameon=True)
-            ax.grid(True)
+            ax3.grid(True)
 
-            ax.set_xlabel("Lags ({})".format(xunit))
+            ax3.set_xlabel("Lags ({})".format(xunit))
 
             plt.tight_layout()
 
