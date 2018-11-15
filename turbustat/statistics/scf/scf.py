@@ -806,8 +806,9 @@ class SCF_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=11, boundary='continuous',
-                 fiducial_model=None, weighted=True, phys_distance=None):
-        super(SCF_Distance, self).__init__()
+                 fiducial_model=None, weighted=True,
+                 show_progress=True, phys_distance=None):
+
         self.weighted = weighted
 
         dataset1 = input_data(cube1, no_header=False)
@@ -848,13 +849,13 @@ class SCF_Distance(object):
         else:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1,
                             distance=phys_distance)
-            self.scf1.run(boundary=boundary[0],
-                          fit_2D=False)
+            self.scf1.compute_surface(boundary=boundary[0],
+                                      show_progress=show_progress)
 
         self.scf2 = SCF(cube2, roll_lags=roll_lags2,
                         distance=phys_distance)
-        self.scf2.run(boundary=boundary[1],
-                      fit_2D=False)
+        self.scf2.compute_surface(boundary=boundary[1],
+                                  show_progress=show_progress)
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
                         xunit=u.pix, save_name=None):
