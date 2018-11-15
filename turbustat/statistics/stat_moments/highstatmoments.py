@@ -594,7 +594,7 @@ class StatMoments_Distance(object):
         self.moments2.make_spatial_histograms(skewness_bins=skew_bins,
                                               kurtosis_bins=kurt_bins)
 
-    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None,
+    def distance_metric(self, verbose=False, nbins=None,
                         plot_kwargs1={'color': 'b', 'label': '1'},
                         plot_kwargs2={'color': 'g', 'label': '2'},
                         save_name=None):
@@ -619,28 +619,15 @@ class StatMoments_Distance(object):
 
         self.create_common_histograms(nbins=nbins)
 
-        if metric == "Hellinger":
-            kurt_bw = np.diff(self.moments1.kurtosis_hist[0])[0]
-            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
-                                               self.moments2.kurtosis_hist[1],
-                                               bin_width=kurt_bw)
+        kurt_bw = np.diff(self.moments1.kurtosis_hist[0])[0]
+        self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
+                                           self.moments2.kurtosis_hist[1],
+                                           bin_width=kurt_bw)
 
-            skew_bw = np.diff(self.moments1.skewness_hist[0])[0]
-            self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
-                                               self.moments2.skewness_hist[1],
-                                               bin_width=skew_bw)
-        elif metric == "KL Divergence":
-            warnings.warn("KL Divergence distance is not well-tested. "
-                          "Use with caution!")
-            self.kurtosis_distance = np.abs(
-                kl_divergence(self.moments1.kurtosis_hist[1],
-                              self.moments2.kurtosis_hist[1]))
-            self.skewness_distance = np.abs(
-                kl_divergence(self.moments1.skewness_hist[1],
-                              self.moments2.skewness_hist[1]))
-        else:
-            raise ValueError("metric must be 'Hellinger' or 'KL Divergence'. "
-                             "Was given as " + str(metric))
+        skew_bw = np.diff(self.moments1.skewness_hist[0])[0]
+        self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
+                                           self.moments2.skewness_hist[1],
+                                           bin_width=skew_bw)
 
         if verbose:
             import matplotlib.pyplot as plt
