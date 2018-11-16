@@ -237,16 +237,19 @@ class VCA_Distance(object):
     breaks : `~astropy.units.Quantity`, list or array, optional
         Specify where the break point is with appropriate units.
         If none is given, no break point will be used in the fit.
-    fiducial_model : `~turbustat.statistics.VCA`
-        Computed VCA object. use to avoid recomputing.
-    logspacing : bool, optional
-        Enable to use logarithmically-spaced bins.
     low_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The lower frequency fitting limit. An array with 2 elements can be
         passed to give separate lower limits for the datasets.
     high_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The upper frequency fitting limit. See `low_cut` above. Defaults to
         0.5.
+    pspec_kwargs : dict, optional
+        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run`.
+    pspec2_kwargs : dict or None, optional
+        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `data2`.
+        When `None` is given, setting from `pspec_kwargs` are used for `data2`.
+    fiducial_model : `~turbustat.statistics.VCA`
+        Computed VCA object. use to avoid recomputing.
     phys_distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
     '''
@@ -254,14 +257,18 @@ class VCA_Distance(object):
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, channel_width=None, breaks=None,
-                 fiducial_model=None, logspacing=False, low_cut=None,
-                 high_cut=None, phys_distance=None):
+                 low_cut=None, high_cut=None,
+                 radial_pspec_kwargs={}, radial_pspec_kwargs2=None,
+                 fiducial_model=None, phys_distance=None):
         super(VCA_Distance, self).__init__()
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
+
+        if radial_pspec_kwargs2 is None:
+            radial_pspec_kwargs2 = radial_pspec_kwargs
 
         if fiducial_model is not None:
             self.vca1 = fiducial_model
@@ -271,7 +278,7 @@ class VCA_Distance(object):
             self.vca1.run(fit_kwargs={'brk': breaks[0]},
                           low_cut=low_cut[0],
                           high_cut=high_cut[0],
-                          radial_pspec_kwargs={'logspacing': logspacing},
+                          radial_pspec_kwargs=radial_pspec_kwargs,
                           fit_2D=False)
 
         self.vca2 = VCA(cube2, channel_width=channel_width,
@@ -279,7 +286,7 @@ class VCA_Distance(object):
 
         self.vca2.run(fit_kwargs={'brk': breaks[1]},
                       low_cut=low_cut[1], high_cut=high_cut[1],
-                      radial_pspec_kwargs={'logspacing': logspacing},
+                      radial_pspec_kwargs=radial_pspec_kwargs2,
                       fit_2D=False)
 
     def distance_metric(self, verbose=False, xunit=u.pix**-1,
