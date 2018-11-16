@@ -20,7 +20,7 @@ Using
 
 **The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
-We need to import the `~turbustat.statistics.PCA_Distance` class, along with a few other common packages:
+We need to import the `~turbustat.statistics.VCA_Distance` class, along with a few other common packages:
 
     >>> from turbustat.statistics import VCA_Distance
     >>> from astropy.io import fits
@@ -164,7 +164,7 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> from turbustat.statistics import VCA
     >>> vca_fid = VCA(cube_fid).run(low_cut=0.025 / u.pix,
     ...                             high_cut=0.1 / u.pix)  # doctest: +SKIP
-    >>> vca = VCA_Distance(cube_fid, cube, fiducial_model=scf_fid,
+    >>> vca = VCA_Distance(cube_fid, cube, fiducial_model=vca_fid,
     ...                    low_cut=0.025 / u.pix,
     ...                    high_cut=0.1 / u.pix)  # doctest: +SKIP
 
