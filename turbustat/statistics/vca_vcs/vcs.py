@@ -30,7 +30,7 @@ class VCS(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube, header=None, channel_width=None):
+    def __init__(self, cube, header=None):
         super(VCS, self).__init__()
 
         self.input_data_header(cube, header)
@@ -409,12 +409,17 @@ class VCS_Distance(object):
         spline.
     fiducial_model : VCS
         Computed VCS object. use to avoid recomputing.
+    fit_kwargs : dict, optional
+        Passed to `~VCS.run`.
+    fit_kwargs2 : dict or None, optional
+        Passed to `~VCS.run` for `cube2`. When `None` is given, settings
+        from `fit_kwargs` will be used for `cube2`.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, breaks=None, fiducial_model=None,
-                 channel_width=None, **fit_kwargs):
+                 fit_kwargs={}, fit_kwargs2=None):
         super(VCS_Distance, self).__init__()
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
@@ -423,13 +428,12 @@ class VCS_Distance(object):
         if fiducial_model is not None:
             self.vcs1 = fiducial_model
         else:
-            self.vcs1 = VCS(cube1,
-                            channel_width=channel_width).run(breaks=breaks[0],
-                                                             **fit_kwargs)
+            self.vcs1 = VCS(cube1).run(breaks=breaks[0], **fit_kwargs)
 
-        self.vcs2 = VCS(cube2,
-                        channel_width=channel_width).run(breaks=breaks[1],
-                                                         **fit_kwargs)
+        if fit_kwargs2 is None:
+            fit_kwargs2 = fit_kwargs
+
+        self.vcs2 = VCS(cube2).run(breaks=breaks[1], **fit_kwargs2)
 
     def distance_metric(self, verbose=False, xunit=u.pix**-1,
                         save_name=None, plot_kwargs1={},

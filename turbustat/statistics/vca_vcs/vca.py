@@ -246,8 +246,8 @@ class VCA_Distance(object):
     pspec_kwargs : dict, optional
         Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run`.
     pspec2_kwargs : dict or None, optional
-        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `data2`.
-        When `None` is given, setting from `pspec_kwargs` are used for `data2`.
+        Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `cube2`.
+        When `None` is given, setting from `pspec_kwargs` are used for `cube2`.
     fiducial_model : `~turbustat.statistics.VCA`
         Computed VCA object. use to avoid recomputing.
     phys_distance : `~astropy.units.Quantity`, optional
