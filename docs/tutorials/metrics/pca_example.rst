@@ -28,15 +28,15 @@ We need to import the `~turbustat.statistics.PCA_Distance` class, along with a f
 
 `~turbustat.statistics.PCA_Distance` takes two data cubes as input:
 
-    >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]
-    >>> cube_fid = fits.open("Fiducial0_flatrho_0021_00_radmc.fits")[0]
-    >>> pca = PCA_Distance(cube_fid, cube, n_eigs=50, mean_sub=True)
+    >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
+    >>> cube_fid = fits.open("Fiducial0_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
+    >>> pca = PCA_Distance(cube_fid, cube, n_eigs=50, mean_sub=True)  # doctest: +SKIP
 
 There are two additional keywords that set the number of eigenvalues to include in the distance calculation (`n_eigs`), and whether to subtract the mean from each spectral channel (`mean_sub`).
 
 To calculate the distance between the eigenvalues:
 
-    >>> pca.distance_metric(verbose=True)
+    >>> pca.distance_metric(verbose=True)  # doctest: +SKIP
     Proportions of total variance: 1 - 1.000, 2 - 1.000
 
 .. image:: images/pca_distmet.png
@@ -45,7 +45,7 @@ This prints out what fraction of the total variance is included in the eigenvalu
 
 And the distance is:
 
-    >>> pca.distance
+    >>> pca.distance  # doctest: +SKIP
     0.07211706060387167
 
 Note that a comparison of the size-line width from PCA as a distance metric is not yet implemented.
