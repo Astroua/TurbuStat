@@ -1,4 +1,4 @@
-.. _scfdistmet:
+.. _statmomentsdistmet:
 
 ****************
 Moments Distance
