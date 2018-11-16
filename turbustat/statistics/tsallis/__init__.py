@@ -1,1 +1,1 @@
-from .tsallis import Tsallis, Tsallis_Distance
+from .tsallis import Tsallis  # , Tsallis_Distance
