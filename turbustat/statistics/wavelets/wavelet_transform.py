@@ -602,20 +602,25 @@ class Wavelet_Distance(object):
         The scales where the transform is calculated.
     num : int
         Number of scales to calculate the transform at.
-    fiducial_model : wt2D
-        Computed wt2D object. use to avoid recomputing.
     xlow : `astropy.units.Quantity`, optional
         The lower lag fitting limit. An array with 2 elements can be passed to
         give separate lower limits for the datasets.
     xhigh : `astropy.units.Quantity`, optional
         The upper lag fitting limit. See `xlow` above.
-
+    fit_kwargs : dict, optional
+        Passed to `~turbustat.statistics.Wavelet.run`.
+    fit_kwargs2 : dict, optional
+        Passed to `~turbustat.statistics.Wavelet.run` for `dataset2`. When
+        `None` is given, `fit_kwargs` is used for `dataset2`.
+    fiducial_model : None or `~turbustat.statistics.Wavelet`
+        A computed Wavelet model. Used to avoid recomputing.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2,
                  scales=None, num=50, xlow=None, xhigh=None,
+                 fit_kwargs={}, fit_kwargs2=None,
                  fiducial_model=None):
         super(Wavelet_Distance, self).__init__()
 
@@ -623,12 +628,15 @@ class Wavelet_Distance(object):
 
         if fiducial_model is None:
             self.wt1 = Wavelet(dataset1, scales=scales)
-            self.wt1.run(xlow=xlow[0], xhigh=xhigh[0])
+            self.wt1.run(xlow=xlow[0], xhigh=xhigh[0], **fit_kwargs)
         else:
             self.wt1 = fiducial_model
 
+        if fit_kwargs2 is None:
+            fit_kwargs2 = fit_kwargs
+
         self.wt2 = Wavelet(dataset2, scales=scales)
-        self.wt2.run(xlow=xlow[1], xhigh=xhigh[1])
+        self.wt2.run(xlow=xlow[1], xhigh=xhigh[1], **fit_kwargs2)
 
     def distance_metric(self, verbose=False, xunit=u.pix,
                         save_name=None, plot_kwargs1={},
