@@ -472,7 +472,9 @@ class Wavelet(BaseStatisticMixIn):
         ax.errorbar(scales[fin_vals], self.values[fin_vals],
                     yerr=self.stddev[fin_vals],
                     fmt=symbol + "-", color=color,
-                    label=label)
+                    label=label,
+                    markersize=5, alpha=0.5, capsize=10,
+                    elinewidth=3)
 
         # Plot the fit within the fitting range.
         low_lim = \
@@ -482,7 +484,7 @@ class Wavelet(BaseStatisticMixIn):
 
         ax.loglog(scales, 10**self.fitted_model(np.log10(pix_scales.value)),
                   '--', color=fit_color,
-                  linewidth=8, alpha=0.75)
+                  linewidth=3)
 
         ax.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
         ax.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
@@ -496,8 +498,9 @@ class Wavelet(BaseStatisticMixIn):
                 10**self.fitted_model(np.log10(pix_scales.value))
 
             ax_r.errorbar(scales, resids, yerr=self.stddev[fin_vals],
-                          fmt=symbol + "-", color=color, label=label)
-
+                          fmt=symbol + "-", color=color, label=label,
+                          markersize=5, alpha=0.5, capsize=10,
+                          elinewidth=3)
             ax_r.axvline(low_lim, color=color, alpha=0.5, linestyle='-')
             ax_r.axvline(high_lim, color=color, alpha=0.5, linestyle='-')
 
@@ -506,10 +509,9 @@ class Wavelet(BaseStatisticMixIn):
             ax_r.grid()
 
             ax_r.set_ylabel("Residuals")
-
             ax_r.set_xlabel("Scales ({})".format(xunit))
 
-            ax.get_xaxis().set_ticks([])
+            plt.setp(ax.get_xticklabels(), visible=False)
 
         else:
             ax.set_xlabel("Scales ({})".format(xunit))
