@@ -10,6 +10,7 @@ The distance metric for MVC is based on the t-statistics of teh difference betwe
 
 .. math::
     d_{\rm MVC} = \left| \beta_1 - \beta_2 \right| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
 :math:`\beta_i` and :math:`\sigma_{\beta_i}` is the index and index uncertainty, respectively.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_.

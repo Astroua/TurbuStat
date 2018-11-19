@@ -12,15 +12,17 @@ The distance metric for Delta-Variance is `~turbustat.statistics.DeltaVariance_D
 1. The curve distance is the L2 norm between the delta-variance curves normalized by the sum of each curve:
     .. math::
         d_{curve} = \left|\left|\frac{\sigma_{\Delta,1}^2 (\ell)}{\sum_i \sigma_{\Delta,1}^2 (\ell)} - \frac{\sigma_{\Delta,2}^2 (\ell)}{\sum_i \sigma_{\Delta,2}^2 (\ell)}\right|\right|
+
     :math:`\frac{\sigma_{\Delta,i}` are the delta-variance values at lag :math:`\ell`.
 
     This is a non-parametric attempt to describe the entire delta-variance curve, including regions that are not well fit by a power-law model.
 
-   .. warn:: This distance requires the delta-variance to be measured at the same lags in angular units. This is described further below.
+   .. warning:: This distance requires the delta-variance to be measured at the same lags in angular units. This is described further below.
 
 2. The slope distance is the t-statistic of the difference in the fitted slopes:
     .. math::
         d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
     :math:`\beta_i` are the slopes of the delta-variance curves and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

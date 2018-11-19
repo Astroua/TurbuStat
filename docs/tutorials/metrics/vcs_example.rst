@@ -14,11 +14,13 @@ There are four distance definitions for the VCS based on the broken linear model
 1. The difference between the fitted slopes on "large-scales" (below the break position): `~turbustat.statistics.VCS_Distance.large_scale_distance`.
     .. math::
             d_{\rm large-scale} = |\beta_{{\rm LS}, 1} - \beta_{{\rm LS}, 2}| / \sqrt{\sigma_{\beta_{{\rm LS}, 1}}^2 + \sigma_{\beta_{{\rm LS}, 2}}^2}
+
     :math:`\beta_{{\rm LS}, i}` are the slopes of the VCS on large-scales and :math:`\sigma_{\beta_{{\rm LS}, i}}` are the uncertainty of the slopes.
 
 2. The difference between the fitted slopes on "small-scales" (above the break position): `~turbustat.statistics.VCS_Distance.small_scale_distance`.
     .. math::
             d_{\rm small-scale} = |\beta_{{\rm SS}, 1} - \beta_{{\rm SS}, 2}| / \sqrt{\sigma_{\beta_{{\rm SS}, 1}}^2 + \sigma_{\beta_{{\rm SS}, 2}}^2}
+
     :math:`\beta_{{\rm SS}, i}` are the slopes of the VCS on small-scales and :math:`\sigma_{\beta_{{\rm SS}, i}}` are the uncertainty of the slopes.
 
 3. The sum of the differences between the slopes in both regimes: `~turbustat.statistics.VCS_Distance.distance`
@@ -28,6 +30,7 @@ There are four distance definitions for the VCS based on the broken linear model
 4. The difference in the fitted break points: `~turbustat.statistics.VCS_Distance.break_distance`
     .. math::
         d_{\rm break} = |b_{1} - b_{2}| / \sqrt{\sigma_{b_{1}}^2 + \sigma_{b_{2}}^2}
+
     :math:`b_{i}` are the break locations of the VCS and :math:`\sigma_{b_{i}}` are the uncertainties.
 
 

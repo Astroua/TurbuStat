@@ -10,6 +10,7 @@ The distance metric for wavelets is `~turbustat.statistics.Wavelet_Distance`. Th
 
 .. math::
         d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
 :math:`\beta_i` are the slopes of the wavelet transforms and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

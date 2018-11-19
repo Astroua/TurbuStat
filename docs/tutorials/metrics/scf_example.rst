@@ -9,8 +9,8 @@ See :ref:`the tutorial <scf_tutorial>` for a description of the Spectral Correla
 The SCF creates a surface by shifting a spectral-line cube and calculating the correlation of the shifted cube with the original cube. The distance metric defined in `~turbustat.statistics.SCF_Distance` is the L2 distance between the correlation surfaces, weighted by the inverse of the lag:
 
 .. math::
-      d_{\mathrm{SCF}} = \left( \frac{\sum_{\boldsymbol{\ell}}[S_1(\boldsymbol{\ell})-S_2(\boldsymbol{\ell})]^2/|\boldsymbol{\ell}|}
-{\sum_{\boldsymbol{\ell}} 1/|\boldsymbol{\ell}|}\right)^{1/2}.
+      d_{\mathrm{SCF}} = \left( \frac{\sum_{\boldsymbol{\ell}}[S_1(\boldsymbol{\ell})-S_2(\boldsymbol{\ell})]^2/|\boldsymbol{\ell}|}{\sum_{\boldsymbol{\ell}} 1/|\boldsymbol{\ell}|}\right)^{1/2}.
+
 where :math:`S_i` is the correlation surface and :math:`\ell` is the spatial lag between the shifted and original cubes.
 
 This direct comparison between the correlation surfaces requires that a common set of spatial lags be used. `~turbustat.statistics.SCF_Distance` creates a common set of angular lags to compare two data cubes.

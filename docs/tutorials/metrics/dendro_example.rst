@@ -14,12 +14,14 @@ Using the two comparisons defined by `Burkhart et al. 2013 <https://ui.adsabs.ha
 
     .. math::
         d_{\mathrm{Hist}} = \left[\sum H(p_{1,\delta_I},p_{2,\delta_I})\right]/N_\delta
+
     :math:`p_{i,\delta_I}` are the histograms with minimum branch height of :math:`\delta_I`, :math:`H(i, j)` is the `Hellinger distance <https://en.wikipedia.org/wiki/Hellinger_distance#Discrete_distributions>`_, and :math:`N_{\delta}` is the number of branch heights (and histograms) that the dendrogram was computed for.
 
 2. The slopes of the linear relation fit to the log of the number of features in the tree as a function of minimum branch height:
 
     .. math::
         d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
     :math:`\beta_i` are the slopes of the fitted lines and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

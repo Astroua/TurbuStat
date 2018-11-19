@@ -1,4 +1,4 @@
-.. _genus:
+.. _genus_tutorial:
 
 *****
 Genus

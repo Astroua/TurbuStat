@@ -11,6 +11,7 @@ The distance metric for Genus is `~turbustat.statistics.Genus_Distance`. The dis
 
 .. math::
     d_{\mathrm{genus}} = \left|\left|\frac{G_{1}\left(I_{0,i}\right)}{A_1} - \frac{G_{2}\left(I_{0,i}\right)}{A_2}\right|\right|
+
 where :math:`G_{j}\left(I_{0, i}\right)` are the Genus curves, and :math:`A_{j}` is the total area each Genus curve is measured over to normalize comparisons of images of different sizes.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

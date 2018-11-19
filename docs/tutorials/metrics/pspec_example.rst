@@ -7,10 +7,11 @@ Spatial Power Spectrum Distance
 
 See :ref:`the tutorial <pspec_tutorial>` for a description of the spatial power-spectrum.
 
-The distance metric for the power-spectrum is `~turbustat.statistics.DeltaVariancePSpec_Distance`. The distance is defined as the t-statistic between the indices of the power-spectra:
+The distance metric for the power-spectrum is `~turbustat.statistics.PSpec_Distance`. The distance is defined as the t-statistic between the indices of the power-spectra:
 
 .. math::
     d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
 :math:`\beta_i` are the slopes of the power-spectra and :math:`\sigma_{\beta_i}` are the uncertainties.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

@@ -11,6 +11,7 @@ The VCA distance is defined as the t-statistic of the difference in the fitted s
 
 .. math::
         d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+
 :math:`\beta_i` are the slopes of the VCA spectra and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_.
@@ -88,7 +89,7 @@ To find the distance between the cubes:
     Kurtosis:                       5.434   Cond. No.                         15.2
     ==============================================================================
 
-.. images:: images/vca_distmet.png
+.. image:: images/vca_distmet.png
 
 This function returns a summary of the fits to the VCA spectra and plots the two spectra with the fits. Colours, symbols and labels in the plot can be changed with `plot_kwargs1` and `plot_kwargs2` in `~turbustat.statistics.VCA_Distance.distance_metric`.
 
@@ -152,7 +153,7 @@ In this example, we will change the velocity resolution to 400 m/s:
     Kurtosis:                       5.398   Cond. No.                         15.2
     ==============================================================================
 
-.. images:: images/vca_distmet_thickchan.png
+.. image:: images/vca_distmet_thickchan.png
 
 The VCA power-spectra with 400 m/s channels have a similar slope to the original velocity resolution. The distance then has not significantly changed:
 
