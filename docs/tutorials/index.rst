@@ -6,8 +6,6 @@ TurbuStat Tutorials
 .. toctree::
     :maxdepth: 2
 
-    preprocessing_data
-    masking_and_moments
     applying_apodizing_functions
     correcting_for_the_beam
 
