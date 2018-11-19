@@ -53,7 +53,7 @@ Additional arguments for the figure and the number of bins can also be given.  T
 
 The distances for the skewness and kurtosis are:
 
-    >>> print(moments.skewness_distance, moments.kurtosis_distance)
+    >>> print(moments.skewness_distance, moments.kurtosis_distance)  # doctest: +SKIP
     0.01189910501201634 0.019870935761084074
 
 If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.StatMoments` class can be passed:

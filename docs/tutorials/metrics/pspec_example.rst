@@ -23,7 +23,7 @@ Using
 
 We need to import the `~turbustat.statistics.Pspec_Distance` class, along with a few other common packages:
 
-    >>> from turbustat.statistics import Pspec_Distance
+    >>> from turbustat.statistics import PSpec_Distance
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
     >>> import astropy.units as u
@@ -98,7 +98,7 @@ The distance between these two images is:
 
 When comparing many images to a fiducial image, recomputing the power-spectrum of the fiducial can be avoided by passing a pre-computed `~turbustat.statistics.PowerSpectrum` to `fiducial_model`
 
-    >>> from turbustat.statistics import PowerSpectrum  # doctest: +SKIP
+    >>> from turbustat.statistics import PowerSpectrum
     >>> pspec_moment0 = PowerSpectrum(moment0_fid).run()  # doctest: +SKIP
     >>> pspec = PSpec_Distance(moment0_fid, moment0, fiducial_model=pspec_moment0)  # doctest: +SKIP
 

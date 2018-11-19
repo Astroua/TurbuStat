@@ -168,7 +168,7 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> from turbustat.statistics import MVC
     >>> mvc_fid = MVC(data_fid['centroid'], data_fid['moment0'],
     ...               data_fid['linewidth'])  # doctest: +SKIP
-    >>> mvc_fid.run()
+    >>> mvc_fid.run()  # doctest: +SKIP
     >>> mvc = MVC_Distance(data_fid, data, fiducial_model=mvc_fid)  # doctest: +SKIP
 
 Note that the data still needs to be passed to `~turbustat.statistics.MVC_Distance`.

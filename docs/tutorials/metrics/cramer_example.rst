@@ -47,7 +47,7 @@ The argument `n_jobs` sets how many cores to use when calculating pairwise dista
 
 The distance between the data cubes is:
 
-    >>> cramer.distance
+    >>> cramer.distance  # doctest: +SKIP
     0.18175851051788378
 
 `~turbustat.statistics.Cramer_Distance.distance_metric` performs two steps: `~turbustat.statistics.Cramer_Distance.format_data` to find the 2D data matrix for each cube, and `~turbustat.statistics.Cramer_Distance.cramer_statistic` to calculate the distance. These steps can be run separately to allow for changes in the keyword arguments of both.

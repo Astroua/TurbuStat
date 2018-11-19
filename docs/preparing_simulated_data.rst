@@ -10,28 +10,31 @@ We start with a numpy array of data from some source. First consider a PPV cube.
 
     >>> import astropy.units as u
     >>> from turbustat.io.sim_tools import create_fits_hdu
+    >>> cube = np.ones((8, 16, 16))
     >>> pixel_scale = 0.001 * u.deg
     >>> spec_pixel_scale = 1000. * u.m / u.s
     >>> beamfwhm = 0.003 * u.deg
-    >>> imshape = cube.shape  # doctest: +SKIP
+    >>> imshape = cube.shape
     >>> restfreq = 1.4 * u.GHz
     >>> bunit = u.K
-    >>> cube_hdu = create_fits_hdu(cube, pixel_scale, spec_pixel_scale, beamfwhm, imshape, restfreq, bunit)  # doctest: +SKIP
+    >>> cube_hdu = create_fits_hdu(cube, pixel_scale, spec_pixel_scale, beamfwhm, imshape, restfreq, bunit)
 
 
 `cube_hdu` can now be passed to the TurbuStat statistics, or loaded into a `spectral_cube.SpectralCube` with `SpectralCube.read(cube_hdu)` for easy manipulation of the PPV cube.
 
 For a two-dimensional image, the FITS HDU can be made in almost the same way, minus `spec_pixel_scale`:
 
-    >>> img_hdu = create_fits_hdu(cube, pixel_scale, beamfwhm, imshape, restfreq, bunit)  # doctest: +SKIP
+    >>> img = np.ones((16, 16))
+    >>> imshape = img.shape
+    >>> img_hdu = create_fits_hdu(img, pixel_scale, beamfwhm, imshape, restfreq, bunit)
 
 The FITS HDU can be given to TurbuStat statistics, or converted to a `spectral_cube.Projection` with `Projection.from_hdu(img_hdu)`.
 
 You can also create just the FITS headers with:
 
     >>> from turbustat.io.sim_tools import create_image_header, create_cube_header
-    >>> img_hdr = create_image_header(pixel_scale, beamfwhm, imshape, restfreq, bunit)
-    >>> cube_hdr = create_cube_header(pixel_scale, spec_pixel_scale, beamfwhm, imshape, restfreq, bunit)
+    >>> img_hdr = create_image_header(pixel_scale, beamfwhm, img.shape, restfreq, bunit)
+    >>> cube_hdr = create_cube_header(pixel_scale, spec_pixel_scale, beamfwhm, cube.shape, restfreq, bunit)
 
 
 Units

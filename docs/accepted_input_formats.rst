@@ -11,7 +11,7 @@ FITS HDU
 
 The most common format is likely a FITS HDU. These can be loaded in python with the `~astropy.io.fits` library::
 
-    >>> from astropy.io import fits  # doctest: +SKIP
+    >>> from astropy.io import fits
     >>> hdulist = fits.open("test.fits")  # doctest: +SKIP
     >>> hdu = hdulist[0]  # doctest: +SKIP
 
@@ -41,6 +41,6 @@ This SpectralCube object can be sliced, or used to create moment maps. These spa
 The Projection objects also offer a number of the convenient functions available for a SpectralCube, making it easy to manipulate and alter the data as needed. To load a spatial FITS image as a projection::
 
     >>> from spectral_cube import Projection
-    >>> img_hdu = fits.open("test_spatial.fits")[0]
-    >>> proj = Projection.from_hdu(img_hdu)
+    >>> img_hdu = fits.open("test_spatial.fits")[0]  # doctest: +SKIP
+    >>> proj = Projection.from_hdu(img_hdu)  # doctest: +SKIP
 

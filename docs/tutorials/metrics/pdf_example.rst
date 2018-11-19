@@ -50,7 +50,7 @@ And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be gi
 
 These two images are given as the inputs to `~turbustat.statistics.PDF_Distance`. Other parameters can be set here, including the minimum images values to be included in the histograms (`min_val1`/`min_val2`), whether to fit a log-normal distribution (`do_fit`), and what type of normalization to use on the data (`normalization_type`; see the :ref:`PDF tutorial <pdf_tutorial>`):
     >>> pdf = PDF_Distance(moment0_fid, moment0, min_val1=0.0, min_val2=0.0,
-                           do_fit=True, normalization_type=None)  # doctest: +SKIP
+    ...                    do_fit=True, normalization_type=None)  # doctest: +SKIP
 
 This will create and run two `~turbustat.statistics.PDF` instances using a common set of bins for the histograms. These can be accessed as `~turbustat.statistics.PDF_Distance.pdf1` and `~turbustat.statistics.PDF_Distance.pdf2`.
 

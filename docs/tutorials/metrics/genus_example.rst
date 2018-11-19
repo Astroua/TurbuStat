@@ -53,8 +53,8 @@ This returns a figure that plots the Genus curves of the two images, where the i
 When comparing many images to a fiducial image, a pre-computed `~turbustat.statistics.Genus` of the fiducial image can be passed:
 
     >>> from turbustat.statistics import Genus
-    >>> genus_fid = Genus(moment0_fid, lowdens_percent=15, highdens_percent=85, numpts=100)
-    >>> genus_fid.run(min_size=4 * u.pix**2)
+    >>> genus_fid = Genus(moment0_fid, lowdens_percent=15, highdens_percent=85, numpts=100)  # doctest: +SKIP
+    >>> genus_fid.run(min_size=4 * u.pix**2)  # doctest: +SKIP
     >>> genus = Genus_Distance(moment0_fid, moment0,
     ...                        lowdens_percent=15, highdens_percent=85, numpts=100,
     ...                        genus_kwargs=dict(min_size=4 * u.pix**2),
