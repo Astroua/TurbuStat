@@ -8,7 +8,7 @@ import numpy.testing as npt
 import astropy.units as u
 import os
 
-from ..statistics import Tsallis, Tsallis_Distance
+from ..statistics import Tsallis  # , Tsallis_Distance
 from ._testing_data import \
     dataset1, dataset2, computed_data, computed_distances
 
@@ -83,14 +83,14 @@ def test_Tsallis_lagunits():
                         computed_data['tsallis_val'], atol=0.01)
 
 
-def test_Tsallis_distance():
-    kwarg_dict = dict(num_bins=100, periodic=True)
-    tester_dist = \
-        Tsallis_Distance(dataset1["moment0"],
-                         dataset2["moment0"],
-                         lags=[1, 2, 4, 8, 16] * u.pix,
-                         tsallis1_kwargs=kwarg_dict,
-                         tsallis2_kwargs=kwarg_dict).distance_metric()
-    npt.assert_almost_equal(tester_dist.distance,
-                            computed_distances['tsallis_distance'],
-                            decimal=4)
+# def test_Tsallis_distance():
+#     kwarg_dict = dict(num_bins=100, periodic=True)
+#     tester_dist = \
+#         Tsallis_Distance(dataset1["moment0"],
+#                          dataset2["moment0"],
+#                          lags=[1, 2, 4, 8, 16] * u.pix,
+#                          tsallis1_kwargs=kwarg_dict,
+#                          tsallis2_kwargs=kwarg_dict).distance_metric()
+#     npt.assert_almost_equal(tester_dist.distance,
+#                             computed_distances['tsallis_distance'],
+#                             decimal=4)
