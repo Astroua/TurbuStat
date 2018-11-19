@@ -8,6 +8,7 @@ TurbuStat requires the input data be in a valid FITS format. Since simulated obs
 
 We start with a numpy array of data from some source. First consider a PPV cube. We will need to specify several quantities, like the angular pixel scale, to create the header:
 
+    >>> import numpy as np
     >>> import astropy.units as u
     >>> from turbustat.io.sim_tools import create_fits_hdu
     >>> cube = np.ones((8, 16, 16))

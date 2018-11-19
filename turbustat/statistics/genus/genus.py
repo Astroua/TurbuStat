@@ -129,7 +129,7 @@ class Genus(BaseStatisticMixIn):
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
         if smoothing_radii is None:
-            self.smoothing_radii = [1.0] * u.pix
+            self.smoothing_radii = np.array([1.0])
         else:
             if isinstance(smoothing_radii, u.Quantity):
                 self.smoothing_radii = self._to_pixel(smoothing_radii).value

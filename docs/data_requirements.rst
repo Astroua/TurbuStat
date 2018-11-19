@@ -12,8 +12,8 @@ Spatial Projection
 
 TurbuStat assumes that the spatial dimensions of the data are square. All physical and angular dimensions will be incorrect, otherwise.  Data with non-square pixels should first be reprojected. This can be easily done using `spectral-cube <http://spectral-cube.readthedocs.io/en/latest/>`_:
 
-    >>> reproj_cube = cube.reproject(new_header)
-    >>> reproj_proj = proj_2D.reproject(new_header_2D)
+    >>> reproj_cube = cube.reproject(new_header)  # doctest: +SKIP
+    >>> reproj_proj = proj_2D.reproject(new_header_2D)  # doctest: +SKIP
 
 Considerations for distance metrics
 ***********************************

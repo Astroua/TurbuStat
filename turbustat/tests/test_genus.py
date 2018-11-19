@@ -50,7 +50,7 @@ def test_Genus_method_headerbeam():
     tester = Genus(mom0, smoothing_radii=smooth_scales)
     tester.run(use_beam=True, match_kernel=True)
 
-    tester2 = Genus(mom0)
+    tester2 = Genus(mom0, smoothing_radii=smooth_scales)
     tester2.run(use_beam=True, min_size=1.0 * u.deg**2,
                 match_kernel=True)
 
