@@ -13,15 +13,15 @@ The distance metric for the bispectrum is `~turbustat.statistics.Bispectrum_Dist
     .. math::
         d_{\rm surface} = ||b_1(k_1, k_2) - b_2(k_1, k_2)||^2
 
-    The :math:`k_1,\,k_2` are wavenumbers and :math:`b_1,\,b_2` are the bicoherence arrays for each image.
+The :math:`k_1,\,k_2` are wavenumbers and :math:`b_1,\,b_2` are the bicoherence arrays for each image.
 
-   .. warning:: The images must have the same shape to use this definition of distance.
+.. warning:: The images must have the same shape to use this definition of distance.
 
 2. The mean distance is the absolute difference between the mean bicoherence of two 2D images:
     .. math::
         d_{\rm mean} = |\bar{b_1(k_1, k_2)} - \bar{b_1(k_1, k_2)}|
 
-    This distance metric can be used with images of different shapes.
+This distance metric can be used with images of different shapes.
 
 The bicoherence surface is used for the distance metric because it is normalized between 0 and 1, and this normalization removes the effect of the mean of the images (`meansub` in the :ref:`bispectrum tutorial <bispec_tutorial>`).
 

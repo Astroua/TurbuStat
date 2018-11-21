@@ -10,7 +10,7 @@ See :ref:`the tutorial <vca_tutorial>` for a description of Velocity Channel Ana
 The VCA distance is defined as the t-statistic of the difference in the fitted slopes:
 
 .. math::
-        d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+        d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
 
 :math:`\beta_i` are the slopes of the VCA spectra and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 

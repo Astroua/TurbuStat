@@ -10,7 +10,7 @@ See :ref:`the tutorial <pspec_tutorial>` for a description of the spatial power-
 The distance metric for the power-spectrum is `~turbustat.statistics.PSpec_Distance`. The distance is defined as the t-statistic between the indices of the power-spectra:
 
 .. math::
-    d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+    d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
 
 :math:`\beta_i` are the slopes of the power-spectra and :math:`\sigma_{\beta_i}` are the uncertainties.
 

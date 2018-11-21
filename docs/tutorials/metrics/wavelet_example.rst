@@ -9,7 +9,7 @@ See :ref:`the tutorial <wavelet_tutorial>` for a description of Delta-Variance.
 The distance metric for wavelets is `~turbustat.statistics.Wavelet_Distance`. The distance is defined as the t-statistic of the difference between the slopes of the wavelet transforms:
 
 .. math::
-        d_{\rm slope} = |\beta_1 - \beta_2| / \sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}
+        d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
 
 :math:`\beta_i` are the slopes of the wavelet transforms and :math:`\sigma_{\beta_i}` are the uncertainty of the slopes.
 

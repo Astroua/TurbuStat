@@ -9,14 +9,12 @@ See :ref:`the tutorial <pdf_tutorial>` for a description of PDFs.
 There are multiple ways to define the distance between PDFs. Two of the metrics are non-parametric:
 
 1. The `Hellinger distance <https://en.wikipedia.org/wiki/Hellinger_distance#Discrete_distributions>`_ between the PDFs (computed over the same set of bins):
-
     .. math::
         d_{\rm Hellinger}(p_1,p_2) = \frac{1}{\sqrt{2}}\left\{\sum_{\tilde{I}} \left[ \sqrt{p_1(\tilde{I})} - \sqrt{p_{2}(\tilde{I})} \right]^2\right\}^{1/2}.
 
     where :math:`p_i` are the histogram values at the bin :math:`\tilde{I}`.
 
 2. The `Kolmogorov-Smirnov Distance <https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test#Kolmogorov%E2%80%93Smirnov_statistic>`_ between the ECDFs of the PDFs:
-
     .. math::
         d_{\rm KS}(P_1, P_2) = {\rm sup} \left| P_1(\tilde{I}) - P_2(\tilde{I}) \right|
 
@@ -24,10 +22,10 @@ There are multiple ways to define the distance between PDFs. Two of the metrics 
 
 There is also one parametric distance metric included in `~turbustat.statistics.PDF_Distance`: the t-statistic of the difference in the fitted log-normal widths:
 
-    .. math::
-        d_{\rm LN} = \left| \w_1 - \w_2 \right| / \sqrt{\sigma_{\w_1}^2 + \sigma_{\w_1}^2}
+.. math::
+    d_{\rm LN} = \frac{\left| w_1 - w_2 \right|}{\sqrt{\sigma_{w_1}^2 + \sigma_{w_1}^2}}
 
-    where :math:`w_i` is the width of the log-normal distribution fit.
+where :math:`w_i` is the width of the log-normal distribution fit.
 
 More information on the distance metric definitions can be found in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_.
 
