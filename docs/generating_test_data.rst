@@ -145,8 +145,6 @@ small 32 pixel cubes so this is quick to compute:
 
     >>> velocity = make_3dfield(32, powerlaw=4., amp=1.,
     ...                         randomseed=98734) * u.km / u.s  # doctest: +SKIP
-
-    # Deal with negative density values.
     >>> density = make_3dfield(32, powerlaw=3., amp=1.,
     ...                        randomseed=328764) * u.cm**-3  # doctest: +SKIP
 
