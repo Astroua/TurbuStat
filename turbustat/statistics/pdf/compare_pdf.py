@@ -560,6 +560,12 @@ class PDF_Distance(object):
         Weights to be used with img1
     weights2 : %(dtypes)s, optional
         Weights to be used with img2
+    bin_min : float, optional
+        Minimum value to use for the histogram bins *after* normalization is
+        applied.
+    bin_max : float, optional
+        Maximum value to use for the histogram bins *after* normalization is
+        applied.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
@@ -567,7 +573,8 @@ class PDF_Distance(object):
 
     def __init__(self, img1, img2, min_val1=-np.inf, min_val2=-np.inf,
                  do_fit=True, normalization_type=None,
-                 nbins=None, weights1=None, weights2=None):
+                 nbins=None, weights1=None, weights2=None,
+                 bin_min=None, bin_max=None):
         super(PDF_Distance, self).__init__()
 
         if do_fit:
@@ -587,7 +594,8 @@ class PDF_Distance(object):
 
         self.bins, self.bin_centers = \
             common_histogram_bins(self.PDF1.data, self.PDF2.data,
-                                  return_centered=True, nbins=nbins)
+                                  return_centered=True, nbins=nbins,
+                                  min_val=bin_min, max_val=bin_max)
 
         # Feed the common set of bins to be used in the PDFs
         self._do_fit = do_fit
@@ -649,7 +657,10 @@ class PDF_Distance(object):
         self.lognormal_distance = diff / denom
 
     def distance_metric(self, statistic='all', verbose=False,
-                        label1="Data 1", label2="Data 2",
+                        plot_kwargs1={'color': 'b', 'marker': 'D',
+                                      'label': '1'},
+                        plot_kwargs2={'color': 'g', 'marker': 'o',
+                                      'label': '2'},
                         save_name=None):
         '''
         Calculate the distance.
@@ -664,10 +675,12 @@ class PDF_Distance(object):
             Sets the labels in the output plot.
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for img1
-        label2 : str, optional
-            Object or region name for img2
+        plot_kwargs1 : dict, optional
+            Pass kwargs to `~matplotlib.pyplot.plot` for
+            `dataset1`.
+        plot_kwargs2 : dict, optional
+            Pass kwargs to `~matplotlib.pyplot.plot` for
+            `dataset2`.
         save_name : str,optional
             Save the figure when a file name is given.
         '''
@@ -696,7 +709,17 @@ class PDF_Distance(object):
 
         if verbose:
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
+
+            defaults1 = {'color': 'b', 'marker': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'marker': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
 
             if self.normalization_type == "standardize":
                 xlabel = r"z-score"
@@ -721,70 +744,103 @@ class PDF_Distance(object):
                          " for data set 2!")
 
             # PDF
-            p.subplot(121)
-            p.semilogy(self.bin_centers,
-                       self.PDF1.pdf, 'bD-', label=label1)
-            p.semilogy(self.bin_centers,
-                       self.PDF2.pdf, 'go-', label=label2)
+            plt.subplot(121)
+            plt.semilogy(self.bin_centers, self.PDF1.pdf,
+                         color=plot_kwargs1['color'], linestyle='none',
+                         marker=plot_kwargs1['marker'],
+                         label=plot_kwargs1['label'])
+            plt.semilogy(self.bin_centers, self.PDF2.pdf,
+                         color=plot_kwargs2['color'], linestyle='none',
+                         marker=plot_kwargs2['marker'],
+                         label=plot_kwargs2['label'])
             if self._do_fit:
                 # Plot the fitted model.
                 vals = np.linspace(self.bin_centers[0], self.bin_centers[-1],
                                    1000)
 
                 fit_params1 = self.PDF1.model_params
-                p.semilogy(vals,
-                           lognorm.pdf(vals, *fit_params1[:-1],
-                                       scale=fit_params1[-1],
-                                       loc=0), 'b-', label='Fit 1')
+                plt.semilogy(vals,
+                             lognorm.pdf(vals, *fit_params1[:-1],
+                                         scale=fit_params1[-1],
+                                         loc=0),
+                             color=plot_kwargs1['color'], linestyle='-')
+
                 fit_params2 = self.PDF2.model_params
-                p.semilogy(vals,
-                           lognorm.pdf(vals, *fit_params2[:-1],
-                                       scale=fit_params2[-1],
-                                       loc=0), 'g-', label='Fit 2')
-            p.grid(True)
-            p.xlabel(xlabel)
-            p.ylabel("PDF")
+                plt.semilogy(vals,
+                             lognorm.pdf(vals, *fit_params2[:-1],
+                                         scale=fit_params2[-1],
+                                         loc=0),
+                             color=plot_kwargs2['color'], linestyle='-')
+
+            plt.grid(True)
+            plt.xlabel(xlabel)
+            plt.ylabel("PDF")
+            plt.legend(frameon=True)
 
             # ECDF
-            ax2 = p.subplot(122)
+            ax2 = plt.subplot(122)
             ax2.yaxis.tick_right()
             ax2.yaxis.set_label_position("right")
             if self.normalization_type is not None:
-                ax2.plot(self.bin_centers, self.PDF1.ecdf, 'bD-')
-                ax2.plot(self.bin_centers, self.PDF2.ecdf, 'go-')
+                ax2.plot(self.bin_centers, self.PDF1.ecdf,
+                         color=plot_kwargs1['color'], linestyle='-',
+                         marker=plot_kwargs1['marker'],
+                         label=plot_kwargs1['label'])
+
+                ax2.plot(self.bin_centers, self.PDF2.ecdf,
+                         color=plot_kwargs2['color'], linestyle='-',
+                         marker=plot_kwargs2['marker'],
+                         label=plot_kwargs2['label'])
+
                 if self._do_fit:
                     ax2.plot(vals,
                              lognorm.cdf(vals,
                                          *fit_params1[:-1],
                                          scale=fit_params1[-1],
-                                         loc=0), 'b-')
+                                         loc=0),
+                             color=plot_kwargs1['color'], linestyle='-',)
+
                     ax2.plot(vals,
                              lognorm.cdf(vals,
                                          *fit_params2[:-1],
                                          scale=fit_params2[-1],
-                                         loc=0), 'g-')
+                                         loc=0),
+                             color=plot_kwargs2['color'], linestyle='-',)
+
             else:
-                ax2.semilogx(self.bin_centers, self.PDF1.ecdf, 'bD-')
-                ax2.semilogx(self.bin_centers, self.PDF2.ecdf, 'go-')
+                ax2.semilogx(self.bin_centers, self.PDF1.ecdf,
+                             color=plot_kwargs1['color'], linestyle='-',
+                             marker=plot_kwargs1['marker'],
+                             label=plot_kwargs1['label'])
+
+                ax2.semilogx(self.bin_centers, self.PDF2.ecdf,
+                             color=plot_kwargs2['color'], linestyle='-',
+                             marker=plot_kwargs2['marker'],
+                             label=plot_kwargs2['label'])
+
                 if self._do_fit:
                     ax2.semilogx(vals,
                                  lognorm.cdf(vals, *fit_params1[:-1],
                                              scale=fit_params1[-1],
-                                             loc=0), 'b-')
+                                             loc=0),
+                                 color=plot_kwargs1['color'], linestyle='-',)
+
                     ax2.semilogx(vals,
                                  lognorm.cdf(vals, *fit_params2[:-1],
                                              scale=fit_params2[-1],
-                                             loc=0), 'g-')
-            p.grid(True)
-            p.xlabel(xlabel)
-            p.ylabel("ECDF")
+                                             loc=0),
+                                 color=plot_kwargs2['color'], linestyle='-',)
 
-            p.tight_layout()
+            plt.grid(True)
+            plt.xlabel(xlabel)
+            plt.ylabel("ECDF")
+
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self

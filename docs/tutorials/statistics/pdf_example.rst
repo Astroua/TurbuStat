@@ -1,3 +1,4 @@
+.. _pdf_tutorial:
 
 ***
 PDF

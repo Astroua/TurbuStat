@@ -355,93 +355,93 @@ class Tsallis(BaseStatisticMixIn):
         return self
 
 
-class Tsallis_Distance(object):
+# class Tsallis_Distance(object):
 
-    '''
-    Distance Metric for the Tsallis Distribution.
+#     '''
+#     Distance Metric for the Tsallis Distribution.
 
-    Parameters
-    ----------
-    array1 : %(dtypes)s
-        2D datas.
-    array2 : %(dtypes)s
-        2D datas.
-    lags : `~astropy.units.Quantity`
-        Lags to calculate at.
-    fiducial_model : Tsallis
-        Computed Tsallis object. use to avoid recomputing.
-    tsallis1_kwargs : dict, optional
-        Pass kwargs to `~Tsallis.run` for array1.
-    tsallis2_kwargs : dict, optional
-        Pass kwargs to `~Tsallis.run` for array2.
-    '''
+#     Parameters
+#     ----------
+#     array1 : %(dtypes)s
+#         2D datas.
+#     array2 : %(dtypes)s
+#         2D datas.
+#     lags : `~astropy.units.Quantity`
+#         Lags to calculate at.
+#     fiducial_model : Tsallis
+#         Computed Tsallis object. use to avoid recomputing.
+#     tsallis1_kwargs : dict, optional
+#         Pass kwargs to `~Tsallis.run` for array1.
+#     tsallis2_kwargs : dict, optional
+#         Pass kwargs to `~Tsallis.run` for array2.
+#     '''
 
-    __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
+#     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, array1, array2, lags=None, tsallis1_kwargs={},
-                 tsallis2_kwargs={}, fiducial_model=None,):
-        super(Tsallis_Distance, self).__init__()
+#     def __init__(self, array1, array2, lags=None, tsallis1_kwargs={},
+#                  tsallis2_kwargs={}, fiducial_model=None,):
+#         super(Tsallis_Distance, self).__init__()
 
-        if fiducial_model is not None:
-            self.tsallis1 = fiducial_model
-        else:
-            self.tsallis1 = \
-                Tsallis(array1, lags=lags).run(verbose=False,
-                                               **tsallis1_kwargs)
+#         if fiducial_model is not None:
+#             self.tsallis1 = fiducial_model
+#         else:
+#             self.tsallis1 = \
+#                 Tsallis(array1, lags=lags).run(verbose=False,
+#                                                **tsallis1_kwargs)
 
-        self.tsallis2 = \
-            Tsallis(array2, lags=lags).run(verbose=False,
-                                           **tsallis2_kwargs)
+#         self.tsallis2 = \
+#             Tsallis(array2, lags=lags).run(verbose=False,
+#                                            **tsallis2_kwargs)
 
-        self.distance = None
+#         self.distance = None
 
-    def distance_metric(self, verbose=False, save_name=None):
-        '''
+#     def distance_metric(self, verbose=False, save_name=None):
+#         '''
 
-        We do not consider the parameter a in the distance metric. Since we
-        are fitting to a PDF, a is related to the number of data points and
-        is therefore not a true measure of the differences between the data
-        sets. The distance is computed by summing the squared difference of
-        the parameters, normalized by the sums of the squares, for each lag.
-        The total distance the sum between the two parameters.
+#         We do not consider the parameter a in the distance metric. Since we
+#         are fitting to a PDF, a is related to the number of data points and
+#         is therefore not a true measure of the differences between the data
+#         sets. The distance is computed by summing the squared difference of
+#         the parameters, normalized by the sums of the squares, for each lag.
+#         The total distance the sum between the two parameters.
 
-        Parameters
-        ----------
-        verbose : bool, optional
-            Enables plotting.
-        save_name : str,optional
-            Save the figure when a file name is given.
-        '''
+#         Parameters
+#         ----------
+#         verbose : bool, optional
+#             Enables plotting.
+#         save_name : str,optional
+#             Save the figure when a file name is given.
+#         '''
 
-        w1 = self.tsallis1.tsallis_params[:, 1]
-        w2 = self.tsallis2.tsallis_params[:, 1]
+#         w1 = self.tsallis1.tsallis_params[:, 1]
+#         w2 = self.tsallis2.tsallis_params[:, 1]
 
-        q1 = self.tsallis1.tsallis_params[:, 2]
-        q2 = self.tsallis2.tsallis_params[:, 2]
+#         q1 = self.tsallis1.tsallis_params[:, 2]
+#         q2 = self.tsallis2.tsallis_params[:, 2]
 
-        # diff_a = (a1-a2)**2.
-        diff_w = (w1 - w2) ** 2. / (w1 ** 2. + w2 ** 2.)
-        diff_q = (q1 - q2) ** 2. / (q1 ** 2. + q2 ** 2.)
+#         # diff_a = (a1-a2)**2.
+#         diff_w = (w1 - w2) ** 2. / (w1 ** 2. + w2 ** 2.)
+#         diff_q = (q1 - q2) ** 2. / (q1 ** 2. + q2 ** 2.)
 
-        self.distance = np.sum(diff_w + diff_q)
+#         self.distance = np.sum(diff_w + diff_q)
 
-        if verbose:
-            import matplotlib.pyplot as p
-            lags = self.tsallis1.lags
-            p.plot(lags, diff_w, "rD", label="Difference of w")
-            p.plot(lags, diff_q, "go", label="Difference of q")
-            p.legend()
-            p.xscale('log', basex=2)
-            p.ylabel("Normalized Difference")
-            p.xlabel("Lags (pixels)")
-            p.grid(True)
+#         if verbose:
+#             import matplotlib.pyplot as p
+#             lags = self.tsallis1.lags
+#             p.plot(lags, diff_w, "rD", label="Difference of w")
+#             p.plot(lags, diff_q, "go", label="Difference of q")
+#             p.legend()
+#             p.xscale('log', basex=2)
+#             p.ylabel("Normalized Difference")
+#             p.xlabel("Lags (pixels)")
+#             p.grid(True)
 
-            if save_name is not None:
-                p.savefig(save_name)
-                p.close()
-            else:
-                p.show()
-        return self
+#             if save_name is not None:
+#                 p.savefig(save_name)
+#                 p.close()
+#             else:
+#                 p.show()
+#         return self
 
 
 def tsallis_function(x, *p):

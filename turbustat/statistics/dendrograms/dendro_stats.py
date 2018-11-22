@@ -16,6 +16,7 @@ import numpy as np
 from warnings import warn
 import statsmodels.api as sm
 from astropy.utils.console import ProgressBar
+import warnings
 
 try:
     from astrodendro import Dendrogram, periodic_neighbours
@@ -450,7 +451,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
             self.save_results(output_name=output_name)
 
 
-class DendroDistance(object):
+class Dendrogram_Distance(object):
 
     """
     Calculate the distance between 2 cubes using dendrograms. The number of
@@ -462,43 +463,53 @@ class DendroDistance(object):
 
     Parameters
     ----------
-    cube1 : %(dtypes)s or str
-        Data cube. If a str, it should be the filename of a pickle file saved
-        using Dendrogram_Stats.
-    cube2 : %(dtypes)s or str
-        Data cube. If a str, it should be the filename of a pickle file saved
-        using Dendrogram_Stats.
+    dataset1 : %(dtypes)s or str
+        Data cube or 2D image. When a string is given it should be the
+        filename of a pickle file saved using
+        `~turbustat.statistics.Dendrogram_Stats`,
+        where the dendrogram statistics are saved.
+    dataset2 : %(dtypes)s or str
+        Data cube or 2D image to compare. When a string is given it should be
+        the filename of a pickle file saved using
+        `~turbustat.statistics.Dendrogram_Stats`,
+        where the dendrogram statistics are saved.
     min_deltas : numpy.ndarray or list
-        Minimum deltas of leaves in the dendrogram.
+        Minimum deltas (branch heights) of leaves in the dendrogram. The set
+        of dendrograms must be computed with the same minimum branch heights.
     nbins : str or float, optional
         Number of bins for the histograms. 'best' sets
         that number using the square root of the average
         number of features between the histograms to be
         compared.
     min_features : int, optional
-        The minimum number of features necessary to compare
-        the histograms.
+        The minimum number of features (branches and leaves) for the histogram
+        be used in the histogram distance.
     fiducial_model : Dendrogram_Stats
         Computed dendrogram and statistic values. Use to avoid
         re-computing.
     dendro_params : dict or list of dicts, optional
         Further parameters for the dendrogram algorithm
         (see www.dendrograms.org for more info). If a list of dictionaries is
-        given, the first list entry should be the dictionary for cube1, and the
-        second for cube2.
+        given, the first list entry should be the dictionary for `dataset1`,
+        and the second for `dataset2`.
     periodic_bounds : bool or list, optional
         Enable when the data is periodic in the spatial dimensions. Passing
         a two-element list can be used to individually set how the boundaries
         are treated for the datasets.
+    dendro_kwargs : dict, optional
+        Passed to `~turbustat.statistics.Dendrogram_Stats.run`.
+    dendro2_kwargs : None, dict, optional
+        Passed to `~turbustat.statistics.Dendrogram_Stats.run` for `dataset2`.
+        When `None` is given, parameters given in `dendro_kwargs` will be used
+        for both datasets.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types +
                                       threed_types)}
 
-    def __init__(self, cube1, cube2, min_deltas=None, nbins="best",
+    def __init__(self, dataset1, dataset2, min_deltas=None, nbins="best",
                  min_features=100, fiducial_model=None, dendro_params=None,
-                 periodic_bounds=False):
-        super(DendroDistance, self).__init__()
+                 dendro_kwargs={}, dendro2_kwargs=None):
 
         if not astrodendro_flag:
             raise ImportError("astrodendro must be installed to use "
@@ -509,6 +520,9 @@ class DendroDistance(object):
         if min_deltas is None:
             # min_deltas = np.append(np.logspace(-1.5, -0.7, 8),
             #                        np.logspace(-0.6, -0.35, 10))
+            warnings.warn("Using default min_deltas ranging from 10^-2.5 to"
+                          "10^0.5. Check whether this range is appropriate"
+                          " for your data.")
             min_deltas = np.logspace(-2.5, 0.5, 100)
 
         if dendro_params is not None:
@@ -526,31 +540,31 @@ class DendroDistance(object):
             dendro_params1 = None
             dendro_params2 = None
 
-        if isinstance(periodic_bounds, bool):
-            periodic_bounds = [periodic_bounds] * 2
-        else:
-            if not len(periodic_bounds) == 2:
-                raise ValueError("periodic_bounds should be a two-element"
-                                 " list.")
+        if dendro2_kwargs is None:
+            dendro2_kwargs = dendro_kwargs
 
         if fiducial_model is not None:
             self.dendro1 = fiducial_model
-        elif isinstance(cube1, str):
-            self.dendro1 = Dendrogram_Stats.load_results(cube1)
+        elif isinstance(dataset1, str):
+            self.dendro1 = Dendrogram_Stats.load_results(dataset1)
         else:
-            self.dendro1 = Dendrogram_Stats(
-                cube1, min_deltas=min_deltas, dendro_params=dendro_params1)
+            self.dendro1 = Dendrogram_Stats(dataset1, min_deltas=min_deltas,
+                                            dendro_params=dendro_params1)
+            dendro_kwargs.pop('make_hists', None)
+            dendro_kwargs.pop('verbose', None)
             self.dendro1.run(verbose=False, make_hists=False,
-                             periodic_bounds=periodic_bounds[0])
+                             **dendro_kwargs)
 
-        if isinstance(cube2, str):
-            self.dendro2 = Dendrogram_Stats.load_results(cube2)
+        if isinstance(dataset2, str):
+            self.dendro2 = Dendrogram_Stats.load_results(dataset2)
         else:
             self.dendro2 = \
-                Dendrogram_Stats(cube2, min_deltas=min_deltas,
+                Dendrogram_Stats(dataset2, min_deltas=min_deltas,
                                  dendro_params=dendro_params2)
+            dendro_kwargs.pop('make_hists', None)
+            dendro_kwargs.pop('verbose', None)
             self.dendro2.run(verbose=False, make_hists=False,
-                             periodic_bounds=periodic_bounds[1])
+                             **dendro2_kwargs)
 
         # Set the minimum number of components to create a histogram
         cutoff1 = np.argwhere(self.dendro1.numfeatures > min_features)
@@ -558,27 +572,27 @@ class DendroDistance(object):
         if cutoff1.any():
             cutoff1 = cutoff1[-1]
         else:
-            raise ValueError("The dendrogram from cube1 does not contain the"
+            raise ValueError("The dendrogram from dataset1 does not contain the"
                              " necessary number of features, %s. Lower"
                              " min_features or alter min_deltas."
                              % (min_features))
         if cutoff2.any():
             cutoff2 = cutoff2[-1]
         else:
-            raise ValueError("The dendrogram from cube2 does not contain the"
+            raise ValueError("The dendrogram from dataset2 does not contain the"
                              " necessary number of features, %s. Lower"
                              " min_features or alter min_deltas."
                              % (min_features))
 
         self.cutoff = np.min([cutoff1, cutoff2])
 
-        self.bins = []
-        self.mecdf1 = None
-        self.mecdf2 = None
-
-        self.num_results = None
-        self.num_distance = None
-        self.histogram_distance = None
+    @property
+    def num_distance(self):
+        '''
+        Distance between slopes from the for to the
+        log Number of features vs. branch height.
+        '''
+        return self._num_distance
 
     def numfeature_stat(self, verbose=False, label1=None, label2=None,
                         save_name=None):
@@ -590,46 +604,54 @@ class DendroDistance(object):
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
-            Object or region name for cube1
+            Object or region name for dataset1
         label2 : str, optional
-            Object or region name for cube2
+            Object or region name for dataset2
         save_name : str, optional
             Saves the plot when a filename is given.
         '''
 
-        self.num_distance = \
+        self._num_distance = \
             np.abs(self.dendro1.tail_slope - self.dendro2.tail_slope) / \
             np.sqrt(self.dendro1.tail_slope_err**2 +
                     self.dendro2.tail_slope_err**2)
 
         if verbose:
 
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
+
+            plt.figure()
 
             # Dendrogram 1
-            p.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1], 'bD',
-                   label=label1)
-            p.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
-                   'b')
+            plt.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1], 'bD',
+                     label=label1)
+            plt.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
+                     'b')
 
             # Dendrogram 2
-            p.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1], 'go',
-                   label=label2)
-            p.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
-                   'g')
+            plt.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1], 'go',
+                     label=label2)
+            plt.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
+                     'g')
 
-            p.grid(True)
-            p.xlabel(r"log $\delta$")
-            p.ylabel("log Number of Features")
-            p.legend(loc='best')
+            plt.grid(True)
+            plt.xlabel(r"log $\delta$")
+            plt.ylabel("log Number of Features")
+            plt.legend(loc='best')
+
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.clf()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
+
+    @property
+    def histogram_distance(self):
+        return self._histogram_distance
 
     def histogram_stat(self, verbose=False, label1=None, label2=None,
                        save_name=None):
@@ -641,9 +663,9 @@ class DendroDistance(object):
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
-            Object or region name for cube1
+            Object or region name for dataset1
         label2 : str, optional
-            Object or region name for cube2
+            Object or region name for dataset2
         save_name : str, optional
             Saves the plot when a filename is given.
         '''
@@ -664,6 +686,8 @@ class DendroDistance(object):
         self.histograms2 = \
             np.empty((len(self.dendro2.numfeatures[:self.cutoff]),
                       np.max(self.nbins)))
+
+        self.bins = []
 
         for n, (data1, data2, nbin) in enumerate(
                 zip(self.dendro1.values[:self.cutoff],
@@ -696,27 +720,29 @@ class DendroDistance(object):
         self.mecdf1 = mecdf(self.histograms1)
         self.mecdf2 = mecdf(self.histograms2)
 
-        self.histogram_distance = hellinger_stat(
-            self.histograms1, self.histograms2)
+        self._histogram_distance = hellinger_stat(self.histograms1,
+                                                  self.histograms2)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            ax1 = p.subplot(2, 2, 1)
+            plt.figure()
+
+            ax1 = plt.subplot(2, 2, 1)
             ax1.set_title(label1)
             ax1.set_ylabel("ECDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 ax1.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                          self.mecdf1[n, :][:self.nbins[n]])
             ax1.axes.xaxis.set_ticklabels([])
-            ax2 = p.subplot(2, 2, 2)
+            ax2 = plt.subplot(2, 2, 2)
             ax2.set_title(label2)
             ax2.axes.xaxis.set_ticklabels([])
             ax2.axes.yaxis.set_ticklabels([])
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 ax2.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                          self.mecdf2[n, :][:self.nbins[n]])
-            ax3 = p.subplot(2, 2, 3)
+            ax3 = plt.subplot(2, 2, 3)
             ax3.set_ylabel("PDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
@@ -724,7 +750,7 @@ class DendroDistance(object):
                         self.histograms1[n, :][:self.nbins[n]],
                         align="center", width=bin_width, alpha=0.25)
             ax3.set_xlabel("z-score")
-            ax4 = p.subplot(2, 2, 4)
+            ax4 = plt.subplot(2, 2, 4)
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
                 ax4.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
@@ -733,16 +759,18 @@ class DendroDistance(object):
             ax4.set_xlabel("z-score")
             ax4.axes.yaxis.set_ticklabels([])
 
-            p.tight_layout()
+            plt.tight_layout()
+
             if save_name is not None:
-                p.savefig(save_name)
-                p.clf()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 
-    def distance_metric(self, verbose=False, label1=None, label2=None):
+    def distance_metric(self, verbose=False, label1="1", label2="2",
+                        save_name=None):
         '''
         Calculate both distance metrics.
 
@@ -751,15 +779,43 @@ class DendroDistance(object):
         verbose : bool, optional
             Enables plotting.
         label1 : str, optional
-            Object or region name for cube1
+            Object or region name for `dataset1`. Defaults to "1".
         label2 : str, optional
-            Object or region name for cube2
+            Object or region name for `dataset2`. Defaults to "2".
+        save_name : str, optional
+            Save plots by passing a file name. `hist_distance` and
+            `num_distance` will be appended to the file name to distinguish
+            the plots made with the two metrics.
         '''
 
-        self.histogram_stat(verbose=verbose, label1=label1, label2=label2)
-        self.numfeature_stat(verbose=verbose, label1=label1, label2=label2)
+        if save_name is not None:
+            import os
+            # Distinguish name for the two plots
+            base_name, extens = os.path.splitext(save_name)
+
+            save_name_hist = "{0}.hist_distance{1}".format(base_name, extens)
+            save_name_num = "{0}.num_distance{1}".format(base_name, extens)
+        else:
+            save_name_hist = None
+            save_name_num = None
+
+        self.histogram_stat(verbose=verbose, label1=label1, label2=label2,
+                            save_name=save_name_hist)
+        self.numfeature_stat(verbose=verbose, label1=label1, label2=label2,
+                             save_name=save_name_num)
 
         return self
+
+
+def DendroDistance(*args, **kwargs):
+    '''
+    Old name for the Dendrogram_Distance class.
+    '''
+
+    warn("Use the new 'Dendrogram_Distance' class. 'DendroDistance' is deprecated and will"
+         " be removed in a future release.", Warning)
+
+    return Dendrogram_Distance(*args, **kwargs)
 
 
 def hellinger_stat(x, y):

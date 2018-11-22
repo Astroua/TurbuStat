@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 import astropy.units as u
 from astropy.utils.console import ProgressBar
 from itertools import product
+import warnings
 
 from ..stats_utils import (hellinger, kl_divergence, common_histogram_bins,
                            common_scale, padwithnans)
@@ -522,7 +523,7 @@ class StatMoments_Distance(object):
 
     def __init__(self, image1, image2, radius=5 * u.pix, min_frac=0.8,
                  weights1=None, weights2=None,
-                 nbins=None, periodic1=False, periodic2=False,
+                 nbins=None, periodic1=True, periodic2=True,
                  fiducial_model=None):
         super(StatMoments_Distance, self).__init__()
 
@@ -580,12 +581,12 @@ class StatMoments_Distance(object):
         skew_bins = \
             common_histogram_bins(self.moments1.skewness_array.flatten(),
                                   self.moments2.skewness_array.flatten(),
-                                  nbins=nbins)
+                                  nbins=self.nbins if nbins is None else nbins)
 
         kurt_bins = \
             common_histogram_bins(self.moments1.kurtosis_array.flatten(),
                                   self.moments2.kurtosis_array.flatten(),
-                                  nbins=nbins)
+                                  nbins=self.nbins if nbins is None else nbins)
 
         self.moments1.make_spatial_histograms(skewness_bins=skew_bins,
                                               kurtosis_bins=kurt_bins)
@@ -593,8 +594,10 @@ class StatMoments_Distance(object):
         self.moments2.make_spatial_histograms(skewness_bins=skew_bins,
                                               kurtosis_bins=kurt_bins)
 
-    def distance_metric(self, metric='Hellinger', verbose=False, nbins=None,
-                        label1=None, label2=None, save_name=None):
+    def distance_metric(self, verbose=False, nbins=None,
+                        plot_kwargs1={'color': 'b', 'label': '1'},
+                        plot_kwargs2={'color': 'g', 'label': '2'},
+                        save_name=None):
         '''
         Compute the distance.
 
@@ -616,51 +619,68 @@ class StatMoments_Distance(object):
 
         self.create_common_histograms(nbins=nbins)
 
-        if metric == "Hellinger":
-            kurt_bw = np.diff(self.moments1.kurtosis_hist[0])[0]
-            self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
-                                               self.moments2.kurtosis_hist[1],
-                                               bin_width=kurt_bw)
+        kurt_bw = np.diff(self.moments1.kurtosis_hist[0])[0]
+        self.kurtosis_distance = hellinger(self.moments1.kurtosis_hist[1],
+                                           self.moments2.kurtosis_hist[1],
+                                           bin_width=kurt_bw)
 
-            skew_bw = np.diff(self.moments1.skewness_hist[0])[0]
-            self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
-                                               self.moments2.skewness_hist[1],
-                                               bin_width=skew_bw)
-        elif metric == "KL Divergence":
-            self.kurtosis_distance = np.abs(
-                kl_divergence(self.moments1.kurtosis_hist[1],
-                              self.moments2.kurtosis_hist[1]))
-            self.skewness_distance = np.abs(
-                kl_divergence(self.moments1.skewness_hist[1],
-                              self.moments2.skewness_hist[1]))
-        else:
-            raise ValueError("metric must be 'Hellinger' or 'KL Divergence'. "
-                             "Was given as " + str(metric))
+        skew_bw = np.diff(self.moments1.skewness_hist[0])[0]
+        self.skewness_distance = hellinger(self.moments1.skewness_hist[1],
+                                           self.moments2.skewness_hist[1],
+                                           bin_width=skew_bw)
 
         if verbose:
             import matplotlib.pyplot as plt
+
+            defaults1 = {'color': 'b', 'label': '1'}
+            defaults2 = {'color': 'g', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
             plt.subplot(121)
             plt.plot(self.moments1.kurtosis_hist[0],
-                     self.moments1.kurtosis_hist[1], 'b', label=label1)
+                     self.moments1.kurtosis_hist[1],
+                     plot_kwargs1['color'],
+                     label=plot_kwargs1['label'])
             plt.plot(self.moments2.kurtosis_hist[0],
-                     self.moments2.kurtosis_hist[1], 'g', label=label2)
+                     self.moments2.kurtosis_hist[1],
+                     plot_kwargs2['color'],
+                     label=plot_kwargs2['label'])
             plt.fill(self.moments1.kurtosis_hist[0],
-                     self.moments1.kurtosis_hist[1], 'b',
+                     self.moments1.kurtosis_hist[1],
+                     plot_kwargs1['color'],
                      self.moments2.kurtosis_hist[0],
-                     self.moments2.kurtosis_hist[1], 'g', alpha=0.5)
+                     self.moments2.kurtosis_hist[1],
+                     plot_kwargs2['color'],
+                     alpha=0.5)
             plt.xlabel("Kurtosis")
             plt.ylabel("PDF")
             plt.legend(loc='upper right')
+
             plt.subplot(122)
             plt.plot(self.moments1.skewness_hist[0],
-                     self.moments1.skewness_hist[1], 'b',
-                     self.moments2.skewness_hist[0],
-                     self.moments2.skewness_hist[1], 'g')
+                     self.moments1.skewness_hist[1],
+                     plot_kwargs1['color'],
+                     label=plot_kwargs1['label'])
+            plt.plot(self.moments2.skewness_hist[0],
+                     self.moments2.skewness_hist[1],
+                     plot_kwargs2['color'],
+                     label=plot_kwargs2['label'])
             plt.fill(self.moments1.skewness_hist[0],
-                     self.moments1.skewness_hist[1], 'b',
+                     self.moments1.skewness_hist[1],
+                     plot_kwargs1['color'],
                      self.moments2.skewness_hist[0],
-                     self.moments2.skewness_hist[1], 'g', alpha=0.5)
+                     self.moments2.skewness_hist[1],
+                     plot_kwargs2['color'],
+                     alpha=0.5)
             plt.xlabel("Skewness")
+
+            plt.tight_layout()
 
             if save_name is not None:
                 plt.savefig(save_name)
@@ -712,13 +732,19 @@ def compute_moments(img, weights):
 
     mean = np.nansum(img * weights) / np.nansum(weights)
     variance = np.nansum(weights * (img - mean) ** 2.) / np.nansum(weights)
-    skewness = np.nansum(weights * ((img - mean) / np.sqrt(variance)) ** 3.) / \
+
+    std = np.sqrt(variance)
+
+    skewness = np.nansum(weights * ((img - mean) / std) ** 3.) / \
         np.nansum(weights)
-    kurtosis = np.nansum(weights * ((img - mean) / np.sqrt(variance)) ** 4.) / \
+    kurtosis = np.nansum(weights * ((img - mean) / std) ** 4.) / \
         np.nansum(weights) - 3
 
     return mean, variance, skewness, kurtosis
 
 
 def _auto_nbins(size1, size2):
-    return int((size1 + size2) / 2.)
+    '''
+    Set bins to the sqrt of the smaller size.
+    '''
+    return int(np.sqrt(min(size1, size2)))

@@ -109,7 +109,7 @@ def kl_divergence(P, Q):
 
 
 def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
-                          return_centered=False):
+                          return_centered=False, min_val=None, max_val=None):
     '''
     Returns bins appropriate for both given datasets. If nbins is not
     specified, the number is set by the square root of the average
@@ -128,16 +128,24 @@ def common_histogram_bins(dataset1, dataset2, nbins=None, logscale=False,
         Return logarithmically spaced bins.
     return_centered : bool, optional
         Return the centers of the bins along the the usual edge output.
+    min_val : float, optional
+        Minimum value to use for the bins.
+    max_val : float, optional
+        Maximum value to use for the bins.
     '''
 
     if dataset1.ndim > 1 or dataset2.ndim > 1:
         raise ValueError("dataset1 and dataset2 should be 1D arrays.")
 
     global_min = min(np.nanmin(dataset1), np.nanmin(dataset2))
+    if min_val is not None:
+        global_min = max(global_min, min_val)
     global_max = max(np.nanmax(dataset1), np.nanmax(dataset2))
+    if max_val is not None:
+        global_max = min(global_max, max_val)
 
     if nbins is None:
-        avg_num = np.sqrt((dataset1.size + dataset2.size)/2.)
+        avg_num = np.sqrt((dataset1.size + dataset2.size) / 2.)
         nbins = np.floor(avg_num).astype(int)
 
     if logscale:

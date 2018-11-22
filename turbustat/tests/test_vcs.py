@@ -48,8 +48,8 @@ def test_VCS_method():
 def test_VCS_distance():
     tester_dist = \
         VCS_Distance(dataset1["cube"], dataset2["cube"],
-                     high_cut=0.3 / u.pix,
-                     low_cut=3e-2 / u.pix)
+                     fit_kwargs=dict(high_cut=0.3 / u.pix,
+                                     low_cut=3e-2 / u.pix))
     tester_dist = tester_dist.distance_metric()
 
     npt.assert_almost_equal(tester_dist.distance,

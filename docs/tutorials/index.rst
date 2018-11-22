@@ -6,10 +6,6 @@ TurbuStat Tutorials
 .. toctree::
     :maxdepth: 2
 
-    accepted_input_formats
-    preparing_simulated_data
-    preprocessing_data
-    masking_and_moments
     applying_apodizing_functions
     correcting_for_the_beam
 
@@ -37,7 +33,26 @@ Statistics
 Distance Metrics
 ================
 
+These describe the distance metrics defined in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract7>`_ for comparing two data sets with some output of the statistics listed above. It is important to note that few of these distance metrics are defined to be absolute. Rather, most of the metrics give *relative* distances and are defined only when comparing with a common fiducial image.
+
+As shown in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract7>`_, the distance metrics for some statistics have more scatter than others.  Some metrics also suffer from systematic issues and should be avoided when those systematics cannot be controlled for.  The **Cramer distance metric** is an example of this; its shortcomings are described in the paper linked above, and while the implementation is still available, we recommend caution when using it.
+
+A distance metric for **Tsallis** statistics has not been explored and is not currently available in this release.
+
 .. toctree::
     :maxdepth: 2
 
+    metrics/bispectrum_example
+    metrics/cramer_example
+    metrics/delvar_example
+    metrics/dendro_example
+    metrics/genus_example
+    metrics/mvc_example
     metrics/pca_example
+    metrics/pdf_example
+    metrics/pspec_example
+    metrics/scf_example
+    metrics/statmoments_example
+    metrics/vca_example
+    metrics/vcs_example
+    metrics/wavelet_example

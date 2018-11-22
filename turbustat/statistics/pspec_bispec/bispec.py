@@ -519,20 +519,32 @@ class Bispectrum_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, data1, data2, nsamples=100, fiducial_model=None):
+    def __init__(self, data1, data2, stat_kwargs={}, fiducial_model=None):
 
         if fiducial_model is not None:
             self.bispec1 = fiducial_model
         else:
-            self.bispec1 = Bispectrum(data1)
-            self.bispec1.run(nsamples=nsamples)
+            self.bispec1 = BiSpectrum(data1)
+            self.bispec1.run(**stat_kwargs)
 
-        self.bispec2 = Bispectrum(data2)
-        self.bispec2.run(nsamples=nsamples)
+        self.bispec2 = BiSpectrum(data2)
+        self.bispec2.run(**stat_kwargs)
 
-        self.distance = None
+    @property
+    def surface_distance(self):
+        '''
+        L2 distance between the bicoherence surfaces.
+        '''
+        return self._surface_distance
 
-    def distance_metric(self, metric='average', verbose=False, label1=None,
+    @property
+    def mean_distance(self):
+        '''
+        Absolute difference between the mean bicoherence.
+        '''
+        return self._mean_distance
+
+    def distance_metric(self, verbose=False, label1=None,
                         label2=None, save_name=None):
         '''
         verbose : bool, optional
@@ -545,14 +557,17 @@ class Bispectrum_Distance(object):
             Save the figure when a file name is given.
         '''
 
-        if metric is 'surface':
-            self.distance = np.linalg.norm(self.bispec1.bicoherence.ravel() -
-                                           self.bispec2.bicoherence.ravel())
-        elif metric is 'average':
-            self.distance = np.abs(self.bispec1.bicoherence.mean() -
-                                   self.bispec2.bicoherence.mean())
+        if self.bispec1.bicoherence.shape == self.bispec2.bicoherence.shape:
+            self._surface_distance = \
+                np.linalg.norm(self.bispec1.bicoherence.ravel() -
+                               self.bispec2.bicoherence.ravel())
         else:
-            raise ValueError("metric must be 'surface' or 'average'.")
+            warn("Bicoherence surface must have equal shapes for the surface"
+                 " distance metric.")
+            self._surface_distance = np.NaN
+
+        self._mean_distance = np.abs(self.bispec1.bicoherence.mean() -
+                                     self.bispec2.bicoherence.mean())
 
         if verbose:
             import matplotlib.pyplot as plt
@@ -564,19 +579,19 @@ class Bispectrum_Distance(object):
             if label2 is None:
                 label2 = "2"
 
-            ax1 = plt.subplot(121)
+            fig = plt.gcf()
+
+            ax1 = fig.add_subplot(121)
             ax1.set_title(label1)
-            ax1.imshow(
-                self.bispec1.bicoherence, origin="lower",
-                interpolation="nearest", vmax=1.0, vmin=0.0)
+            ax1.imshow(self.bispec1.bicoherence, origin="lower",
+                       interpolation="nearest", vmax=1.0, vmin=0.0)
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
 
             ax2 = plt.subplot(122)
             ax2.set_title(label2)
-            im = plt.imshow(
-                self.bispec2.bicoherence, origin="lower",
-                interpolation="nearest", vmax=1.0, vmin=0.0)
+            im = plt.imshow(self.bispec2.bicoherence, origin="lower",
+                            interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
             ax2.set_yticklabels([])
 
@@ -584,7 +599,6 @@ class Bispectrum_Distance(object):
             cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
             fig.colorbar(im, cax=cbar_ax)
 
-            # plt.tight_layout()
             if save_name is not None:
                 plt.savefig(save_name)
                 plt.close()

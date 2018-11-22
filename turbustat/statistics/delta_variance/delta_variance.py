@@ -658,7 +658,6 @@ class DeltaVariance_Distance(object):
 
     Parameters
     ----------
-
     dataset1 : %(dtypes)s
         Contains the data and header for one dataset.
     dataset2 : %(dtypes)s
@@ -671,78 +670,73 @@ class DeltaVariance_Distance(object):
         The ratio between the kernel sizes.
     lags : numpy.ndarray or list, optional
         The pixel scales to compute the delta-variance at.
+    lags2 : numpy.ndarray or list, optional
+        The pixel scales for the delta-variance of `dataset2`. Ignored if
+        `use_common_lags=True`.
+    use_common_lags : bool, optional
+        Use a set of common lags that have the same angular sizes for both
+        datasets. This is required for `DeltaVariance_Distance.curve_distance`
+        metric.
+    delvar_kwargs : dict, optional
+        Pass kwargs to `~DeltaVariance.run`.
+    delvar2_kwargs : dict, optional
+        Pass kwargs to `~DeltaVariance.run` for `dataset2`. When `None` is
+        given, the kwargs in `delvar_kwargs` are used for both datasets.
     fiducial_model : DeltaVariance
         A computed DeltaVariance model. Used to avoid recomputing.
-    ang_units : bool, optional
-        Convert frequencies to angular units using the given header.
-    xlow : float or np.ndarray, optional
-        The lower lag fitting limit. An array with 2 elements can be passed to
-        give separate lower limits for the datasets.
-    xhigh : float or np.ndarray, optional
-        The upper lag fitting limit. See `xlow` above.
-    boundary : str, np.ndarray or list, optional
-        Set how boundaries should be handled. If a string is not passed, a
-        two element list/array with separate boundary conditions is expected.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
-                 diam_ratio=1.5, lags=None, fiducial_model=None,
-                 xlow=None, xhigh=None, boundary='wrap'):
+                 diam_ratio=1.5, lags=None, use_common_lags=True,
+                 delvar_kwargs={}, delvar2_kwargs=None, fiducial_model=None):
         super(DeltaVariance_Distance, self).__init__()
 
         dataset1 = copy(input_data(dataset1, no_header=False))
         dataset2 = copy(input_data(dataset2, no_header=False))
 
-        # Enforce standardization on both datasets. Values for the
-        # delta-variance then represents a relative fraction of structure on
-        # different scales.
-        # dataset1[0] = standardize(dataset1[0])
-        # dataset2[0] = standardize(dataset2[0])
+        self._common_lags = use_common_lags
 
         # Create a default set of lags, in pixels
-        if lags is None:
-            min_size = 3.0
-            nlags = 25
-            shape1 = dataset1[0].shape
-            shape2 = dataset2[0].shape
-            if min(shape1) > min(shape2):
-                lags = \
-                    np.logspace(np.log10(min_size),
-                                np.log10(min(shape2) / 2.),
-                                nlags) * u.pix
+        if use_common_lags:
+            if lags is None:
+                min_size = 3.0
+                nlags = 25
+                shape1 = dataset1[0].shape
+                shape2 = dataset2[0].shape
+                if min(shape1) > min(shape2):
+                    lags = \
+                        np.logspace(np.log10(min_size),
+                                    np.log10(min(shape2) / 2.),
+                                    nlags) * u.pix
+                else:
+                    lags = \
+                        np.logspace(np.log10(min_size),
+                                    np.log10(min(shape1) / 2.),
+                                    nlags) * u.pix
+
+            # Now adjust the lags such they have a common scaling when the
+            # datasets are not on a common grid.
+            scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+
+            if scale == 1.0:
+                lags1 = lags
+                lags2 = lags
+            elif scale > 1.0:
+                lags1 = scale * lags
+                lags2 = lags
             else:
-                lags = \
-                    np.logspace(np.log10(min_size),
-                                np.log10(min(shape1) / 2.),
-                                nlags) * u.pix
-
-        # Check the limits are given in an understandable form.
-        # The returned xlow and xhigh are arrays.
-        xlow, xhigh = check_fit_limits(xlow, xhigh)
-
-        # Allow separate boundary conditions to be passed
-        if isinstance(boundary, string_types):
-            boundary = [boundary] * 2
+                lags1 = lags
+                lags2 = lags / float(scale)
         else:
-            if not len(boundary) == 2:
-                raise ValueError("boundary must be a two-element list/array"
-                                 " when a string is not passed.")
+            if lags2 is None and lags is not None:
+                lags2 = lags
 
-        # Now adjust the lags such they have a common scaling when the datasets
-        # are not on a common grid.
-        scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
-
-        if scale == 1.0:
-            lags1 = lags
-            lags2 = lags
-        elif scale > 1.0:
-            lags1 = scale * lags
-            lags2 = lags
-        else:
-            lags1 = lags
-            lags2 = lags / float(scale)
+            if lags is not None:
+                lags1 = lags
+            else:
+                lags1 = None
 
         if fiducial_model is not None:
             self.delvar1 = fiducial_model
@@ -750,13 +744,29 @@ class DeltaVariance_Distance(object):
             self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags1)
-            self.delvar1.run(xlow=xlow[0], xhigh=xhigh[0],
-                             boundary=boundary[0])
+            self.delvar1.run(**delvar_kwargs)
+
+        if delvar2_kwargs is None:
+            delvar2_kwargs = delvar_kwargs
 
         self.delvar2 = DeltaVariance(dataset2,
                                      weights=weights2,
                                      diam_ratio=diam_ratio, lags=lags2)
-        self.delvar2.run(xlow=xlow[1], xhigh=xhigh[1], boundary=boundary[1])
+        self.delvar2.run(**delvar2_kwargs)
+
+    @property
+    def curve_distance(self):
+        '''
+        The L2 norm between the delta-variance curves.
+        '''
+        return self._curve_distance
+
+    @property
+    def slope_distance(self):
+        '''
+        The t-statistic of the difference in the delta-variance slopes.
+        '''
+        return self._slope_distance
 
     def distance_metric(self, verbose=False, xunit=u.pix,
                         save_name=None, plot_kwargs1={},
@@ -781,50 +791,58 @@ class DeltaVariance_Distance(object):
             `dataset2`.
         '''
 
-        # Check for NaNs and negatives
-        nans1 = np.logical_or(np.isnan(self.delvar1.delta_var),
-                              self.delvar1.delta_var <= 0.0)
-        nans2 = np.logical_or(np.isnan(self.delvar2.delta_var),
-                              self.delvar2.delta_var <= 0.0)
+        # curve distance is only defined if the delta-variance is measured at
+        # the same lags
+        if self._common_lags:
+            # Check for NaNs and negatives
+            nans1 = np.logical_or(np.isnan(self.delvar1.delta_var),
+                                  self.delvar1.delta_var <= 0.0)
+            nans2 = np.logical_or(np.isnan(self.delvar2.delta_var),
+                                  self.delvar2.delta_var <= 0.0)
 
-        all_nans = np.logical_or(nans1, nans2)
+            all_nans = np.logical_or(nans1, nans2)
 
-        # Cut the curves at the specified xlow and xhigh points
-        fit_range1 = self.delvar1.fit_range
-        fit_range2 = self.delvar1.fit_range
+            # Cut the curves at the specified xlow and xhigh points
+            fit_range1 = self.delvar1.fit_range
+            fit_range2 = self.delvar2.fit_range
 
-        # The curve metric only makes sense if the same range is used for both
-        if fit_range1[0] == fit_range2[0] and fit_range1[1] == fit_range2[1]:
+            # The curve metric only makes sense if the same range is used for
+            # both
+            check_range = fit_range1[0] == fit_range2[0] and \
+                fit_range1[1] == fit_range2[1]
+            if check_range:
 
-            # Lags are always in pixels. As are the limits
-            cuts1 = np.logical_and(self.delvar1.lags >= fit_range1[0],
-                                   self.delvar1.lags <= fit_range1[1])
-            cuts2 = np.logical_and(self.delvar2.lags >= fit_range2[0],
-                                   self.delvar2.lags <= fit_range2[1])
+                # Lags are always in pixels. As are the limits
+                cuts1 = np.logical_and(self.delvar1.lags >= fit_range1[0],
+                                       self.delvar1.lags <= fit_range1[1])
+                cuts2 = np.logical_and(self.delvar2.lags >= fit_range2[0],
+                                       self.delvar2.lags <= fit_range2[1])
 
-            valids1 = np.logical_and(cuts1, ~all_nans)
-            valids2 = np.logical_and(cuts2, ~all_nans)
+                valids1 = np.logical_and(cuts1, ~all_nans)
+                valids2 = np.logical_and(cuts2, ~all_nans)
 
-            deltavar1_sum = np.sum(self.delvar1.delta_var[valids1])
-            deltavar1 = \
-                np.log10(self.delvar1.delta_var[valids1] / deltavar1_sum)
+                deltavar1_sum = np.sum(self.delvar1.delta_var[valids1])
+                deltavar1 = \
+                    np.log10(self.delvar1.delta_var[valids1] / deltavar1_sum)
 
-            deltavar2_sum = np.sum(self.delvar2.delta_var[valids2])
-            deltavar2 = \
-                np.log10(self.delvar2.delta_var[valids2] / deltavar2_sum)
+                deltavar2_sum = np.sum(self.delvar2.delta_var[valids2])
+                deltavar2 = \
+                    np.log10(self.delvar2.delta_var[valids2] / deltavar2_sum)
 
-            # Distance between two normalized curves
-            self.curve_distance = np.linalg.norm(deltavar1 - deltavar2)
+                # Distance between two normalized curves
+                self._curve_distance = np.linalg.norm(deltavar1 - deltavar2)
+            else:
+
+                warn("The curve distance is only defined when the fit "
+                     "range and lags for both datasets are equal. "
+                     "Setting curve_distance to NaN.", TurbuStatMetricWarning)
+
+                self._curve_distance = np.NaN
         else:
-
-            warn("The curve distance is only defined when the fit "
-                 "range and lags for both datasets are equal. "
-                 "Setting curve_distance to NaN.", TurbuStatMetricWarning)
-
-            self.curve_distance = np.NaN
+            self._curve_distance = np.NaN
 
         # Distance between the fitted slopes (combined t-statistic)
-        self.slope_distance = \
+        self._slope_distance = \
             np.abs(self.delvar1.slope - self.delvar2.slope) / \
             np.sqrt(self.delvar1.slope_err**2 + self.delvar2.slope_err**2)
 

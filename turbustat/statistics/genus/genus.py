@@ -7,6 +7,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.convolution import Gaussian2DKernel, convolve_fft
 from astropy.wcs import WCS
 import astropy.units as u
+from warnings import warn
 
 from ..stats_utils import standardize, common_scale
 from ..base_statistic import BaseStatisticMixIn
@@ -128,11 +129,9 @@ class Genus(BaseStatisticMixIn):
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
         if smoothing_radii is None:
-            self.smoothing_radii = \
-                np.linspace(1.0, 0.1 * min(self.data.shape), 5)
+            self.smoothing_radii = np.array([1.0])
         else:
             if isinstance(smoothing_radii, u.Quantity):
-                print(smoothing_radii)
                 self.smoothing_radii = self._to_pixel(smoothing_radii).value
             else:
                 self.smoothing_radii = smoothing_radii
@@ -155,7 +154,8 @@ class Genus(BaseStatisticMixIn):
     def smoothing_radii(self, values):
 
         if np.any(values < 1.0):
-            raise ValueError("All smoothing radii must be larger than one pixel.")
+            raise ValueError("All smoothing radii must be larger than one"
+                             " pixel.")
 
         if np.any(values > 0.5 * min(self.data.shape)):
             raise ValueError("All smoothing radii must be smaller than half of"
@@ -163,52 +163,25 @@ class Genus(BaseStatisticMixIn):
 
         self._smoothing_radii = values
 
-    def make_smooth_arrays(self, **kwargs):
-        '''
-        Smooth data using a Gaussian kernel. NaN interpolation during
-        convolution is automatically used when the data contains any NaNs.
-
-        Parameters
-        ----------
-        kwargs: Passed to `~astropy.convolve.convolve_fft`.
-        '''
-
-        self._smoothed_images = []
-
-        for i, width in enumerate(self.smoothing_radii):
-            kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
-                                      y_size=self.data.shape[1])
-            if self.nanflag:
-                self._smoothed_images.append(
-                    convolve_fft(self.data, kernel,
-                                 normalize_kernel=True,
-                                 interpolate_nan=True,
-                                 **kwargs))
-            else:
-                self._smoothed_images.append(
-                    convolve_fft(self.data, kernel, **kwargs))
-
     @property
     def smoothed_images(self):
         '''
         List of smoothed versions of the image, using the radii in
         `~Genus.smoothing_radii`.
         '''
+        if not hasattr(self, '_smoothed_images'):
+            raise ValueError("Set `keep_smoothed_images=True` in "
+                             "Genus.make_genus_curve")
+
         return self._smoothed_images
 
-    # def clean_fft(self):
-    #     self.fft_images = []
-
-    #     for j, image in enumerate(self.smoothed_images):
-    #         self.fft_images.append(np.fft2(image))
-
-    #     return self
-
     def make_genus_curve(self, use_beam=False, min_size=4,
-                         connectivity=1):
+                         connectivity=1, keep_smoothed_images=False,
+                         match_kernel=False,
+                         **convolution_kwargs):
         '''
-        Create the genus curve from the smoothed_images at the specified\
-        thresholds.
+        Smooth the data with a Gaussian kernel to create the genus curve from
+        at the specified thresholds.
 
         Parameters
         ----------
@@ -216,11 +189,24 @@ class Genus(BaseStatisticMixIn):
             When enabled, will use the given `beam_fwhm` or try to load it from
             the header. When disabled, the minimum size is set by `min_size`.
         min_size : int or `~astropy.units.Quantity`, optional
-            Directly specify the number of pixels to be used as the minimum
-            area a region must have to be counted.
+            Directly specify the minimum
+            area a region must have to be counted. Integer values with no units
+            are assumed to be in pixels.
         connectivity : {1, 2}, optional
             Connectivity used when removing regions below min_size.
+        keep_smoothed_images : bool, optional
+            Keep the convolved images in the `~Genus.smoothed_images` list.
+            Default is `False`.
+        match_kernel : bool, optional
+            Match kernel shape to the data shape when convolving. Default is
+            `False`. Enable to reproduce behaviour of `~Genus` prior to
+            version 1.0 of TurbuStat.
+        convolution_kwargs: Passed to `~astropy.convolve.convolve_fft`.
+
         '''
+
+        if keep_smoothed_images:
+            self._smoothed_images = []
 
         if use_beam:
             major, minor = find_beam_properties(self.header)[:2]
@@ -237,15 +223,27 @@ class Genus(BaseStatisticMixIn):
             else:
                 min_size = int(min_size)
 
-        self._genus_stats = np.empty((len(self.smoothed_images),
+        self._genus_stats = np.empty((len(self.smoothing_radii),
                                       len(self.thresholds)))
 
-        for j, image in enumerate(self.smoothed_images):
+        for j, width in enumerate(self.smoothing_radii):
+
+            if match_kernel:
+                kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
+                                          y_size=self.data.shape[1])
+            else:
+                kernel = Gaussian2DKernel(width)
+
+            smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
+
+            if keep_smoothed_images:
+                self._keep_smoothed_images.append(smooth_img)
+
             for i, thresh in enumerate(self.thresholds):
-                high_density = remove_small_objects(image > thresh,
+                high_density = remove_small_objects(smooth_img > thresh,
                                                     min_size=min_size,
                                                     connectivity=connectivity)
-                low_density = remove_small_objects(image < thresh,
+                low_density = remove_small_objects(smooth_img < thresh,
                                                    min_size=min_size,
                                                    connectivity=connectivity)
                 # eight-connectivity to count the regions
@@ -303,8 +301,8 @@ class Genus(BaseStatisticMixIn):
         else:
             plt.show()
 
-    def run(self, verbose=False, save_name=None, use_beam=False,
-            beam_area=None, min_size=4, color='b', **kwargs):
+    def run(self, verbose=False, save_name=None,
+            color='b', **kwargs):
         '''
         Run the whole statistic.
 
@@ -315,18 +313,10 @@ class Genus(BaseStatisticMixIn):
         save_name : str,optional
             Save the figure when a file name is given. Must have `verbose`
             enabled for plotting.
-        use_beam : bool, optional
-            See `~Genus.make_genus_curve`.
-        beam_area : `~astropy.units.Quantity`, optional
-            See `~Genus.make_genus_curve`.
-        min_size : int, optional
-            See `~Genus.make_genus_curve`.
-        kwargs : See `~Genus.make_smooth_arrays`.
+        kwargs : See `~Genus.make_genus_curve`.
         '''
 
-        self.make_smooth_arrays(**kwargs)
-        # self.clean_fft()
-        self.make_genus_curve(use_beam=use_beam, min_size=min_size)
+        self.make_genus_curve(**kwargs)
 
         if verbose:
             self.plot_fit(save_name=save_name, color=color)
@@ -334,29 +324,70 @@ class Genus(BaseStatisticMixIn):
         return self
 
 
-class GenusDistance(object):
+class Genus_Distance(object):
 
     """
-
     Distance Metric for the Genus Statistic.
 
     Parameters
     ----------
-
     img1 : %(dtypes)s
         2D image.
     img2 : %(dtypes)s
         2D image.
     smoothing_radii : list, optional
-        Kernel radii to smooth data to.
+        Kernel radii to smooth data to. See `~Genus`.
+    numpts : int, optional
+        Number of thresholds to calculate statistic at. See `~Genus`.
+    min_value : `~astropy.units.Quantity` or float or list, optional
+        Minimum value to use for Genus statistic. When a two-element list is
+        given, the first item is used for `img1` and the second for
+        `img2`. See `~Genus`.
+    max_value : `~astropy.units.Quantity` or float, optional
+        Maximum value to use for Genus statistic. When a two-element list is
+        given, the first item is used for `img1` and the second for
+        `img2`. See `~Genus`.
+    lowdens_percent : float, optional
+        Lowest percentile of the data to use for Genus statistic.
+        When a two-element list is given, the first item is used for
+        `img1` and the second for `img2`. See `~Genus`.
+    highdens_percent : float, optional
+        Highest percentile of the data to use for Genus statistic.
+        When a two-element list is given, the first item is used for
+        `img1` and the second for `img2`. See `~Genus`.
+    genus_kwargs : dict, optional
+        Dictionary passed to `~Genus.run`.
+    genus2_kwargs : None or dict, optional
+        Dictionary passed to `~Genus.run` for `img2`. When `None` is given,
+        settings from `genus_kwargs` are used  for `img2`.
     fiducial_model : Genus
         Computed Genus object. Use to avoid recomputing.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img1, img2, smoothing_radii=None, fiducial_model=None):
-        super(GenusDistance, self).__init__()
+    def __init__(self, img1, img2, smoothing_radii=None, numpts=100,
+                 min_value=None, max_value=None, lowdens_percent=0,
+                 highdens_percent=100,
+                 genus_kwargs={}, genus2_kwargs=None,
+                 fiducial_model=None):
+
+        # Check if list for inputs, where first is for img1 and second is
+        # for img2
+        if not isinstance(min_value, list):
+            min_value = [min_value] * 2
+
+        if not isinstance(max_value, list):
+            max_value = [max_value] * 2
+
+        if not isinstance(lowdens_percent, list):
+            lowdens_percent = [lowdens_percent] * 2
+
+        if not isinstance(highdens_percent, list):
+            highdens_percent = [highdens_percent] * 2
+
+        if genus2_kwargs is None:
+            genus2_kwargs = genus_kwargs
 
         # Standardize the intensity values in the images
 
@@ -369,20 +400,25 @@ class GenusDistance(object):
         if fiducial_model is not None:
             self.genus1 = fiducial_model
         else:
-            self.genus1 = \
-                Genus(img1, smoothing_radii=smoothing_radii,
-                      lowdens_percent=20).run()
+            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii,
+                                min_value=min_value[0], max_value=max_value[0],
+                                lowdens_percent=lowdens_percent[0],
+                                highdens_percent=highdens_percent[0])
+            self.genus1.run(**genus_kwargs)
 
-        self.genus2 = \
-            Genus(img2, smoothing_radii=smoothing_radii,
-                  lowdens_percent=20).run()
+        self.genus2 = Genus(img2, smoothing_radii=smoothing_radii,
+                            min_value=min_value[1], max_value=max_value[1],
+                            lowdens_percent=lowdens_percent[1],
+                            highdens_percent=highdens_percent[1])
+        self.genus2.run(**genus2_kwargs)
 
         # When normalizing the genus curves for the distance metric, find
         # the scaling between the angular size of the grids.
         self.scale = common_scale(WCS(hdr1), WCS(hdr2))
 
     def distance_metric(self, verbose=False, label1=None, label2=None,
-                        save_name=None):
+                        save_name=None, color1='b', color2='g',
+                        marker1='D', marker2='o'):
         '''
 
         Data is centered and normalized (via normalize).
@@ -435,28 +471,39 @@ class GenusDistance(object):
                                        interp2(points))
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
 
-            p.plot(self.genus1.thresholds,
-                   genus1, "bD",
-                   label=label1)
-            p.plot(self.genus2.thresholds,
-                   genus2, "go",
-                   label=label2)
-            p.plot(points, interp1(points), "b")
-            p.plot(points, interp2(points), "g")
-            p.xlabel("z-score")
-            p.ylabel("Genus Score")
-            p.grid(True)
-            p.legend(loc="best")
+            plt.plot(self.genus1.thresholds, genus1, color=color1,
+                     marker=marker1,
+                     label=label1)
+            plt.plot(self.genus2.thresholds, genus2, color=color2,
+                     marker=marker2,
+                     label=label2)
+            plt.plot(points, interp1(points), "b")
+            plt.plot(points, interp2(points), "g")
+            plt.xlabel("z-score")
+            plt.ylabel("Genus Score")
+            plt.grid(True)
+            plt.legend(loc="best")
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
+
+
+def GenusDistance(*args, **kwargs):
+    '''
+    Old name for the Genus_Distance class.
+    '''
+
+    warn("Use the new 'Genus_Distance' class. 'GenusDistance' is deprecated and will"
+         " be removed in a future release.", Warning)
+
+    return Genus_Distance(*args, **kwargs)
 
 
 def remove_small_objects(arr, min_size, connectivity=8):

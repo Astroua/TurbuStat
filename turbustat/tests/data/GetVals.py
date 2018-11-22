@@ -84,14 +84,18 @@ bispec_val_meansub = bispec_meansub.bicoherence
 
 from turbustat.statistics import GenusDistance, Genus
 
+smooth_scales = np.linspace(1.0, 0.1 * min(dataset1["moment0"][0].shape), 5)
+
 genus_distance = \
     GenusDistance(dataset1["moment0"],
-                  dataset2["moment0"]).distance_metric()
+                  dataset2["moment0"],
+                  lowdens_percent=20,
+                  genus_kwargs=dict(match_kernel=True)).distance_metric()
 
 # The distance method requires standardizing the data. Make a
 # separate version that isn't
-genus = Genus(dataset1['moment0'])
-genus.run()
+genus = Genus(dataset1['moment0'], smoothing_radii=smooth_scales)
+genus.run(match_kernel=True)
 
 genus_val = genus.genus_stats
 
@@ -104,7 +108,7 @@ delvar_distance = \
                            dataset2["moment0"],
                            weights1=dataset1["moment0_error"][0],
                            weights2=dataset2["moment0_error"][0],
-                           xhigh=11 * u.pix)
+                           delvar_kwargs=dict(xhigh=11 * u.pix))
 
 delvar_distance.distance_metric()
 
@@ -139,8 +143,9 @@ from turbustat.statistics import VCA_Distance, VCS_Distance, VCA
 
 vcs_distance = VCS_Distance(dataset1["cube"],
                             dataset2["cube"],
-                            high_cut=0.3 / u.pix,
-                            low_cut=3e-2 / u.pix).distance_metric()
+                            fit_kwargs=dict(high_cut=0.3 / u.pix,
+                                            low_cut=3e-2 / u.pix))
+vcs_distance.distance_metric()
 
 vcs_val = vcs_distance.vcs1.ps1D
 vcs_slopes = vcs_distance.vcs1.slope
@@ -157,19 +162,16 @@ vca_slope2D = vca.slope2D
 
 # Tsallis
 
-from turbustat.statistics import Tsallis_Distance, Tsallis
+from turbustat.statistics import Tsallis
 
 tsallis_kwargs = {"sigma_clip": 5, "num_bins": 100}
 
-tsallis_distance = \
-    Tsallis_Distance(dataset1["moment0"],
-                     dataset2["moment0"],
-                     lags=[1, 2, 4, 8, 16] * u.pix,
-                     tsallis1_kwargs=tsallis_kwargs,
-                     tsallis2_kwargs=tsallis_kwargs).distance_metric()
+tsallis = Tsallis(dataset1['moment0'],
+                  lags=[1, 2, 4, 8, 16] * u.pix)
+tsallis.run(periodic=True, **tsallis_kwargs)
 
-tsallis_val = tsallis_distance.tsallis1.tsallis_params
-tsallis_stderrs = tsallis_distance.tsallis1.tsallis_stderrs
+tsallis_val = tsallis.tsallis_params
+tsallis_stderrs = tsallis.tsallis_stderrs
 
 tsallis_noper = Tsallis(dataset1['moment0'],
                         lags=[1, 2, 4, 8, 16] * u.pix)
@@ -290,13 +292,13 @@ cramer_val = cramer_distance.data_matrix1
 
 # Dendrograms
 
-from turbustat.statistics import DendroDistance, Dendrogram_Stats
+from turbustat.statistics import Dendrogram_Distance, Dendrogram_Stats
 
 min_deltas = np.logspace(-1.5, 0.5, 40)
 
-dendro_distance = DendroDistance(dataset1["cube"],
-                                 dataset2["cube"],
-                                 min_deltas=min_deltas).distance_metric()
+dendro_distance = Dendrogram_Distance(dataset1["cube"],
+                                      dataset2["cube"],
+                                      min_deltas=min_deltas).distance_metric()
 
 dendrogram_val = dendro_distance.dendro1.numfeatures
 
@@ -400,13 +402,14 @@ np.savez_compressed('computed_distances', mvc_distance=mvc_distance.distance,
                     wavelet_distance=wavelet_distance.distance,
                     delvar_curve_distance=delvar_distance.curve_distance,
                     delvar_slope_distance=delvar_distance.slope_distance,
-                    tsallis_distance=tsallis_distance.distance,
+                    # tsallis_distance=tsallis_distance.distance,
                     kurtosis_distance=moment_distance.kurtosis_distance,
                     skewness_distance=moment_distance.skewness_distance,
                     cramer_distance=cramer_distance.distance,
                     genus_distance=genus_distance.distance,
                     vcs_distance=vcs_distance.distance,
-                    bispec_distance=bispec_distance.distance,
+                    bispec_mean_distance=bispec_distance.mean_distance,
+                    bispec_surface_distance=bispec_distance.surface_distance,
                     dendrohist_distance=dendro_distance.histogram_distance,
                     dendronum_distance=dendro_distance.num_distance,
                     pdf_hellinger_distance=pdf_distance.hellinger_distance,

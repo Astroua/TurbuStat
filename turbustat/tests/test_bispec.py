@@ -54,8 +54,11 @@ def test_Bispec_distance():
                             dataset2["moment0"])
     tester_dist.distance_metric()
 
-    npt.assert_almost_equal(tester_dist.distance,
-                            computed_distances['bispec_distance'])
+    npt.assert_almost_equal(tester_dist.surface_distance,
+                            computed_distances['bispec_surface_distance'])
+
+    npt.assert_almost_equal(tester_dist.mean_distance,
+                            computed_distances['bispec_mean_distance'])
 
 
 def test_bispec_azimuthal_slicing():
@@ -125,17 +128,30 @@ def test_BiSpec_deprec():
     with warnings.catch_warnings(record=True) as w:
         bispec = BiSpectrum(dataset1['cube'])
 
-    assert len(w) == 1
-    assert w[0].category == Warning
-    assert str(w[0].message) == \
-        ("Use the new 'Bispectrum' class. 'BiSpectrum' is deprecated and will"
-         " be removed in a future release.")
+    assert len(w) >= 1
+
+    good_catch = False
+    for wn in w:
+        if "Use the new 'Bispectrum'" in str(wn.message):
+            assert wn.category == Warning
+            good_catch = True
+            break
+
+    if not good_catch:
+        raise ValueError("Did not receive deprecation warning.")
 
     with warnings.catch_warnings(record=True) as w:
-        bispec = BiSpectrum_Distance(dataset1['moment0'], dataset2['moment0'])
+        bispec = BiSpectrum_Distance(dataset1['moment0'],
+                                     dataset2['moment0'])
 
-    assert len(w) == 1
-    assert w[0].category == Warning
-    assert str(w[0].message) == \
-        ("Use the new 'Bispectrum_Distance' class. 'BiSpectrum_Distance' "
-         "is deprecated and will be removed in a future release.")
+    assert len(w) >= 1
+
+    good_catch = False
+    for wn in w:
+        if "Use the new 'Bispectrum_Distance'" in str(wn.message):
+            assert wn.category == Warning
+            good_catch = True
+            break
+
+    if not good_catch:
+        raise ValueError("Did not receive deprecation warning.")

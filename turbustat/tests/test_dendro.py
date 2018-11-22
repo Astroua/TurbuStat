@@ -55,7 +55,7 @@ def test_DendroDistance():
         DendroDistance(dataset1["cube"],
                        dataset2["cube"],
                        min_deltas=min_deltas,
-                       periodic_bounds=False).distance_metric()
+                       dendro_kwargs=dict(periodic_bounds=False)).distance_metric()
 
     npt.assert_almost_equal(tester_dist.histogram_distance,
                             computed_distances["dendrohist_distance"])
