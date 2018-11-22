@@ -612,8 +612,8 @@ class StatisticBase_PSpec2D(object):
 
         # Axis limits to highlight the fitted region
         vmax = 1.1 * \
-            np.max((self.ps1D + self.ps1D_stddev)
-                   [self.freqs <= self.high_cut])
+            np.nanmax((self.ps1D + self.ps1D_stddev)
+                      [self.freqs <= self.high_cut])
 
         logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
 
@@ -666,7 +666,7 @@ class StatisticBase_PSpec2D(object):
 
         ax_1D.set_ylabel(r"log P$_2(K)$")
 
-        ax_1D.set_ylim(top=np.log10(vmax))
+        ax_1D.set_ylim(top=vmax)
 
         # Show the fitting extents
         low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value
