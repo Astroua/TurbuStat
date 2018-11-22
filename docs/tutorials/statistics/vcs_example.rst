@@ -89,7 +89,8 @@ With the default settings, the fit is horrendous. This is due to the model's cur
 
 `high_cut` is set to ignore scales below :math:`\sim 240` m / s, just slightly larger than the thermal line width. To see this more clearly, we can create the same plot above in velocity units:
 
-    >>> vcs.run(verbose=True, high_cut=0.17 / u.pix, xunit=(u.m / u.s)**-1)  # doctest: +SKIP
+    >>> vcs.run(verbose=True, high_cut=0.17 / u.pix,
+    ...         xunit=(u.m / u.s)**-1)  # doctest: +SKIP
 
 .. image:: images/design4_vcs_lowcut_physunits.png
 
@@ -97,7 +98,8 @@ The dotted lines, indicating the fitting extents, are now more easily understood
 
 This is still not an optimal fit. There are large deviations as the single break-point model tries to interpret the smooth transition at large scales. This flattening at large scales could be from the periodic box condition in the simulation: there is effectively a maximum size cut-off at the box size beyond which there is no additional energy. For the next example, assume that this is indeed the case and that we can remove this region from the fit:
 
-    >>> vcs.run(verbose=True, high_cut=0.17 / u.pix, low_cut=6e-4 / (u.m / u.s), xunit=(u.m / u.s)**-1)   # doctest: +SKIP
+    >>> vcs.run(verbose=True, high_cut=0.17 / u.pix, low_cut=6e-4 / (u.m / u.s),
+    ...         xunit=(u.m / u.s)**-1)   # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.996
@@ -143,38 +145,7 @@ Since, in this regime, both components only rely on the velocity field, they sho
 
 Each component does give a similar estimate for :math:`m`. There is the additional issue with the simulated data as to how the inertial range should be handled. Certainly the slope at smaller scales is made steeper if portions are outside the spatial inertial range.
 
-This simulation is inherently noiseless. With observational data, small scales will be completely dominated by noise, flattening the spectrum on those scales. While this region of the spectrum could be omitted from the range that is fit, an alternative solution is to increase the size of the spectral channels to lower the noise level and remove the smallest spectral scales. Consider averaging to just larger than the thermal line width:
-
-    >>> vcs_chanwidth = VCS(cube, channel_width=240 * u.m / u.s)  # doctest: +SKIP
-    >>> vcs_chanwidth.run(verbose=True, xunit=(u.m / u.s)**-1, low_cut=6e-4 / (u.m / u.s))  # doctest: +SKIP
-                           OLS Regression Results
-    ==============================================================================
-    Dep. Variable:                      y   R-squared:                       0.998
-    Model:                            OLS   Adj. R-squared:                  0.998
-    Method:                 Least Squares   F-statistic:                     5278.
-    Date:                Fri, 21 Jul 2017   Prob (F-statistic):           5.81e-34
-    Time:                        17:56:08   Log-Likelihood:                 41.600
-    No. Observations:                  28   AIC:                            -75.20
-    Df Residuals:                      24   BIC:                            -69.87
-    Df Model:                           3
-    Covariance Type:            nonrobust
-    ==============================================================================
-                     coef    std err          t      P>|t|      [0.025      0.975]
-    ------------------------------------------------------------------------------
-    const         -1.2059      0.137     -8.824      0.000      -1.488      -0.924
-    x1            -5.9068      0.206    -28.742      0.000      -6.331      -5.483
-    x2            -8.0960      0.313    -25.829      0.000      -8.743      -7.449
-    x3            -0.0269      0.045     -0.598      0.555      -0.119       0.066
-    ==============================================================================
-    Omnibus:                        2.324   Durbin-Watson:                   0.318
-    Prob(Omnibus):                  0.313   Jarque-Bera (JB):                2.022
-    Skew:                          -0.564   Prob(JB):                        0.364
-    Kurtosis:                       2.320   Cond. No.                         41.8
-    ==============================================================================
-
-.. image:: images/design4_vcs_chanwidth_200ms.png
-
-We find a good fit to the data, but the slopes have changed. The distinction between the regions that are fit to in the previous example have effectively been smoothed over. This seems to be a break down of the simplified segmented linear model that has been used. The model presented in :ref:`Chepurnov et al. 2010 <ref-chepurnov2010>` and :ref:`Chepurnov et al. 2015 <ref-chepurnov2015>`, which account for a smooth transition over the entire spectrum, will be a more effective and useful choice. This model will be included in a future release of TurbuStat.
+While we find a good fit to the data, the VCS transition between the two regimes is smoothed over.  This is a break down of assuming the asymptotic regimes, and is a break down of the simplified segmented linear model that has been used. The model presented in :ref:`Chepurnov et al. 2010 <ref-chepurnov2010>` and :ref:`Chepurnov et al. 2015 <ref-chepurnov2015>`, which account for a smooth transition over the entire spectrum, will be a more effective and useful choice. This model will be included in a future release of TurbuStat.
 
 References
 ----------

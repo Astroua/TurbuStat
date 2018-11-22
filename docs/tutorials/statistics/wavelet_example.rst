@@ -132,7 +132,8 @@ Finally, we note a difference between the TurbuStat implementation of the wavele
 The :math:`+2` discrepancy can be explained by thinking of the Mexican-Hat kernel as the negative of the Laplacian of a Gaussian. A normalized Gaussian has a normalization constant of :math:`1/2 \pi \sigma^2`, or units of :math:`1/{\rm length}^2`, but has a constant peak for all :math:`\sigma`. In order to make the Laplacian also have a constant peak, referred to as a *scale-normalized derivative* in `image processing <https://en.wikipedia.org/wiki/Scale_space>`_, we need to multiply the Mexican-Hat by a factor of :math:`\sigma^2` at each scale. Combined with the normalization coefficient of :math:`1/\pi \sigma^4`, this restores the :math:`1/{\rm length}^2` of a Gaussian. In order to reproduce the unnormalized version of :ref:`Gill & Henriksen 1990 <ref-gill1990>`, we need to multiply the kernel by :math:`\sigma^4`. To reproduce their results, we have included a normalization keyword to disable the correct normalization:
 
     >>> wavelet = Wavelet(moment0)  # doctest: +SKIP
-    >>> wavelet.run(verbose=True, scale_normalization=False, xhigh=10 * u.pix)  # doctest: +SKIP
+    >>> wavelet.run(verbose=True, scale_normalization=False,
+    ...             xhigh=10 * u.pix)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000

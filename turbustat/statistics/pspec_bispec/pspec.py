@@ -202,7 +202,7 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                 print("Bootstrapping used to find stderrs! "
                       "Errors may not equal those shown above.")
 
-            self.plot_fit(show=True, show_2D=True,
+            self.plot_fit(show_2D=True,
                           xunit=xunit, save_name=save_name,
                           use_wavenumber=use_wavenumber)
             if save_name is not None:

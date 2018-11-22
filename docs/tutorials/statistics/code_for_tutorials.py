@@ -15,7 +15,7 @@ from spectral_cube import SpectralCube
 
 # Use my default seaborn setting
 sb.set(font='Times New Roman', style='ticks')
-sb.set_context("poster", font_scale=1.0)
+sb.set_context("poster", font_scale=0.75)
 
 data_path = "../../../testingdata"
 
@@ -159,12 +159,12 @@ if run_genus:
     # Requiring regions be larger than the beam
     moment0.header["BMAJ"] = 2e-5  # deg.
     genus = Genus(moment0, lowdens_percent=15, highdens_percent=85,
-                  smoothing_radii=[1])
+                  smoothing_radii=[1] * u.pix)
     genus.run(verbose=True, use_beam=True, save_name=osjoin(fig_path, "genus_design4_beamarea.png"))
 
     # With a distance
     genus = Genus(moment0, lowdens_percent=15, highdens_percent=85,
-                  smoothing_radii=u.Quantity([100 * u.AU]),
+                  smoothing_radii=u.Quantity([0.04 * u.pc]),
                   distance=250 * u.pc)
     genus.run(verbose=True, min_size=40 * u.AU**2,
               save_name=osjoin(fig_path, "genus_design4_physunits.png"))
@@ -191,7 +191,7 @@ if run_mvc:
     mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)
     mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix,
             high_cut=0.4 / u.pix,
-            brk=0.1 / u.pix, log_break=False, fit_2D=False,
+            fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False,
             save_name=osjoin(fig_path, "mvc_design4_breakfit.png"))
 
     # With phys units
@@ -207,7 +207,6 @@ if run_mvc:
             radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg},
             save_name=osjoin(fig_path, 'mvc_design4_physunits_azimlimits.png'))
 
-
 # PCA
 if run_pca:
 
@@ -217,21 +216,24 @@ if run_pca:
 
     pca = PCA(cube, distance=250. * u.pc)
     pca.run(verbose=True, mean_sub=False,
-            min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-            beam_fwhm=20 * u.arcsec, brunt_beamcorrect=False,
+            min_eigval=1e-4, spatial_output_unit=u.pc,
+            spectral_output_unit=u.m / u.s,
+            beam_fwhm=10 * u.arcsec, brunt_beamcorrect=False,
             save_name=osjoin(fig_path, "pca_design4_default.png"))
 
     # With beam correction
     pca.run(verbose=True, mean_sub=False,
-            min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-            beam_fwhm=20 * u.arcsec, brunt_beamcorrect=True,
+            min_eigval=1e-4, spatial_output_unit=u.pc,
+            spectral_output_unit=u.m / u.s,
+            beam_fwhm=10 * u.arcsec, brunt_beamcorrect=True,
             save_name=osjoin(fig_path, "pca_design4_beamcorr.png"))
 
     # With mean_sub
     pca_ms = PCA(cube, distance=250. * u.pc)
     pca_ms.run(verbose=True, mean_sub=True,
-               min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s,
-               beam_fwhm=20 * u.arcsec, brunt_beamcorrect=True,
+               min_eigval=1e-4, spatial_output_unit=u.pc,
+               spectral_output_unit=u.m / u.s,
+               beam_fwhm=10 * u.arcsec, brunt_beamcorrect=True,
                save_name=osjoin(fig_path, "pca_design4_meansub.png"))
 
     # Individual steps
@@ -243,19 +245,19 @@ if run_pca:
     print(pca.n_eigs)
 
     pca.compute_pca(mean_sub=False, n_eigs='auto', min_eigval=1.e-4, eigen_cut_method='value')
-    pca.find_spatial_widths(method='contour', beam_fwhm=20 * u.arcsec, output_unit=u.pc,
+    pca.find_spatial_widths(method='contour', beam_fwhm=10 * u.arcsec,
                             brunt_beamcorrect=True, diagnosticplots=True)
     plt.savefig(osjoin(fig_path, "pca_autocorrimgs_contourfit_Design4.png"))
     plt.close()
 
-    pca.find_spectral_widths(method='walk-down', output_unit=u.m / u.s)
+    pca.find_spectral_widths(method='walk-down')
     autocorr_spec = pca.autocorr_spec()
     x = np.fft.rfftfreq(500) * 500 / 2.0
-    fig, axes = plt.subplots(3, 3, sharex=True, sharey=True)
+    fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(10, 8))
     for i, ax in zip(range(9), axes.ravel()):
         ax.plot(x, autocorr_spec[:251, i])
         ax.axhline(np.exp(-1), label='exp(-1)', color='r', linestyle='--')
-        ax.axvline(pca.spectral_width[i].value / pca._spectral_size.value,
+        ax.axvline(pca.spectral_width(u.pix)[i].value,
                    label='Fitted Width',
                    color='g', linestyle='-.')
         # ax.set_yticks([])
@@ -263,6 +265,7 @@ if run_pca:
         ax.set_xlim([0, 50])
         if i == 0:
             ax.legend()
+    fig.tight_layout()
     fig.savefig(osjoin(fig_path, "pca_autocorrspec_Design4.png"))
     plt.close()
 
@@ -276,7 +279,7 @@ if run_pca:
 
     print(pca.gamma)
 
-    print(pca.sonic_length(T_k=10 * u.K, mu=1.36))
+    print(pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc))
 
 # PDF
 if run_pdf:
@@ -467,7 +470,8 @@ if run_tsallis:
     tsallis.plot_parameters(save_name=osjoin(fig_path, 'design4_tsallis_params.png'))
 
     # With physical lags units
-    phys_lags = np.arange(0.025, 0.5, 0.05) * u.pc
+    # Get a float rounding error, so just take first 3 decimal points
+    phys_lags = np.around(np.arange(0.025, 0.5, 0.05), 3) * u.pc
     tsallis = Tsallis(moment0, lags=phys_lags, distance=250 * u.pc)
     tsallis.run(verbose=True,
                 save_name=osjoin(fig_path, 'design4_tsallis_physlags.png'))
@@ -497,13 +501,15 @@ if run_vca:
             save_name=osjoin(fig_path, "design4_vca_limitedfreq.png"))
 
     vca = VCA(cube, distance=250 * u.pc)
-    vca.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
-            brk=0.1 / u.pix, log_break=False, fit_2D=False,
+    vca.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+            high_cut=0.4 / u.pix,
+            fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False,
             save_name=osjoin(fig_path, "design4_vca_breakfit.png"))
 
     vca_thicker = VCA(cube, distance=250 * u.pc, channel_width=400 * u.m / u.s)
-    vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
-                    brk=0.1 / u.pix, fit_2D=False,
+    vca_thicker.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+                    high_cut=0.4 / u.pix,
+                    fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False,
                     save_name=osjoin(fig_path, "design4_vca_400ms_channels.png"))
 
     # W/ azimuthal constraints
@@ -532,10 +538,6 @@ if run_vcs:
 
     vcs.run(verbose=True, high_cut=0.17 / u.pix, low_cut=6e-4 / (u.m / u.s), xunit=(u.m / u.s)**-1,
             save_name=osjoin(fig_path, "design4_vcs_bothcut_physunits.png"))
-
-    vcs_chanwidth = VCS(cube, channel_width=240 * u.m / u.s)
-    vcs_chanwidth.run(verbose=True, xunit=(u.m / u.s)**-1, low_cut=6e-4 / (u.m / u.s),
-            save_name=osjoin(fig_path, "design4_vcs_chanwidth_200ms.png"))
 
 # Wavelets
 if run_wavelet:

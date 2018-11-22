@@ -166,7 +166,8 @@ For this example, let us consider values below 250 K m/s to be unreliable. We wi
     >>> import scipy.stats as stats  # doctest: +SKIP
     >>> plaw_data = stats.pareto.rvs(2, size=5000)  # doctest: +SKIP
     >>> pdf_mom0 = PDF(moment0, min_val=250.0, normalization_type=None)  # doctest: +SKIP
-    >>> pdf_mom0.run(verbose=True, model=stats.pareto, fit_type='mle', floc=False)  # doctest: +SKIP
+    >>> pdf_mom0.run(verbose=True, model=stats.pareto,
+    ...              fit_type='mle', floc=False)  # doctest: +SKIP
     Optimization terminated successfully.
              Current function value: 5.641058
              Iterations: 84

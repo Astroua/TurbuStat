@@ -666,7 +666,7 @@ class StatisticBase_PSpec2D(object):
 
         ax_1D.set_ylabel(r"log P$_2(K)$")
 
-        ax_1D.set_ylim(top=vmax)
+        ax_1D.set_ylim(top=np.log10(vmax))
 
         # Show the fitting extents
         low_cut = self._spatial_freq_unit_conversion(self.low_cut, xunit).value

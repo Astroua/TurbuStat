@@ -35,7 +35,8 @@ And we load in the data:
 
 The FITS HDU is passed to initialize `~turbustat.statistics.Genus`:
 
-    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85, numpts=100, smoothing_radii=np.linspace(1, moment0.shape[0] / 10., 5))  # doctest: +SKIP
+    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85, numpts=100,
+    ...               smoothing_radii=np.linspace(1, moment0.shape[0] / 10., 5))  # doctest: +SKIP
 
 `lowdens_percent` and `highdens_percent` set the upper and lower percentiles in the data to measure the Genus value at. When using observational data, `lowdens_percent` should be set above the noise level. Alternatively, specific values for the low and high cut-offs can be passed using `min_value` and `max_value`, respectively. These setting are overridden when `lowdens_percent > min_value` or `highdens_percent < max_value`.
 
@@ -61,7 +62,8 @@ The basic sinusoid seen in the Genus curve of the Gaussian field is still eviden
 Often the smallest size that can be "trusted" in a radio image is the beam area. In this example, a FITS HDU was passed, including an associated header. If the beam information is contained in the header, the size threshold can be set to the beam area using:
 
     >>> moment0.header["BMAJ"] = 2e-5  # deg.   # doctest: +SKIP
-    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85, smoothing_radii=[1])  # doctest: +SKIP
+    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85,
+    ...               smoothing_radii=[1] * u.pix)  # doctest: +SKIP
     >>> genus.run(verbose=True, use_beam=True)  # doctest: +SKIP
 
 .. image:: images/genus_design4_beamarea.png
@@ -72,7 +74,8 @@ The curve has far less detail then before when requiring large connected regions
 
 If a distance is given to `~turbustat.statistics.Genus`, areas and smoothing radii can be passed in physical units:
 
-    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85, smoothing_radii=u.Quantity([100 * u.AU]), distance=500 * u.pc)  # doctest: +SKIP
+    >>> genus = Genus(moment0, lowdens_percent=15, highdens_percent=85,
+    ...               smoothing_radii=u.Quantity([0.04 * u.pc]), distance=500 * u.pc)  # doctest: +SKIP
     >>> genus.run(verbose=True, min_size=40 * u.AU**2)  # doctest: +SKIP
 
 .. image:: images/genus_design4_physunits.png
