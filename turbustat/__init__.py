@@ -1,6 +1,4 @@
 
-__doctest_skip__ = ['*']
-
 from ._astropy_init import *
 
 # if not _ASTROPY_SETUP_:
