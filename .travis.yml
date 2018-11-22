@@ -23,7 +23,7 @@ env:
         - CONDA_CHANNELS='astropy-ci-extras astropy'
         - SETUP_XVFB=True
 
-        - CONDA_DEPENDENCIES='pytest=3.10.1 scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
+        - CONDA_DEPENDENCIES='pytest=3.9.3 scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
