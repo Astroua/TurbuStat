@@ -801,10 +801,20 @@ class PCA(BaseStatisticMixIn):
                                 np.log10(np.nanmax(spatial_width).value),
                                 spatial_width.size * 10)
 
-            intercept = self.intercept(unit=spectral_unit)
+            xvals_pix = \
+                np.linspace(np.log10(np.nanmin(self.spatial_width(u.pix).value)),
+                            np.log10(np.nanmax(self.spatial_width(u.pix).value)),
+                            spatial_width.size * 10)
 
-            plt.plot(xvals, self.index * xvals + np.log10(intercept.value),
+            intercept = self.intercept(unit=u.pix)
+
+            spec_conv = self._to_spectral(1 * u.pix, spectral_unit).value
+
+            plt.plot(xvals,
+                     np.log10(10**(self.index * xvals_pix +
+                                   np.log10(intercept.value)) * spec_conv),
                      '-', color=fit_color)
+
             # Some very large error bars makes it difficult to see the model
             # Limit the range shown in the plot.
             x_range = \
@@ -828,9 +838,10 @@ class PCA(BaseStatisticMixIn):
                 else:
                     plt.subplot2grid((4, 1), (3, 0), rowspan=1, colspan=1)
 
+                x_log_pix = np.log10(self.spatial_width(u.pix).value)
                 resids = np.log10(spectral_width.value) - \
-                    (self.index * np.log10(spatial_width.value) +
-                     np.log10(intercept.value))
+                    np.log10(10**(self.index * x_log_pix +
+                                  np.log10(intercept.value)) * spec_conv)
 
                 plt.errorbar(np.log10(spatial_width.value), resids,
                              xerr=0.434 * spatial_width_error /
