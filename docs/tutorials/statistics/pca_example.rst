@@ -100,12 +100,29 @@ First, the eigenvalue decomposition is performed using `~turbustat.statistics.PC
 
 This will keep the number of components that describe 99% of the variance in the data. The percentage of variance described by a principal component is its eigenvalue divided by the sum of all eigenvalues (the total variance in the data). All other components beyond these levels are due to irreducible noise. These noise components can be thought of as an N-dimensional sphere, where it becomes impossible to diminish the remaining variance as there is no preferred direction.
 
-Second, we calculate the spatial size scales from the autocorrelation of the eigenimages (reverting back to the PCs from `eigen_cut_method='value'`):
+The eigenvalues of the important components can be generated with:
 
-    >>> pca_ms.compute_pca(mean_sub=False, n_eigs='auto', min_eigval=1e-4,
-    ...                    eigen_cut_method='value')  # doctest: +SKIP
-    >>> pca_ms.find_spatial_widths(method='contour', beam_fwhm=10 * u.arcsec,
-    ...                            brunt_beamcorrect=True, diagnosticplots=True)  # doctest: +SKIP
+    >>> pca.eigvals  # doctest: +SKIP
+
+This will return the full set of eigenvalues as a two-dimensional array with a shape equal to the number of spectral channels in the data. To only return the important eigenvalues, use:
+
+    >>> pca.eigvals[:, :pca.n_eigs]  # doctest: +SKIP
+
+Eigenimages have the same shape as the spatial dimensions of the data. To save memory, eigenimages are not cached and are calculated from the data and set of eigenvalues:
+
+    >>> eigimgs = pca.eigimages()  # doctest: +SKIP
+
+`eigimgs` is a three-dimensional array, with two spatial axes and the third the number of eigenimages requested. By default, the number of eigenimages returned is equal to `pca.n_eigs`. To instead return the first `n` eigenimages:
+
+    >>> n = 40
+    >>> eigimgs = pca.eigimages(n)  # doctest: +SKIP
+
+The second step is to calculate the spatial size scales from the autocorrelation of the eigenimages (reverting back to the PCs from `eigen_cut_method='value'`):
+
+    >>> pca.compute_pca(mean_sub=False, n_eigs='auto', min_eigval=1e-4,
+    ...                 eigen_cut_method='value')  # doctest: +SKIP
+    >>> pca.find_spatial_widths(method='contour', beam_fwhm=10 * u.arcsec,
+    ...                         brunt_beamcorrect=True, diagnosticplots=True)  # doctest: +SKIP
 
 .. image:: images/pca_autocorrimgs_contourfit_Design4.png
 
@@ -117,8 +134,8 @@ When beam correction is applied (`brunt_beamcorrect`), the angular FWHM of the b
 
 Third, we find the spectral widths:
 
-    >>> pca_ms.find_spectral_widths(method='walk-down')  # doctest: +SKIP
-    >>> autocorr_spec = pca_ms.autocorr_spec()  # doctest: +SKIP
+    >>> pca.find_spectral_widths(method='walk-down')  # doctest: +SKIP
+    >>> autocorr_spec = pca.autocorr_spec()  # doctest: +SKIP
     >>> x = np.fft.rfftfreq(500) * 500 / 2.0  # doctest: +SKIP
     >>> fig, axes = plt.subplots(3, 3, sharex=True, sharey=True)  # doctest: +SKIP
     >>> for i, ax in zip(range(9), axes.ravel()):  # doctest: +SKIP
@@ -143,13 +160,13 @@ Finally, we fit the size-line width relation. There is no clear independent vari
 
 To run ODR:
 
-    >>> pca_ms.fit_plaw(fit_method='odr', verbose=True)  # doctest: +SKIP
+    >>> pca.fit_plaw(fit_method='odr', verbose=True)  # doctest: +SKIP
 
 .. image:: images/pca_design4_plaw_odr.png
 
 And to run the MCMC:
 
-    >>> pca_ms.fit_plaw(fit_method='bayes', verbose=True)  # doctest: +SKIP
+    >>> pca.fit_plaw(fit_method='bayes', verbose=True)  # doctest: +SKIP
 
 .. image:: images/pca_design4_plaw_mcmc.png
 

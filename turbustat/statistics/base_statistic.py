@@ -337,4 +337,9 @@ class BaseStatisticMixIn(object):
         the unit conversions will work.
         '''
 
-        return 1 / self._to_spectral(1 / value, 1 / unit)
+        # For some reason (1 / unit).unit != vel_unit for
+        # astropy >3.1. Making a new unit from the string
+        # works, though.
+        str_unit = u.Unit((1 / unit).unit.to_string())
+
+        return 1 / self._to_spectral(1 / value, str_unit)

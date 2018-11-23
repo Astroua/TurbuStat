@@ -32,3 +32,8 @@ The extent of these effects will differ for different data sets. We recommend te
     For the former, the noise level can introduce a bias in the measured quantities.  To mitigate this, data can be masked prior to running metrics.  Otherwise, minimum cut-off values can be specified for metrics the utilize the actual intensity values of the data, such as dendrograms and the PDF.  For statistics that are independent of intensity, like a power-law slope or correlation, the fitting range can be specified for each statistic to minimize bias from noise. This is the same effect described above for spatial scales.
 
     For the second case, the VCA index is *expected* to change with spectral resolution depending on the underlying properties of the turbulent fields (see the :ref:`VCA tutorial <vca_tutorial>`).
+
+Data units for distance metrics
+*******************************
+
+Most of the distance metrics will do not depend on the absolute value of the data sets. The exceptions are when values of a statistic are directly compared. This includes `~turbustat.statistics.Cramer_Distance`, the curve distance in `~turbustat.statistics.DeltaVariance_Distance`, and the bins used in the histograms of `~turbustat.statistics.StatMoments_Distance` and `~turbustat.statistics.PDF_Distance`.  While each of these methods applies some normalization scheme to the data, we advise to convert both data sets to a common unit to minimize possible discrepancies.
