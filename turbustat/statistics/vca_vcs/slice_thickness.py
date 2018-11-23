@@ -134,7 +134,7 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
 
         gaussian_width = ((target_resolution**2 - current_resolution**2)**0.5 /
                           pixel_scale / fwhm_factor)
-        kernel = Gaussian1DKernel(gaussian_width)
+        kernel = Gaussian1DKernel(gaussian_width.value)
         new_cube = cube.spectral_smooth(kernel)
 
         # Now define the new spectral axis at the new resolution
