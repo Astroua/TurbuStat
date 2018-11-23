@@ -113,7 +113,9 @@ Real data may not have a spectrum described by a single power-law. In this case,
 
 The one-dimensional power spectrum in the previous examples is averaged over all azimuthal angles. In cases where only a certain range of angles is of interest, limits on the averaged azimuthal angles can be given:
 
-    >>> scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix, radialavg_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 70 * u.deg})  # doctest: +SKIP
+    >>> scf.run(verbose=True, xlow=1 * u.pix, xhigh=5 * u.pix,
+    ...         radialavg_kwargs={"theta_0": 1.13 * u.rad,
+    ...                           "delta_theta": 70 * u.deg})  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.987

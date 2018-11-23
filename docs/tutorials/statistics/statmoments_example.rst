@@ -52,7 +52,8 @@ This example does not include any blanked regions, though observational data oft
 
     >>> np.random.seed(3434789)
     >>> noise = moment0.data * 0.1 + np.random.normal(0, 0.1, size=moment0.data.shape)  # doctest: +SKIP
-    >>> moments_weighted = StatMoments(moment0, radius=5 * u.pix, weights=noise**-2)  # doctest: +SKIP
+    >>> moments_weighted = StatMoments(moment0, radius=5 * u.pix,
+    ...                                weights=noise**-2)  # doctest: +SKIP
     >>> moments_weighted.run(verbose=True, periodic=True)  # doctest: +SKIP
 
 .. image:: images/design4_statmoments_randweights.png

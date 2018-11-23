@@ -110,7 +110,9 @@ Note the drastic change in the slope! Specifying the correct fit region for the 
 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix, brk=0.1 / u.pix, log_break=False, fit_2D=False)  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+    ...         high_cut=0.4 / u.pix,
+    ...         fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.994
@@ -145,7 +147,8 @@ Many of the techniques in TurbuStat are derived from two-dimensional power spect
 The frequency units of the final plot (`xunit`) and the units of `low_cut` and `high_cut` can be given in angular units, as well as physical units when a distance is given. For example:
 
     >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, fit_2D=False)  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+    ...         high_cut=0.1 / u.pix, fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.952
@@ -176,7 +179,9 @@ Alternatively, the fitting limits could be passed in units of `u.pc**-1`.
 Constraints on the azimuthal angles used to compute the one-dimensional power-spectrum can also be given:
 
     >>> mvc = MVC(centroid, moment0, lwidth, distance=250 * u.pc)  # doctest: +SKIP
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix, fit_2D=False, radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
+    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix,
+    ...         fit_2D=False,
+    ...         radial_pspec_kwargs={"theta_0": 1.13 * u.rad, "delta_theta": 40 * u.deg})  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.806

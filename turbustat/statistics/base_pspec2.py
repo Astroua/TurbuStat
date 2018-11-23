@@ -612,8 +612,8 @@ class StatisticBase_PSpec2D(object):
 
         # Axis limits to highlight the fitted region
         vmax = 1.1 * \
-            np.max((self.ps1D + self.ps1D_stddev)
-                   [self.freqs <= self.high_cut])
+            np.nanmax((self.ps1D + self.ps1D_stddev)
+                      [self.freqs <= self.high_cut])
 
         logyerrs = 0.434 * (self.ps1D_stddev / self.ps1D)
 

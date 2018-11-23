@@ -42,7 +42,8 @@ If the distance is given, you will have the option to convert spatial widths to 
 
 The simplest way to run the entire process is using the `~turbustat.statistics.PCA.run` command:
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=False)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
+    ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=False)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
     Index: 0.64 (0.62, 0.66)
     Gamma: 0.55 (0.51, 0.59)
@@ -55,7 +56,9 @@ The key properties are shown when `verbose=True`: a summary of the results with 
 
 Since this data is simulated, this example does not account for a finite beam size. If it did, however, we would want to deconvolve the spatial widths with the beam. To see this effect, let us assume these data have a 20" circular beam:
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
+    ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
+    ...         beam_fwhm=10 * u.arcsec)  # doctest: +SKIP
     Proportion of Variance kept: 0.999693451344
     Index: 0.54 (0.51, 0.57)
     Gamma: 0.37 (0.33, 0.42)
@@ -67,7 +70,9 @@ Since the correction is not linear, the slope changes with the beam correction. 
 
 Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in :ref:`Brunt, C. & Heyer, M. 2002a <ref-brunt_heyer2002_i>` and :ref:`Brunt, C. & Heyer, M. 2002b <ref-brunt_heyer2002_ii>` is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
 
-    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc, spectral_output_unit=u.m / u.s, brunt_beamcorrect=True, beam_fwhm=20 * u.arcsec, mean_sub=True)  # doctest: +SKIP
+    >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
+    ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
+    ...         beam_fwhm=10 * u.arcsec, mean_sub=True)  # doctest: +SKIP
     Proportion of Variance kept: 0.999808532503
     Index: 0.70 (0.67, 0.74)
     Gamma: 0.63 (0.59, 0.66)
@@ -97,8 +102,10 @@ This will keep the number of components that describe 99% of the variance in the
 
 Second, we calculate the spatial size scales from the autocorrelation of the eigenimages (reverting back to the PCs from `eigen_cut_method='value'`):
 
-    >>> pca.compute_pca(mean_sub=False, n_eigs='auto', min_eigval=1e-4, eigen_cut_method='value')  # doctest: +SKIP
-    >>> pca.find_spatial_widths(method='contour', beam_fwhm=20 * u.arcsec, brunt_beamcorrect=True, output_unit=u.pc, diagnosticplots=True)  # doctest: +SKIP
+    >>> pca_ms.compute_pca(mean_sub=False, n_eigs='auto', min_eigval=1e-4,
+    ...                    eigen_cut_method='value')  # doctest: +SKIP
+    >>> pca_ms.find_spatial_widths(method='contour', beam_fwhm=10 * u.arcsec,
+    ...                            brunt_beamcorrect=True, diagnosticplots=True)  # doctest: +SKIP
 
 .. image:: images/pca_autocorrimgs_contourfit_Design4.png
 
@@ -110,14 +117,15 @@ When beam correction is applied (`brunt_beamcorrect`), the angular FWHM of the b
 
 Third, we find the spectral widths:
 
-    >>> pca.find_spectral_widths(method='walk-down', output_unit=u.m / u.s)  # doctest: +SKIP
-    >>> autocorr_spec = pca.autocorr_spec()  # doctest: +SKIP
+    >>> pca_ms.find_spectral_widths(method='walk-down')  # doctest: +SKIP
+    >>> autocorr_spec = pca_ms.autocorr_spec()  # doctest: +SKIP
     >>> x = np.fft.rfftfreq(500) * 500 / 2.0  # doctest: +SKIP
     >>> fig, axes = plt.subplots(3, 3, sharex=True, sharey=True)  # doctest: +SKIP
     >>> for i, ax in zip(range(9), axes.ravel()):  # doctest: +SKIP
     >>>     ax.plot(x, autocorr_spec[:251, i])  # doctest: +SKIP
     >>>     ax.axhline(np.exp(-1), label='exp(-1)', color='r', linestyle='--')  # doctest: +SKIP
-    >>>     ax.axvline(pca.spectral_width[i].value / pca._spectral_size.value, label='Fitted Width', color='g', linestyle='-.')  # doctest: +SKIP
+    >>>     ax.axvline(pca.spectral_width(u.pix)[i].value,
+    ...                label='Fitted Width', color='g', linestyle='-.')  # doctest: +SKIP
     >>>     ax.set_title("{}".format(i + 1))  # doctest: +SKIP
     >>>     ax.set_xlim([0, 50])  # doctest: +SKIP
     >>>     if i == 0:  # doctest: +SKIP
@@ -135,13 +143,13 @@ Finally, we fit the size-line width relation. There is no clear independent vari
 
 To run ODR:
 
-    >>> pca.fit_plaw(fit_method='odr', verbose=True)  # doctest: +SKIP
+    >>> pca_ms.fit_plaw(fit_method='odr', verbose=True)  # doctest: +SKIP
 
 .. image:: images/pca_design4_plaw_odr.png
 
 And to run the MCMC:
 
-    >>> pca.fit_plaw(fit_method='bayes', verbose=True)  # doctest: +SKIP
+    >>> pca_ms.fit_plaw(fit_method='bayes', verbose=True)  # doctest: +SKIP
 
 .. image:: images/pca_design4_plaw_mcmc.png
 
@@ -151,9 +159,9 @@ Additional arguments for setting the chain properties can be passed as well. See
 The interesting outputs from this analysis are estimates of the slopes of the size-line width relation (:math:`\gamma`) and the sonic length:
 
     >>> pca.gamma  # doctest: +SKIP
-    0.389
-    >>> pca.sonic_length(T_k=10 * u.K, mu=1.36)  # doctest: +SKIP
-    (<Quantity 0.09127872189128151 pc>, <Quantity [ 0.04895106, 0.15262456] pc>)
+    0.433
+    >>> pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc)  # doctest: +SKIP
+    (<Quantity 0.35451525 pc>, <Quantity [0.27522952, 0.45267135] pc>)
 
 Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 

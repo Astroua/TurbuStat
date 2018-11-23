@@ -57,7 +57,8 @@ The code returns a summary of the one-dimensional fit and a figure showing the o
 
 The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the limited inertial range in this simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
 
-    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
+    >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix,
+    ...           high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.971
