@@ -423,6 +423,9 @@ class EllipseModel(object):
         if not hasattr(self, "params"):
             raise AttributeError("Run EllipseModel.estimate first.")
 
+        if self.params is None:
+            raise ValueError("No parameters set. Run fit first.")
+
         if alpha < 0 or alpha >= 1.:
             raise ValueError("alpha must be between 0 and 1.")
 

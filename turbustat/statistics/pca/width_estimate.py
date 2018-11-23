@@ -370,14 +370,17 @@ def fit_2D_ellipse(pts, **bootstrap_kwargs):
     '''
 
     ellip = EllipseModel()
-    ellip.estimate(pts)
-    ellip.estimate_stderrs(pts, **bootstrap_kwargs)
+    try:
+        ellip.estimate(pts)
+        ellip.estimate_stderrs(pts, **bootstrap_kwargs)
 
-    xwidth = ellip.params[2] / np.sqrt(2)
-    ywidth = ellip.params[3] / np.sqrt(2)
+        xwidth = ellip.params[2] / np.sqrt(2)
+        ywidth = ellip.params[3] / np.sqrt(2)
 
-    xwidth_err = ellip.param_errs[2] / np.sqrt(2)
-    ywidth_err = ellip.param_errs[3] / np.sqrt(2)
+        xwidth_err = ellip.param_errs[2] / np.sqrt(2)
+        ywidth_err = ellip.param_errs[3] / np.sqrt(2)
+    except ValueError:
+        ywidth = xwidth = ywidth_err = xwidth_err = np.NaN
 
     return ywidth, xwidth, ywidth_err, xwidth_err, ellip
 
