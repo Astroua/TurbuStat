@@ -48,8 +48,8 @@ def test_PCA_method():
                    tester.intercept_error_range(unit=u.pix)[0].value,
                    tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
-                   tester.sonic_length()[1][0].value,
-                   tester.sonic_length()[1][1].value)
+                   tester.sonic_length(use_gamma=False)[1][0].value,
+                   tester.sonic_length(use_gamma=False)[1][1].value)
 
     # Test loading and saving
     tester.save_results("pca_output.pkl", keep_data=False)
@@ -76,8 +76,8 @@ def test_PCA_method():
                    saved_tester.intercept_error_range(unit=u.pix)[0].value,
                    saved_tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
-                   saved_tester.sonic_length()[1][0].value,
-                   saved_tester.sonic_length()[1][1].value)
+                   saved_tester.sonic_length(use_gamma=False)[1][0].value,
+                   saved_tester.sonic_length(use_gamma=False)[1][1].value)
 
 
 @pytest.mark.skipif("not EMCEE_INSTALLED")
@@ -107,8 +107,8 @@ def test_PCA_method_w_bayes():
                    tester.intercept_error_range(unit=u.pix)[0].value,
                    tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length_bayes"],
-                   tester.sonic_length()[1][0].value,
-                   tester.sonic_length()[1][1].value)
+                   tester.sonic_length(use_gamma=False)[1][0].value,
+                   tester.sonic_length(use_gamma=False)[1][1].value)
 
 
 @pytest.mark.parametrize("method", ['odr', 'bayes'])
@@ -132,7 +132,7 @@ def test_PCA_fitting(method):
 
     npt.assert_allclose(tester.index, index, atol=0.05)
     npt.assert_allclose(tester.intercept(unit=u.pix).value, 1, atol=0.05)
-    npt.assert_allclose(tester.gamma, (index - 0.03) / 1.07, atol=0.05)
+    npt.assert_allclose(tester.gamma, 1.52 * index - 0.19, atol=0.05)
 
     # Check the sonic length
     T_k = 10 * u.K
