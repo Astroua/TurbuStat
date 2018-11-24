@@ -564,8 +564,8 @@ class PCA(BaseStatisticMixIn):
     @property
     def gamma(self):
         '''
-        Slope of the size-linewidth relation with correction from Chris Brunt's
-        `thesis <http://search.proquest.com/docview/304529913>`_.
+        Slope of the size-linewidth relation with correction from
+        `Brunt & Heyer 2002 <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_
         '''
         return float(brunt_index_correct(self.index))
 
@@ -574,8 +574,7 @@ class PCA(BaseStatisticMixIn):
         '''
         One-sigma error bounds on gamma.
         '''
-        return np.array([brunt_index_correct(val) for val in
-                         self.index_error_range])
+        return brunt_index_correct_range(*self.index_error_range)
 
     def intercept(self, unit=u.pix):
         '''
@@ -1087,19 +1086,44 @@ class PCA_Distance(object):
         return self
 
 
-def brunt_index_correct(value):
+def brunt_index_correct(alpha):
     '''
     Apply empirical corrections from Heyer & Brunt
+
+    Using the empirical correction from Brunt & Heyer 2002a, where
+
+    .. math::
+        \alpha = (0.33 \pm 0.04)\beta -(0.05 \pm 0.08)
+
+    :math:`\beta` is the index of the integrated velocity spectrum. This is
+    Equation 4.1. The relation to the velocity structure index is:
+
+    .. math::
+        \beta = 2\gamma + 1
+
+    Then the conversion to :math:`\gamma` is:
+
+    .. math::
+        \gamma = (1.5 \pm 0.18) \alpha - (0.19 \pm 0.20)
 
     These values are based off a broken linear fit in Section 3.3.1 from
     Chris Brunt's thesis. These are based off calibrating against uniform
     density field's with different indices.
     '''
 
-    if value < 0.67:
-        return (value - 0.32) / 0.59
-    else:
-        return (value - 0.03) / 1.07
+    # term1 = 1.52 * alpha
+    # term1_err = term1 * np.sqrt((0.18 / 1.52)**2 + (alpha_err / alpha)**2)
+
+    return 1.52 * alpha - 0.19
+
+
+def brunt_index_correct_range(alpha_low, alpha_up):
+    '''
+    Upper and low error ranges. See `brunt_index_correct`.
+    '''
+
+    return (1.52 - 0.18) * alpha_low - (0.19 + 0.2), \
+        (1.52 + 0.18) * alpha_up - (0.19 - 0.2)
 
 
 def set_n_eigs(eigenvalues, min_eigval, method='value'):
