@@ -224,7 +224,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         # We need the number of pixels across 1 FWHM
         # Since it's just being used in the formula below, I don't
         # think rounding to the nearest int is needed.
-        pix_per_beam = beam_fwhm.value / spatial_cdelt.value
+        pix_per_beam = beam_fwhm.value / spatial_cdelt.value / \
+            np.sqrt(8 * np.log(2)) / np.sqrt(2)
 
         # Using the definition from Chris Brunt's thesis for a gaussian
         # beam. Note that the IDL code has:
@@ -233,7 +234,10 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         # deltaz[i]=(p[i,1]^kappa-(e*1.0)^kappa)^(1./kappa)
         # I think the (e * 1.0) term is where the beam size should be
         # used, which is what is used here.
-        kappa = 0.8
+
+        # For an exponential ACF
+        kappa = 1.
+
         e = np.power(3. / ((kappa + 2.) * (kappa + 3.)), 1 / kappa)
         # This is the other form that appears in the thesis.
         # e = 0.65 + 0.1 * kappa

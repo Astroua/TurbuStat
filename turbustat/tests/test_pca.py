@@ -199,17 +199,19 @@ def test_spatial_with_beam():
     Test running the spatial width find with beam corrections enabled.
     '''
 
-    model_gauss = generate_2D_array(x_std=10, y_std=10)
+    conv_scale = np.sqrt(10**2 + (4 / 2.35)**2)
+
+    model_gauss = generate_2D_array(x_std=conv_scale, y_std=conv_scale)
 
     model_gauss = model_gauss[np.newaxis, :]
 
     widths, errors = WidthEstimate2D(model_gauss, method='contour',
-                                     brunt_beamcorrect=False,
+                                     brunt_beamcorrect=True,
                                      beam_fwhm=2.0 * u.deg,
                                      spatial_cdelt=0.5 * u.deg)
 
     # Using value based on run with given settings.
-    npt.assert_approx_equal(widths[0], 7.071, significant=4)
+    npt.assert_approx_equal(widths[0], 6.749, significant=4)
 
 
 @pytest.mark.parametrize(('method'), ('fit', 'interpolate', 'walk-down'))
