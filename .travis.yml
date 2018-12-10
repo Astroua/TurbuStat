@@ -23,7 +23,9 @@ env:
         - CONDA_CHANNELS='astropy-ci-extras astropy'
         - SETUP_XVFB=True
 
-        - CONDA_DEPENDENCIES='pytest=3.9.3 scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
+        - CONDA_DEPENDENCIES='sip<4.19 pytest=3.9.3 scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
+
+        - MPLBACKEND="Agg"
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
@@ -49,7 +51,7 @@ matrix:
         # may run for a long time
         - os: linux
           env: SETUP_CMD='build_docs -w'
-               CONDA_DEPENDENCIES='pytest scipy matplotlib pandas statsmodels scikit-learn mock sphinx_bootstrap_theme cython'
+               CONDA_DEPENDENCIES='sip<4.19 pytest=3.9.3 scipy matplotlib pandas statsmodels scikit-learn mock sphinx_bootstrap_theme cython'
 
         # Now try Astropy dev and LTS vesions with the latest 3.x and 2.7.
         # astropy dev is now >=3.5 only
@@ -80,14 +82,6 @@ matrix:
         - os: linux
           env: NUMPY_VERSION=prerelease
                EVENT_TYPE='pull_request push cron'
-
-# before_install:
-#     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-#     - chmod +x miniconda.sh
-#     - ./miniconda.sh -b
-#     - export PATH=/home/travis/miniconda2/bin:$PATH
-#     - export PATH=/home/travis/miniconda/bin:$PATH
-#     - conda update --yes conda
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
