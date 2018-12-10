@@ -697,3 +697,6 @@ class StatisticBase_PSpec2D(object):
 
         if save_name is not None:
             plt.savefig(save_name)
+            plt.close()
+        else:
+            plt.show()

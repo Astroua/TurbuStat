@@ -876,6 +876,8 @@ class DeltaVariance_Distance(object):
             if save_name is not None:
                 plt.savefig(save_name)
                 plt.close()
+            else:
+                plt.show()
 
         return self
 
