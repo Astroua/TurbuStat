@@ -4,6 +4,7 @@ Cython
 scipy
 astropy-helpers
 astropy
+sphinx_astropy
 mock
 numpydoc
 sphinx_bootstrap_theme
