@@ -183,7 +183,7 @@ There will now be two slopes, and a break point returned:
 
 On scales smaller than 4 pixels, the curve may tend to steepen. This is due to the finite beam-size (for observational data; see `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_).
 
-Volker Ossenkopf-Okada's IDL Delta-Variance codes is available `here <https://hera.ph1.uni-koeln.de/~ossk/Myself/deltavariance.html>`_.
+Volker Ossenkopf-Okada's IDL Delta-Variance codes is available `here <https://hera.ph1.uni-koeln.de/~ossk/Myself/deltavariance.html>`__.
 
 
 References
