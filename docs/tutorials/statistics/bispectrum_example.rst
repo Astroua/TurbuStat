@@ -18,7 +18,7 @@ The bispectrum retains phase information which is lost in the :ref:`power spectr
 
 The use of the bispectrum in the ISM was introduced by `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_, and is further used in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ and `Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_.
 
-The phase information retained by the bispectrum requires it to be a complex quantity. A real, normalized version can be expressed through the `bicoherence <https://en.wikipedia.org/wiki/Bicoherence>`_. The bicoherence is a measure of phase coupling alone, where the maximal values of 1 and 0 represent complete coupled and uncoupled, respectively. The form that is used here is defined by :ref:`Hagihira et al. 2001 <ref-hagihira2001>`:
+The phase information retained by the bispectrum requires it to be a complex quantity. A real, normalized version can be expressed through the `bicoherence <https://en.wikipedia.org/wiki/Bicoherence>`_. The bicoherence is a measure of phase coupling alone, where the maximal values of 1 and 0 represent complete coupled and uncoupled, respectively. The form that is used here is defined by `Hagihira et al. 2001 <https://www.ncbi.nlm.nih.gov/pubmed/11574365>`_:
 
 .. math::
     b(k_1, k_2) = \frac{|B(k_1, k_2)|}{\sum_{k_1, k_2} |F(k_1)F(k_2)F^{\ast}(k_1 + k_2)|}

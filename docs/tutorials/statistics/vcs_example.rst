@@ -134,7 +134,7 @@ This is still not an optimal fit. There are large deviations as the single break
 
 This appears to be a better fit! Also, note that the `low_cut` and `high_cut` parameters can be given in pixel or spectral frequency units. We estimated `low_cut` from the previous example, where the plot was already in spectral frequency units.
 
-Based on the power spectrum slope of :math:`-3.2\pm0.1` we found using the zeroth moment map (:ref:`Power Spectrum tutorial <pspec_tutorial>`), this data is in the *steep* regime, where density fluctuations do not dominate at any spectral scale. Using the asymptotic case from Fig. 2 in :ref:`Lazarian & Pogosyan 2006 <ref-lp06>`, the slopes should be close to :math:`-6 / m` at small scales and :math:`-2 / m` on large scales, where :math:`m` is the index of the velocity field. The second slope in the fit summary (`x2`) is defined *relative* to the first slope (`x1`). The true slopes can be accessed through:
+Based on the power spectrum slope of :math:`-3.2\pm0.1` we found using the zeroth moment map (:ref:`Power Spectrum tutorial <pspec_tutorial>`), this data is in the *steep* regime, where density fluctuations do not dominate at any spectral scale. Using the asymptotic case from Fig. 2 in `Lazarian & Pogosyan 2006 <https://ui.adsabs.harvard.edu/#abs/2006ApJ...652.1348L/abstract>`_, the slopes should be close to :math:`-6 / m` at small scales and :math:`-2 / m` on large scales, where :math:`m` is the index of the velocity field. The second slope in the fit summary (`x2`) is defined *relative* to the first slope (`x1`). The true slopes can be accessed through:
 
     >>> vcs.slope  # doctest: +SKIP
     array([ -9.19479557, -21.58069847])
@@ -150,7 +150,7 @@ Since, in this regime, both components only rely on the velocity field, they sho
 
 Each component does give a similar estimate for :math:`m`. There is the additional issue with the simulated data as to how the inertial range should be handled. Certainly the slope at smaller scales is made steeper if portions are outside the spatial inertial range.
 
-While we find a good fit to the data, the VCS transition between the two regimes is smoothed over.  This is a break down of assuming the asymptotic regimes, and is a break down of the simplified segmented linear model that has been used. The model presented in :ref:`Chepurnov et al. 2010 <ref-chepurnov2010>` and :ref:`Chepurnov et al. 2015 <ref-chepurnov2015>`, which account for a smooth transition over the entire spectrum, will be a more effective and useful choice. This model will be included in a future release of TurbuStat.
+While we find a good fit to the data, the VCS transition between the two regimes is smoothed over.  This is a break down of assuming the asymptotic regimes, and is a break down of the simplified segmented linear model that has been used. The model presented in `Chepurnov et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...714.1398C/abstract>`_ and `Chepurnov et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...810...33C/abstract>`_, which account for a smooth transition over the entire spectrum, will be a more effective and useful choice. This model will be included in a future release of TurbuStat.
 
 References
 ----------
