@@ -7,9 +7,9 @@ PDF
 Overview
 --------
 
-A common technique used in ISM and molecular cloud studies is the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., :ref:`Kowal et al. 2007 <ref-kowal2007>`, :ref:`Federrath et al. 2010 <ref-federrath2010>`).
+A common technique used in ISM and molecular cloud studies is the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_, `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_).
 
-A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs (:ref:`Lombardi et al. 2015 <ref-lombardi2015>`). TurbuStat's implementation seeks to be flexible because of this. Parametric and non-parametric measures to describe PDFs are shown below.
+A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs (`Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_). TurbuStat's implementation seeks to be flexible because of this. Parametric and non-parametric measures to describe PDFs are shown below.
 
 Using
 -----
@@ -195,14 +195,22 @@ References
 
 As stated above, there are a ton of papers measuring properties of the PDF. Below are just a few examples with different PDF uses and discussions:
 
-.. _ref-kowal2007:
+`Miesch et al. 1995 <https://ui.adsabs.harvard.edu/#abs/1995ApJ...450L..27M/abstract>`_
+
+`Ostriker et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...546..980O/abstract>`_
 
 `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_
 
-.. _ref-federrath2010:
+`Federrath et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...688L..79F/abstract>`_
+
+`Goodman et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...692...91G/abstract>`_
 
 `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_
 
-.. _ref-lombardi2015:
-
 `Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_
+
+`Alves et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017A&A...606L...2A/abstract>`_
+
+`Burkhart et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017ApJ...834L...1B/abstract>`_
+
+`Chen et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...859..162C/abstract>`_

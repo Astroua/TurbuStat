@@ -8,9 +8,9 @@ Statistical Moments
 Overview
 --------
 
-A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (:ref:`Falgarone et al. 1994 <ref-falgarone1994>`). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by :ref:`Kowal et al. 2007 <ref-kowal2007>` and extended in :ref:`Burkhart et al. 2010 <ref-burkhart2010>`, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. This provides an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
+A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (`Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_ and extended in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. This provides an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
 
-For the purpose of comparing these spatial moment maps between data sets, :ref:`Burkhart et al. 2010 <ref-burkhart2010>` recommend using the third and fourth moments - the skewness and kurtosis, respectively - since they are independent of the mean and normalized by the standard deviation.
+For the purpose of comparing these spatial moment maps between data sets, `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ recommend using the third and fourth moments---the skewness and kurtosis, respectively---since they are independent of the mean and normalized by the standard deviation.
 
 
 Using
@@ -104,14 +104,16 @@ Whenever a radius with an angular or physical units is given, the radius of the 
 References
 ----------
 
-.. _ref-falgarone1994:
-
 `Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_
 
-.. _ref-kowal2007:
+`Padoan et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...525..318P/abstract>`_
 
 `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_
 
-.. _ref-burkhart2010:
+`Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_
 
 `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..122B/abstract>`_
+
+`Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_

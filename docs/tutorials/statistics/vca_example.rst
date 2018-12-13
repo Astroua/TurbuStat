@@ -8,9 +8,9 @@ Velocity Channel Analysis (VCA)
 Overview
 --------
 
-A major advantage of a spectral-line data cube, rather than an integrated two-dimensional image, is that it captures aspects of both the density and velocity fluctuations in the field of observation. :ref:`Lazarian & Pogosyan 2000 <ref-lp00>` and :ref:`Lazarian & Pogosyan 2004 <ref-lp04>` derived how the power spectrum from a cube depends on the statistics of the density and velocity fields for the 21-cm Hydrogen line, allowing for each their properties to be examined (provided the data has sufficient spectral resolution).
+A major advantage of a spectral-line data cube, rather than an integrated two-dimensional image, is that it captures aspects of both the density and velocity fluctuations in the field of observation. `Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_ and `Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_ derived how the power spectrum from a cube depends on the statistics of the density and velocity fields for the 21-cm Hydrogen line, allowing for each their properties to be examined (provided the data has sufficient spectral resolution).
 
-The Lazarian & Pogosyan theory predicts two regimes based on the the power-spectrum slope: the *shallow* (:math:`n < -3`) and the *steep* (:math:`n < -3`) regimes. In the case of optically thick line emission, :ref:`Lazarian & Pogosyan 2004 <ref-lp04>` show that the slope saturates to :math:`n = -3` (see :ref:`Burkhart et al. 2013 <ref-burkhart2013>` as well). The VCA predictions in these different regimes are shown in Table 1 of :ref:`Chepurnov & Lazarian 2009 <ref-chepurnov09>` (also see Table 3 in :ref:`Lazarian 2009 <ref-lazarian09>`). The complementary :ref:`Velocity Coordinate Spectrum <vca_tutorial>` can be used in tandem with VCA.
+The Lazarian & Pogosyan theory predicts two regimes based on the the power-spectrum slope: the *shallow* (:math:`n < -3`) and the *steep* (:math:`n < -3`) regimes. In the case of optically thick line emission, `Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_ show that the slope saturates to :math:`n = -3` (see `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_ as well). The VCA predictions in these different regimes are shown in Table 1 of `Chepurnov & Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_ (also see Table 3 in `Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009SSRv..143..357L/abstract>`_). The complementary :ref:`Velocity Coordinate Spectrum <vca_tutorial>` can be used in tandem with VCA.
 
 Using
 -----
@@ -146,7 +146,7 @@ The values of the slope after the break point (`x2`) in the fit description is d
 
 The slope above the break point is within the uncertainty of the slope we found in the second example (:math:`-3.1\pm0.1`). The uncertainty we find here is nearly half of the previous one since more points have been used in this fit.
 
-The Lazarian & Pogosyan theory predicts that the VCA power-spectrum depends on the size of the velocity slices in the data cube (e.g., :ref:`Stanimirovic & Lazarian 2001 <ref-sl01>`). `~turbustat.statistics.VCA` allows for the velocity channel thickness to be changed with `channel_width`. This runs a routine that spectrally smooths the cube with a Gaussian kernel, whose width matched the target `channel_width`, then interpolates the data onto a new grid at the new `channel_width`. The example data used here has spectral channels of :math:`\sim 40` m / s. We can re-run VCA on this data with a channel width of :math:`\sim 400` m / s, and compare to the original slope:
+The Lazarian & Pogosyan theory predicts that the VCA power-spectrum depends on the size of the velocity slices in the data cube (e.g., `Stanimirovic & Lazarian 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...551L..53S/abstract>`_). `~turbustat.statistics.VCA` allows for the velocity channel thickness to be changed with `channel_width`. This runs a routine that spectrally smooths the cube with a Gaussian kernel, whose width matched the target `channel_width`, then interpolates the data onto a new grid at the new `channel_width`. The example data used here has spectral channels of :math:`\sim 40` m / s. We can re-run VCA on this data with a channel width of :math:`\sim 400` m / s, and compare to the original slope:
 
     >>> vca_thicker_channel = VCA(cube, distance=250 * u.pc,
     ...                           channel_width=400 * u.m / u.s)  # doctest: +SKIP
@@ -223,26 +223,24 @@ Most observational data will be smoothed over the beam size, which will steepen 
 References
 ----------
 
-.. _ref-lp00:
-
 `Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_
 
-.. _ref-lp04:
-
-`Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_
-
-.. _ref-sl01:
+`Dickey et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...561..264D/abstract>`_
 
 `Stanimirovic & Lazarian 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...551L..53S/abstract>`_
 
-.. _ref-burkhart2013:
+`Miville-Deschenes et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...593..831M/abstract>`_
 
-`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
+`Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_
 
-.. _ref-chepurnov09:
+`Muller et al. 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..845M/abstract>`_
+
+`Padoan et al. 2006 <https://ui.adsabs.harvard.edu/#abs/2006ApJ...653L.125P/abstract>`_
 
 `Chepurnov & Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_
 
-.. _ref-lazarian09:
-
 `Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009SSRv..143..357L/abstract>`_
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
+
+`Kandel et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016MNRAS.461.1227K/abstract>`_

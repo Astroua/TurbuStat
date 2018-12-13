@@ -8,7 +8,7 @@ Spectral Correlation Function (SCF)
 Overview
 --------
 
-The Spectral Correlation Function was introduced by :ref:`Rosolowsky et al. 1999 <ref-rosolowsky1999>` and :ref:`Padoan et al. 2001 <ref-padoan2001>` to quantify the correlation of a spectral-line data cube as a function of spatial separation. Formally, this can be expressed as
+The Spectral Correlation Function was introduced by `Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_ and `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_ to quantify the correlation of a spectral-line data cube as a function of spatial separation. Formally, this can be expressed as
 
 .. math::
 
@@ -18,7 +18,7 @@ The Spectral Correlation Function was introduced by :ref:`Rosolowsky et al. 1999
 
 :math:`S(\boldsymbol{\ell})` is the total correlation between the cube, and the cube shifted by the *lag*, the vector :math:`\boldsymbol{\ell}=(\Delta x, \Delta y)`. By repeating this process for a series of :math:`\Delta x, \Delta y)` in the spatial dimensions, a 2D correlation surface is created. This surface describes the spatial scales on which the spectral features begin to change.
 
-The correlation surface can be further simplified by computing an azimuthal average, yielding a 1D spectrum of the correlation vs. length of the lag vector. This form, as is presented in :ref:`Rosolowsky et al. 1999 <ref-rosolowsky1999>` and :ref:`Padoan et al. 2001 <ref-padoan2001>`, yields a power-law relation, whose slope can be used to quantify differences between different spectral cubes. An example of this comparison is the study by :ref:`Gaches et al. 2015 <ref-gaches2015>`, where the effect of chemical species analyzed is traced through changes in the SCF slope.
+The correlation surface can be further simplified by computing an azimuthal average, yielding a 1D spectrum of the correlation vs. length of the lag vector. This form, as is presented in `Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_ and `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_, yields a power-law relation, whose slope can be used to quantify differences between different spectral cubes. An example of this comparison is the study by `Gaches et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...799..235G/abstract>`_, where the effect of chemical species analyzed is traced through changes in the SCF slope.
 
 Using
 -----
@@ -143,7 +143,7 @@ The one-dimensional power spectrum in the previous examples is averaged over all
 
 `theta_0` is the angle at the center of the azimuthal mask and `delta_theta` is the width of that mask. The mask is shown on the SCF surface by the radial blue-dashed contours.
 
-Here the fit limits were given in pixel units, but angular units and physical units (if a distance is given) can also be passed. For these data, there is some deviation from a power-law at small lags over the range of lags used and so limiting the fitting range has not significantly changed the fit. See Figure 8 in :ref:`Padoan et al. 2001 <ref-padoan2001>` for an example of deviations from power-law behaviour in the SCF spectrum.
+Here the fit limits were given in pixel units, but angular units and physical units (if a distance is given) can also be passed. For these data, there is some deviation from a power-law at small lags over the range of lags used and so limiting the fitting range has not significantly changed the fit. See Figure 8 in `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_ for an example of deviations from power-law behaviour in the SCF spectrum.
 
 The slope of the model can be accessed with `scf.slope` and its standard error with `scf.slope_err`. The slope and intercept values are in `scf.fit.params`. `scf.fitted_model` can be used to evaluate the model at any given lag value. For example:
 
@@ -241,14 +241,14 @@ Note that if `keep_data=False` was used when saving the file, the loaded version
 References
 ----------
 
-.. _ref-rosolowsky1999:
-
 `Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_
-
-.. _ref-padoan2001:
 
 `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_
 
-.. _ref-gaches2015:
+`Padaon et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...588..881P/abstract>`_
+
+`Muller et al. 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..845M/abstract>`_
+
+`Yeremi et al. 2014 <https://ui.adsabs.harvard.edu/#abs/2014ApJ...783...93Y/abstract>`_
 
 `Gaches et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...799..235G/abstract>`_

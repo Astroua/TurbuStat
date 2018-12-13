@@ -9,6 +9,11 @@ Velocity Coordinate Spectrum (VCS)
 Overview
 --------
 
+The Velocity Coordinate Spectrum (VCS) was present in the theoretical framework of `Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_, and further developed in `Lazarian & Pogosyan 2006 <https://ui.adsabs.harvard.edu/#abs/2006ApJ...652.1348L/abstract>`_. The VCS is complementary to the :ref:`VCA <vca_tutorial>`, but rather than integrating over the spectral dimension in the VCA, the spatial dimensions are integrated over.  This results in a 1D power-spectrum whose properties and shape are set by the underlying turbulent velocity and density fields, and the typical velocity dispersion and beam size of the data.
+
+There are two asymptotic regimes of the VCS corresponding to high and low resolution (`Lazarian & Pogosyan 2006 <https://ui.adsabs.harvard.edu/#abs/2006ApJ...652.1348L/abstract>`_). The transition between these regimes depends on the spatial resolution (i.e., beam size) of the data, the spectral resolution of the data, and the velocity dispersion. The current VCS implementation in TurbuStat fits a broken linear model to approximate the asymptotic regimes, rather than fitting with the full VCS formalism (`Chepurnov et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...714.1398C/abstract>`_, `Chepurnov et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...810...33C/abstract>`_).  We assume that the break point lies at the transition point between the regimes and label velocity frequencies smaller than the break as "large-scale" and frequencies larger than the break as "small-scale".
+
+A summary of the VCS asymptotic regimes is given in Table 3 of `Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009SSRv..143..357L/abstract>`_.
 
 Using
 -----
@@ -150,30 +155,18 @@ While we find a good fit to the data, the VCS transition between the two regimes
 References
 ----------
 
-.. _ref-lp00:
-
 `Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_
-
-.. _ref-lp04:
-
-`Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_
-
-.. _ref-lp06:
 
 `Lazarian & Pogosyan 2006 <https://ui.adsabs.harvard.edu/#abs/2006ApJ...652.1348L/abstract>`_
 
-.. _ref-chepurnov09:
+`Lazarian & Pogosyan 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...686..350L/abstract>`_
 
 `Chepurnov & Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_
 
-.. _ref-lazarian09:
-
 `Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009SSRv..143..357L/abstract>`_
 
-.. _ref-chepurnov2010:
+`Padoan et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...707L.153P/abstract>`_
 
 `Chepurnov et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...714.1398C/abstract>`_
-
-.. _ref-chepurnov2015:
 
 `Chepurnov et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...810...33C/abstract>`_

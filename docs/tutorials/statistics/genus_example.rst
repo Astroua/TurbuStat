@@ -13,9 +13,7 @@ If a region has a negative Genus statistics, it is dominate by holes in the emis
 
 .. image:: images/genus_random.png
 
-:ref:`Kowal et al. 2007 <ref-kowal2007>` constructed Genus curves for a set of simulations to investigate the effect of changing the Mach number and the Alfvenic Mach number. The isocontours were taken for a range of density values in the full position-position-position space.
-
-:ref:`Chepurnov et al. 2008 <ref-chepurnov2008>` then used this technique on an HI integrated intensity image of the Small Magellanic Cloud (SMC). The range of values used to create the curve are the HI intensities in the image. They investigated the change in the morphology over several regions and at different smoothing scales.
+`Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_ constructed Genus curves for a set of simulations to investigate the effect of changing the Mach number and the Alfvenic Mach number. The isocontours were taken for a range of density values in the full position-position-position space. Applications to observations includes `Chepurnov et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...688.1021C/abstract>`_ and `Burkhart et al. 2012 <https://ui.adsabs.harvard.edu/#abs/2012ApJ...749..145B/abstract>`_.
 
 Using
 -----
@@ -85,10 +83,8 @@ Note that the smooth size shown in the plots is always the smoothing radius in p
 References
 ----------
 
-.. _ref-kowal2007:
-
 `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_
 
-.. _ref-chepurnov2008:
-
 `Chepurnov et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...688.1021C/abstract>`_
+
+`Burkhart et al. 2012 <https://ui.adsabs.harvard.edu/#abs/2012ApJ...749..145B/abstract>`_

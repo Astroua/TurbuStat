@@ -8,9 +8,9 @@ Wavelets
 Overview
 --------
 
-A wavelet transform can be used to filter structure on certain scales, where the scale is typically related to the size and choice of wavelet kernel. By calculating the amount of structure using different sized kernels, the amount of structure on different scales can be calculated. This makes the technique similar to the power-spectrum, but the power at given scale is calculated in the image domain. This approach was introduced for use on astrophysical turbulence by :ref:`Gill & Henriksen 1990 <ref-gill1990>`. They used a Mexican-Hat (or Ricker) wavelet for the transform and used the sum of positive values in each filtered map to produce a one-dimensional spectrum between the scale and amount of structure at that scale.
+A wavelet transform can be used to filter structure on certain scales, where the scale is typically related to the size and choice of wavelet kernel. By calculating the amount of structure using different sized kernels, the amount of structure on different scales can be calculated. This makes the technique similar to the power-spectrum, but the power at given scale is calculated in the image domain. This approach was introduced for use on astrophysical turbulence by `Gill & Henriksen 1990 <https://ui.adsabs.harvard.edu/#abs/1990ApJ...365L..27G/abstract>`_. They used a Mexican-Hat (or Ricker) wavelet for the transform and used the sum of positive values in each filtered map to produce a one-dimensional spectrum between the scale and amount of structure at that scale.
 
-This technique has many similarities to :ref:`Delta-Variance <delvar_tutorial>`. Both create a set of filtered maps at different wavelet scales, though the Delta-Variance splits the wavelet kernel into separate component and normalizes by a weight map to reduce edge effects. From the filtered maps, the Delta-Variance measures the variance across the entire map to estimate the amount of structure, while the Wavelet transform assumes the amount of structure is represented by the total of the positive values. From both methods, the slope of the one-dimensional spectrum is the desired measurement.
+This technique has many similarities to :ref:`Delta-Variance <delvar_tutorial>` (see comparison in `Zielinsky & Stutzki 1999 <https://ui.adsabs.harvard.edu/\#abs/1999A&A...347..630Z>`_). Both create a set of filtered maps at different wavelet scales, though the Delta-Variance splits the wavelet kernel into separate component and normalizes by a weight map to reduce edge effects. From the filtered maps, the Delta-Variance measures the variance across the entire map to estimate the amount of structure, while the Wavelet transform assumes the amount of structure is represented by the total of the positive values. From both methods, the slope of the one-dimensional spectrum is the desired measurement.
 
 
 Using
@@ -164,6 +164,6 @@ The unnormalized transform appears to follow a power-law relation over all of th
 References
 ----------
 
-.. _ref-gill1990:
+`Gill & Henriksen 1990 <https://ui.adsabs.harvard.edu/#abs/1990ApJ...365L..27G/abstract>`_
 
-`Gill & Henriksen <https://ui.adsabs.harvard.edu/#abs/1990ApJ...365L..27G/abstract>`_
+`Zielinsky & Stutzki 1999 <https://ui.adsabs.harvard.edu/\#abs/1999A&A...347..630Z>`_

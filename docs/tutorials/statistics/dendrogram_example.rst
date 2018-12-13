@@ -7,16 +7,16 @@ Dendrograms
 Overview
 --------
 
-In general, dendrograms provide a hierarchical description of datasets, which may be used to identify clusters of similar objects or variables. This is known as `hierarchical clustering <https://en.wikipedia.org/wiki/Hierarchical_clustering>`_. In the case of position-position-velocity (PPV) cubes, a dendrogram is a hierarchical decomposition of the emission in the cube. This decomposition was introduced by :ref:`Rosolowsky et al. 2008 <ref-rosolowsky2008>` to calculate the multiscale properties of molecular gas in nearby clouds. The tree structure is comprised of branches and leaves. Branches are the connections, while leaves are the tips of the branches.
+In general, dendrograms provide a hierarchical description of datasets, which may be used to identify clusters of similar objects or variables. This is known as `hierarchical clustering <https://en.wikipedia.org/wiki/Hierarchical_clustering>`_. In the case of position-position-velocity (PPV) cubes, a dendrogram is a hierarchical decomposition of the emission in the cube. This decomposition was introduced by `Rosolowsky et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...679.1338R/abstract>`_ to calculate the multiscale properties of molecular gas in nearby clouds. The tree structure is comprised of branches and leaves. Branches are the connections, while leaves are the tips of the branches.
 
-:ref:`Burkhart et al. 2013 <ref-burkhart2013>` introduced two statistics for comparing the dendrograms of two cubes: the relationship between the number of leaves and branches in the tree versus the minimum branch length, and a histogram comparison of the peak intensity in a branch or leaf. The former statistic shows a power-law like turn-off with increasing branch length.
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_ introduced two statistics for comparing the dendrograms of two cubes: the relationship between the number of leaves and branches in the tree versus the minimum branch length, and a histogram comparison of the peak intensity in a branch or leaf. The former statistic shows a power-law like turn-off with increasing branch length.
 
 Using
 -----
 
 **The data in this tutorial are available** `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_.
 
-**Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
+**Requires the optional astrodendro package to be installed. See the** `documentation <https://dendrograms.readthedocs.io>`_
 
 Importing the dendrograms code, along with a few other common packages:
 
@@ -141,14 +141,8 @@ Note that the dendrogram and data are **NOT** saved, and only the statistic outp
 References
 ----------
 
-.. _ref-rosolowsky2008:
-
 `Rosolowsky et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...679.1338R/abstract>`_
 
-.. _ref-goodman2009:
-
-`Goodman et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2009Natur.457...63G/abstract>`_
-
-.. _ref-burkhart2013:
+`Goodman et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009Natur.457...63G/abstract>`_
 
 `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_
