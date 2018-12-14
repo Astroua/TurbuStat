@@ -7,7 +7,7 @@ Bispectrum
 Overview
 --------
 
-The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly used two-point statistics, whose autocorrelation function is the power spectrum. The bispectrum is computed using:
+The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly-used two-point statistics, whose autocorrelation function is the Fourier transform of the power spectrum. The bispectrum is computed using:
 
 .. math::
     B(k_1, k_2) = F^{\ast}(k_1 + k_2)\,F(k_1)\,F(k_2)

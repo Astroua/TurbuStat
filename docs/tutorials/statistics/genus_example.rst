@@ -9,7 +9,7 @@ Overview
 
 Genus statistics provide a measure of a region's topology. At a given value in the data, the genus value is the number of discrete region above the value minus the number of regions below it. When this process is repeated over a range of values, a Genus curve can be constructed. The technique has previously been used to study CMB deviations from a Gaussian distribution.
 
-If a region has a negative Genus statistics, it is dominate by holes in the emission ("swiss cheese" morphology). A positive Genus value implies as "meatball" morphology, where the emission is localized into clumps. The Genus curve of a Gaussian field is shown below. Note that at the mean value (0.0), the Genus value is zero: at the mean intensity, there is no preference to either morphological type.
+If a region has a negative Genus statistics, it is dominate by holes in the emission ("swiss cheese" morphology). A positive Genus value implies a "meatball" morphology, where the emission is localized into clumps. The Genus curve of a Gaussian field is shown below. Note that at the mean value (0.0), the Genus value is zero: at the mean intensity, there is no preference to either morphological type.
 
 .. image:: images/genus_random.png
 
