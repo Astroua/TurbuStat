@@ -8,12 +8,12 @@ Modified Velocity Centroids
 Overview
 --------
 
-Centroid statistics have been used to study molecular clouds for decades. One of the best known works by :ref:`Miesch & Bally 1994 <ref-miesch_bally1994>` created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
+Centroid statistics have been used to study molecular clouds for decades. For example, `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_ created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
 
 .. math::
     M_1 = \frac{\Sigma_{v}\, v \,I(x, v)\, \delta v}{\Sigma_{v}\, I(x, v)\,  \delta v} = \frac{\Sigma_{v}\, v\, I(x, v)\, \delta v}{M_0},
 
-where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. :ref:`Lazarian & Esquivel 2003 <ref-lazarian_esquivel_2003>` proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
+where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
     \Sigma_{v}\, v I(x, v)\, \delta v.
@@ -23,7 +23,7 @@ The structure function of the modified velocity centroid is then the squared dif
 .. math::
     P_2(k) = |\mathcal{M}_0\,\mathcal{M}_1|^2 - <M_2>_{x}\,|\mathcal{M}_0|^2,
 
-where :math:`\mathcal{M}_i` denotes the Fourier transform of the ith moment.
+where :math:`\mathcal{M}_i` denotes the Fourier transform of the ith moment. MVC is also explored in `Esquivel & Lazarian 2005 <https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract>`_.
 
 
 Using
@@ -216,10 +216,8 @@ Most observational data will be smoothed over the beam size, which will steepen 
 References
 ----------
 
-.. _ref-miesch_bally1994:
-
 `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_
 
-.. _ref-lazarian_esquivel_2003:
-
 `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_
+
+`Esquivel & Lazarian 2005 <https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract>`_

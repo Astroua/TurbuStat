@@ -6,14 +6,14 @@ Tsallis Statistics
 Overview
 --------
 
-The `Tsallis statistic <https://en.wikipedia.org/wiki/Tsallis_statistics>`_ was introduced by :ref:`Tsallis 1988 <ref-Tsallis1988>` for describing multi-fractal (non-Gaussian) systems. Its use for describing properties of the ISM has been explored in :ref:`Esquivel & Lazarian 2010 <ref-Esquivel2010>` and :ref:`Tofflemire et al. 2011 <ref-Tofflemire2011>`. In both of these works, they consider describing an incremental lags in a field by the Tsallis distribution. The specific form of this Tsallis distribution is the `q-Gaussian distribution <https://en.wikipedia.org/wiki/Q-Gaussian_distribution>`_:
+The `Tsallis statistic <https://en.wikipedia.org/wiki/Tsallis_statistics>`_ was introduced by `Tsallis 1988 <https://link.springer.com/article/10.1007%2FBF01016429>`_ for describing multi-fractal (non-Gaussian) systems. Its use for describing properties of the ISM has been explored in `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...710..125E/abstract>`_ and `Tofflemire et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...736...60T/abstract>`_. In both of these works, they consider describing an incremental lags in a field by the Tsallis distribution. The specific form of this Tsallis distribution is the `q-Gaussian distribution <https://en.wikipedia.org/wiki/Q-Gaussian_distribution>`_:
 
 .. math::
     R_q = a \left[ 1 + \left( q - 1 \right) \frac{\left[ \Delta f(r) \right]^2}{w^2} \right]^{\frac{-1}{q - 1}}
 
 where :math:`a` is the normalization, :math:`q` controls how "peaked" the distribution is (and is therefore closely related to the kurtosis; :ref:`Moments tutorial <statmoments_tutorial>`), and :math:`w` is the width of the distribution. As :math:`q \rightarrow 1` the distribution approaches a Gaussian, while :math:`q > 1` gives a flattened distribution with heavier tails. The field is a standardized measure of some quantity: :math:`\Delta f(r) = \left[ f(x, r) - \left< f(x, r) \right>_x \right] / \sqrt{{\rm var}\left[f(x, r)\right]}`, where the angle brackets indicate an average over :math:`x`. The input quantity is the difference over some scale :math:`r` of a field :math:`f(x)`:  :math:`f(x, r) = f(x) - f(x + r)`. The :math:`x, r` are vectors for multi-dimensional data and the formalism is valid for any dimension of data. One distribution is generated for each scale :math:`r`, and the variation of the distribution parameters with changing :math:`r` can be tracked.
 
-Both :ref:`Esquivel & Lazarian 2010 <ref-Esquivel2010>` and :ref:`Tofflemire et al. 2011 <ref-Tofflemire2011>` calculate the Tsallis distribution properties for 3D (spatial) and 2D (column density) fields for different sets of simulations. Since TurbuStat is intended to work solely for observable quantities, only the integrated intensity or column density maps can currently be used.
+Both `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...710..125E/abstract>`_ and `Tofflemire et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...736...60T/abstract>`_ calculate the Tsallis distribution properties for 3D (spatial) and 2D (column density) fields for different sets of simulations. Since TurbuStat is intended to work solely for observable quantities, only the integrated intensity or column density maps can currently be used.
 
 Using
 -----
@@ -49,7 +49,7 @@ With default values, the Tsallis distribution fits are calculated using:
 
 This returns an astropy table of the fits to each of the parameters, their standard errors, and the reduced :math:`\chi^2` values (`~turbustat.statistics.Tsallis.tsallis_table`). The figure shows the histograms at each lag and their respective fits. The solid black line is the fit and the dashed red lines indicated which data was used to fit the distribution. The x-axis shows the standardized values of the difference maps at each lag, such that the mean is zero and the standard deviation is one. Because of this, there is no mean parameter fit in the Tsallis distribution. Examining the histograms and the fits is useful for showing where the histograms deviate significantly from the model, something that is difficult to determine from the reduced :math:`\chi^2` values alone.
 
-A key to the works of :ref:`Esquivel & Lazarian 2010 <ref-Esquivel2010>` and :ref:`Tofflemire et al. 2011 <ref-Tofflemire2011>` is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
+A key to the works of `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...710..125E/abstract>`_ and `Tofflemire et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...736...60T/abstract>`_ is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
 
     >>> tsallis.plot_parameters()  # doctest: +SKIP
 
@@ -128,14 +128,14 @@ One final parameter can be changed: the number of bins used to create the histog
 References
 ----------
 
-.. _ref-Tsallis1988:
-
 `Tsallis 1988 <https://link.springer.com/article/10.1007%2FBF01016429>`_
-
-.. _ref-Esquivel2010:
 
 `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...710..125E/abstract>`_
 
-.. _ref-Tofflemire2011:
-
 `Tofflemire et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...736...60T/abstract>`_
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..122B/abstract>`_
+
+`Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_
+
+`Gonz{\'a}lez-Casanova et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018MNRAS.475.3324G>`_

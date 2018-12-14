@@ -8,9 +8,9 @@ Statistical Moments
 Overview
 --------
 
-A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (:ref:`Falgarone et al. 1994 <ref-falgarone1994>`). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by :ref:`Kowal et al. 2007 <ref-kowal2007>` and extended in :ref:`Burkhart et al. 2010 <ref-burkhart2010>`, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. This provides an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
+A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (`Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_ and extended in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. This provides an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
 
-For the purpose of comparing these spatial moment maps between data sets, :ref:`Burkhart et al. 2010 <ref-burkhart2010>` recommend using the third and fourth moments - the skewness and kurtosis, respectively - since they are independent of the mean and normalized by the standard deviation.
+For the purpose of comparing these spatial moment maps between data sets, `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ recommend using the third and fourth moments---the skewness and kurtosis, respectively---since they are independent of the mean and normalized by the standard deviation.
 
 
 Using
@@ -64,7 +64,7 @@ And the associated histograms:
 
 .. image:: images/design4_statmoments_hists_randweights.png
 
-An important consideration when choosing the radius is the balance between tracking small-scale variations and the increased uncertainty when estimating the moments with fewer data. :ref:`Burkhart et al. 2010 <ref-burkhart2010>` use approximate formulae for the standard errors of skewness and kurtosis for a normal distribution that are valid for large samples. These are :math:`\sqrt{6 / n}` for skewness and :math:`\sqrt{24 / n}` for kurtosis, where :math:`n` is the number of points. This also assumes all of these points are *independent* of each other. This typically is not true of observational data, where the data is correlated on at least the beam scale. Each of these points should be considered when choosing the minimum radius appropriate for the data set. For more information on the standard errors, see the sections on **sample** `skewness <https://en.wikipedia.org/wiki/Skewness#Sample_skewness>`_ and `kurtosis <https://en.wikipedia.org/wiki/Kurtosis#Sample_kurtosis>`_ on their Wikipedia pages.
+An important consideration when choosing the radius is the balance between tracking small-scale variations and the increased uncertainty when estimating the moments with fewer data. `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ use approximate formulae for the standard errors of skewness and kurtosis for a normal distribution that are valid for large samples. These are :math:`\sqrt{6 / n}` for skewness and :math:`\sqrt{24 / n}` for kurtosis, where :math:`n` is the number of points. This also assumes all of these points are *independent* of each other. This typically is not true of observational data, where the data is correlated on at least the beam scale. Each of these points should be considered when choosing the minimum radius appropriate for the data set. For more information on the standard errors, see the sections on **sample** `skewness <https://en.wikipedia.org/wiki/Skewness#Sample_skewness>`_ and `kurtosis <https://en.wikipedia.org/wiki/Kurtosis#Sample_kurtosis>`_ on their Wikipedia pages.
 
 What happens if the radius is chosen to be too small, making the higher-order moments highly uncertain? A new radius can be given to `~turbustat.statistics.StatMoments.run` to replace the first one given:
 
@@ -104,14 +104,16 @@ Whenever a radius with an angular or physical units is given, the radius of the 
 References
 ----------
 
-.. _ref-falgarone1994:
-
 `Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_
 
-.. _ref-kowal2007:
+`Padoan et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...525..318P/abstract>`_
 
 `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_
 
-.. _ref-burkhart2010:
+`Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_
 
 `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..122B/abstract>`_
+
+`Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_

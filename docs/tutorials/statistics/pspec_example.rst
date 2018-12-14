@@ -7,7 +7,9 @@ Spatial Power Spectrum
 Overview
 --------
 
-A common analysis technique for two-dimensional images is the spatial power spectrum -- the square of the 2D Fourier transform of the image. A radial profile of the 2D power spectrum gives the 1D power spectrum. The slope of this 1D spectrum can be compared to the expected indices in different physical limits. For example, the velocity field of Kolmogorov turbulence follows :math:`k^{-5/3}`, while Burgers' turbulence has :math:`k^{-2}`. However, observations are a combination of both velocity and density fluctuations (e.g., :ref:`Lazarian & Pogosyan 2000 <ref-lp00>`), and the measured index from an integrated intensity map depend on both components, as well as optical depth effects. For a turbulent optically thin tracer, an integrated intensity image (or zeroth moment) will have :math:`k^{-11/3}`, while an optically thick tracer saturates to :math:`k^{-3}` (:ref:`Lazarian & Pogosyan 2004 <ref-lp04>`, :ref:`Burkhart et al. 2013 <ref-burkhart2013>`). The effect of velocity resolution is discussed in the :ref:`VCA tutorial <vca_tutorial>`.
+A common analysis technique for two-dimensional images is the spatial power spectrum -- the square of the 2D Fourier transform of an image. A radial profile of the 2D power spectrum gives the 1D power spectrum. The slope of this 1D spectrum can be compared to the expected indices in different physical limits. For example, the velocity field of Kolmogorov turbulence follows :math:`k^{-5/3}`, while Burgers' turbulence has :math:`k^{-2}`.
+
+However, observations are a combination of both velocity and density fluctuations (e.g., `Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_), and the measured index from an integrated intensity map depend on both components, as well as optical depth effects. For a turbulent optically thin tracer, an integrated intensity image (or zeroth moment) will have :math:`k^{-11/3}`, while an optically thick tracer saturates to :math:`k^{-3}` (`Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_, `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_). The effect of velocity resolution is discussed in the :ref:`VCA tutorial <vca_tutorial>`.
 
 
 Using
@@ -211,14 +213,36 @@ Most observational data will be smoothed over the beam size, which will steepen 
 References
 ----------
 
-.. _ref-burkhart2013:
+Many papers have utilized the power spectrum. An incomplete list is provided below:
 
-`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
+`Crovisier & Dickey 1983 <https://ui.adsabs.harvard.edu/#abs/1983A&A...122..282C/abstract>`_
 
-.. _ref-lp04:
+`Scalo 1984 <https://ui.adsabs.harvard.edu/#abs/1984ApJ...277..556S/abstract>`_
+
+`Green 1993 <https://ui.adsabs.harvard.edu/#abs/1993MNRAS.262..327G/abstract>`_
+
+`Schlegel et al. 1998 <https://ui.adsabs.harvard.edu/#abs/1998ApJ...500..525S/abstract>`_
+
+`Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_
+
+`Elmegreen et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...548..749E/abstract>`_
+
+`Stanimirovic & Lazarian 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...551L..53S/abstract>`_
+
+`Miville-Deschenes et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003A&A...411..109M/abstract>`_
 
 `Lazarian & Pogosyan 2004 <https://ui.adsabs.harvard.edu/#abs/2004ApJ...616..943L/abstract>`_
 
-.. _ref-lp00:
+`Esquivel et al. 2005 <https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract>`_
 
-`Lazarian & Pogosyan 2000 <https://ui.adsabs.harvard.edu/#abs/2000ApJ...537..720L/abstract>`_
+`Miville-Deschenes et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...518L.104M/abstract>`_
+
+`Zhang et al. 2012 <https://ui.adsabs.harvard.edu/#abs/2012ApJ...754...29Z/abstract>`_
+
+`Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
+
+`Martin et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...809..153M/abstract>`_
+
+`Kalberla et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016A&A...595A..37K/abstract>`_
+
+`Kandel et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.464.3617K/abstract>`_

@@ -7,11 +7,11 @@ PCA
 Overview
 --------
 
-Principal Component Analysis (PCA) is primarily a dimensionality reduction technique. Generally the data are arranged into a set of columns (representing dimensions or variables) and the set of samples is contained within each row. A covariance matrix is then constructed between each pair of columns. Performing an eigenvalue decomposition of this matrix gives an orthogonal basis for the data, the components of which are the prinipal components (eigenvectors). The associated eigenvalues correspond to the variance in the data described by each principal component.
+Principal Component Analysis (PCA) is primarily a dimensionality reduction technique. Generally the data are arranged into a set of columns (representing dimensions or variables) and the set of samples is contained within each row. A covariance matrix is then constructed between each pair of columns. Performing an eigenvalue decomposition of this matrix gives an orthogonal basis for the data, the components of which are the principal components (eigenvectors). The associated eigenvalues correspond to the variance in the data described by each principal component.
 
 By ordering the principal components from the largest to smallest eigenvalue, a minimal set of eigenvectors can be found that account for a large portion of the variance within the data. These first N principal components have a (usually) much reduced dimensionality, while still containing the majority of the structure in the data. The `PCA Wikipedia <https://en.wikipedia.org/wiki/Principal_component_analysis>`_ page has a much more thorough explanation.
 
-The use of PCA on spectral-line data cubes was introduced by :ref:`Heyer & Schloerb 1997 <ref-heyer_schloerb1997>`, and thoroughly extended in a number of other papers (e.g., :ref:`Brunt, C. & Heyer, M. 2002a <ref-brunt_heyer2002_i>`, :ref:`Brunt, C. & Heyer, M. 2002b <ref-brunt_heyer2002_ii>`). An analytical derivation is given in :ref:`Brunt, C. & Heyer, M. 2013 <ref-brunt_heyer2013>`. Briefly, they use the PCA decomposition to measure the associated spectral and spatial width scales associated with each principal component. An eigenvalue can be multiplied by each spectral channel to produce an eigenimage. The autocorrelation function of that eigenimage gives an estimate of the spatial scale of that principal component. The autocorrelation of the eigenvector itself gives an associated spectral width. Using the spatial and spectral widths from the first N principal components give an estimate the size-line width relation.
+The use of PCA on spectral-line data cubes was introduced by `Heyer & Schloerb 1997 <https://ui.adsabs.harvard.edu/#abs/1997ApJ...475..173H/abstract>`_, and thoroughly extended in a number of other papers (e.g., `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_, `Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). An analytical derivation is given in `Brunt & Heyer 2013 <https://ui.adsabs.harvard.edu/#abs/2013MNRAS.433..117B/abstract>`_. Briefly, they use the PCA decomposition to measure the associated spectral and spatial width scales associated with each principal component. An eigenvalue can be multiplied by each spectral channel to produce an eigenimage. The autocorrelation function of that eigenimage gives an estimate of the spatial scale of that principal component. The autocorrelation of the eigenvector itself gives an associated spectral width. Using the spatial and spectral widths from the first N principal components give an estimate the size-line width relation.
 
 Using
 -----
@@ -68,7 +68,7 @@ Since this data is simulated, this example does not account for a finite beam si
 
 Since the correction is not linear, the slope changes with the beam correction. If the header of the data has the beam information defined, it will be automatically read in and `beam_fwhm` will not have to be given.
 
-Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in :ref:`Brunt, C. & Heyer, M. 2002a <ref-brunt_heyer2002_i>` and :ref:`Brunt, C. & Heyer, M. 2002b <ref-brunt_heyer2002_ii>` is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
+Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_ and `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_ is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
@@ -156,7 +156,7 @@ There are three methods available to estimate spectral widths of the autocorrela
 
 **Note: If your input data has few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
 
-Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in :ref:`Hogg, D, Bovy, J, & Lang D. <ref-hogg_fitting>`. The Brunt & Heyer works have used the bisector method, which has several drawbacks. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
+Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in `Hogg, Bovy & Lang 2010 <https://ui.adsabs.harvard.edu/#abs/2010arXiv1008.4686H/abstract>`_. The Brunt & Heyer works have used the bisector method. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
 
 To run ODR:
 
@@ -186,23 +186,20 @@ Since the sonic length depends on temperature and :math:`\mu`, this is a functio
 References
 ----------
 
-.. _ref-heyer_schloerb1997:
+`Heyer & Schloerb 1997 <https://ui.adsabs.harvard.edu/#abs/1997ApJ...475..173H/abstract>`_
 
-`Heyer, M., & Schloerb, P. 1997 <https://ui.adsabs.harvard.edu/#abs/1997ApJ...475..173H/abstract>`_
+`Brunt & Heyer 2013 <https://ui.adsabs.harvard.edu/#abs/2013MNRAS.433..117B/abstract>`_
 
-.. _ref-brunt_heyer2013:
+`Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_
 
-`Brunt, C. & Heyer, M. 2013 <https://ui.adsabs.harvard.edu/#abs/2013MNRAS.433..117B/abstract>`_
+`Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_
 
-.. _ref-brunt_heyer2002_i:
+`Heyer et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...680..420H/abstract>`_
 
-`Brunt, C. & Heyer, M. 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_
+`Hogg, Bovy & Lang 2010 <https://ui.adsabs.harvard.edu/#abs/2010arXiv1008.4686H/abstract>`_
 
-.. _ref-brunt_heyer2002_ii:
+`Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_
 
-`Brunt, C. & Heyer, M. 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_
+`Bertram et al. 2014 <https://ui.adsabs.harvard.edu/#abs/2014MNRAS.440..465B/abstract>`_
 
-.. _ref-hogg_fitting:
-
-`Hogg, D, Bovy, J, & Lang D. <https://ui.adsabs.harvard.edu/#abs/2010arXiv1008.4686H/abstract>`_
-
+`Correia et al. 2016 <`Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_>`_

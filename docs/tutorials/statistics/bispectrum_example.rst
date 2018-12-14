@@ -7,7 +7,7 @@ Bispectrum
 Overview
 --------
 
-The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly used two-point statistics, whose autocorrelation function is the power spectrum. The bispectrum is computed using:
+The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly-used two-point statistics, whose autocorrelation function is the Fourier transform of the power spectrum. The bispectrum is computed using:
 
 .. math::
     B(k_1, k_2) = F^{\ast}(k_1 + k_2)\,F(k_1)\,F(k_2)
@@ -16,9 +16,9 @@ where :math:`\ast` denotes the complex conjugate, :math:`F` is the Fourier trans
 
 The bispectrum retains phase information which is lost in the :ref:`power spectrum <pspec_tutorial>`, and is therefore useful for investigating phase coherence and coupling.
 
-The use of the bispectrum in the ISM was introduced by :ref:`Burkhart et al. 2009 <ref-burkhart2009>`, and recently extended in :ref:`Burkhart et al. 2016 <ref-burkhart2016>`.
+The use of the bispectrum in the ISM was introduced by `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_, and is further used in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ and `Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_.
 
-The phase information retained by the bispectrum requires it to be a complex quantity. A real, normalized version can be expressed through the `bicoherence <https://en.wikipedia.org/wiki/Bicoherence>`_. The bicoherence is a measure of phase coupling alone, where the maximal values of 1 and 0 represent complete coupled and uncoupled, respectively. The form that is used here is defined by :ref:`Hagihira et al. 2001 <ref-hagihira2001>`:
+The phase information retained by the bispectrum requires it to be a complex quantity. A real, normalized version can be expressed through the `bicoherence <https://en.wikipedia.org/wiki/Bicoherence>`_. The bicoherence is a measure of phase coupling alone, where the maximal values of 1 and 0 represent complete coupled and uncoupled, respectively. The form that is used here is defined by `Hagihira et al. 2001 <https://www.ncbi.nlm.nih.gov/pubmed/11574365>`_:
 
 .. math::
     b(k_1, k_2) = \frac{|B(k_1, k_2)|}{\sum_{k_1, k_2} |F(k_1)F(k_2)F^{\ast}(k_1 + k_2)|}
@@ -99,14 +99,10 @@ The slices are returned over angles 0 to :math:`\pi / 2`. With the azimuthal sli
 References
 ----------
 
-.. _ref-burkhart2009:
+`Hagihira et al. 2001 <https://www.ncbi.nlm.nih.gov/pubmed/11574365>`_
 
 `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_
 
-.. _ref-burkhart2016:
+`Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_
 
 `Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_
-
-.. _ref-hagihira2001:
-
-`Hagihira et al. 2001 <https://www.ncbi.nlm.nih.gov/pubmed/11574365>`_

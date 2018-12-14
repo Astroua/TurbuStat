@@ -9,9 +9,9 @@ Delta-Variance
 Overview
 --------
 
-The :math:`\Delta`-variance technique was introduced by :ref:`Stutzki et al. 1998 <ref-stutzki1998>` as a generalization of *Allan-variance*, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by :ref:`Bensch et al. 2001 <ref-bensch2001>` to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by :ref:`Ossenkopf et al. 2008a <ref-ossenkopf2008a>`, where the computation using filters of different scales was moved in to the Fourier domain, allowing for a significant improvement in speed. The following description uses their formulation.
+The :math:`\Delta`-variance technique was introduced by `Stutzki et al. 1998 <https://ui.adsabs.harvard.edu/#abs/1998A&A...336..697S/abstract>`_ as a generalization of *Allan-variance*, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_ to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_, where the computation using filters of different scales was moved in to the Fourier domain, allowing for a significant improvement in speed. The following description uses this formulation.
 
-Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with a spherically symmetric kernel - a French-hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, :ref:`Ossenkopf et al. 2008a <ref-ossenkopf2008a>` proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:
+Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with a spherically symmetric kernel - a French-hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:
 
 .. math::
     F(r) = \frac{G_{\rm core}(r)}{W_{\rm core}(r)} - \frac{G_{\rm ann}(r)}{W_{\rm ann}(r)}
@@ -23,7 +23,7 @@ where :math:`r` is the kernel size, :math:`G` is the convolved image map, and :m
 
 where :math:`W_{\rm tot}(r) = W_{\rm core}(r)\,W_{\rm ann}(r)`.
 
-Since the kernel is separated into two components, the ratio between their widths can be set independently. :ref:`Ossenkopf et al. 2008a <ref-ossenkopf2008a>` find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.
+Since the kernel is separated into two components, the ratio between their widths can be set independently. `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.
 
 Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function. Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
 
@@ -48,7 +48,7 @@ Next, we initialize the `~turbustat.statistics.DeltaVariance` class:
 
     >>> delvar = DeltaVariance(moment0, weights=moment0_err, distance=250 * u.pc)  # doctest: +SKIP
 
-The weight array is optional, but is recommended. Note that this is not the exact form of the weight array used by :ref:`Ossenkopf et al. 2008b <ref-ossenkopf2008b>`; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
+The weight array is optional, but is recommended. Note that this is not the exact form of the weight array used by `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
 
 By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the `lags` keyword. If a `~numpy.ndarray` is passed, it is assumed to be in pixel units. Lags can also be given in angular units. The diameter between the inner and outer convolution kernels is set by `diam_ratio`. By default, this is set to 1.5.
 
@@ -181,24 +181,20 @@ There will now be two slopes, and a break point returned:
 
 .. warning:: The turn-over at large scales tends to be dominated by the kernel shape rather than the data. Further, there are variations on those large scales that depend on how the convolution is done (there are some difference between v1 and v2 of astropy).
 
-On scales smaller than 4 pixels, the curve may tend to steepen. This is due to the finite beam-size (for observational data; see :ref:`Bensch et al. 2001 <ref-bensch2001>`).
+On scales smaller than 4 pixels, the curve may tend to steepen. This is due to the finite beam-size (for observational data; see `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_).
+
+Volker Ossenkopf-Okada's IDL Delta-Variance codes is available `here <https://hera.ph1.uni-koeln.de/~ossk/Myself/deltavariance.html>`__.
 
 
 References
 ----------
 
-.. _ref-stutzki1998:
-
 `Stutzki et al. 1998 <https://ui.adsabs.harvard.edu/#abs/1998A&A...336..697S/abstract>`_
 
-.. _ref-bensch2001:
+`Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_
 
-`Bensch, F. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_
-
-.. _ref-ossenkopf2008a:
+`Ossenkopf at al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001A&A...379.1005O/abstract>`_
 
 `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_
-
-.. _ref-ossenkopf2008b:
 
 `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_
