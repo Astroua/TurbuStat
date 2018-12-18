@@ -93,6 +93,10 @@ def make_ppv(vel_field, dens_field, los_axis=0,
         are returned.
     '''
 
+    # Densities better be postive
+    if (dens_field.value < 0.).any():
+        raise ValueError("The density field contains negative values.")
+
     v_therm_sq = (co.k_B * T / m).to(vel_field.unit**2)
 
     # Estimate the velocity dispersion when not given.

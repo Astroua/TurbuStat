@@ -79,3 +79,33 @@ def test_ppv(axis):
     vel_std = np.std(velocity, axis=axis)[twod_slice].to(u.km / u.s)
 
     npt.assert_allclose(vel_std.value, lwidth.value, atol=0.2)
+
+
+@pytest.mark.skipif("not SPECCUBE_INSTALL")
+@pytest.mark.xfail(raises=ValueError)
+def test_ppv_negative_density():
+    '''
+    Negative densities should give a ValueError
+    '''
+
+    # Number of samples to take along each non-projected dimension
+    size = 16
+
+    axis = 0
+
+    twod_slice = [slice(0, size), slice(0, size)]
+    threed_slice = [slice(0, size), slice(0, size)]
+    threed_slice.insert(axis, slice(None))
+
+    # Need a large enough field to have good statistics
+    velocity = make_3dfield(128, powerlaw=3.5, amp=5.e3) * u.m / u.s
+
+    density = np.ones_like(velocity.value) * u.cm**-3
+
+    density[4, 4, 4] *= -1.
+
+    cube_hdu = make_ppv(velocity[threed_slice], density[threed_slice],
+                        los_axis=axis,
+                        vel_disp=np.std(velocity, axis=axis)[twod_slice].max(),
+                        T=100 * u.K,
+                        return_hdu=True)
