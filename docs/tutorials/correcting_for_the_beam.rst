@@ -119,8 +119,8 @@ How has smoothing changed the shape of the power-spectrum?
 
 .. image:: images/rednoise_pspec_slope3_smoothed.png
 
-The slope of the power-spectrum is significantly steepened on small scales by the beam.
-And this steepening occurs on scales much larger than the beam size, which is indicated by
+The slope of the power-spectrum is significantly steepened on small scales by the beam (see the reported result in variable ``x1`` above).
+And this steepening occurs on scales much larger than the beam FWHM, which is indicated by
 the thick purple vertical line in the left-hand side of the plot.  The fitting was restricted to scales much larger than three times the beam width. However, the recovered slope is still steeper than the original -3.
 
 Also note that convolving the image with the beam causes some tapering at the edges of the
@@ -182,4 +182,4 @@ Here are the three power-spectra shown above overplotted to highlight the shape 
 
 .. image:: images/rednoise_pspec_slope3_beam_comparisons.png
 
-Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be avoided from any fitting. For example, lag scales smaller than the beam in the :ref:`Delta-Variance <delvar_tutorial>`, :ref:`Wavelets <wavelet_tutorial>`, and :ref:`SCF <scf_tutorial>` should not be fit. The spatial filtering used to measure :ref:`Statistical Moments <statmoments_tutorial>` should be set to a width of at least the beam size.
+Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be excluded from any fitting. For example, lag scales smaller than the beam in the :ref:`Delta-Variance <delvar_tutorial>`, :ref:`Wavelets <wavelet_tutorial>`, and :ref:`SCF <scf_tutorial>` should not be fit. The spatial filtering used to measure :ref:`Statistical Moments <statmoments_tutorial>` should be set to a width of at least the beam size.
