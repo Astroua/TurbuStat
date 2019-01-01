@@ -6,7 +6,7 @@ Applying Apodizing Kernels to Data
 
 Applying Fourier transforms to images with emission at the edges can lead to severe ringing effects.  This can be an issue for all spatial power-spectra, including the :ref:`PowerSpectrum <pspec_tutorial>`, :ref:`VCA <vca_tutorial>`, and :ref:`MVC <mvc_tutorial>`.
 
-A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero.  However, that shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
+A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero.  However, the shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
 
 TurbuStat has four built-in apodizing functions based on the implementations from `photutils <https://photutils.readthedocs.io/en/stable/psf_matching.html>`_:
 
@@ -88,6 +88,8 @@ To get an idea of how these apodizing functions affect the data, we can examine 
 
 The smoothly-varying windows (Hanning and Cosine) have power-spectra that consistently decrease the power. This means that the use of a Hanning or Cosine window will affect the shape of power-spectra FINISH.
 
+.. todo:: The above sentence needs to be completed?
+
 As an example, we will compare the effect each of the windows has on a red-noise image.
 
     >>> from turbustat.simulator import make_extended
@@ -107,7 +109,7 @@ As an example, we will compare the effect each of the windows has on a red-noise
 
 .. image:: images/rednoise_slope3_img.png
 
-The power-spectrum of the image should give a slope of 3:
+The power-spectrum of the image should give a slope of 3, which it does (see the variable ``x1`` in the output):
 
     >>> from turbustat.statistics import PowerSpectrum
     >>> pspec = PowerSpectrum(plaw_hdu)
@@ -139,7 +141,7 @@ The power-spectrum of the image should give a slope of 3:
 
 .. image:: images/rednoise_pspec_slope3.png
 
-The slope is nearly 3, as expected. Note that we have limited the range of frequencies fit over to avoid the largest scales. From the figure, it is clear that the samples on larger scales deviate from a power-law. This is a result of the lack of samples on these large-scales. This can be avoided by increasing the size of the radial bins, but we will stick with small bins here to highlight the affect of the apodizing kernels on the power-spectrum shape.
+The slope is nearly 3, as expected. Note that we have limited the range of frequencies fit over to avoid the largest scales using the parameer ``low_cut``. From the figure, it is clear that the samples on larger scales deviate from a power-law. This deviation is a result of the lack of samples on these large-scales. It can be avoided by increasing the size of the radial bins, but we will stick with small bins here to highlight the effect of the apodizing kernels on the power-spectrum shape.
 
 Before exploring the effect of the apodizing kernels, we can demonstrate the need for an apodizing kernel by taking a slice of the red-noise image, such that the edges are no longer periodic.
 
