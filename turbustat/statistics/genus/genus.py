@@ -212,7 +212,8 @@ class Genus(BaseStatisticMixIn):
             major, minor = find_beam_properties(self.header)[:2]
             major = self._to_pixel(major)
             minor = self._to_pixel(minor)
-            pix_area = np.pi * major * minor
+            # the area of a Gaussian beam is 2 pi sigma^2, and major/minor are FWHMs
+            pix_area = 2 * np.pi * major * minor / np.sqrt(8*np.log(2))
             min_size = int(np.floor(pix_area.value))
         else:
             if isinstance(min_size, u.Quantity):
