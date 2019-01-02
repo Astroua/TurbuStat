@@ -13,12 +13,12 @@ Centroid statistics have been used to study molecular clouds for decades. For ex
 .. edit comment by AG: including the `\delta v`'s in the equation below is strange since these are strict sums; the delta-v should only be included if these are integrals, right?
 
 .. math::
-    M_1 = \frac{\Sigma_{v}\, v \,I(x, v)\, \delta v}{\Sigma_{v}\, I(x, v)\,  \delta v} = \frac{\Sigma_{v}\, v\, I(x, v)\, \delta v}{M_0},
+    M_1 = \frac{\Sigma_{v}\, v \,I(x, v)}{\Sigma_{v}\, I(x, v)} = \frac{\Sigma_{v}\, v\, I(x, v)}{M_0},
 
 where :math:`I(x, v)` is a PPV cube with :math:`x` representing the spatial coordinate, :math:`v` the velocity coordinate, and :math:`M_0` the integrated intensity (moment zero).   On small scales, however, the contribution from density fluctuations can dominate, and the first moment is contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
-    \Sigma_{v}\, v I(x, v)\, \delta v.
+    \Sigma_{v}\, v I(x, v)
 
 The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of :math:`M_0` times the velocity dispersion (:math:`<v^2>`) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:
 
