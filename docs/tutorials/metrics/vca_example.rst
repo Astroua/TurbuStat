@@ -169,4 +169,4 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     ...                    low_cut=0.025 / u.pix,
     ...                    high_cut=0.1 / u.pix)  # doctest: +SKIP
 
-Note that the data still needs to be passed to `~turbustat.statistics.VCA_Distance`.
+Note that the data still need to be passed to `~turbustat.statistics.VCA_Distance`.

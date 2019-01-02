@@ -94,7 +94,7 @@ For large data sets, creating the dendrogram can be slow. Particularly when comp
     ...                                                "min_npix": 50},
     ...                                 fiducial_model=dend_stat)  # doctest: +SKIP
 
-    Note that the data (`cube_fid`) still needs to be given to `~turbustat.statistics.Dendrogram_Distance`.
+    Note that the data (`cube_fid`) still need to be given to `~turbustat.statistics.Dendrogram_Distance`.
 
     .. warning:: The object given to `fiducial_model` should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
 

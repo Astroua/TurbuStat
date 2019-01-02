@@ -106,4 +106,4 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> wavelet = Wavelet_Distance(moment0_fid, moment0, xlow=2 * u.pix,
     ...                            xhigh=10 * u.pix, fiducial_model=wave_fid)  # doctest: +SKIP
 
-Note that the data still needs to be passed to `~turbustat.statistics.Wavelet_Distance`.
+Note that the data still need to be passed to `~turbustat.statistics.Wavelet_Distance`.

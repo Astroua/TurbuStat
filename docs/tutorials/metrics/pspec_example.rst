@@ -33,7 +33,7 @@ And we load in the two data sets; in this case, two integrated intensity (zeroth
     >>> moment0 = fits.open("Design4_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
     >>> moment0_fid = fits.open("Fiducial0_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
 
-These two images are given as inputs to `~turbustat.statistics.Pspec_Distance`. We know from the :ref:`power-spectrum tutorial <pspec_tutorial>` that there should be limits set on where the power-spectra are fit to. These can be specified with `low_cut` and `high_cut`, along with `breaks` if the power-spectrum is best fit with a broken power-law model. In this case, we will use the same fit limits for both power-spectra, but separate limits can be given for each image by giving a two-element list to any of these three keywords.
+These two images are given as inputs to `~turbustat.statistics.Pspec_Distance`. We know from the :ref:`power-spectrum tutorial <pspec_tutorial>` that there should be limits set on where the power-spectra are fit. These can be specified with `low_cut` and `high_cut`, along with `breaks` if the power-spectrum is best fit with a broken power-law model. In this case, we will use the same fit limits for both power-spectra, but separate limits can be given for each image by giving a two-element list to any of these three keywords.
 
     >>> pspec = PSpec_Distance(moment0_fid, moment0,
     ...                        low_cut=0.025 / u.pix, high_cut=0.1 / u.pix,)  # doctest: +SKIP

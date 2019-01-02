@@ -56,4 +56,4 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> pca_fid = PCA(cube_fid, n_eigs=50).run(decomp_only=True)  # doctest: +SKIP
     >>> pca = PCA_Distance(cube_fid, cube, fiducial_model=pca_fid)  # doctest: +SKIP
 
-Note that the data still needs to be passed to `~turbustat.statistics.PCA_Distance`.
+Note that the data still need to be passed to `~turbustat.statistics.PCA_Distance`.

@@ -60,4 +60,4 @@ When comparing many images to a fiducial image, a pre-computed `~turbustat.stati
     ...                        genus_kwargs=dict(min_size=4 * u.pix**2),
     ...                        fiducial_model=genus_fid)  # doctest: +SKIP
 
-Note that the data (`moment0_fid`) still needs to be given.
+Note that the data (`moment0_fid`) still need to be given.

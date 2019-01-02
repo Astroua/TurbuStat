@@ -17,6 +17,8 @@ observations that can be used to test idealized regimes of turbulent statistics.
 Two-dimensional images
 ----------------------
 
+.. could you find a way to cite image_registration here?  You do it in the source code already.
+
 The 2D power-law image function is `make_extended`:
     >>> from turbustat.simulator import make_extended
 

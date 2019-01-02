@@ -171,4 +171,4 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> mvc_fid.run()  # doctest: +SKIP
     >>> mvc = MVC_Distance(data_fid, data, fiducial_model=mvc_fid)  # doctest: +SKIP
 
-Note that the data still needs to be passed to `~turbustat.statistics.MVC_Distance`.
+Note that the data still need to be passed to `~turbustat.statistics.MVC_Distance`.
