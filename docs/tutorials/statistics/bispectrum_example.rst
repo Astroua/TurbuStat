@@ -40,7 +40,7 @@ And we load in the data:
 
     >>> moment0 = fits.open("Design4_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
 
-While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation is performed on an integrated intensity or column density map.
+While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation was performed on an integrated intensity or column density map.
 
 First, the `~turbustat.statistics.Bispectrum` class is initialized:
 
@@ -60,7 +60,7 @@ The computing the bispectrum and bicoherence maps is performed through `~turbust
 
     >>> bispec.run(nsamples=10000, mean_subtract=True, seed=4242424)  # doctest: +SKIP
 
-`seed` sets the random seed for the sampling, and `mean_subtract` removes the mean from the data before computing the bispectrum. This removes the "zero frequency" power defined based on the largest scale in the image that provides gives the phase coupling along :math:`k_1 = k_2` line. Removing the mean highlights the non-linear mode interactions:
+`seed` sets the random seed for the sampling, and `mean_subtract` removes the mean from the data before computing the bispectrum. This removes the "zero frequency" power defined based on the largest scale in the image that gives the phase coupling along :math:`k_1 = k_2` line. Removing the mean highlights the non-linear mode interactions:
 
 .. image:: images/bispectrum_w_and_wo_meansub_coherence.png
 

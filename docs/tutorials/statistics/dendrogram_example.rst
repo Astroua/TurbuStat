@@ -113,27 +113,32 @@ The results have slightly changed. The left panel shows fewer features at nearly
 
 Creating the initial dendrogram is the most time-consuming step. To check the progress of building the dendrogram, `dendro_verbose=True` can be set to give a progress bar and time-to-completion estimate.
 
-Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file:
+Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file::
 
-    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5", min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
+    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5",
+    ...                                              min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
 
 Saving the dendrogram structure is explained in the `astrodendro documentation <http://dendrograms.org/>`_. **The saved dendrogram must have `min_delta` set to the minimum of the given `min_deltas`. Otherwise pruning is ineffective.**
 
 
-If the dendrogram is not saved (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`:
+If the dendrogram is stored in a variable (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`::
+
     >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.01, min_npix=50, verbose=True)  # doctest: +SKIP
     >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
     >>> dend_stat.run(verbose=True, dendro_obj=d)  # doctest: +SKIP
 
-Once the statistics have been run, the results can be saved as a pickle file:
+Once the statistics have been run, the results can be saved as a pickle file::
+
     >>> dend_stat.save_results(output_name="Design4_Dendrogram_Stats.pkl", keep_data=False)  # doctest: +SKIP
 
-`keep_data=False` will avoid saving the entire cube, and is the default setting.
+``keep_data=False`` will avoid saving the entire cube, and is the default setting.
 
-Saving can also be enabled with `~turbustat.statistics.Dendrogram_Stats.run`:
+Saving can also be enabled with `~turbustat.statistics.Dendrogram_Stats.run`::
+
     >>> dend_stat.run(save_results=True, output_name="Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
-The results may then be reloaded:
+The results may then be reloaded::
+
     >>> dend_stat = Dendrogram_Stats.load_results("Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
 Note that the dendrogram and data are **NOT** saved, and only the statistic outputs will be accessible.
