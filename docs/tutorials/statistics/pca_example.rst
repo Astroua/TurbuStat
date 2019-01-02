@@ -154,7 +154,7 @@ The above image shows the 50 components of the first 9 autocorrelation spectra (
 
 There are three methods available to estimate spectral widths of the autocorrelation spectra. `walk-down` starts from the peak and continues until the 1/e level is reached. The width is estimated by averaging the points before and after this level is reached. This is the method used by Brunt & Heyer. Otherwise, `method` may be set to `fit`, which fits a Gaussian to the data before the first local minimum occurs, and `interpolate`, which does the same, but through interpolating onto a finer grid. As shown in the above figure, the number of oscillations in the autocorrelation spectrum increases with the Nth principal component. The width of interest is determined from the first peak to the first minimum.
 
-**Note: If your input data has few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
+**Note: If your input data have few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
 
 Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in `Hogg, Bovy & Lang 2010 <https://ui.adsabs.harvard.edu/#abs/2010arXiv1008.4686H/abstract>`_. The Brunt & Heyer works have used the bisector method. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
 
@@ -179,6 +179,8 @@ The interesting outputs from this analysis are estimates of the slopes of the si
     0.433
     >>> pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc)  # doctest: +SKIP
     (<Quantity 0.35451525 pc>, <Quantity [0.27522952, 0.45267135] pc>)
+
+.. you should define the sonic length here.  It's just the length coordinate at which the fitted line intersects the sound speed, right?
 
 Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 
