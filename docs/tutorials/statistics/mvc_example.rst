@@ -20,6 +20,8 @@ where :math:`I(x, v)` is a PPV cube with :math:`x` representing the spatial coor
 .. math::
     \Sigma_{v}\, v I(x, v)
 
+.. consider writing out the text below in math?
+
 The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of :math:`M_0` times the velocity dispersion (:math:`<v^2>`) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:
 
 .. math::
@@ -110,7 +112,7 @@ The fit here is not very good since the spectrum deviates from a single power-la
 
 Note the drastic change in the slope! Specifying the correct fit region for the data you're using is critical for interpreting the results of the method. This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with `weighted_fit=True` (this cannot be used for the segmented model described below).
 
-Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
+Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does not handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
     >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
     ...         high_cut=0.4 / u.pix,
