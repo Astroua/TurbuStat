@@ -7,7 +7,7 @@ PDF
 Overview
 --------
 
-A common technique used in ISM and molecular cloud studies is the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_, `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_).
+A common technique used in ISM and molecular cloud studies is measurement of the shape of the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_, `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_).
 
 A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs (`Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_). TurbuStat's implementation seeks to be flexible because of this. Parametric and non-parametric measures to describe PDFs are shown below.
 
@@ -49,9 +49,11 @@ Since the PDF is a one-dimensional view of the data, any dimension data can be p
 
 .. image:: images/pdf_design4_mom0.png
 
+.. what is ECDF?  something cumulative distribution function, but what's E?
+
 The resulting PDF and ECDF of the data are plotted, along with a log-normal fit to the PDF. By default, `~turbustat.statistics.PDF` will fit a log-normal to the PDF. Choosing other models and disabling the fitting are discussed below.
 
-The fit parameters can be accessed from `~turbustat.statistics.PDF.model_params` and the standard errors from `~turbustat.statistics.PDF,model_stderrs`. The fitting in `~turbustat.statistics.PDF` uses the `~scipy.stats` distributions. The scipy implementation for a `log-normal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html>`_ defines the two fit parameters as `par0 = exp(mu)` and `par1 = sigma`.
+The fit parameters can be accessed from `~turbustat.statistics.PDF.model_params` and the standard errors from `~turbustat.statistics.PDF.model_stderrs`. The fitting in `~turbustat.statistics.PDF` uses the `~scipy.stats` distributions. The scipy implementation for a `log-normal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html>`_ defines the two fit parameters as `par0 = exp(mu)` and `par1 = sigma`.
 
 There are several options that can be set. Using `min_val` will set the lower limit on values to consider in the PDF. `bins` allows a custom array of bins (edges) to be given. By default, the bins are of equal width, with the number set by the square root of the number of data points (a good estimate when the number of samples is >100).
 
@@ -129,6 +131,8 @@ When comparing to the PDFs from other data, adopting a common normalization sche
 
 .. image:: images/pdf_design4_mom0_normmean.png
 
+.. is this really true?  The mean of a lognormal is not a very good estimate of its center...
+
 The example data are well-described by a log-normal, making the normalization by the mean an appropriate choice. Note how the shape of the distribution appears unchanged in these examples, but the axis they're defined on changes.
 
 The distribution fitting shown above uses a maximum likelihood estimate (MLE) to find the parameter values and their uncertainties. This works well for well-behaved data, like those used in this tutorial, where the parametric description fits the data well. When this is not the case, the standard errors can be extremely under-estimated. One solution is to adopt a Monte Carlo approach for fitting. When the `emcee <http://dan.iel.fm/emcee/current/>`_ package is installed, `~turbustat.statistics.PDF.fit_pdf` will fit the distribution using MCMC. Note that all keyword arguments to `~turbustat.statistics.PDF.fit_pdf` can also be passed to `~turbustat.statistics.PDF.run`.
@@ -157,9 +161,9 @@ We can also look at the sample distributions for each fit parameter using a corn
 
 .. image:: images/pdf_design4_mom0_mcmc_corner.png
 
-Each parameter distribution is showed (1D histograms) and their interaction (2D histogram), which is useful for exploring covariate parameters in the fit. The dotted lines show the 16th, 50th, and 84th quantiles. Each of the distributions here is close to normally-distributed and appears well-behaved.
+Each parameter distribution is showed (1D histograms) and their interaction (2D histogram), which is useful for exploring covariant parameters in the fit. The dotted lines show the 16th, 50th, and 84th quantiles. Each of the distributions here is close to normally-distributed and appears well-behaved.
 
-The log-normal distribution is typically not used for observational data since low column densities or extinction regions have greater uncertainties and/or are incompletely sampled in the data (see :`Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_). A power-law model may be a better model choice in this case. We can choose to fit other models by passing different `~scipy.stats.rv_continuous` models to `model` in `~turbustat.statistics.PDF.run`. Note that the fit will fail if the data is outside of the accepted range for the given model (such as negative values for the log-normal distribution).
+The log-normal distribution is typically not used for observational data since low column densities or extinction regions have greater uncertainties and/or are incompletely sampled in the data (see `Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_). A power-law model may be a better model choice in this case. We can choose to fit other models by passing different `~scipy.stats.rv_continuous` models to `model` in `~turbustat.statistics.PDF.run`. Note that the fit will fail if the data are outside of the accepted range for the given model (such as negative values for the log-normal distribution).
 
 For this example, let us consider values below 250 K m/s to be unreliable. We will fit a `pareto <https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.stats.pareto.html#scipy.stats.pareto>`_ distribution to the integrated intensities above this (the scipy powerlaw model requires a positive index).
 
