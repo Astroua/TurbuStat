@@ -80,7 +80,7 @@ The 2D model parameters are not shown in the above summary. Instead, the paramet
     >>> print(scf.theta2D, scf.theta2D_err)  # doctest: +SKIP
     (0.33117523945671401, 0.06876652735591221)
 
-Since each value in the SCF surface is an average over the whole cube, it is tends to be less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
+Since each value in the SCF surface is an average over the whole cube, it tends to be less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
 
 
 Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh` to limit which scales are used in the fit.
@@ -196,7 +196,7 @@ The lags here are equally spaced and centered around zero. `phys_conv` converts 
 
 This example takes a bit longer to run than the others because, whenever a non-integer lag is used, the cube is shifted in Fourier space.
 
-Throughout all of these examples, we have assumed that the spatial boundaries can be wrapped. This is appropriate for the example data since it is generated from a periodic-box simulation and is the default setting (`boundary='continuous'`). Typically this will not be the case for observational data. To avoid wrapping the edges of the data, `boundary='cut'` can be set to avoid using the portion of the data that has been spatially wrapped:
+Throughout all of these examples, we have assumed that the spatial boundaries can be wrapped. This is appropriate for the example data since they are generated from a periodic-box simulation and is the default setting (`boundary='continuous'`). Typically this will not be the case for observational data. To avoid wrapping the edges of the data, `boundary='cut'` can be set to avoid using the portion of the data that has been spatially wrapped:
 
     >>> scf = SCF(cube, size=11)  # doctest: +SKIP
     >>> scf.run(verbose=True, boundary='cut')  # doctest: +SKIP
