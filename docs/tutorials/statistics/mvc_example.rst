@@ -8,12 +8,14 @@ Modified Velocity Centroids
 Overview
 --------
 
-Centroid statistics have been used to study molecular clouds for decades. For example, `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_ created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
+Centroid statistics have been used to study molecular clouds for decades. For example, `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_ created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. The normalized centroids take the form
+
+.. edit comment by AG: including the `\delta v`'s in the equation below is strange since these are strict sums; the delta-v should only be included if these are integrals, right?
 
 .. math::
     M_1 = \frac{\Sigma_{v}\, v \,I(x, v)\, \delta v}{\Sigma_{v}\, I(x, v)\,  \delta v} = \frac{\Sigma_{v}\, v\, I(x, v)\, \delta v}{M_0},
 
-where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
+where :math:`I(x, v)` is a PPV cube with :math:`x` representing the spatial coordinate, :math:`v` the velocity coordinate, and :math:`M_0` the integrated intensity (moment zero).   On small scales, however, the contribution from density fluctuations can dominate, and the first moment is contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
     \Sigma_{v}\, v I(x, v)\, \delta v.
