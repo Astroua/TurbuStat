@@ -54,31 +54,23 @@ def convolution_wrapper(img, kernel, use_pyfftw=False, threads=1,
         use_ifftn = np.fft.ifftn
 
     if int(astro_version[0]) >= 2:
-        if kwargs.get("nan_interpolate") is not None:
-            if kwargs['nan_interpolate']:
-                nan_treatment = 'interpolate'
-            else:
-                nan_treatment = 'fill'
-            kwargs.pop('nan_interpolate')
-        else:
-            # Default to not nan interpolating
-            nan_treatment = 'fill'
 
         conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                nan_treatment=nan_treatment,
-                                preserve_nan=False,
                                 fftn=use_fftn,
                                 ifftn=use_ifftn,
                                 **kwargs)
+
     else:
+        raise Exception("Delta-variance requires astropy version >2.")
+
         # in astropy >= v2, fill_value can be a NaN. ignore_edge_zeros gives
         # the same behaviour in older versions.
-        if kwargs.get('fill_value'):
-            kwargs.pop('fill_value')
-        conv_img = convolve_fft(img, kernel, normalize_kernel=True,
-                                ignore_edge_zeros=True,
-                                fftn=use_fftn,
-                                ifftn=use_ifftn,
-                                **kwargs)
+        # if kwargs.get('fill_value'):
+        #     kwargs.pop('fill_value')
+        # conv_img = convolve_fft(img, kernel, normalize_kernel=True,
+        #                         ignore_edge_zeros=True,
+        #                         fftn=use_fftn,
+        #                         ifftn=use_ifftn,
+        #                         **kwargs)
 
     return conv_img

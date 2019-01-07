@@ -49,12 +49,11 @@ Package Dependencies
 
 Requires:
 
- *   astropy>=1.0
+ *   astropy>=2.0
  *   numpy>=1.7
  *   matplotlib>=1.2
  *   scipy>=0.12
  *   sklearn>=0.13.0
- *   pandas>=0.13
  *   statsmodels>=0.4.0
  *   scikit-image>=0.12
 

@@ -54,7 +54,7 @@ MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
                 'statsmodels.formula', 'statsmodels.distributions',
                 'statsmodels.distributions.empirical_distribution',
                 'statsmodels.base', 'statsmodels.base.model',
-                'astrodendro', 'signal_id', 'pandas',
+                'astrodendro', 'signal_id'
                 'spectral_cube', 'spectral_cube._moments',
                 'spectral_cube.wcs_utils', "spectral_cube.cube_utils",
                 'spectral_cube.lower_dimensional_structures',

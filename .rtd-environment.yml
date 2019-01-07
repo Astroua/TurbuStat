@@ -10,7 +10,6 @@ dependencies:
     - matplotlib
     - numpy
     - scipy
-    - pandas
     - statsmodels
     - scikit-learn
     - scikit-image
