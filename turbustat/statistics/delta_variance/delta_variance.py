@@ -74,10 +74,6 @@ class DeltaVariance(BaseStatisticMixIn):
         if distance is not None:
             self.distance = distance
 
-        self.nanflag = False
-        if np.isnan(self.data).any() or np.isnan(self.weights).any():
-            self.nanflag = True
-
         if lags is None:
             min_size = 3.0
             self.lags = \
@@ -140,7 +136,8 @@ class DeltaVariance(BaseStatisticMixIn):
         self._weights = arr
 
     def do_convolutions(self, allow_huge=False, boundary='wrap',
-                        min_weight_frac=0.01, nan_interpolate=True,
+                        min_weight_frac=0.01, nan_treatment=False,
+                        preserve_nan=False,
                         use_pyfftw=False, threads=1,
                         pyfftw_kwargs={},
                         show_progress=True):
@@ -160,7 +157,7 @@ class DeltaVariance(BaseStatisticMixIn):
             not guaranteed to! Increase this value if artifacts are
             encountered (this typically results in large spikes in the
             delta-variance curve).
-        nan_interpolate : bool, optional
+        nan_treatment : bool, optional
             Enable to interpolate over NaNs in the convolution. Default is
             True.
         use_pyfftw : bool, optional
@@ -199,7 +196,7 @@ class DeltaVariance(BaseStatisticMixIn):
                 convolution_wrapper(pad_img, core, boundary=boundary,
                                     fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate,
+                                    nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
                                     threads=threads,
                                     pyfftw_kwargs=pyfftw_kwargs)
@@ -207,7 +204,7 @@ class DeltaVariance(BaseStatisticMixIn):
                 convolution_wrapper(pad_img, annulus,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate,
+                                    nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
                                     threads=threads,
                                     pyfftw_kwargs=pyfftw_kwargs)
@@ -215,7 +212,7 @@ class DeltaVariance(BaseStatisticMixIn):
                 convolution_wrapper(pad_weights, core,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate,
+                                    nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
                                     threads=threads,
                                     pyfftw_kwargs=pyfftw_kwargs)
@@ -223,7 +220,7 @@ class DeltaVariance(BaseStatisticMixIn):
                 convolution_wrapper(pad_weights, annulus,
                                     boundary=boundary, fill_value=np.NaN,
                                     allow_huge=allow_huge,
-                                    nan_interpolate=nan_interpolate,
+                                    nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
                                     threads=threads,
                                     pyfftw_kwargs=pyfftw_kwargs)
@@ -589,7 +586,8 @@ class DeltaVariance(BaseStatisticMixIn):
             plt.show()
 
     def run(self, show_progress=True, verbose=False, xunit=u.pix,
-            nan_interpolate=True, allow_huge=False, boundary='wrap',
+            nan_treatment='interpolate', preserve_nan=False,
+            allow_huge=False, boundary='wrap',
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             xlow=None, xhigh=None,
             brk=None, fit_kwargs={},
@@ -607,7 +605,7 @@ class DeltaVariance(BaseStatisticMixIn):
             The unit to show the x-axis in.
         allow_huge : bool, optional
             See `~DeltaVariance.do_convolutions`.
-        nan_interpolate : bool, optional
+        nan_treatment : bool, optional
             Enable to interpolate over NaNs in the convolution. Default is
             True.
         boundary : {"wrap", "fill"}, optional
@@ -634,7 +632,8 @@ class DeltaVariance(BaseStatisticMixIn):
         '''
 
         self.do_convolutions(allow_huge=allow_huge, boundary=boundary,
-                             nan_interpolate=nan_interpolate,
+                             nan_treatment=nan_treatment,
+                             preserve_nan=preserve_nan,
                              use_pyfftw=use_pyfftw,
                              threads=threads,
                              pyfftw_kwargs=pyfftw_kwargs,

@@ -138,7 +138,11 @@ The entire process is performed through `~turbustat.statistics.DeltaVariance.run
 
 Since the Delta-variance is based on a series of convolutions, there is a choice for how the boundaries should be treated. This is set by the `boundary` keyword in `~turbustat.statistics.DeltaVariance.run`. By default, `boundary='wrap'` as is appropriate for simulated data in a periodic box. If the data is *not* periodic in the spatial dimensions, `boundary='fill'` should be used. This mode pads the edges of the data based on the size of the convolution kernel used.
 
-Another important keyword is `nan_interpolate`. By default, the convolution will interpolate over NaNs, which works well if the NaNs are small regions dispersed throughout the image. However, if your data have a large border of NaNs around the data, as is common for observational data, interpolating over NaNs will lead to edge effects and large deviations from the data at small lag values. If you find a non-smooth delta-variance curve with large spikes, try setting `nan_interpolate=False`.
+When an image contains NaNs, there are two important parameters for the convolution: `preserve_nan` and `nan_treatment`. Setting `preserve_nan=True` will set pixels that were originally a NaN to a NaN in the convolved image.  This is useful for when the image has a border of NaNs. When the edges are not handled correctly, the delta-variance curve will have large spikes at small lag values.
+
+If an image has missing values within the image, setting `nan_treatment='interpolate'` will interpolate over the missing regions, providing a smoothed version of the convolved image.
+
+If an image has both missing regions and a border of NaNs, manual treatment may be necessary to convert the edges to NaNs while correctly handling the interpolating regions in the interior. See the `convolution <http://docs.astropy.org/en/stable/api/astropy.convolution.convolve_fft.html#astropy.convolution.convolve_fft>`_ page on astropy for more information.
 
 Similar to the fitting for other statistics, the Delta-variance curve can be fit with a segmented linear model:
 
@@ -179,9 +183,7 @@ There will now be two slopes, and a break point returned:
     >>> delvar.brk  # doctest: +SKIP
     <Quantity 19.413294229328802 pix>
 
-.. warning:: The turn-over at large scales tends to be dominated by the kernel shape rather than the data. Further, there are variations on those large scales that depend on how the convolution is done (there are some difference between v1 and v2 of astropy).
-
-On scales smaller than 4 pixels, the curve may tend to steepen. This is due to the finite beam-size (for observational data; see `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_).
+.. warning:: The turn-over at large scales (usually larger than half the image size) tends to be dominated by the kernel shape rather than the data.  On scales smaller than the beam size, the curve will tend to steepen.  This is due to the enhanced correlations from over-sampling the beam, which is standard for radio and submillimetre observational data. See `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_ for a discussion of how the beam affects the delta-variance curves.
 
 Volker Ossenkopf-Okada's IDL Delta-Variance codes is available `here <https://hera.ph1.uni-koeln.de/~ossk/Myself/deltavariance.html>`__.
 
