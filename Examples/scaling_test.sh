@@ -24,7 +24,7 @@ export project_path=/home/ekoch/projects/rrg-eros-ab/ekoch/
 cd $scratch_path
 
 # Call script with number of cores
-$HOME/anaconda3/bin/python $HOME/code/turbustat/Examples/scaling_test.py
+$HOME/anaconda3/bin/python $HOME/code/TurbuStat_ewk_fork/Examples/scaling_test.py
 
 # Copy the output files to the project path
 cp $scratch_path/*.txt $project_path/turbustat_scaling/
