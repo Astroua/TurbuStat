@@ -62,17 +62,23 @@ for size, del_t in zip(image_sizes, samp_time):
         if Stat == MVC:
             inputs = [img_hdu] * 3
             kwargs = {}
+            run_kwargs = {}
         elif Stat == Wavelet:
             # Match the default number of scales to 25, same as Delta-Variance
             # Should eventually change default in code too
             inputs = [img_hdu]
             kwargs = {"num": 25}
+            run_kwargs = {}
+        elif Stat == DeltaVariance:
+            inputs = [img_hdu]
+            run_kwargs = {'allow_huge': True}
         else:
             inputs = [img_hdu]
             kwargs = {}
+            run_kwargs = {}
 
         def stat_runner():
-            out = Stat(*inputs, **kwargs).run()
+            out = Stat(*inputs, **kwargs).run(**run_kwargs)
             del out
 
         # From https://stackoverflow.com/questions/9850995/tracking-maximum-memory-usage-by-a-python-function/10117657#10117657
