@@ -72,6 +72,8 @@ for size, del_t in zip(image_sizes, samp_time):
         elif Stat == DeltaVariance:
             inputs = [img_hdu]
             run_kwargs = {'allow_huge': True}
+        elif Stat == Wavelet:
+            run_kwargs = {'convolve_kwargs': {'allow_huge': True}}
         else:
             inputs = [img_hdu]
 
