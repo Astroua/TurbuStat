@@ -99,7 +99,7 @@ class Wavelet(BaseStatisticMixIn):
         self._scales = values
 
     def compute_transform(self, show_progress=True, scale_normalization=True,
-                          keep_convolved_arrays=False,
+                          keep_convolved_arrays=False, convolve_kwargs={},
                           use_pyfftw=False, threads=1, pyfftw_kwargs={}):
         '''
         Compute the wavelet transform at each scale.
@@ -114,6 +114,8 @@ class Wavelet(BaseStatisticMixIn):
         keep_convolved_arrays: bool, optional
             Keep the image convolved at all wavelet scales. For large images,
             this can require a large amount memory. Default is False.
+        convolve_kwargs : dict, optional
+            Passed to `~astropy.convolution.convolve_fft`.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -163,7 +165,8 @@ class Wavelet(BaseStatisticMixIn):
 
             conv_arr = \
                 convolve_fft(self.data, psi, normalize_kernel=False,
-                             fftn=use_fftn, ifftn=use_ifftn).real * \
+                             fftn=use_fftn, ifftn=use_ifftn,
+                             **convolve_kwargs).real * \
                 an**factor
 
             if keep_convolved_arrays:
@@ -528,6 +531,7 @@ class Wavelet(BaseStatisticMixIn):
             plt.show()
 
     def run(self, show_progress=True, verbose=False, xunit=u.pix,
+            convolve_kwargs={},
             use_pyfftw=False, threads=1,
             pyfftw_kwargs={}, scale_normalization=True,
             xlow=None, xhigh=None, brk=None, fit_kwargs={},
@@ -543,6 +547,8 @@ class Wavelet(BaseStatisticMixIn):
             Plot wavelet transform.
         xunit : u.Unit, optional
             Choose the unit to convert to when ang_units is enabled.
+        convolve_kwargs : dict, optional
+            Passed to `~astropy.convolution.convolve_fft`.
         scale_normalization: bool, optional
             Compute the transform with the correct scale-invariant
             normalization.
@@ -570,6 +576,7 @@ class Wavelet(BaseStatisticMixIn):
         plot_kwargs : Passed to `~Wavelet.plot_transform`.
         '''
         self.compute_transform(scale_normalization=scale_normalization,
+                               convolve_kwargs=convolve_kwargs,
                                use_pyfftw=use_pyfftw, threads=threads,
                                pyfftw_kwargs=pyfftw_kwargs,
                                show_progress=show_progress)
