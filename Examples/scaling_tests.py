@@ -58,24 +58,22 @@ for size, del_t in zip(image_sizes, samp_time):
     # Run 2D stats
     for Stat in twod_stats:
 
+        kwargs = {}
+        run_kwargs = {}
+
         # MVC has different inputs than the rest
         if Stat == MVC:
             inputs = [img_hdu] * 3
-            kwargs = {}
-            run_kwargs = {}
         elif Stat == Wavelet:
             # Match the default number of scales to 25, same as Delta-Variance
             # Should eventually change default in code too
             inputs = [img_hdu]
             kwargs = {"num": 25}
-            run_kwargs = {}
         elif Stat == DeltaVariance:
             inputs = [img_hdu]
             run_kwargs = {'allow_huge': True}
         else:
             inputs = [img_hdu]
-            kwargs = {}
-            run_kwargs = {}
 
         def stat_runner():
             out = Stat(*inputs, **kwargs).run(**run_kwargs)
