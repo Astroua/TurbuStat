@@ -166,6 +166,8 @@ class Wavelet(BaseStatisticMixIn):
             conv_arr = \
                 convolve_fft(self.data, psi, normalize_kernel=False,
                              fftn=use_fftn, ifftn=use_ifftn,
+                             nan_treatment='fill',
+                             preserve_nan=True,
                              **convolve_kwargs).real * \
                 an**factor
 
