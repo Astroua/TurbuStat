@@ -21,6 +21,10 @@ source /home/ekoch/preload.bash
 export scratch_path=/home/ekoch/scratch/turbustat_scaling
 export project_path=/home/ekoch/projects/rrg-eros-ab/ekoch/
 
+# Ensure the most recent version of TurbuStat is installed
+cd $HOME/code/TurbuStat_ewk_fork
+$HOME/anaconda3/bin/python setup.py install
+
 cd $scratch_path
 
 # Call script with number of cores
