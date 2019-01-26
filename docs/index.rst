@@ -43,7 +43,6 @@ Contents:
    preparing_simulated_data.rst
    data_requirements.rst
    moments.rst
-   cube_tools.rst
    tutorials/index
    generating_test_data.rst
    statistics.rst
