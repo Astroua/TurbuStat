@@ -37,12 +37,6 @@ Currently, the only way install TurbuStat is to clone the repository and run
 ```python
 python setup.py install
 ```
-Due to conflicts with the dependencies, TurbuStat will **NOT** automatically install all
-dependencies (only numpy and astropy). To check if your version of python has all the
-dependencies installed, run:
-```python
-python setup.py check_deps
-```
 
 Package Dependencies
 --------------------
@@ -64,19 +58,18 @@ Recommended:
  *   [radio_beam](https://github.com/radio-astro-tools/radio_beam) - A class for handling radio beams and useful utilities. Required for correcting for the beam shape in spatial power spectra. Automatically installed with spectral-cube.
 
 Optional:
- *   [emcee](http://dan.iel.fm/emcee/current/) - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA.
+ *   [emcee](http://dan.iel.fm/emcee/current/) - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA and fitting PDFs.
 
 Credits
 -------
 
-This package was developed by:
-
-* [Eric Koch](https://github.com/e-koch)
-* [Caleb Ward](https://github.com/Astrolebs)
-* [Erik Rosolowsky](https://github.com/low-sky)
-* [Jason Loeppky](https:/github.com/jloeppky)
-
 If you make use of this package in a publication, please cite our accompanying paper:
+
+```
+UPCOMING
+```
+
+A description of the distance metrics is provided in this paper:
 ```
 @ARTICLE{Koch2017,
    author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and 
@@ -95,4 +88,4 @@ archivePrefix = "arXiv",
   adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 ```
-Citation courtesy of [ADS](https://ui.adsabs.harvard.edu/#).
+Citations courtesy of [ADS](https://ui.adsabs.harvard.edu/#).
