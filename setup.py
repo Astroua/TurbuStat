@@ -39,16 +39,6 @@ def check_dependencies():
             "Install or upgrade scipy before installing TurbuStat.")
 
     try:
-        import pandas
-        pa_version = pandas.__version__
-        if parse_version(pa_version) < parse_version('0.13'):
-            print("***Before installing, upgrade pandas to 0.13***")
-            raise ImportError
-    except:
-        raise ImportError(
-            "Install or upgrade pandas before installing TurbuStat.")
-
-    try:
         from statsmodels.version import version as sm_version
         if parse_version(sm_version) < parse_version('0.4.0'):
             print("***Before installing, upgrade statsmodels to 0.4.0***")
@@ -70,18 +60,19 @@ def check_dependencies():
     try:
         import astrodendro
     except:
-        Warning("Install or upgrade astrodendro to use the dendrogram"
-                 " statistics in TurbuStat. ***NOTE: Need dev version as"
-                 "of 17/06/14.***")
+        raise ImportError("Install or upgrade astrodendro to use the"
+                          " dendrogram statistics in TurbuStat. "
+                          "***NOTE: Need dev version as "
+                          "of 17/06/14.***")
     try:
         import spectral_cube
     except ImportError:
         raise ImportError("Install spectral-cube before installing TurbuStat")
 
-    try:
-        import signal_id
-    except ImportError:
-        Warning("signal-id is an optional package for TurbuStat.")
+    # try:
+    #     import signal_id
+    # except ImportError:
+    #     Warning("signal-id is an optional package for TurbuStat.")
 
 
 if __name__ == "__main__":

@@ -1160,7 +1160,12 @@ def set_n_eigs(eigenvalues, min_eigval, method='value'):
 
         above = np.where(cumulative <= min_eigval)[0]
 
-        return above.size
+        if above.size == 0:
+            # The first one has a greater proportion than the limit.
+            # Set to 1
+            return 1
+        else:
+            return above.size
 
     else:
         raise ValueError("method must be 'value' or 'proportion'.")

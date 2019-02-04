@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #208 - Fix #207; description of NaN handling for the delta-variance tutorial from @keflavich. **Change to requiring astropy >v2!**
 * #171 - Expand PCA tutorial; fix unit conversion error in astropy 3.2dev
 * #170 - Add tutorial pages for distance metrics and updated distance metric inputs. **API CHANGES IN DISTANCE METRICS!**
 * #192 - Add stddev and weighted fitting for `Wavelet`. Correct bug in fitting weights for `StatisticBase_PSpec2D`.
