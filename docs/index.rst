@@ -33,13 +33,6 @@ If you make use of this package in a publication, please cite our accompanying p
 Citation courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
 
 
-This package was developed by:
-
-* `Eric Koch <https://github.com/e-koch>`_
-* `Caleb Ward <https://github.com/Astrolebs>`_
-* `Erik Rosolowsky <https://github.com/low-sky>`_
-* `Jason Loeppky <https://github.com/jloeppky>`_
-
 Contents:
 
 .. toctree::
@@ -50,7 +43,6 @@ Contents:
    preparing_simulated_data.rst
    data_requirements.rst
    moments.rst
-   cube_tools.rst
    tutorials/index
    generating_test_data.rst
    statistics.rst
@@ -64,6 +56,18 @@ Papers using TurbuStat
 * `Koch et al. (2017 <https://ui.adsabs.harvard.edu/#abs/2017arXiv170705415K/abstract>`_
 * `Boyden et al. (2018) <https://ui.adsabs.harvard.edu/#abs/2018arXiv180509775B/abstract>`_
 
+
+TurbuStat Developers
+--------------------
+
+* `Eric Koch <https://github.com/e-koch>`_
+* `Erik Rosolowsky <https://github.com/low-sky>`_
+* Ryan Boyden
+* Blakesley Burkhart
+* `Adam Ginsburg <https://github.com/keflavich>`_
+* `Caleb Ward <https://github.com/Astrolebs>`_
+* Stella Offner
+* `Jason Loeppky <https://github.com/jloeppky>`_
 
 
 Indices and tables

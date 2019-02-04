@@ -66,3 +66,6 @@ turbustat/cython_version.py
 
 # Test data
 testingdata
+
+# Don't include unfinished Mahalanobis distance version
+turbustat/statistics/mahalanobis
