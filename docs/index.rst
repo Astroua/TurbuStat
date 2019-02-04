@@ -14,6 +14,10 @@ To be notified of future releases and updates to TurbuStat, please join the mail
 
 If you make use of this package in a publication, please cite our accompanying paper::
 
+  UPCOMING
+
+If your work makes use of the distance metrics, please cite the following::
+
     @ARTICLE{Koch2017,
      author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and {Rosolowsky}, E.~W.},
      title = "{Identifying tools for comparing simulations and observations of spectral-line data cubes}",
@@ -30,7 +34,7 @@ If you make use of this package in a publication, please cite our accompanying p
      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
     }
 
-Citation courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
+Citations courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
 
 
 Contents:
@@ -65,9 +69,17 @@ TurbuStat Developers
 * Ryan Boyden
 * Blakesley Burkhart
 * `Adam Ginsburg <https://github.com/keflavich>`_
-* `Caleb Ward <https://github.com/Astrolebs>`_
-* Stella Offner
 * `Jason Loeppky <https://github.com/jloeppky>`_
+* Stella Offner
+* `Caleb Ward <https://github.com/Astrolebs>`_
+
+Many thanks to the everyone who has reported bugs and given feedback on TurbuStat!
+
+* Dario Colombo
+* Jesse Feddersen
+* Simon Glover
+* Jonathan Henshaw
+* Sac Medina
 
 
 Indices and tables
