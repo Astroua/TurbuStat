@@ -114,3 +114,12 @@ By default, all three distance metrics are run. For these images, the distances 
 Each distance metric can be run separately by running its function in `~turbustat.statistics.PDF_Distance`, or by setting the `statistic` keyword in `~turbustat.statistics.PDF_Distance.distance_metric`.
 
 Because of the Hellinger distance requires that the PDF histograms have the same bins, there is no input to give a pre-computed fiducial `~turbustat.statistics.PDF`, unlike most of the other distance metric classes.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

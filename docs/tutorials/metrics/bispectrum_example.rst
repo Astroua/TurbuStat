@@ -77,3 +77,12 @@ If a `~turbustat.statistics.Bispectrum` has been previously defined, it can be p
 `fiducial_model` will be set to `~turbustat.statistics.Bispectrum_Distance.bispec1`. This is useful when comparing a number of images to a common (i.e., fiducial) image. Note that the data (`moment0`) must still be passed.
 
 .. warning:: Caution must be taken when passing `fiducial_model` as there are no checks to ensure the bispectra were computed the same way! (e.g., do both have `mean_sub=True` set?). Ensure that the keyword arguments for `fiducial_model` match those specified to `~turbustat.statistics.Bispectrum_Distance`.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

@@ -103,3 +103,12 @@ When comparing many images to a fiducial image, recomputing the power-spectrum o
     >>> pspec = PSpec_Distance(moment0_fid, moment0, fiducial_model=pspec_moment0)  # doctest: +SKIP
 
 Note that the data (`moment0_fid`) must still be given.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

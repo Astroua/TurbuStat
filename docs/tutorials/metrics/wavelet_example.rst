@@ -107,3 +107,12 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     ...                            xhigh=10 * u.pix, fiducial_model=wave_fid)  # doctest: +SKIP
 
 Note that the data still need to be passed to `~turbustat.statistics.Wavelet_Distance`.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

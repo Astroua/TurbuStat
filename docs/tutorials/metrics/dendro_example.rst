@@ -112,3 +112,11 @@ For large data sets, creating the dendrogram can be slow. Particularly when comp
 
 .. warning:: In both cases, the saved dendrograms should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
 
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

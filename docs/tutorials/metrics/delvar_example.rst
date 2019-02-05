@@ -243,3 +243,13 @@ The curve distance is only valid when the same set of lags are used to compute t
 The curve distance will also be undefined if different sets of lags are used for the datasets. By default, `use_common_lags=True` is used in `~turbustat.statistics.DeltaVariance_Distance`, which will find a common set of scales in angular units between the two datasets.
 
 For further fine-tuning of the delta-variance for either dataset, the `~turbustat.statistics.DeltaVariance` classes for each dataset are can be accessed as `~turbustat.statistics.DeltaVariance_Distance.delvar1` and `~turbustat.statistics.DeltaVariance_Distance.delvar2`. Each of these class instances can be run separately with, as shown in the :ref:`delta-variance tutorial <delvar_tutorial>`, to fine-tune or alter how the delta-variance is computed.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
+

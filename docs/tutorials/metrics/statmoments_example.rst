@@ -63,3 +63,12 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> moments = StatMoments_Distance(moment0_fid, moment0, fiducial_model=moments_fid)  # doctest: +SKIP
 
 It is critical that the `size` used in `~turbustat.statistics.StatMoments` match the common set of lags that are used in `~turbustat.statistics.StatMoments_Distance`. Also note that the data still needs to be passed to `~turbustat.statistics.StatMoments_Distance`.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
