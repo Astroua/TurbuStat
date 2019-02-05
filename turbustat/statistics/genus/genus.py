@@ -278,7 +278,7 @@ class Genus(BaseStatisticMixIn):
         import matplotlib.pyplot as plt
 
         num = len(self.smoothing_radii)
-        num_cols = num / 2 if num % 2 == 0 else (num / 2) + 1
+        num_cols = num // 2 if num % 2 == 0 else (num // 2) + 1
 
         for i in range(1, num + 1):
             if num == 1:
@@ -291,8 +291,13 @@ class Genus(BaseStatisticMixIn):
                     transform=ax.transAxes, fontsize=12)
             plt.plot(self.thresholds, self.genus_stats[i - 1], "D-",
                      color=color)
-            plt.xlabel("Intensity")
+
             plt.grid(True)
+
+            if (num - i + 1) <= 2:
+                plt.xlabel("Intensity")
+            else:
+                plt.setp(ax.get_xticklabels(), visible=False)
 
         plt.tight_layout()
 
