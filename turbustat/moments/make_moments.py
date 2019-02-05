@@ -35,7 +35,7 @@ class Moments(object):
     A unified approach to deriving the noise level in a cube, applying a
     mask, and deriving moments along with their errors. All the heavy lifting
     is done with
-    `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+    `spectral_cube <http://spectral-cube.readthedocs.org/en/latest/>`_.
 
     Parameters
     ----------
@@ -345,7 +345,7 @@ class Moments(object):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
         match the naming of the cube for the automatic loading to work
-        (e.g. a cube called test.fits will have a moment 0 array solved
+        (e.g. a cube called test.fits will have a moment 0 array with the name
         test_moment0.fits). Otherwise, specify a path to one of the keyword
         arguments.
 

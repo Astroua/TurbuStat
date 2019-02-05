@@ -6,7 +6,7 @@
 TurbuStat
 =========
 
-TurbuStat provides a set of analysis tools for comparing astronomical radio datacubes, as well as column density, integrated intensity or cube moment maps. Each statistic returns a measure of "distance" between the two datasets.
+TurbuStat implements a 14 turbulence-based statistics described in the astronomical literature. TurbuStat also defines a distance metrics for each statistic to quantitatively compare spectral-line data cubes, as well as column density, integrated intensity, or other moment maps.
 
 The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contributions to the code base are very much welcome! If you find any issues in the package, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
 
@@ -37,22 +37,6 @@ If your work makes use of the distance metrics, please cite the following::
 Citations courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
 
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   install.rst
-   accepted_input_formats.rst
-   preparing_simulated_data.rst
-   data_requirements.rst
-   moments.rst
-   tutorials/index
-   generating_test_data.rst
-   statistics.rst
-   helper_scripts.rst
-   contributing.rst
-
 Papers using TurbuStat
 ----------------------
 
@@ -81,6 +65,22 @@ Many thanks to the everyone who has reported bugs and given feedback on TurbuSta
 * Jonathan Henshaw
 * Sac Medina
 
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   install.rst
+   accepted_input_formats.rst
+   preparing_simulated_data.rst
+   data_requirements.rst
+   moments.rst
+   tutorials/index
+   generating_test_data.rst
+   statistics.rst
+   helper_scripts.rst
+   contributing.rst
 
 Indices and tables
 ==================

@@ -4,9 +4,9 @@
 Accounting for the beam shape
 *****************************
 
-The beam size of an observation introduces artifical correlations into the data
-on small scales. This affects the shape of various turbulence statistics that
-measure spatial properties (Spatial Power-Spectrum, MVC, VCA, Delta-Variance, Wavelets, SCF).
+.. warning:: The beam size of an observation introduces artificial correlations into the data
+    on scales near to and below the beam size. This affects the shape of various turbulence statistics that
+    measure spatial properties (Spatial Power-Spectrum, MVC, VCA, Delta-Variance, Wavelets, SCF).
 
 The beam size is typically expressed as the full-width-half-max (FWHM). However, it is
 important to note that the data will still be correlated beyond the FWHM. For example,
@@ -168,7 +168,7 @@ The beam correction in TurbuStat requires the optional package `radio_beam <http
 
 .. image:: images/rednoise_pspec_slope3_smoothed_beamcorr.png
 
-The shape of the power-spectrum has been restored and we recover the correct slope. The deviation on small scales (large frequencies) occurs on scales smaller than about the FWHM of the beam where the information has been lost by the spatial smoothing applied to the image. If the beam is over-sampled by a larger factor --- say with a 6-pixel FWHM instead of 3 --- the increase in power on small scales will affect a larger region of the power-spectrum. This region should be avoided when fitting the power-spectrum. A reasonable lower-limit to fit the power-spectrum to is the FWHM of the beam. Additional noise in the image will tend to flatten the power-spectrum to larger scales, so setting the lower fitting limit to a couple times the beam width may be necessary. Always check the quality of the fit to be sure!
+The shape of the power-spectrum has been restored and we recover the correct slope. The deviation on small scales (large frequencies) occurs on scales smaller than about the FWHM of the beam where the information has been lost by the spatial smoothing applied to the image. If the beam is over-sampled by a larger factor --- say with a 6-pixel FWHM instead of 3 --- the increase in power on small scales will affect a larger region of the power-spectrum. This region should be excluded from the power-spectrum fit. A reasonable lower-limit to fit the power-spectrum to is the FWHM of the beam. Additional noise in the image will tend to flatten the power-spectrum to larger scales, so setting the lower fitting limit to a couple times the beam width may be necessary. **We recommend visually examining the quality of the fit.**
 
 Here are the three power-spectra shown above overplotted to highlight the shape changes from spatial smoothing:
 
