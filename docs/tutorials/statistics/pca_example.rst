@@ -29,11 +29,6 @@ And we load in the data:
 
     >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
 
-The `spectral-cube <http://spectral-cube.readthedocs.io/en/latest/>`_ package can also be used to load in data.
-
-    >>> from spectral_cube import SpectralCube
-    >>> cube = SpectralCube.read("Design4_flatrho_0021_00_radmc.fits")  # doctest: +SKIP
-
 The `~turbustat.statistics.PCA` class is first initialized, and the distance to the region (if desired) can be given:
 
     >>> pca = PCA(cube, distance=250. * u.pc)  # doctest: +SKIP

@@ -568,7 +568,7 @@ class DeltaVariance(BaseStatisticMixIn):
             ax_r.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
             ax_r.grid()
 
-            ax.get_xaxis().set_ticks([])
+            plt.setp(ax.get_xticklabels(), visible=False)
 
         else:
             ax.set_xlabel("Lag ({})".format(xunit))

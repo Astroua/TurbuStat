@@ -42,14 +42,9 @@ class Moments(object):
     cube : SpectralCube or str
         Either a SpectralCube object, or the filename of a cube readable
         by spectral-cube.
-    noise_type : {'constant'}, optional
-        *NO CURRENT FUNCTION* Once implemented, it will set parameters
-        for deriving the noise level.
-    clip : float, optional
-        Sigma level to clip data at.
     scale : `~astropy.units.Quantity`, optional
-        The noise level in the cube. Overrides estimation using
-        `signal_id <https://github.com/radio-astro-tools/signal-id>`_
+        The noise level in the cube. Used to estimate uncertainties of the
+        moment maps.
     moment_method : {'slice', 'cube', 'ray'}, optional
         The method to use for creating the moments. See the spectral-cube
         docs for an explanation of the differences.

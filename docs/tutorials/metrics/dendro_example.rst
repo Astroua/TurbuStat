@@ -55,6 +55,8 @@ If additional parameters need to be set to create the dendrograms, `dendro_kwarg
 To calculate the two dendrogram distances, we run:
     >>> dend_dist.distance_metric(verbose=True)  # doctest: +SKIP
 
+The distance computation is very fast for both methods so both distance metrics are always computed.
+
 Verbose mode creates two plots, which can be saved by specifying `save_name` in the call above. The first plot shows the histograms used in the Hellinger distance.
 
 .. image:: images/dendrogram_distmet.hist_distance.png

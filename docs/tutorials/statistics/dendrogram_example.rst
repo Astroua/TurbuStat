@@ -113,7 +113,7 @@ When using simulated data from a periodic box, the boundaries need to be handled
 
 The results have slightly changed. The left panel shows fewer features at nearly every values of :math:`\delta` as regions along the edges are connected across the boundaries.
 
-Creating the initial dendrogram is the most time-consuming step. To check the progress of building the dendrogram, `dendro_verbose=True` can be set to give a progress bar and time-to-completion estimate.
+**Creating the initial dendrogram is the most time-consuming step.** To check the progress of building the dendrogram, `dendro_verbose=True` can be set in the previous call to give a progress bar and time-to-completion estimate.
 
 Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file::
 

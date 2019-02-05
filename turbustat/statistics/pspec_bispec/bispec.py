@@ -412,29 +412,34 @@ class Bispectrum(BaseStatisticMixIn):
         '''
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         if show_bicoh:
-            plt.subplot(1, 2, 1)
+            ax1 = plt.subplot(1, 2, 1)
         else:
-            plt.subplot(1, 1, 1)
-        plt.imshow(self.bispectrum_logamp, origin="lower",
-                   interpolation="nearest", cmap=cmap)
-        cbar1 = plt.colorbar()
+            ax1 = plt.subplot(1, 1, 1)
+        im1 = ax1.imshow(self.bispectrum_logamp, origin="lower",
+                         interpolation="nearest", cmap=cmap)
+        divider = make_axes_locatable(ax1)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar1 = plt.colorbar(im1, cax=cax)
         cbar1.set_label(r"log$_{10}$ Bispectrum Amplitude")
-        plt.contour(self.bispectrum_logamp,
+        ax1.contour(self.bispectrum_logamp,
                     colors=contour_color)
-        plt.xlabel(r"$k_1$")
-        plt.ylabel(r"$k_2$")
+        ax1.set_xlabel(r"$k_1$")
+        ax1.set_ylabel(r"$k_2$")
 
         if show_bicoh:
-            plt.subplot(1, 2, 2)
-            plt.imshow(self.bicoherence, origin="lower",
-                       interpolation="nearest",
-                       cmap=cmap)
-            cbar2 = plt.colorbar()
+            ax2 = plt.subplot(1, 2, 2)
+            im2 = ax2.imshow(self.bicoherence, origin="lower",
+                             interpolation="nearest",
+                             cmap=cmap)
+            divider = make_axes_locatable(ax2)
+            cax2 = divider.append_axes("right", size="5%", pad=0.05)
+            cbar2 = plt.colorbar(im2, cax=cax2)
             cbar2.set_label("Bicoherence")
-            plt.xlabel(r"$k_1$")
-            plt.ylabel(r"$k_2$")
+            ax2.set_xlabel(r"$k_1$")
+            ax2.set_ylabel(r"$k_2$")
 
         plt.tight_layout()
 

@@ -36,7 +36,7 @@ We need to import the `~turbustat.statistics.Bispectrum` code, along with a few 
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
 
-And we load in the data:
+Next, we load in the data:
 
     >>> moment0 = fits.open("Design4_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
 
@@ -48,7 +48,7 @@ First, the `~turbustat.statistics.Bispectrum` class is initialized:
 
 The bispectrum requires only the image, not a header, so passing any arbitrary 2D array will work.
 
-Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run!**
+Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run on this image!**
 
 The computing the bispectrum and bicoherence maps is performed through `~turbustat.statistics.Bispectrum.run`:
 

@@ -1,8 +1,8 @@
 .. _statmomentsdistmet:
 
-****************
-Moments Distance
-****************
+****************************
+Statistical Moments Distance
+****************************
 
 See :ref:`the tutorial <statmoments_tutorial>` for a description of the statistics moments.
 

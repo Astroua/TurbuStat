@@ -149,7 +149,7 @@ The distribution fitting shown above uses a maximum likelihood estimate (MLE) to
 
 The MCMC fit finds the same parameter values (see the first example above) with a ~1-sigma range about twice that of the MLE fit. The MCMC chain is ran for 200 burn-in steps, followed by 2000 steps that are used to estimate the distribution parameters. These can be altered by passing `burnin` and `steps` to the run command above. Other accepted keywords can be found in the `emcee documentation <http://dan.iel.fm/emcee/current/api/#emcee.EnsembleSampler.run_mcmc>`_.
 
-MCMC results shown **not** be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result. This can be checked by making a trace plot:
+MCMC results should **not** be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result. This can be checked by making a trace plot:
 
     >>> pdf_mom0.trace_plot()  # doctest: +SKIP
 
