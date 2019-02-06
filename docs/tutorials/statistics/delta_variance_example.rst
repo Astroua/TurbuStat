@@ -25,7 +25,7 @@ where :math:`W_{\rm tot}(r) = W_{\rm core}(r)\,W_{\rm ann}(r)`.
 
 Since the kernel is separated into two components, the ratio between their widths can be set independently. `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.
 
-Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function. Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
+Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function (e.g., `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_). Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
 
 This technique shares many similarities to the :ref:`Wavelet transform <wavelet_tutorial>`.
 
@@ -48,11 +48,9 @@ Next, we initialize the `~turbustat.statistics.DeltaVariance` class:
 
     >>> delvar = DeltaVariance(moment0, weights=moment0_err, distance=250 * u.pc)  # doctest: +SKIP
 
-The weight array is optional but is recommended to downweight noisy data (particularly near the map edge). Note that this is not the exact form of the weight array used by `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
+The weight array is optional but is recommended to down-weight noisy data (particularly near the map edge). Note that this is not the exact form of the weight array used by `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
 
-By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the `lags` keyword. If a `~numpy.ndarray` is passed, it is assumed to be in pixel units. Lags can also be given in angular units using `astropy.units.Quantity` objects. The diameter between the inner and outer convolution kernels is set by `diam_ratio`. By default, this is set to 1.5.
-
-.. Note to @e-koch: check the above change
+To compute the delta-variance curve, the image is convolved with a set of kernels. The width of each kernel is referred to as the "lag." By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the `lags` keyword. If a `~numpy.ndarray` is passed, it is assumed to be in pixel units. Lags can also be given in angular units using `astropy.units.Quantity` objects. The diameter between the inner and outer convolution kernels is set by `diam_ratio`. By default, this is set to 1.5 (`Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_).
 
 The entire process is performed through `~turbustat.statistics.DeltaVariance.run`:
 
@@ -178,7 +176,7 @@ Similar to the fitting for other statistics, the Delta-variance curve can be fit
 
 The range here was chosen to force the model to fit a break near the turn-over, and the result is not great. This is not a realistic example; it is included only to highlight how the segmented model is enabled.
 
-There will now be two slopes, and a break point returned:
+There will now be two slopes and a break point returned:
 
     >>> delvar.slopes  # doctest: +SKIP
     array([ 1.08598566, -0.07259903])
@@ -202,3 +200,5 @@ References
 `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_
 
 `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_
+
+`Bertram et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015MNRAS.451..196B/abstract>`_

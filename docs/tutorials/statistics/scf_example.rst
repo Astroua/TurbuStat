@@ -8,7 +8,7 @@ Spectral Correlation Function (SCF)
 Overview
 --------
 
-The Spectral Correlation Function was introduced by `Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_ and `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_ to quantify the correlation of a spectral-line data cube as a function of spatial separation. Formally, this can be expressed as
+The Spectral Correlation Function was introduced by `Rosolowsky et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999ApJ...524..887R/abstract>`_ and `Padoan et al. 2001 <https://ui.adsabs.harvard.edu/#abs/2001ApJ...547..862P/abstract>`_ to quantify the correlation of a spectral-line data cube as a function of spatial separation. There are different forms of the SCF described in the literature (e.g., `Padaon et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...588..881P/abstract>`_). TurbuStat contains the SCF form described in `Padaon et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...588..881P/abstract>`_, which has been used in `Yeremi et al. 2014 <https://ui.adsabs.harvard.edu/#abs/2014ApJ...783...93Y/abstract>`_ and `Gaches et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...799..235G/abstract>`_.
 
 .. math::
 
@@ -39,7 +39,7 @@ The cube and lags to use are given to initialize the `~turbustat.statistics.SCF`
 
     >>> scf = SCF(cube, size=11)  # doctest: +SKIP
 
-`size` describes the total size of one dimension of the correlation surface and will compute the SCF up to a lag of 5 pixels in each direction. Alternatively, a set of custom lag values can be passed using `roll_lags` (see the example with physical units below). No restriction is placed on the values of these lags, however the azimuthally average spectrum is only usable if the given lags are symmetric with positive and negative values. Also note that lags do not have to be integer values! `~turbustat.statistics.SCF` handles non-integer shifts by shifting the data in the Fourier plane.
+`size` describes the total size of one dimension of the correlation surface and will compute the SCF up to a lag of 5 pixels in each direction. Alternatively, a set of custom lag values can be passed using `roll_lags` (see the example with physical units below). No restriction is placed on the values of these lags, however the azimuthally-averaged spectrum is only usable if the given lags are symmetric with positive and negative values. Also note that lags do not have to be integer values! `~turbustat.statistics.SCF` handles non-integer shifts by shifting the data in the Fourier plane.
 
 To compute the SCF, we run:
 
@@ -80,7 +80,7 @@ The 2D model parameters are not shown in the above summary. Instead, the paramet
     >>> print(scf.theta2D, scf.theta2D_err)  # doctest: +SKIP
     (0.33117523945671401, 0.06876652735591221)
 
-Since each value in the SCF surface is an average over the whole cube, it tends to be less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit to. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
+Since each value in the SCF surface is an average over the whole cube, it tends to be less affected by noise than the power-spectrum based methods (e.g., :ref:`PowerSpectrum tutorial <pspec_tutorial>`) and the 2D fit is highly constrained despite having many fewer points to fit. The slope of the 2D model is much steeper than the slope of the 1D model. In the 2D model, the index is defined to be the slope along the minor axis, where the slope is the steepest. The ability to return the slope at any angle will be added to TurbuStat in a future release.
 
 
 Real data may not have a spectrum described by a single power-law. In this case, the fit limits can be specified using `xlow` and `xhigh` to limit which scales are used in the fit.
@@ -196,7 +196,7 @@ The lags here are equally spaced and centered around zero. `phys_conv` converts 
 
 This example takes a bit longer to run than the others because, whenever a non-integer lag is used, the cube is shifted in Fourier space.
 
-Throughout all of these examples, we have assumed that the spatial boundaries can be wrapped. This is appropriate for the example data since they are generated from a periodic-box simulation and is the default setting (`boundary='continuous'`). Typically this will not be the case for observational data. To avoid wrapping the edges of the data, `boundary='cut'` can be set to avoid using the portion of the data that has been spatially wrapped:
+Throughout all of these examples, we have assumed that the spatial boundaries can be wrapped. This is appropriate for the example data since they are generated from a :ref:`periodic-box simulation <data_for_tutorial>` and is the default setting (`boundary='continuous'`). Typically this will not be the case for observational data. To avoid wrapping the edges of the data, `boundary='cut'` can be set to avoid using the portion of the data that has been spatially wrapped:
 
     >>> scf = SCF(cube, size=11)  # doctest: +SKIP
     >>> scf.run(verbose=True, boundary='cut')  # doctest: +SKIP

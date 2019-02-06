@@ -8,7 +8,36 @@ Statistical Moments
 Overview
 --------
 
-A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (`Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_ and extended in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. This provides an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
+A commonly used analysis technique with spectral-line data cubes is to find the moment of each spectrum (`Falgarone et al. 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...436..728F/abstract>`_). Alternatively, moments can be computed using the distribution of values in an image or a region within an image. This idea was introduced by `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_ and extended in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_, who computed the mean, variance, skewness, and kurtosis within circular regions across an image. These moments provide an estimate of how the intensity structure varies across an image. Using different neighborhood sizes to compute these statistics will emphasize or hide variations on the different spatial scales.
+
+The moments have the following definitions measured within a circular neighborhood :math:`|\mathbf{x}'-\mathbf{x}|\le r` with radius :math:`r` on a two-dimensional image :math:`I`:
+
+The mean is defined as:
+
+.. math::
+
+    \mu_r(\mathbf{x}) = \frac{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w_i(\boldsymbol{x}) I(\boldsymbol{x})}{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w_i(\boldsymbol{x})}
+
+where :math:`I(\boldsymbol{x})` are the values within the neighborhood region, and :math:`w_i` is the noise variance at that position (e.g., for a zeroth moment map :math:`M_0(\boldsymbol{x})`, :math:`w_i(\boldsymbol{x}) = [\sigma_{M_0}(\boldsymbol{x})]`).
+
+The variance is defined as:
+
+.. math::
+
+    \sigma^2_r(\boldsymbol{x}) \equiv \frac{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w_i(\boldsymbol{x}) \left( I - \mu_r(\mathbf{x}) \right)^2}{\sum{|\mathbf{x}'-\mathbf{x}|\le r} w_i(\boldsymbol{x})}.
+
+The skewness is defined as:
+
+.. math::
+
+    \gamma_{3,r}(\mathbf{x}) \equiv \frac{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w(\mathbf{x}')\left[\frac{I(\mathbf{x}')-\mu_r(\mathbf{x})}{\sigma_r(\mathbf{x})}\right]^3}{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w(\mathbf{x}')}.
+
+And the kurtosis is defined as:
+
+.. math::
+
+    \gamma_{4,r}(\mathbf{x}) \equiv \frac{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w(\mathbf{x}') \left[\frac{I(\mathbf{x}')-\mu_r(\mathbf{x})}{\sigma_r(\mathbf{x})}\right]^4}{\sum_{|\mathbf{x}'-\mathbf{x}|\le r} w(\mathbf{x}')} - 3.
+
 
 For the purpose of comparing these spatial moment maps between data sets, `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ recommend using the third and fourth moments---the skewness and kurtosis, respectively---since they are independent of the mean and normalized by the standard deviation.
 
@@ -48,7 +77,7 @@ Again, the mean is just a smoothed version of the zeroth moment values. The vari
 
 This example does not include any blanked regions, though observational data often do. To avoid edge effects near these regions, a limit can be set on the minimum fraction of finite points within each region with `min_frac`. By default, `min_frac` is set to 0.8. To completely remove edge effects, this parameter can be increased to 1 to reject all regions that contain a NaN. Note that this will increase the size of the blank region by your chosen radius.
 
-**Note:** This example uses data that are noiseless. If these data *did* have noise, it would be critical to not consider the noise-dominated regions when computing the skewness and kurtosis, in particular, since they are normalized by the variance. To minimize the effect of noise, the data can be masked beforehand or an array of weights can be passed to down-weight noisy regions. We recommend using the latter method. For example, a weight array could be the inverse squared noise level of the data. Assume the noise level is set to make the signal-to-noise ratio 10 for every pixel in the map:
+.. warning:: This example uses data that are noiseless. If these data *did* have noise, it would be critical to remove the noise-dominated regions when computing the skewness and kurtosis, in particular, since they are normalized by the variance. To minimize the effect of noise, the data can be masked beforehand or an array of weights can be passed to down-weight noisy regions. We recommend using the latter method. For example, a weight array could be the inverse squared noise level of the data. Assume the noise level is set to make the signal-to-noise ratio 10 for every pixel in the map:
 
     >>> np.random.seed(3434789)
     >>> noise = moment0.data * 0.1 + np.random.normal(0, 0.1, size=moment0.data.shape)  # doctest: +SKIP
@@ -64,7 +93,7 @@ And the associated histograms:
 
 .. image:: images/design4_statmoments_hists_randweights.png
 
-An important consideration when choosing the radius is the balance between tracking small-scale variations and the increased uncertainty when estimating the moments with less data. `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ use approximate formulae for the standard errors of skewness and kurtosis for a normal distribution that are valid for large samples. These are :math:`\sqrt{6 / n}` for skewness and :math:`\sqrt{24 / n}` for kurtosis, where :math:`n` is the number of points. This also assumes all of these points are *independent* of each other. This typically is not true of observational data, where the data are correlated on at least the beam scale. Each of these points should be considered when choosing the minimum radius appropriate for the data set. For more information on the standard errors, see the sections on **sample** `skewness <https://en.wikipedia.org/wiki/Skewness#Sample_skewness>`_ and `kurtosis <https://en.wikipedia.org/wiki/Kurtosis#Sample_kurtosis>`_ on their Wikipedia pages.
+An important consideration when choosing the radius is the balance between tracking small-scale variations and the increased uncertainty when estimating the moments with less data. `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ use approximate formulae for the standard errors of skewness and kurtosis for a normal distribution that are valid for large samples. These are :math:`\sqrt{6 / n}` for skewness and :math:`\sqrt{24 / n}` for kurtosis, where :math:`n` is the number of points. This also assumes all of these points are *independent* of each other. This typically is not true of observational data, where the data are correlated on at least the beam scale. Each of these points should be considered when choosing the minimum radius appropriate for the data set. For more information on the standard errors, see the sections on `skewness <https://en.wikipedia.org/wiki/Skewness#Sample_skewness>`_ and `kurtosis <https://en.wikipedia.org/wiki/Kurtosis#Sample_kurtosis>`_ on their Wikipedia pages.
 
 What happens if the radius is chosen to be too small, making the higher-order moments highly uncertain? A new radius can be given to `~turbustat.statistics.StatMoments.run` to replace the first one given:
 
@@ -73,7 +102,7 @@ What happens if the radius is chosen to be too small, making the higher-order mo
 
 .. image:: images/design4_statmoments_hists_rad_2pix.png
 
-The skewness distribution is narrower, but the kurtosis is wider. While both are highly uncertain with so few samples, the kurtosis is more so, leading the a broader distribution. What are the distribution shapes using larger radii?
+The skewness distribution is narrower, but the kurtosis is wider. The kurtosis uncertainty is larger than the skewness uncertainty, leading to a broader distribution. What are the distribution shapes using larger radii?
 
     >>> moments.run(verbose=False, radius=10 * u.pix)  # doctest: +SKIP
     >>> moments.plot_histograms()  # doctest: +SKIP
@@ -87,7 +116,7 @@ The skewness and kurtosis distributions are not significantly different from the
 
 .. image:: images/design4_statmoments_hists_rad_32pix.png
 
-This is clearly too large of a region to be using for this data. A radius of 32 pixels means using a circular region half the size of the image, and there are artifacts dominated by single prominent features in the map, leading the weird multi-model moment distributions.
+This is clearly too large of a region to be using for this data. A radius of 32 pixels means using a circular region half the size of the image, and there are artifacts dominated by single prominent features in the map, leading to weird multi-model moment distributions.
 
 Because this method relies significantly on the pixel size of the map (for small radii), comparing data sets is best done on a common grid. However, if larger radii are being used, the pixel-to-pixel variation will not be as important.
 
@@ -99,7 +128,7 @@ Often it is more convenient to specify scales in angular or physical units, rath
 
 .. image:: images/design4_statmoments_hists_physunits.png
 
-Whenever a radius with an angular or physical units is given, the radius of the region used is rounded *down* to the nearest integer. In this case, 0.23 pc rounds down to 10 pixels and we find the same distributions shown above for the `radius=10*u.pix` case.
+When a radius is given in angular or physical units, the radius of the region used is rounded *down* to the nearest integer. In this case, 0.23 pc rounds down to 10 pixels and we find the same distributions shown above for the `radius=10*u.pix` case.
 
 References
 ----------

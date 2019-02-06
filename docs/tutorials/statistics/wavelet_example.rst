@@ -159,7 +159,9 @@ The :math:`+2` discrepancy can be explained by thinking of the Mexican-Hat kerne
 
 .. image:: images/design4_wavelet_unnorm.png
 
-The unnormalized transform appears to follow a power-law relation over all of the scales, and when limited to the same fitting region, the fit appears to be much better. This is deceiving, however, because the extra factors of :math:`\sigma` are increasing the correlation between the x and y variables in the fit! This effectively gives a slope of :math:`+2` for free, regardless of the data. Further, it means that the fit statistics are no longer valid, as the underlying assumption in the model is that the y and x values are uncorrelated. We do **not** recommend using the unnormalized form as it inflates the quality of the fit, hides the deviations (that may be physically relevant!), but provides no additional information or improvements.
+The unnormalized transform appears to follow a power-law relation over all of the scales, and when limited to the same fitting region, the fit appears to be much better. This is deceiving, however, because the extra factors of :math:`\sigma` are increasing the correlation between the x and y variables in the fit! This effectively gives a slope of :math:`+2` for free, regardless of the data. Further, it means that the fit statistics are no longer valid, as the underlying assumption in the model is that the y and x values are uncorrelated.
+
+.. warning:: We do **not** recommend using the unnormalized form as it inflates the quality of the fit, hides the deviations (that may be physically relevant!), but provides no additional information or improvements.
 
 References
 ----------

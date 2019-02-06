@@ -33,7 +33,7 @@ The `~turbustat.statistics.PCA` class is first initialized, and the distance to 
 
     >>> pca = PCA(cube, distance=250. * u.pc)  # doctest: +SKIP
 
-If the distance is given, you will have the option to convert spatial widths to physical units. *Note that we're using simulated data and the distance of 250 pc has no special meaning.*
+If the distance is given, you will have the option to convert spatial widths to physical units. *Note that we're using simulated data and the distance of 250 pc has no special meaning in this case.* If no distance is provided, conversions to the physical units will return an error.
 
 The simplest way to run the entire process is using the `~turbustat.statistics.PCA.run` command:
 
@@ -46,8 +46,10 @@ The simplest way to run the entire process is using the `~turbustat.statistics.P
 
 .. image:: images/pca_design4_default.png
 
-Note that we have specified the output units for the both the spectral and spatial units. By default, these would be kept in pixel units.
-The key properties are shown when `verbose=True`: a summary of the results with a plot of the covariance matrix (top left), the variance described by the principal components (bottom left) and the size-line width relation (right). The proportion of variance is the variance contained in the N eigenvalues kept. In this case, we consider all eigenvalues with values above 1e-4 to be important. `index` is the slope of the size-line width relation, and `gamma` is the the slope with a correction factor applied (see `~turbustat.statistics.PCA.gamma`). The sonic length is derived from the intercept of the size-line width relation using a default temperature of 10 K (see below on how to change this).
+Note that we have specified the output units for the spectral and spatial units. By default, these would be kept in pixel units.
+The key properties are shown when `verbose=True`: a summary of the results with a plot of the covariance matrix (top left), the variance described by the principal components (bottom left) and the size-line width relation (right). The proportion of variance is the variance contained in the N eigenvalues kept. In this case, we consider all eigenvalues with values above 1e-4 to be important. In observational data, `min_eigval` should be set to the variance of the noise (square of the rms uncertainty).  Typically, only the first :math:`\sim10` eigenvalues contain signal in observational data.
+
+In the output above `index` is the slope of the size-line width relation, and `gamma` is the the slope with a correction factor applied (see `~turbustat.statistics.PCA.gamma`). The sonic length is derived from the intercept of the size-line width relation using a default temperature of 10 K (see below on how to change this).
 
 Since these data are simulated, this example does not account for a finite beam size. If it did, however, we would want to deconvolve the spatial widths with the beam. To see this effect, let us assume these data have a 20" circular beam:
 
@@ -63,7 +65,7 @@ Since these data are simulated, this example does not account for a finite beam 
 
 Since the correction is not linear, the slope changes with the beam correction. If the header of the data has the beam information defined, it will be automatically read in and `beam_fwhm` will not have to be given.
 
-Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_ and `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_ is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
+Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_ and `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_ is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean, how does this affect the index?
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
@@ -199,4 +201,4 @@ References
 
 `Bertram et al. 2014 <https://ui.adsabs.harvard.edu/#abs/2014MNRAS.440..465B/abstract>`_
 
-`Correia et al. 2016 <`Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_>`_
+`Correia et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...818..118C/abstract>`_

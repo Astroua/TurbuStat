@@ -7,7 +7,7 @@ PDF
 Overview
 --------
 
-A common technique used in ISM and molecular cloud studies is measurement of the shape of the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_, `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_).
+A common technique used in ISM and molecular cloud studies is measurement of the shape of the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., `Kowal et al. 2007 <https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract>`_, `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_) and gravity (e.g., `Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_, `Burkhart et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017ApJ...834L...1B/abstract>`_).
 
 A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs (`Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_). TurbuStat's implementation seeks to be flexible because of this. Parametric and non-parametric measures to describe PDFs are shown below.
 
@@ -149,7 +149,9 @@ The distribution fitting shown above uses a maximum likelihood estimate (MLE) to
 
 The MCMC fit finds the same parameter values (see the first example above) with a ~1-sigma range about twice that of the MLE fit. The MCMC chain is ran for 200 burn-in steps, followed by 2000 steps that are used to estimate the distribution parameters. These can be altered by passing `burnin` and `steps` to the run command above. Other accepted keywords can be found in the `emcee documentation <http://dan.iel.fm/emcee/current/api/#emcee.EnsembleSampler.run_mcmc>`_.
 
-MCMC results should **not** be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result. This can be checked by making a trace plot:
+.. warning:: MCMC results should **not** be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result.
+
+To check if the MCMC has converged, a trace plot of parameter value versus step in the chain can be made::
 
     >>> pdf_mom0.trace_plot()  # doctest: +SKIP
 
@@ -210,6 +212,8 @@ As stated above, there are a ton of papers measuring properties of the PDF. Belo
 `Goodman et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...692...91G/abstract>`_
 
 `Federrath et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...512A..81F/abstract>`_
+
+`Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_
 
 `Lombardi et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015A&A...576L...1L/abstract>`_
 
