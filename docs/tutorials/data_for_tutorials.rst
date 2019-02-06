@@ -20,7 +20,7 @@ Two data sets are used for the tutorials and can be downloaded `here <https://gi
 | Driving scale       |    2-8   |  2-4   |
 +---------------------+----------+--------+
 
-The simulations were performed on a :math:`128^3` base grid with a fixed random turbulent driving field and the boundaries are continuous (i.e., periodic box). The data cubes were produced from one time step after gravity is turned one (:math:`\sim0.1` of the free-fall time).
+The simulations were performed on a :math:`128^3` base grid with a fixed random turbulent driving field and the boundaries are continuous (i.e., periodic box). The data cubes were produced from one time step after gravity is turned one (:math:`\sim0.1` of the free-fall time). The spectral resolution (i.e., channel width) of the cubes is :math:`40` m/s.
 
 Moment maps can also be downloaded from the data cubes with the link above. Each data cube has a zeroth (integrated intensity), first (centroid), and square of the second (line width) moment maps.
 
