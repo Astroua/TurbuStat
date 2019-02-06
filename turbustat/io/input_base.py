@@ -14,7 +14,7 @@ twod_types = ["spectral_cube.Projection", "spectral_cube.Slice"]
 threed_types = ["SpectralCube"]
 
 
-def input_data(data, no_header=False):
+def input_data(data, no_header=False, need_copy=False):
     '''
     Accept a variety of input data forms and return those expected by the
     various statistics.
@@ -28,6 +28,8 @@ def input_data(data, no_header=False):
         must be enabled when passing only an array in.
     no_header : bool, optional
         When enabled, returns only the data without the header.
+    need_copy : bool, optional
+        Return a copy of the data when enabled.
 
     Returns
     -------
@@ -36,12 +38,19 @@ def input_data(data, no_header=False):
         is enabled.
     '''
 
+    def make_copy(data, need_copy):
+        if need_copy:
+            return data.copy()
+        else:
+            return data
+
     if isinstance(data, _ImageBaseHDU):
-        output_data = [data.data, data.header]
+        output_data = [make_copy(data.data, need_copy), data.header]
     elif isinstance(data, SpectralCube):
-        output_data = [data.filled_data[:].value, data.header]
+        output_data = [make_copy(data.filled_data[:].value, need_copy),
+                       data.header]
     elif isinstance(data, LowerDimensionalObject):
-        output_data = [data.value, data.header]
+        output_data = [make_copy(data.value, need_copy), data.header]
     elif isinstance(data, tuple) or isinstance(data, list):
         if len(data) != 2:
             raise TypeError("Must have two items: data and the header.")
@@ -50,7 +59,7 @@ def input_data(data, no_header=False):
         if not no_header:
             raise TypeError("no_header must be enabled when giving data"
                             " without a header.")
-        output_data = [data]
+        output_data = [make_copy(data, need_copy)]
     else:
         raise TypeError("Input data is not of an accepted form:"
                         " astropy.io.fits.PrimaryHDU, astropy.io.fits.ImageHDU,"
