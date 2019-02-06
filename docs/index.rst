@@ -79,7 +79,6 @@ Contents:
    tutorials/index
    generating_test_data.rst
    statistics.rst
-   helper_scripts.rst
    contributing.rst
 
 Indices and tables
