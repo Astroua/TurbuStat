@@ -1,0 +1,13 @@
+.. _data_for_tutorial:
+
+
+Data for tutorials
+******************
+
+Two data sets are used for the tutorials and can be downloaded `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_. The data are synthetic :math:`^{13}{\rm CO}(2\rightarrow)1` spectral-line data cubes from different ENZO adaptive-mesh-refinement simulations.  The simulations setup and input parameters are given in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_ (see Table 1). One of the data sets is a "Fiducial" and the other is a "Design" simulation; the input parameters for the solenoidal fraction, virial parameter, plasma beta, mach number, and driving scale all differ between the two simulations.
+
+The simulations were performed on a :math:`128^3` base grid with a fixed random turbulent driving field. The data cubes were produced from one time step after gravity is turned one (:math:`\sim0.1` of the free-fall time).
+
+Moment maps can also be downloaded from the data cubes with the link above. Each data cube has a zeroth (integrated intensity), first (centroid), and square of the second (line width) moment maps.
+
+These data have a limited inertial range, which is evident in the :ref:`Spatial Power Spectrum tutorial <pspec_tutorial>`. Turbulent dissipation causes the power-spectrum to steepen on small scales and it is necessary to limit the range of scales that are fit.

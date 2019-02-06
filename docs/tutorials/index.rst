@@ -6,6 +6,7 @@ TurbuStat Tutorials
 .. toctree::
     :maxdepth: 2
 
+    data_for_tutorials
     applying_apodizing_functions
     correcting_for_the_beam
 
