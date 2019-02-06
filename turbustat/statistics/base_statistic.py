@@ -93,7 +93,7 @@ class BaseStatisticMixIn(object):
 
             self._data = values.squeeze()
 
-    def input_data_header(self, data, header):
+    def input_data_header(self, data, header, need_copy=False):
         '''
         Check if the header is given separately from the data type.
         '''
