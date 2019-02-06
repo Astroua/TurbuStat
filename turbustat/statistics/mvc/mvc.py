@@ -68,11 +68,6 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         self._moment0 = input_data(moment0, no_header=True)
         self._linewidth = input_data(linewidth, no_header=True)
 
-        # Get rid of nans.
-        self._centroid[np.isnan(self.centroid)] = np.nanmin(self.centroid)
-        self._moment0[np.isnan(self.moment0)] = np.nanmin(self.moment0)
-        self._linewidth[np.isnan(self.linewidth)] = np.nanmin(self.linewidth)
-
         shape_check1 = self.centroid.shape == self.moment0.shape
         shape_check2 = self.centroid.shape == self.linewidth.shape
         if not shape_check1 or not shape_check2:
@@ -81,7 +76,20 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
 
         self.shape = self.centroid.shape
 
-        self._ps1D_stddev = None
+        # Get rid of nans.
+        isnan = np.logical_and(np.isnan(self.centroid),
+                               np.isnan(self.moment0))
+        isnan = np.logical_and(isnan,
+                               np.isnan(self.linewidth))
+
+        if isnan.any():
+            # Need to make copies to avoid making changes to original data
+            self._centroid = self._centroid.copy()
+            self._centroid[isnan] = 0.
+            self._moment0 = self._moment0.copy()
+            self._moment0[isnan] = 0.
+            self._linewidth = self._linewidth.copy()
+            self._linewidth[isnan] = 0.
 
         self.load_beam(beam=beam)
 

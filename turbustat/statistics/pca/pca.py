@@ -54,7 +54,8 @@ class PCA(BaseStatisticMixIn):
         # We need to check for completely empty channels. These cause
         # issues for the decomposition of the covariance matrix (eigenvectors
         # will have significant imaginary components).
-        self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
+        # Now doing this on a per-channel basis in var_cov_cube
+        # self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
 
         self.spectral_shape = self.data.shape[0]
 
@@ -64,10 +65,6 @@ class PCA(BaseStatisticMixIn):
 
         if distance is not None:
             self.distance = distance
-
-        # Try loading in the beam from the header
-
-
 
     @property
     def n_eigs(self):

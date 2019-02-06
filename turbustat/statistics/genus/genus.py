@@ -78,10 +78,6 @@ class Genus(BaseStatisticMixIn):
             self.need_header_flag = True
             self.data, self.header = input_data(img, no_header=False)
 
-        self.nanflag = False
-        if np.isnan(self.data).any():
-            self.nanflag = True
-
         if distance is not None:
             self.distance = distance
 

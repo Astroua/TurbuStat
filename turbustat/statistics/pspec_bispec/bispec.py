@@ -56,7 +56,10 @@ class Bispectrum(BaseStatisticMixIn):
         self.shape = self.data.shape
 
         # Set nans to min
-        self.data[np.isnan(self.data)] = np.nanmin(self.data)
+        isnan = np.isnan(self.data)
+        if isnan.any():
+            self.data = self.data.copy()
+            self.data[isnan] = 0.
 
     def compute_bispectrum(self, show_progress=True, use_pyfftw=False,
                            threads=1, nsamples=100, seed=1000,
