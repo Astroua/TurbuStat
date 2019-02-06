@@ -106,7 +106,7 @@ The MVC spectra are plotted in the figure and the fit summaries are printed out.
     >>> mvc.distance  # doctest: +SKIP
     0.3988169606167437
 
-This is an awful fit. We want to limit where the spectra are fit to. Keywords for `~turbustat.statistics.MVC` can be passed with `low_cut`, `high_cut`, `breaks`, `pspec_kwargs` and `pspec2_kwargs`. If separate parameters need to be set, a two-element list or array can be given to `low_cut`, `high_cut` and `breaks`; the second element will be used for the second data set. For example, limiting the fit region can be done with:
+This is an awful fit. We want to limit where the spectra are fit. Keywords for `~turbustat.statistics.MVC` can be passed with `low_cut`, `high_cut`, `breaks`, `pspec_kwargs` and `pspec2_kwargs`. If separate parameters need to be set, a two-element list or array can be given to `low_cut`, `high_cut` and `breaks`; the second element will be used for the second data set. For example, limiting the fit region can be done with:
 
     >>> mvc = MVC_Distance(data_fid, data, low_cut=0.02 / u.pix,
     ...                    high_cut=0.4 / u.pix)  # doctest: +SKIP

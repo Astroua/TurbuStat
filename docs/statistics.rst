@@ -17,7 +17,7 @@ Nearly all of the distance metrics are actually `"pseudo" - distance metrics <ht
 
 Here :math:`A` and :math:`B` represent two datasets (either a PPV datacube, column density map, or an associated moment of the cube).
 
-For two datasets with different physical properties, a good statistic will return a large value :math:`d(A, B) \gg 0`. If the datasets have similar physical properties, the distance should be small :math:`d(A, B) \approx 0`.
+For two datasets with different physical properties, a good statistic will return a large value :math:`d(A, B) \gg 0`. If the datasets have similar physical properties, the distance should be small :math:`d(A, B) \approx 0`. Clear examples of the distance metric properties and the distinction between large and small distances are shown in `Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_ and `Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_.
 
 Additionally, the statistics should ideally be insensitive to spatial shifts :math:`d\left( A\left[ x,y,v \right], A\left[ x+\delta x,y,v \right] \right)=0` and independent of the noise level (for observational data) :math:`d\left( A + \mathcal{N}\left(0, \sigma_1^2 \right), A + \mathcal{N}\left(0, \sigma_2^2 \right) \right) \approx 0`.
 

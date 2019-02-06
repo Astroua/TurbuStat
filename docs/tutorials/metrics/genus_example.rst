@@ -40,7 +40,7 @@ The two images are passed to the `~turbustat.statistics.Genus_Distance` class:
     ...                        lowdens_percent=15, highdens_percent=85, numpts=100,
     ...                        genus_kwargs=dict(min_size=4 * u.pix**2))  # doctest: +SKIP
 
-`~turbustat.statistics.Genus_Distance` accepts similar keyword arguments to `~turbustat.statistics.Genus`. Keywords to `~turbustat.statistics.Genus.run` can be specified in a dictionary to `genus_kwargs`. Seperate keywords the second image (`moment0`) can be specified in a second dictionary to `genus2_kwargs`.
+`~turbustat.statistics.Genus_Distance` accepts similar keyword arguments to `~turbustat.statistics.Genus`. Keywords to `~turbustat.statistics.Genus.run` can be specified in a dictionary to `genus_kwargs`. Separate keywords for the second image (`moment0`) can be specified in a second dictionary to `genus2_kwargs`.
 
 To find the distance between the images:
 

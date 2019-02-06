@@ -6,9 +6,9 @@ Dendrogram Distance
 
 See :ref:`the tutorial <dendro_tutorial>` for a description of the dendrogram statistics.
 
-**Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
+.. warning:: **Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
 
-Using the two comparisons defined by `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_, `~turbustat.statistics.Dendro_Distance` provides two distance metrics:
+Using the two comparisons defined by `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_, `~turbustat.statistics.Dendro_Distance` provides two distance metrics::
 
 1. The distance between histograms of peak intensity in the leaves of the dendrogram, measured over a range of minimum branch heights, is:
     .. math::

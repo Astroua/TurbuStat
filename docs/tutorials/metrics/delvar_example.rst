@@ -101,7 +101,7 @@ The images (and optionally the error maps) are passed to the `~turbustat.statist
 
 .. image:: images/delvar_distmet.png
 
-A summary of the fits are printed along with a plot of the two Delta-Variance curves and the fit residuals when `verbose=True`. Custom labels can be set by setting `label1` and `label2` in the distance metric call.
+A summary of the fits are printed along with a plot of the two delta-variance curves and the fit residuals when `verbose=True`. Custom labels can be set by setting `label1` and `label2` in the distance metric call.
 
 The distances between these two datasets are:
 
@@ -242,7 +242,7 @@ The curve distance is only valid when the same set of lags are used to compute t
 
 The curve distance will also be undefined if different sets of lags are used for the datasets. By default, `use_common_lags=True` is used in `~turbustat.statistics.DeltaVariance_Distance`, which will find a common set of scales in angular units between the two datasets.
 
-For further fine-tuning of the delta-variance for either dataset, the `~turbustat.statistics.DeltaVariance` classes for each dataset are can be accessed as `~turbustat.statistics.DeltaVariance_Distance.delvar1` and `~turbustat.statistics.DeltaVariance_Distance.delvar2`. Each of these class instances can be run separately with, as shown in the :ref:`delta-variance tutorial <delvar_tutorial>`, to fine-tune or alter how the delta-variance is computed.
+For further fine-tuning of the delta-variance for either dataset, the `~turbustat.statistics.DeltaVariance` classes for each dataset can be accessed as `~turbustat.statistics.DeltaVariance_Distance.delvar1` and `~turbustat.statistics.DeltaVariance_Distance.delvar2`. Each of these class instances can be run separately, as shown in the :ref:`delta-variance tutorial <delvar_tutorial>`, to fine-tune or alter how the delta-variance is computed.
 
 References
 ----------

@@ -41,7 +41,7 @@ We need to import the `~turbustat.statistics.PDF_Distance` class, along with a f
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
 
-And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be given two 2D images or cubes. For this example, we will use two integrated intensity images:
+And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be given two 2D images or cubes. For this example, we will use two integrated intensity images::
 
     >>> moment0 = fits.open(osjoin(data_path, "Design4_flatrho_0021_00_radmc_moment0.fits"))[0]  # doctest: +SKIP
     >>> moment0_fid = fits.open(osjoin(data_path, "Fiducial0_flatrho_0021_00_radmc_moment0.fits"))[0]  # doctest: +SKIP
