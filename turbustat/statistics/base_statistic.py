@@ -99,10 +99,12 @@ class BaseStatisticMixIn(object):
         '''
 
         if header is not None:
-            self.data = input_data(data, no_header=True)
+            self.data = input_data(data, no_header=True,
+                                   need_copy=need_copy)
             self.header = header
         else:
-            self.data, self.header = input_data(data)
+            self.data, self.header = input_data(data,
+                                                need_copy=need_copy)
 
     def save_results(self, output_name, keep_data=False):
         '''
