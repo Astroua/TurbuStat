@@ -7,8 +7,7 @@ Creating testing data
 
 TurbuStat includes a simulation package to create 2D images and PPV cubes with
 set power-law indices. These provide simple non-realistic synthetic
-observations that can be used to test idealized regimes of turbulent statistics.
-
+observations that can be used to test idealized regimes of turbulent statistics.::
 
     >>> import matplotlib.pyplot as plt
     >>> from astropy.io import fits
@@ -17,11 +16,10 @@ observations that can be used to test idealized regimes of turbulent statistics.
 Two-dimensional images
 ----------------------
 
-.. could you find a way to cite image_registration here?  You do it in the source code already.
-
-The 2D power-law image function is `make_extended`:
+The 2D power-law image function is `make_extended`::
     >>> from turbustat.simulator import make_extended
 
+The ``make_extended`` function is adapted from the implementation in `image_registration <https://image-registration.readthedocs.io/en/latest/>`_.
 
 To create an isotropic power-law field, or a fractional Brownian Motion (fBM) field, with an index of 3 and size of 256 pixels, we run:
 
@@ -152,7 +150,7 @@ small 32 pixel cubes so this is quick to compute:
 
 Both fields need to have appropriate units.
 
-There is an additional issue for the density field generated from a power-law in that it will contain negative values. There are numerous approaches to account for negative values, including adding the minimum to force all values to be positive or taking the exponential of this field to produce a log-normal field (`Brunt & Heyer 2002 <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Roman-Duval+2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). Here we use the approach from `Ossenkopf+2006 <https://ui.adsabs.harvard.edu/#abs/2006A&A...452..223O/abstract>`_, adding one standard deviation to all values and masking values that remain negative. Each of these approaches will distort the field properties to some extent.
+There is an additional issue for the density field generated from a power-law in that it will contain negative values. There are numerous approaches to account for negative values, including adding the minimum to force all values to be positive or taking the exponential of this field to produce a log-normal field (`Brunt & Heyer 2002 <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). Here we use the approach from `Ossenkopf et al. 2006 <https://ui.adsabs.harvard.edu/#abs/2006A&A...452..223O/abstract>`_, adding one standard deviation to all values and masking values that remain negative. Each of these approaches will distort the field properties to some extent.
 
     >>> density += density.std()  # doctest: +SKIP
     >>> density[density.value < 0.] = 0. * u.cm**-3  # doctest: +SKIP
@@ -190,22 +188,21 @@ And the mean spectra, averaged over the spatial dimensions:
 
 .. image:: tutorials/images/ppv_mean_spec.png
 
-.. warning:: These simulated cubes (and those from other numerical methods) will suffer from "shot noise" due to a finite number of emitting sources along the line of sight. This will lead to deviations of expected behaviours for several statistics, most notably the :ref:`VCA <vca_tutorial>` and :ref:`VCS <vcs_tutorial>` methods. See `Esquivel+2003 <https://ui.adsabs.harvard.edu/#abs/2003MNRAS.342..325E/abstract>`_ and `Chepurnov+2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_ for thorough explanations of this effect.
+.. warning:: These simulated cubes (and those from other numerical methods) will suffer from "shot noise" due to a finite number of emitting sources along the line of sight. This will lead to deviations of expected behaviours for several statistics, most notably the :ref:`VCA <vca_tutorial>` and :ref:`VCS <vcs_tutorial>` methods. See `Esquivel et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003MNRAS.342..325E/abstract>`_ and `Chepurnov et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_ for thorough explanations of this effect.
 
-Useful References
------------------
+Useful references for making mock-HI cubes include:
 
 `Brunt & Heyer 2002 <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_
 
-`Miville-Deschenes+2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...593..831M/abstract>`_
+`Miville-Deschenes et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...593..831M/abstract>`_
 
-`Esquivel+2003 <https://ui.adsabs.harvard.edu/#abs/2003MNRAS.342..325E/abstract>`_
+`Esquivel et al. 2003 <https://ui.adsabs.harvard.edu/#abs/2003MNRAS.342..325E/abstract>`_
 
-`Ossenkopf+2006 <https://ui.adsabs.harvard.edu/#abs/2006A&A...452..223O/abstract>`_
+`Ossenkopf et al. 2006 <https://ui.adsabs.harvard.edu/#abs/2006A&A...452..223O/abstract>`_
 
-`Chepurnov 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_
+`Chepurnov & Lazarian 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693.1074C/abstract>`_
 
-`Roman-Duval+2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_
+`Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_
 
 Source Code
 -----------
