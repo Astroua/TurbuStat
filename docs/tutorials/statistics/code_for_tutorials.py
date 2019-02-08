@@ -14,15 +14,15 @@ import numpy as np
 from spectral_cube import SpectralCube
 
 # Use my default seaborn setting
-sb.set(font='Times New Roman', style='ticks')
-sb.set_context("poster", font_scale=0.75)
+sb.set(font='Sans-Serif', style='ticks')
+sb.set_context("paper", font_scale=1.)
 
 data_path = "../../../testingdata"
 
 fig_path = 'images'
 
 # Choose which methods to run
-run_bispec = False
+run_bispec = True
 run_delvar = False
 run_dendro = False
 run_genus = False
@@ -71,6 +71,7 @@ if run_bispec:
     plt.xlabel("Radius")
     plt.ylabel("log Bispectrum")
     plt.grid()
+    plt.tight_layout()
     plt.savefig(osjoin(fig_path, "bispectrum_radial_slices.png"))
     plt.close()
 
@@ -82,6 +83,7 @@ if run_bispec:
     plt.xlabel("Theta (rad)")
     plt.ylabel("log Bispectrum")
     plt.grid()
+    plt.tight_layout()
     plt.savefig(osjoin(fig_path, "bispectrum_azim_slices.png"))
     plt.close()
 

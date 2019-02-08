@@ -7,7 +7,6 @@ from astropy import units as u
 from astropy.wcs import WCS
 from copy import copy
 import statsmodels.api as sm
-from astropy.extern.six import string_types
 from warnings import warn
 from astropy.utils.console import ProgressBar
 
@@ -531,7 +530,7 @@ class DeltaVariance(BaseStatisticMixIn):
         ax.errorbar(lags[fin_vals], self.delta_var[fin_vals],
                     yerr=self.delta_var_error[fin_vals],
                     fmt="{}-".format(symbol), color=color,
-                    label=label)
+                    label=label, zorder=-1)
 
         xvals = np.linspace(self._fit_range[0].value,
                             self._fit_range[1].value,
@@ -556,7 +555,8 @@ class DeltaVariance(BaseStatisticMixIn):
             resids = self.delta_var - 10**self.fitted_model(np.log10(lags))
             ax_r.errorbar(lags[fin_vals], resids[fin_vals],
                           yerr=self.delta_var_error[fin_vals],
-                          fmt="{}-".format(symbol), color=color)
+                          fmt="{}-".format(symbol), color=color,
+                          zorder=-1)
 
             ax_r.set_ylabel("Residuals")
 

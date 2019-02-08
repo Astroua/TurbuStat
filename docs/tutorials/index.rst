@@ -3,12 +3,17 @@
 TurbuStat Tutorials
 *******************
 
+Tutorials are provided for each of the statistic classes and their associated distance metric classes. The tutorials use the same two data sets, described on the :ref:`data for tutorials <data_for_tutorial>` page.
+
+The plotting routines are highlighted in each of the tutorials. For users who require custom plotting routines, we recommend looking at the `plotting source code <https://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics>`_ as a starting point.
+
 .. toctree::
     :maxdepth: 2
 
     data_for_tutorials
     applying_apodizing_functions
     correcting_for_the_beam
+    missing_data_noise
 
 Statistics
 ==========
