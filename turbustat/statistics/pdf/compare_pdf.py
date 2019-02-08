@@ -394,6 +394,10 @@ class PDF(BaseStatisticMixIn):
             ax.plot(self._mcmc_chain.flatchain[:, i], **kwargs)
             ax.set_ylabel("par{}".format(i + 1))
 
+        axes.ravel()[-1].set_xlabel("Iterations")
+
+        plt.tight_layout()
+
     def plot_distrib(self, save_name=None, color='r', fit_color='k',
                      show_ecdf=True):
         '''
