@@ -286,7 +286,7 @@ class Genus(BaseStatisticMixIn):
                     "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
                     transform=ax.transAxes, fontsize=12)
             plt.plot(self.thresholds, self.genus_stats[i - 1],
-                     fmt="{}-".format(symbol),
+                     "{}-".format(symbol),
                      color=color)
 
             plt.grid(True)
