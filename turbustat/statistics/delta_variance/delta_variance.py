@@ -474,8 +474,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_fit(self, save_name=None, xunit=u.pix, symbol='D', color='r',
-                 fit_color=None, label=None,
+    def plot_fit(self, save_name=None, xunit=u.pix, symbol='o', color='r',
+                 fit_color='k', label=None,
                  show_residual=True):
         '''
         Plot the delta-variance curve and the fit.

@@ -424,7 +424,7 @@ class Wavelet(BaseStatisticMixIn):
             return self.fit.params[0] + self.fit.params[1] * xvals
 
     def plot_transform(self, save_name=None, xunit=u.pix,
-                       color='b', symbol='D', fit_color=None,
+                       color='r', symbol='o', fit_color='k',
                        label=None, show_residual=True):
         '''
         Plot the transform and the fit.

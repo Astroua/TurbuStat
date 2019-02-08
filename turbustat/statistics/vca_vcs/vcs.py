@@ -249,7 +249,7 @@ class VCS(BaseStatisticMixIn):
         return self.fit.brk_err
 
     def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
-                 symbol='D', fit_color=None, label=None, show_residual=True):
+                 symbol='o', fit_color='k', label=None, show_residual=True):
         '''
         Plot the VCS curve and the associated fit.
 

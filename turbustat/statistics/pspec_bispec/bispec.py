@@ -553,7 +553,8 @@ class Bispectrum_Distance(object):
         return self._mean_distance
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None, save_name=None):
+                        label2=None, save_name=None,
+                        cmap='viridis'):
         '''
         verbose : bool, optional
             Enable plotting.
@@ -563,6 +564,8 @@ class Bispectrum_Distance(object):
             Object or region name for data2
         save_name : str,optional
             Save the figure when a file name is given.
+        cmap : str, optional
+            Colormap to show the bicoherence surfaces.
         '''
 
         if self.bispec1.bicoherence.shape == self.bispec2.bicoherence.shape:
@@ -592,6 +595,7 @@ class Bispectrum_Distance(object):
             ax1 = fig.add_subplot(121)
             ax1.set_title(label1)
             ax1.imshow(self.bispec1.bicoherence, origin="lower",
+                       cmap=cmap,
                        interpolation="nearest", vmax=1.0, vmin=0.0)
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
@@ -599,6 +603,7 @@ class Bispectrum_Distance(object):
             ax2 = plt.subplot(122)
             ax2.set_title(label2)
             im = plt.imshow(self.bispec2.bicoherence, origin="lower",
+                            cmap=cmap,
                             interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
             ax2.set_yticklabels([])

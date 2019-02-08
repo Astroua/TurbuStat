@@ -259,7 +259,7 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
-    def plot_fit(self, save_name=None, color='b'):
+    def plot_fit(self, save_name=None, color='r', symbol='o'):
         '''
         Plot the Genus curves.
 
@@ -285,7 +285,8 @@ class Genus(BaseStatisticMixIn):
             ax.text(0.3, 0.1,
                     "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
                     transform=ax.transAxes, fontsize=12)
-            plt.plot(self.thresholds, self.genus_stats[i - 1], "D-",
+            plt.plot(self.thresholds, self.genus_stats[i - 1],
+                     fmt="{}-".format(symbol),
                      color=color)
 
             plt.grid(True)
@@ -304,7 +305,7 @@ class Genus(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, save_name=None,
-            color='b', **kwargs):
+            color='r', symbol='o', **kwargs):
         '''
         Run the whole statistic.
 
@@ -321,7 +322,7 @@ class Genus(BaseStatisticMixIn):
         self.make_genus_curve(**kwargs)
 
         if verbose:
-            self.plot_fit(save_name=save_name, color=color)
+            self.plot_fit(save_name=save_name, color=color, symbol=symbol)
 
         return self
 
@@ -481,8 +482,8 @@ class Genus_Distance(object):
             plt.plot(self.genus2.thresholds, genus2, color=color2,
                      marker=marker2,
                      label=label2)
-            plt.plot(points, interp1(points), "b")
-            plt.plot(points, interp2(points), "g")
+            plt.plot(points, interp1(points), color1)
+            plt.plot(points, interp2(points), color2)
             plt.xlabel("z-score")
             plt.ylabel("Genus Score")
             plt.grid(True)

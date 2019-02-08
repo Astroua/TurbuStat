@@ -344,7 +344,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         return self
 
     def plot_fit(self, save_name=None, show_hists=True, color='r',
-                 fit_color=None):
+                 fit_color='k', symbol='o'):
         '''
 
         Parameters
@@ -373,7 +373,7 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         if fit_color is None:
             fit_color = color
 
-        ax1.plot(self.fitvals[0], self.fitvals[1], 'D', color=color)
+        ax1.plot(self.fitvals[0], self.fitvals[1], symbol, color=color)
         ax1.plot(self.fitvals[0], self.model.fittedvalues, color=fit_color)
         plt.xlabel(r"log $\delta$")
         plt.ylabel(r"log Number of Features")
@@ -594,8 +594,9 @@ class Dendrogram_Distance(object):
         '''
         return self._num_distance
 
-    def numfeature_stat(self, verbose=False, label1=None, label2=None,
-                        save_name=None):
+    def numfeature_stat(self, verbose=False,
+                        save_name=None, plot_kwargs1={},
+                        plot_kwargs2={}):
         '''
         Calculate the distance based on the number of features statistic.
 
@@ -603,12 +604,13 @@ class Dendrogram_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
         save_name : str, optional
             Saves the plot when a filename is given.
+        plot_kwargs1 : dict, optional
+            Set the color, symbol, and label for dataset1
+            (e.g., plot_kwargs1={'color': 'b', 'symbol': 'D', 'label': '1'}).
+        plot_kwargs2 : dict, optional
+            Set the color, symbol, and label for dataset2.
         '''
 
         self._num_distance = \
@@ -620,19 +622,37 @@ class Dendrogram_Distance(object):
 
             import matplotlib.pyplot as plt
 
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
             plt.figure()
 
             # Dendrogram 1
-            plt.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1], 'bD',
-                     label=label1)
+            plt.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1],
+                     label=plot_kwargs1['label'], fmt=plot_kwargs1['symbol'],
+                     color=plot_kwargs1['color'])
             plt.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
-                     'b')
+                     plot_kwargs1['color'])
 
             # Dendrogram 2
-            plt.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1], 'go',
-                     label=label2)
+            plt.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1],
+                     label=plot_kwargs2['label'], fmt=plot_kwargs2['symbol'],
+                     color=plot_kwargs2['color'])
             plt.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
-                     'g')
+                     plot_kwargs2['color'])
 
             plt.grid(True)
             plt.xlabel(r"log $\delta$")
@@ -653,8 +673,10 @@ class Dendrogram_Distance(object):
     def histogram_distance(self):
         return self._histogram_distance
 
-    def histogram_stat(self, verbose=False, label1=None, label2=None,
-                       save_name=None):
+    def histogram_stat(self, verbose=False,
+                       save_name=None,
+                       plot_kwargs1={},
+                       plot_kwargs2={}):
         '''
         Computes the distance using histograms.
 
@@ -662,12 +684,13 @@ class Dendrogram_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for dataset1
-        label2 : str, optional
-            Object or region name for dataset2
         save_name : str, optional
             Saves the plot when a filename is given.
+        plot_kwargs1 : dict, optional
+            Set the color, symbol, and label for dataset1
+            (e.g., plot_kwargs1={'color': 'b', 'symbol': 'D', 'label': '1'}).
+        plot_kwargs2 : dict, optional
+            Set the color, symbol, and label for dataset2.
         '''
 
         if self.nbins == "best":
@@ -726,36 +749,62 @@ class Dendrogram_Distance(object):
         if verbose:
             import matplotlib.pyplot as plt
 
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
+
             plt.figure()
 
             ax1 = plt.subplot(2, 2, 1)
-            ax1.set_title(label1)
+            ax1.set_title(plot_kwargs1['label'])
             ax1.set_ylabel("ECDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 ax1.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                         self.mecdf1[n, :][:self.nbins[n]])
+                         self.mecdf1[n, :][:self.nbins[n]],
+                         fmt=plot_kwargs1['symbol'],
+                         color=plot_kwargs1['color'])
             ax1.axes.xaxis.set_ticklabels([])
             ax2 = plt.subplot(2, 2, 2)
-            ax2.set_title(label2)
+            ax2.set_title(plot_kwargs2['label'])
             ax2.axes.xaxis.set_ticklabels([])
             ax2.axes.yaxis.set_ticklabels([])
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 ax2.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
-                         self.mecdf2[n, :][:self.nbins[n]])
+                         self.mecdf2[n, :][:self.nbins[n]],
+                         fmt=plot_kwargs2['symbol'],
+                         color=plot_kwargs2['color'])
             ax3 = plt.subplot(2, 2, 3)
             ax3.set_ylabel("PDF")
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
                 ax3.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                         self.histograms1[n, :][:self.nbins[n]],
-                        align="center", width=bin_width, alpha=0.25)
+                        align="center", width=bin_width, alpha=0.25,
+                        fmt=plot_kwargs1['symbol'],
+                        color=plot_kwargs1['color'])
+
             ax3.set_xlabel("z-score")
             ax4 = plt.subplot(2, 2, 4)
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 bin_width = self.bins[n][1] - self.bins[n][0]
                 ax4.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                         self.histograms2[n, :][:self.nbins[n]],
-                        align="center", width=bin_width, alpha=0.25)
+                        align="center", width=bin_width, alpha=0.25,
+                        fmt=plot_kwargs2['symbol'],
+                        color=plot_kwargs2['color'])
+
             ax4.set_xlabel("z-score")
             ax4.axes.yaxis.set_ticklabels([])
 
@@ -769,8 +818,8 @@ class Dendrogram_Distance(object):
 
         return self
 
-    def distance_metric(self, verbose=False, label1="1", label2="2",
-                        save_name=None):
+    def distance_metric(self, verbose=False, save_name=None,
+                        plot_kwargs1={}, plot_kwargs2={}):
         '''
         Calculate both distance metrics.
 
@@ -778,14 +827,15 @@ class Dendrogram_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for `dataset1`. Defaults to "1".
-        label2 : str, optional
-            Object or region name for `dataset2`. Defaults to "2".
         save_name : str, optional
             Save plots by passing a file name. `hist_distance` and
             `num_distance` will be appended to the file name to distinguish
             the plots made with the two metrics.
+        plot_kwargs1 : dict, optional
+            Set the color, symbol, and label for dataset1
+            (e.g., plot_kwargs1={'color': 'b', 'symbol': 'D', 'label': '1'}).
+        plot_kwargs2 : dict, optional
+            Set the color, symbol, and label for dataset2.
         '''
 
         if save_name is not None:
@@ -799,9 +849,11 @@ class Dendrogram_Distance(object):
             save_name_hist = None
             save_name_num = None
 
-        self.histogram_stat(verbose=verbose, label1=label1, label2=label2,
+        self.histogram_stat(verbose=verbose, plot_kwargs1=plot_kwargs1,
+                            plot_kwargs2=plot_kwargs2,
                             save_name=save_name_hist)
-        self.numfeature_stat(verbose=verbose, label1=label1, label2=label2,
+        self.numfeature_stat(verbose=verbose, plot_kwargs1=plot_kwargs1,
+                             plot_kwargs2=plot_kwargs2,
                              save_name=save_name_num)
 
         return self

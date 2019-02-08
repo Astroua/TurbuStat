@@ -466,8 +466,8 @@ class StatisticBase_PSpec2D(object):
         return self._ellip2D_err
 
     def plot_fit(self, show_2D=False, show_residual=True,
-                 color='r', fit_color=None, label=None,
-                 fillin_errs=True, symbol="D", xunit=u.pix**-1, save_name=None,
+                 color='r', fit_color='k', label=None,
+                 fillin_errs=True, symbol="o", xunit=u.pix**-1, save_name=None,
                  use_wavenumber=False):
         '''
         Plot the fitted model.
