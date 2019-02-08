@@ -34,7 +34,8 @@ from .testing_utilities import assert_between
 
 def test_VCA_method():
     tester = VCA(dataset1["cube"])
-    tester.run()
+    tester.run(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     # Test fitting with bootstrapping
     tester.fit_pspec(bootstrap=True)
@@ -101,7 +102,10 @@ def test_VCA_method_fitlimits():
 def test_VCA_distance():
     tester_dist = \
         VCA_Distance(dataset1["cube"],
-                     dataset2["cube"]).distance_metric()
+                     dataset2["cube"])
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['vca_distance'])
 

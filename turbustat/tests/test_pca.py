@@ -29,7 +29,10 @@ def test_PCA_method():
                min_eigval=0.75,
                spatial_method='contour',
                spectral_method='walk-down',
-               fit_method='odr', brunt_beamcorrect=False)
+               fit_method='odr', brunt_beamcorrect=False,
+               verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     slice_used = slice(0, tester.n_eigs)
     npt.assert_allclose(tester.eigvals[slice_used],
                         computed_data['pca_val'][slice_used])
@@ -161,7 +164,10 @@ def test_PCA_auto_n_eigs(method, min_eigval):
 def test_PCA_distance():
     tester_dist = \
         PCA_Distance(dataset1["cube"],
-                     dataset2["cube"]).distance_metric()
+                     dataset2["cube"])
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['pca_distance'])
 

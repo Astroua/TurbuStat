@@ -18,7 +18,8 @@ from ..simulator import make_extended
 
 def test_SCF_method():
     tester = SCF(dataset1["cube"], size=11)
-    tester.run(boundary='continuous')
+    tester.run(boundary='continuous', verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     # Test fitting with bootstrapping
     tester.fit_plaw(bootstrap=True)
@@ -133,7 +134,10 @@ def test_SCF_nonpixelunit_shift():
 def test_SCF_distance():
     tester_dist = \
         SCF_Distance(dataset1["cube"],
-                     dataset2["cube"], size=11).distance_metric()
+                     dataset2["cube"], size=11)
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['scf_distance'])
 

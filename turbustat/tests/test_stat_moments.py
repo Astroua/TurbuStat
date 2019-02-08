@@ -15,7 +15,8 @@ from ._testing_data import \
 
 def test_moments():
     tester = StatMoments(dataset1["moment0"])
-    tester.run()
+    tester.run(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     assert np.allclose(tester.kurtosis_hist[1],
                        computed_data['kurtosis_nondist_val'])
@@ -87,7 +88,8 @@ def test_moment_distance():
     tester_dist = \
         StatMoments_Distance(dataset1["moment0"],
                              dataset2["moment0"])
-    tester_dist.distance_metric()
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     assert np.allclose(tester_dist.moments1.kurtosis_hist[1],
                        computed_data['kurtosis_val'])

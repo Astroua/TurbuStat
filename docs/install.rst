@@ -28,3 +28,8 @@ Change into the TurbuStat directory and run the following to install TurbuStat::
     >>> python setup.py install # doctest: +SKIP
 
 If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
+
+To run the testing suite::
+    >>> MPLBACKEND='agg' python setup.py test
+
+The matplotlib backend needs to be set to avoid having interactive plots pop up during the tests.

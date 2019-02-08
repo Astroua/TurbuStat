@@ -27,7 +27,8 @@ def test_DelVar_method():
     tester = \
         DeltaVariance(dataset1["moment0"],
                       weights=dataset1["moment0_error"][0])
-    tester.run(xhigh=11. * u.pix)
+    tester.run(xhigh=11. * u.pix, verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     # Run the fit again with bootstrap resampling
     tester.fit_plaw(bootstrap=True, xhigh=11. * u.pix)
@@ -109,7 +110,9 @@ def test_DelVar_distance():
                                weights1=dataset1["moment0_error"][0],
                                weights2=dataset2["moment0_error"][0],
                                delvar_kwargs=dict(xhigh=11 * u.pix))
-    tester_dist.distance_metric()
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.curve_distance,
                             computed_distances['delvar_curve_distance'],
                             decimal=3)

@@ -26,9 +26,10 @@ from ..simulator import make_extended
 
 def test_Bispec_method():
     tester = Bispectrum(dataset1["moment0"])
-    tester.run()
+    tester.run(verbose=True, save_name='test.png')
     assert np.allclose(tester.bicoherence,
                        computed_data['bispec_val'])
+    os.system("rm test.png")
 
     # Test the save and load
     tester.save_results("bispec_output.pkl", keep_data=False)
@@ -52,7 +53,8 @@ def test_Bispec_distance():
     tester_dist = \
         Bispectrum_Distance(dataset1["moment0"],
                             dataset2["moment0"])
-    tester_dist.distance_metric()
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     npt.assert_almost_equal(tester_dist.surface_distance,
                             computed_distances['bispec_surface_distance'])
