@@ -642,14 +642,14 @@ class Dendrogram_Distance(object):
 
             # Dendrogram 1
             plt.plot(self.dendro1.fitvals[0], self.dendro1.fitvals[1],
-                     label=plot_kwargs1['label'], fmt=plot_kwargs1['symbol'],
+                     plot_kwargs1['symbol'], label=plot_kwargs1['label'],
                      color=plot_kwargs1['color'])
             plt.plot(self.dendro1.fitvals[0], self.dendro1.model.fittedvalues,
                      plot_kwargs1['color'])
 
             # Dendrogram 2
             plt.plot(self.dendro2.fitvals[0], self.dendro2.fitvals[1],
-                     label=plot_kwargs2['label'], fmt=plot_kwargs2['symbol'],
+                     plot_kwargs2['symbol'], label=plot_kwargs2['label'],
                      color=plot_kwargs2['color'])
             plt.plot(self.dendro2.fitvals[0], self.dendro2.model.fittedvalues,
                      plot_kwargs2['color'])
@@ -773,7 +773,7 @@ class Dendrogram_Distance(object):
             for n in range(len(self.dendro1.min_deltas[:self.cutoff])):
                 ax1.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                          self.mecdf1[n, :][:self.nbins[n]],
-                         fmt=plot_kwargs1['symbol'],
+                         plot_kwargs1['symbol'],
                          color=plot_kwargs1['color'])
             ax1.axes.xaxis.set_ticklabels([])
             ax2 = plt.subplot(2, 2, 2)
@@ -783,7 +783,7 @@ class Dendrogram_Distance(object):
             for n in range(len(self.dendro2.min_deltas[:self.cutoff])):
                 ax2.plot((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                          self.mecdf2[n, :][:self.nbins[n]],
-                         fmt=plot_kwargs2['symbol'],
+                         plot_kwargs2['symbol'],
                          color=plot_kwargs2['color'])
             ax3 = plt.subplot(2, 2, 3)
             ax3.set_ylabel("PDF")
@@ -792,7 +792,6 @@ class Dendrogram_Distance(object):
                 ax3.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                         self.histograms1[n, :][:self.nbins[n]],
                         align="center", width=bin_width, alpha=0.25,
-                        fmt=plot_kwargs1['symbol'],
                         color=plot_kwargs1['color'])
 
             ax3.set_xlabel("z-score")
@@ -802,7 +801,6 @@ class Dendrogram_Distance(object):
                 ax4.bar((self.bins[n][:-1] + self.bins[n][1:]) / 2,
                         self.histograms2[n, :][:self.nbins[n]],
                         align="center", width=bin_width, alpha=0.25,
-                        fmt=plot_kwargs2['symbol'],
                         color=plot_kwargs2['color'])
 
             ax4.set_xlabel("z-score")
