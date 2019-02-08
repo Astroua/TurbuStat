@@ -22,7 +22,7 @@ data_path = "../../../testingdata"
 fig_path = 'images'
 
 # Choose which methods to run
-run_bispec = True
+run_bispec = False
 run_delvar = False
 run_dendro = False
 run_genus = False
