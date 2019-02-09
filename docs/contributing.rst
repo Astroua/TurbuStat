@@ -9,7 +9,7 @@ To make changes to the source code, make a fork of the `TurbuStat repository <ht
 Contributing a new statistic or distance metric
 -----------------------------------------------
 
-Increasing the number of statistics implemented in TurbuStat is a key goal for the project. If you plan on providing a new implementation, the contribution should address the following criteria::
+Increasing the number of statistics implemented in TurbuStat is a key goal for the project. If you plan on providing a new implementation, the contribution should address the following criteria:
 
 1. Statistics and distance metrics should be a `python class <https://docs.python.org/3/tutorial/classes.html>`_. A new folder can be added to the `statistics <https://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics>`_ folder for the new classes. Note that the new folder should contain an `__init__.py` the imports the statistic and/or distance metric classes (see `here <https://github.com/Astroua/TurbuStat/blob/master/turbustat/statistics/pspec_bispec/__init__.py>` for an example).
 

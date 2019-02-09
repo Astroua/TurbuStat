@@ -11,12 +11,14 @@ See :ref:`the tutorial <dendro_tutorial>` for a description of the dendrogram st
 Using the two comparisons defined by `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_, `~turbustat.statistics.Dendro_Distance` provides two distance metrics::
 
 1. The distance between histograms of peak intensity in the leaves of the dendrogram, measured over a range of minimum branch heights, is:
+
     .. math::
         d_{\mathrm{Hist}} = \left[\sum H(p_{1,\delta_I},p_{2,\delta_I})\right]/N_\delta
 
     :math:`p_{i,\delta_I}` are the histograms with minimum branch height of :math:`\delta_I`, :math:`H(i, j)` is the `Hellinger distance <https://en.wikipedia.org/wiki/Hellinger_distance#Discrete_distributions>`_, and :math:`N_{\delta}` is the number of branch heights (and histograms) that the dendrogram was computed for.
 
 2. The slopes of the linear relation fit to the log of the number of features in the tree as a function of minimum branch height:
+
     .. math::
         d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
 

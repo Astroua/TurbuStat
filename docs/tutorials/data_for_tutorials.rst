@@ -4,11 +4,11 @@
 Data for tutorials
 ******************
 
-Two data sets are used for the tutorials and can be downloaded `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_. The data are synthetic :math:`^{13}{\rm CO}(2\rightarrow)1` spectral-line data cubes from different ENZO adaptive-mesh-refinement simulations.  The simulations setup and input parameters are given in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_ (see Table 1). One of the data sets is a "Fiducial" and the other is a "Design" simulation; the input parameters for the solenoidal fraction, virial parameter, plasma beta, Mach number, and driving scale all differ between the two simulations.::
+Two data sets are used for the tutorials and can be downloaded `here <https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37>`_. The data are synthetic :math:`^{13}{\rm CO}(2\rightarrow)1` spectral-line data cubes from different ENZO adaptive-mesh-refinement simulations.  The simulations setup and input parameters are given in `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_ (see Table 1). One of the data sets is a "Fiducial" and the other is a "Design" simulation; the input parameters for the solenoidal fraction, virial parameter, plasma beta, Mach number, and driving scale all differ between the two simulations.
 
 +---------------------+----------+--------+
 | Parameter           | Fiducial | Design |
-+=========================================+
++=====================+==========+========+
 | Solenoidal Fraction |    1/2   |  1/3   |
 +---------------------+----------+--------+
 | Virial Parameter    |     6    |   2    |
