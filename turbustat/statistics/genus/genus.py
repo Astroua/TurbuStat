@@ -51,8 +51,8 @@ class Genus(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import Genus
     >>> from astropy.io import fits
     >>> import astropy.units as u

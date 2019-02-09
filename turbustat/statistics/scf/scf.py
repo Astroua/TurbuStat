@@ -43,8 +43,8 @@ class SCF(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from spectral_cube import SpectralCube
     >>> from turbustat.statistics import SCF
     >>> cube = SpectralCube.read("Design4.13co.fits")  # doctest: +SKIP

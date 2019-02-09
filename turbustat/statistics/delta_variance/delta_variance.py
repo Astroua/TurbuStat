@@ -44,8 +44,8 @@ class DeltaVariance(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import DeltaVariance
     >>> from astropy.io import fits
     >>> moment0 = fits.open("2D.fits") # doctest: +SKIP
