@@ -177,9 +177,7 @@ The interesting outputs from this analysis are estimates of the slopes of the si
     >>> pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc)  # doctest: +SKIP
     (<Quantity 0.35451525 pc>, <Quantity [0.27522952, 0.45267135] pc>)
 
-.. you should define the sonic length here.  It's just the length coordinate at which the fitted line intersects the sound speed, right?
-
-Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
+Sonic length is defined as the length at which the fitted line intersects the sounds speed (temperature can be specified with `T_k` above).  Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 
 
 References

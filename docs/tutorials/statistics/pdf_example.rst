@@ -49,9 +49,7 @@ Since the PDF is a one-dimensional view of the data, any dimension data can be p
 
 .. image:: images/pdf_design4_mom0.png
 
-.. what is ECDF?  something cumulative distribution function, but what's E?
-
-The resulting PDF and ECDF of the data are plotted, along with a log-normal fit to the PDF. By default, `~turbustat.statistics.PDF` will fit a log-normal to the PDF. Choosing other models and disabling the fitting are discussed below.
+The resulting PDF and ECDF of the data are plotted, along with a log-normal fit to the PDF. ECDF is the empirical cumulative distribution function defined as the cumulative sum of the data. By default, `~turbustat.statistics.PDF` will fit a log-normal to the PDF. Choosing other models and disabling the fitting are discussed below.
 
 The fit parameters can be accessed from `~turbustat.statistics.PDF.model_params` and the standard errors from `~turbustat.statistics.PDF.model_stderrs`. The fitting in `~turbustat.statistics.PDF` uses the `~scipy.stats` distributions. The scipy implementation for a `log-normal <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html>`_ defines the two fit parameters as `par0 = exp(mu)` and `par1 = sigma`.
 
@@ -130,8 +128,6 @@ When comparing to the PDFs from other data, adopting a common normalization sche
     >>> pdf_mom0.run(verbose=True, do_fit=False)  # doctest: +SKIP
 
 .. image:: images/pdf_design4_mom0_normmean.png
-
-.. is this really true?  The mean of a lognormal is not a very good estimate of its center...
 
 The example data are well-described by a log-normal, making the normalization by the mean an appropriate choice. Note how the shape of the distribution appears unchanged in these examples, but the axis they're defined on changes.
 
