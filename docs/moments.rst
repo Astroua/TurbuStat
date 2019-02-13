@@ -10,7 +10,7 @@ Basic Use
 
 Moments are easily returned in the expected form for the statistics with `~turbustat.moments.Moments`. This class takes a FITS file of a spectral-line cube as input and creates moment arrays (zeroth, first, and line width) with their respective uncertainties.::
 
-    >>> from turbustat.moments import Mask_and_Moments  # doctest: +SKIP
+    >>> from turbustat.moments import Moments  # doctest: +SKIP
     >>> # Load in the cube "test.fits"
     >>> mm = Moments("test.fits")  # doctest: +SKIP
     >>> mm.make_moments()  # doctest: +SKIP
