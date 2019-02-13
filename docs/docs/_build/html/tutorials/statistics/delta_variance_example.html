@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Delta-Variance &#8212; turbustat v1.0.dev2393</title>
+    <title>Delta-Variance &#8212; turbustat v1.0.dev2395</title>
     <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -39,7 +39,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           turbustat</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2395</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +148,7 @@
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The <span class="math notranslate nohighlight">\(\Delta\)</span>-variance technique was introduced by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1998A&amp;A...336..697S/abstract">Stutzki et al. 1998</a> as a generalization of <em>Allan-variance</em>, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001A&amp;A...366..636B/abstract">Bensch et al. 2001.</a> to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this approach, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a>, where the computation using filters of different scales was moved into the Fourier domain, allowing for a significant improvement in speed. The following description uses the Fourier-domain formulation.</p>
-<p>Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with a spherically symmetric kernel - a French hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a> proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:</p>
+<p>Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with an azimuthally symmetric kernel - a French hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a> proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:</p>
 <div class="math notranslate nohighlight">
 \[F(r) = \frac{G_{\rm core}(r)}{W_{\rm core}(r)} - \frac{G_{\rm ann}(r)}{W_{\rm ann}(r)}\]</div>
 <p>where <span class="math notranslate nohighlight">\(r\)</span> is the kernel size, <span class="math notranslate nohighlight">\(G\)</span> is the convolved image map, and <span class="math notranslate nohighlight">\(W\)</span> is the convolved weight map. The delta-variance is then,</p>
@@ -294,7 +294,7 @@
 <img alt="../../_images/delvar_design4_break.png" src="../../_images/delvar_design4_break.png" />
 <p>The range here was chosen to force the model to fit a break near the turn-over, and the result is not great. This is not a realistic example; it is included only to highlight how the segmented model is enabled.</p>
 <p>There will now be two slopes and a break point returned:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">slopes</span>  <span class="c1"># doctest: +SKIP</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">slope</span>  <span class="c1"># doctest: +SKIP</span>
 <span class="go">array([ 1.08598566, -0.07259903])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">brk</span>  <span class="c1"># doctest: +SKIP</span>
 <span class="go">&lt;Quantity 19.413294229328802 pix&gt;</span>
