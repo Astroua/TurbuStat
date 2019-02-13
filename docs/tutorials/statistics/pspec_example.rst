@@ -59,7 +59,7 @@ The code returns a summary of the one-dimensional fit and a figure showing the o
 
 .. math::
 
-    A \left[-(q^2 \cos^2\theta + \sin^2\theta) x^2 
+    A \left[(q^2 \cos^2\theta + \sin^2\theta) x^2 
     +  2(1 - q^2) \sin\theta \cos\theta xy
     + (q^2 \sin^2\theta + \cos^2 \theta) y^2 \right]^{\Gamma/2}
 
