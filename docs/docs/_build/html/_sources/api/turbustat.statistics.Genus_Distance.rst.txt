@@ -1,0 +1,17 @@
+Genus_Distance
+==============
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Genus_Distance
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Genus_Distance.distance_metric
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: distance_metric

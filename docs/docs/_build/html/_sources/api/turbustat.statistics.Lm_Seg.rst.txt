@@ -1,0 +1,39 @@
+Lm_Seg
+======
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Lm_Seg
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Lm_Seg.param_errs
+      ~Lm_Seg.params
+      ~Lm_Seg.slope_errs
+      ~Lm_Seg.slopes
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Lm_Seg.fit_model
+      ~Lm_Seg.get_slopes
+      ~Lm_Seg.model
+      ~Lm_Seg.plot
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: param_errs
+   .. autoattribute:: params
+   .. autoattribute:: slope_errs
+   .. autoattribute:: slopes
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: fit_model
+   .. automethod:: get_slopes
+   .. automethod:: model
+   .. automethod:: plot

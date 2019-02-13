@@ -1,0 +1,19 @@
+StatMoments_Distance
+====================
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: StatMoments_Distance
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~StatMoments_Distance.create_common_histograms
+      ~StatMoments_Distance.distance_metric
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: create_common_histograms
+   .. automethod:: distance_metric

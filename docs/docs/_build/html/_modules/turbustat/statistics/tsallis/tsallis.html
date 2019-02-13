@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.statistics.tsallis.tsallis &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.statistics.tsallis.tsallis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">chisquare</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">curve_fit</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="k">import</span> <span class="n">Table</span>
+
+<span class="kn">from</span> <span class="nn">..stats_utils</span> <span class="k">import</span> <span class="n">standardize</span><span class="p">,</span> <span class="n">padwithzeros</span>
+<span class="kn">from</span> <span class="nn">..base_statistic</span> <span class="k">import</span> <span class="n">BaseStatisticMixIn</span>
+<span class="kn">from</span> <span class="nn">...io</span> <span class="k">import</span> <span class="n">common_types</span><span class="p">,</span> <span class="n">twod_types</span>
+
+
+<div class="viewcode-block" id="Tsallis"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis">[docs]</a><span class="k">class</span> <span class="nc">Tsallis</span><span class="p">(</span><span class="n">BaseStatisticMixIn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Tsallis Distribution (see Tofflemire et al., 2011)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : %(dtypes)s</span>
+<span class="sd">        2D image.</span>
+<span class="sd">    header : FITS header, optional</span>
+<span class="sd">        The image header. Needed for the pixel scale.</span>
+<span class="sd">    lags : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Give the spatial lag values to compute the distribution at. The</span>
+<span class="sd">        default lag sizes are powers of 2 up to half the image size (so for a</span>
+<span class="sd">        128 by 128 image, the lags will be [1, 2, 4, 8, 16, 32, 64]).</span>
+<span class="sd">    distance : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Physical distance to the region in the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_data_header</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span>
+
+        <span class="k">if</span> <span class="n">lags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Find the next smallest power of 2 from the smallest axis</span>
+            <span class="n">max_power</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lags</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_power</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lags</span> <span class="o">=</span> <span class="n">lags</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Lag values to calculate the statistics at.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lags</span>
+
+    <span class="nd">@lags</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">lags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;lags must be given as a astropy.units.Quantity.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Now make sure that we can convert into pixels before setting.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pix_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="c1"># The radius should be larger than a pixel</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">pix_rad</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One of the chosen lags is smaller than one &quot;</span>
+                             <span class="s2">&quot;pixel.&quot;</span>
+                             <span class="s2">&quot; Ensure that all lag values are larger than one &quot;</span>
+                             <span class="s2">&quot;pixel.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Finally, limit the radius to a maximum of half the image size.</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">pix_rad</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one of the lags is larger than half of &quot;</span>
+                             <span class="s2">&quot;the image size (in the smallest dimension. &quot;</span>
+                             <span class="s2">&quot;Ensure that all lag values are smaller than &quot;</span>
+                             <span class="s2">&quot;this.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lags</span> <span class="o">=</span> <span class="n">values</span>
+
+<div class="viewcode-block" id="Tsallis.make_tsallis"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis.make_tsallis">[docs]</a>    <span class="k">def</span> <span class="nf">make_tsallis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the Tsallis distribution at each lag.</span>
+<span class="sd">        We standardize each distribution such that it has a mean of zero and</span>
+<span class="sd">        variance of one before fitting.</span>
+
+<span class="sd">        If the lag values are fractions of a pixel when converted to pixel</span>
+<span class="sd">        units, the lag is rounded down to the next smallest integer value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        periodic : bool, optional</span>
+<span class="sd">                   Use for simulations with periodic boundaries.</span>
+<span class="sd">        num_bins : int, optional</span>
+<span class="sd">            Number of bins to use in the histograms. Defaults to the</span>
+<span class="sd">            square-root of the number of finite points in the image.</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_bins</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lag_arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lag_distribs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">))</span>
+
+        <span class="c1"># Convert the lags into pixels</span>
+        <span class="n">pix_lags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lag</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pix_lags</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
+                <span class="n">pad_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pad_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">padwithzeros</span><span class="p">)</span>
+            <span class="n">rolls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">pad_img</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">pad_img</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">pad_img</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">pad_img</span><span class="p">,</span> <span class="o">-</span><span class="n">lag</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1">#  Remove the padding</span>
+            <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
+                <span class="n">clip_resulting</span> <span class="o">=</span> <span class="p">(</span><span class="n">rolls</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span> <span class="o">-</span> <span class="n">pad_img</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">clip_resulting</span> <span class="o">=</span> <span class="p">(</span><span class="n">rolls</span><span class="p">[</span><span class="n">lag</span><span class="p">:</span><span class="o">-</span><span class="n">lag</span><span class="p">,</span> <span class="n">lag</span><span class="p">:</span><span class="o">-</span><span class="n">lag</span><span class="p">]</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span> <span class="o">-</span>\
+                    <span class="n">pad_img</span><span class="p">[</span><span class="n">lag</span><span class="p">:</span><span class="o">-</span><span class="n">lag</span><span class="p">,</span> <span class="n">lag</span><span class="p">:</span><span class="o">-</span><span class="n">lag</span><span class="p">]</span>
+            <span class="c1"># Normalize the data</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">standardize</span><span class="p">(</span><span class="n">clip_resulting</span><span class="p">)</span>
+
+            <span class="c1"># Ignore nans for the histogram</span>
+            <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="p">)],</span>
+                                           <span class="n">bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">)</span>
+            <span class="n">bin_centres</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bin_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">normlog_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hist</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">))</span>
+
+            <span class="c1"># Keep results</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lag_arrays</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lag_distribs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">bin_centres</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lag_distribs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">normlog_hist</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lag_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Arrays of the image computed at different lags.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_arrays</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lag_distribs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Histogram bins and values compute from `~Tsallis.lag_arrays`. The</span>
+<span class="sd">        histogram values are in log10.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lag_distribs</span>
+
+<div class="viewcode-block" id="Tsallis.fit_tsallis"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis.fit_tsallis">[docs]</a>    <span class="k">def</span> <span class="nf">fit_tsallis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma_clip</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Fit the Tsallis distributions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma_clip : float</span>
+<span class="sd">            Sets the sigma value to clip data at. If `None`,</span>
+<span class="sd">            no clipping is performed on the data. Defaults to 5.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;lag_distribs&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Calculate the distributions first with &quot;</span>
+                            <span class="s2">&quot;Tsallis.make_tsallis.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_clip</span> <span class="o">=</span> <span class="n">sigma_clip</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_stderrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_chisq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lag_distribs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">sigma_clip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Keep all finite data</span>
+                <span class="n">finite_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                             <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">clipped</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">finite_mask</span><span class="p">],</span> <span class="n">dist</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">finite_mask</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">clipped</span> <span class="o">=</span> <span class="n">clip_to_sigma</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_clip</span><span class="p">)</span>
+
+            <span class="n">params</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">tsallis_function</span><span class="p">,</span> <span class="n">clipped</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">clipped</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                     <span class="n">p0</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">clipped</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">),</span>
+                                     <span class="n">maxfev</span><span class="o">=</span><span class="mi">100</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+            <span class="n">fitted_vals</span> <span class="o">=</span> <span class="n">tsallis_function</span><span class="p">(</span><span class="n">clipped</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_stderrs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_chisq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">chisquare</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">fitted_vals</span><span class="p">),</span>
+                                               <span class="n">f_exp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">clipped</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                               <span class="n">ddof</span><span class="o">=</span><span class="mi">3</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tsallis_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parameters of the Tsallis distribution fit at each lag value.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_params</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tsallis_stderrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Standard errors of the Tsallis distribution fit at each lag value.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_stderrs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tsallis_chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Reduced chi-squared values for the fit at each lag value.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tsallis_chisq</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tsallis_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return the fit parameters, standard error, and chi-squared values as</span>
+<span class="sd">        an `~astropy.table.Table`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_params</span><span class="o">.</span><span class="n">T</span><span class="p">]</span> <span class="o">+</span> \
+            <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_stderrs</span><span class="o">.</span><span class="n">T</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tsallis_chisq</span><span class="p">]</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lags&#39;</span><span class="p">,</span> <span class="s1">&#39;logA&#39;</span><span class="p">,</span> <span class="s1">&#39;w2&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;logA_stderr&#39;</span><span class="p">,</span> <span class="s1">&#39;w2_stderr&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;q_stderr&#39;</span><span class="p">,</span> <span class="s1">&#39;redchisq&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Tsallis.plot_parameters"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis.plot_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">plot_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the fit parameters as a function of lag.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save name for the figure. Enables saving the plot.</span>
+<span class="sd">        kwargs : passed to `~matplotlib.pyplot.errorbar`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;logA&#39;</span><span class="p">],</span>
+                     <span class="n">yerr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;logA_stderr&#39;</span><span class="p">],</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;log A&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;w2&#39;</span><span class="p">],</span>
+                     <span class="n">yerr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;w2_stderr&#39;</span><span class="p">],</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$w^2$&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+        <span class="n">ax3</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;q&#39;</span><span class="p">],</span>
+                     <span class="n">yerr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">[</span><span class="s1">&#39;q_stderr&#39;</span><span class="p">],</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;q&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Tsallis.plot_fit"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis.plot_fit">[docs]</a>    <span class="k">def</span> <span class="nf">plot_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span>
+                 <span class="n">fit_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the distributions and fits to the Tsallis function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Save name for the figure. Enables saving the plot.</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="k">if</span> <span class="n">fit_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_color</span> <span class="o">=</span> <span class="n">color</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">vals</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lags</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lag_distribs</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lag_arrays</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tsallis_params</span><span class="p">,</span>
+                        <span class="n">axes</span><span class="p">):</span>
+
+            <span class="n">lag</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">vals</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Lag </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lag</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tsallis_function</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">params</span><span class="p">),</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">)</span>
+
+            <span class="c1"># Indicate which data was used for the fits.</span>
+            <span class="c1"># Only if sigma-clipping is applied.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigma_clip</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span>
+                           <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigma_clip</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span>
+                           <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Tsallis.run"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Tsallis.html#turbustat.statistics.Tsallis.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sigma_clip</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Run all steps.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        num_bins : int, optional</span>
+<span class="sd">            Sets the number of bins to use in the lag histograms. Passed</span>
+<span class="sd">            to `~Tsallis.make_tsallis`.</span>
+<span class="sd">        periodic : bool, optional</span>
+<span class="sd">            Treat periodic boundaries. Passed</span>
+<span class="sd">            to `~Tsallis.make_tsallis`. Enabled by default.</span>
+<span class="sd">        sigma_clip : float</span>
+<span class="sd">            Sets the sigma value to clip data at.</span>
+<span class="sd">            Passed to :func:`fit_tsallis`.</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_tsallis</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="n">periodic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_tsallis</span><span class="p">(</span><span class="n">sigma_clip</span><span class="o">=</span><span class="n">sigma_clip</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="c1"># print the table of parameters</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tsallis_table</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="c1"># class Tsallis_Distance(object):</span>
+
+<span class="c1">#     &#39;&#39;&#39;</span>
+<span class="c1">#     Distance Metric for the Tsallis Distribution.</span>
+
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     array1 : %(dtypes)s</span>
+<span class="c1">#         2D datas.</span>
+<span class="c1">#     array2 : %(dtypes)s</span>
+<span class="c1">#         2D datas.</span>
+<span class="c1">#     lags : `~astropy.units.Quantity`</span>
+<span class="c1">#         Lags to calculate at.</span>
+<span class="c1">#     fiducial_model : Tsallis</span>
+<span class="c1">#         Computed Tsallis object. use to avoid recomputing.</span>
+<span class="c1">#     tsallis1_kwargs : dict, optional</span>
+<span class="c1">#         Pass kwargs to `~Tsallis.run` for array1.</span>
+<span class="c1">#     tsallis2_kwargs : dict, optional</span>
+<span class="c1">#         Pass kwargs to `~Tsallis.run` for array2.</span>
+<span class="c1">#     &#39;&#39;&#39;</span>
+
+<span class="c1">#     __doc__ %= {&quot;dtypes&quot;: &quot; or &quot;.join(common_types + twod_types)}</span>
+
+<span class="c1">#     def __init__(self, array1, array2, lags=None, tsallis1_kwargs={},</span>
+<span class="c1">#                  tsallis2_kwargs={}, fiducial_model=None,):</span>
+<span class="c1">#         super(Tsallis_Distance, self).__init__()</span>
+
+<span class="c1">#         if fiducial_model is not None:</span>
+<span class="c1">#             self.tsallis1 = fiducial_model</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.tsallis1 = \</span>
+<span class="c1">#                 Tsallis(array1, lags=lags).run(verbose=False,</span>
+<span class="c1">#                                                **tsallis1_kwargs)</span>
+
+<span class="c1">#         self.tsallis2 = \</span>
+<span class="c1">#             Tsallis(array2, lags=lags).run(verbose=False,</span>
+<span class="c1">#                                            **tsallis2_kwargs)</span>
+
+<span class="c1">#         self.distance = None</span>
+
+<span class="c1">#     def distance_metric(self, verbose=False, save_name=None):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         We do not consider the parameter a in the distance metric. Since we</span>
+<span class="c1">#         are fitting to a PDF, a is related to the number of data points and</span>
+<span class="c1">#         is therefore not a true measure of the differences between the data</span>
+<span class="c1">#         sets. The distance is computed by summing the squared difference of</span>
+<span class="c1">#         the parameters, normalized by the sums of the squares, for each lag.</span>
+<span class="c1">#         The total distance the sum between the two parameters.</span>
+
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         verbose : bool, optional</span>
+<span class="c1">#             Enables plotting.</span>
+<span class="c1">#         save_name : str,optional</span>
+<span class="c1">#             Save the figure when a file name is given.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         w1 = self.tsallis1.tsallis_params[:, 1]</span>
+<span class="c1">#         w2 = self.tsallis2.tsallis_params[:, 1]</span>
+
+<span class="c1">#         q1 = self.tsallis1.tsallis_params[:, 2]</span>
+<span class="c1">#         q2 = self.tsallis2.tsallis_params[:, 2]</span>
+
+<span class="c1">#         # diff_a = (a1-a2)**2.</span>
+<span class="c1">#         diff_w = (w1 - w2) ** 2. / (w1 ** 2. + w2 ** 2.)</span>
+<span class="c1">#         diff_q = (q1 - q2) ** 2. / (q1 ** 2. + q2 ** 2.)</span>
+
+<span class="c1">#         self.distance = np.sum(diff_w + diff_q)</span>
+
+<span class="c1">#         if verbose:</span>
+<span class="c1">#             import matplotlib.pyplot as p</span>
+<span class="c1">#             lags = self.tsallis1.lags</span>
+<span class="c1">#             p.plot(lags, diff_w, &quot;rD&quot;, label=&quot;Difference of w&quot;)</span>
+<span class="c1">#             p.plot(lags, diff_q, &quot;go&quot;, label=&quot;Difference of q&quot;)</span>
+<span class="c1">#             p.legend()</span>
+<span class="c1">#             p.xscale(&#39;log&#39;, basex=2)</span>
+<span class="c1">#             p.ylabel(&quot;Normalized Difference&quot;)</span>
+<span class="c1">#             p.xlabel(&quot;Lags (pixels)&quot;)</span>
+<span class="c1">#             p.grid(True)</span>
+
+<span class="c1">#             if save_name is not None:</span>
+<span class="c1">#                 p.savefig(save_name)</span>
+<span class="c1">#                 p.close()</span>
+<span class="c1">#             else:</span>
+<span class="c1">#                 p.show()</span>
+<span class="c1">#         return self</span>
+
+
+<span class="k">def</span> <span class="nf">tsallis_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Tsallis distribution function as given in Tofflemire</span>
+<span class="sd">    Implemented in log form. The expected parameters are</span>
+<span class="sd">    log A, w^2, and q.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : numpy.ndarray or list</span>
+<span class="sd">        x-data</span>
+<span class="sd">    params : list</span>
+<span class="sd">        Contains the three parameter values.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">loga</span><span class="p">,</span> <span class="n">wsquare</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">p</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">q</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">q</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>
+                                      <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mf">2.</span> <span class="o">/</span> <span class="n">wsquare</span><span class="p">))</span> <span class="o">+</span> <span class="n">loga</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">clip_to_sigma</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Clip to values between +/- sigma.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : numpy.ndarray</span>
+<span class="sd">        x-data</span>
+<span class="sd">    y : numpy.ndarray</span>
+<span class="sd">        y-data</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">clip_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="c1"># And ensure all data is finite for fitting</span>
+    <span class="n">finite_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+    <span class="n">all_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">clip_mask</span><span class="p">,</span> <span class="n">finite_mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="n">all_mask</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">all_mask</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

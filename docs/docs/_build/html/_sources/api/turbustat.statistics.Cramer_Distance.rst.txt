@@ -1,0 +1,35 @@
+Cramer_Distance
+===============
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Cramer_Distance
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Cramer_Distance.data_matrix1
+      ~Cramer_Distance.data_matrix2
+      ~Cramer_Distance.distance
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Cramer_Distance.cramer_statistic
+      ~Cramer_Distance.distance_metric
+      ~Cramer_Distance.format_data
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data_matrix1
+   .. autoattribute:: data_matrix2
+   .. autoattribute:: distance
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: cramer_statistic
+   .. automethod:: distance_metric
+   .. automethod:: format_data

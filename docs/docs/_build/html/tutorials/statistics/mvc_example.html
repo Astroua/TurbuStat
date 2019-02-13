@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Modified Velocity Centroids &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PCA" href="pca_example.html" />
+    <link rel="prev" title="Genus" href="genus_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Modified Velocity Centroids</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="genus_example.html" title="Previous Chapter: Genus"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Genus</span>
+    </a>
+  </li>
+  <li>
+    <a href="pca_example.html" title="Next Chapter: PCA"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">PCA &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/statistics/mvc_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Modified Velocity Centroids</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="modified-velocity-centroids">
+<span id="mvc-tutorial"></span><h1>Modified Velocity Centroids<a class="headerlink" href="#modified-velocity-centroids" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Centroid statistics have been used to study molecular clouds for decades. For example, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract">Miesch &amp; Bally 1994</a> created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. The normalized centroids take the form</p>
+<div class="math notranslate nohighlight">
+\[M_1 = \frac{\Sigma_{v}\, v \,I(x, v)}{\Sigma_{v}\, I(x, v)} = \frac{\Sigma_{v}\, v\, I(x, v)}{M_0},\]</div>
+<p>where <span class="math notranslate nohighlight">\(I(x, v)\)</span> is a PPV cube with <span class="math notranslate nohighlight">\(x\)</span> representing the spatial coordinate, <span class="math notranslate nohighlight">\(v\)</span> the velocity coordinate, and <span class="math notranslate nohighlight">\(M_0\)</span> the integrated intensity (moment zero).   On small scales, however, the contribution from density fluctuations can dominate, and the first moment is contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract">Lazarian &amp; Esquivel 2003</a> proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid</p>
+<div class="math notranslate nohighlight">
+\[\Sigma_{v}\, v I(x, v)\]</div>
+<p>The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of <span class="math notranslate nohighlight">\(M_0\)</span> times the velocity dispersion (<span class="math notranslate nohighlight">\(&lt;v^2&gt;\)</span>) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:</p>
+<div class="math notranslate nohighlight">
+\[P_2(k) = |\mathcal{M}_0\,\mathcal{M}_1|^2 - &lt;M_2&gt;_{x}\,|\mathcal{M}_0|^2,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{M}_i\)</span> denotes the Fourier transform of the ith moment. MVC is also explored in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract">Esquivel &amp; Lazarian 2005</a>.</p>
+</div>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC" title="turbustat.statistics.MVC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC</span></code></a> code, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">MVC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+</pre></div>
+</div>
+<p>Most statistics in TurbuStat require only a single data input. MVC requires <em>3</em>, as you can see in the last equation. The zeroth (integrated intensity), first (centroid), and second (velocity dispersion) moments of the data cube are needed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">moment1</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_centroid.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lwidth</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_linewidth.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>The unnormalized centroid can be recovered by multiplying the normal centroid value by the zeroth moment. The line width array here is the square root of the velocity dispersion. These three arrays must be passed to <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC" title="turbustat.statistics.MVC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC</span><span class="p">(</span><span class="n">moment1</span><span class="p">,</span> <span class="n">moment0</span><span class="p">,</span> <span class="n">lwidth</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>The header is read in from <code class="xref py py-obj docutils literal notranslate"><span class="pre">moment1</span></code> to convert into angular scales. Alternatively, a different header can be given with the <code class="xref py py-obj docutils literal notranslate"><span class="pre">header</span></code> keyword.</p>
+<p>Calculating the power spectrum, radially averaging, and fitting a power-law are accomplished through the <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC.run" title="turbustat.statistics.MVC.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.941</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.941</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     1425.</span>
+<span class="go">Date:                Mon, 10 Jul 2017   Prob (F-statistic):           1.46e-56</span>
+<span class="go">Time:                        16:34:01   Log-Likelihood:                -52.840</span>
+<span class="go">No. Observations:                  91   AIC:                             109.7</span>
+<span class="go">Df Residuals:                      89   BIC:                             114.7</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         14.0317      0.103    136.541      0.000      13.827      14.236</span>
+<span class="go">x1            -5.0142      0.133    -37.755      0.000      -5.278      -4.750</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        3.535   Durbin-Watson:                   0.129</span>
+<span class="go">Prob(Omnibus):                  0.171   Jarque-Bera (JB):                3.484</span>
+<span class="go">Skew:                          -0.468   Prob(JB):                        0.175</span>
+<span class="go">Kurtosis:                       2.796   Cond. No.                         4.40</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_design4.png" src="../../_images/mvc_design4.png" />
+<p>The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_2D=True</span></code> is set in <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC.run" title="turbustat.statistics.MVC.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a> (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits. See the <a class="reference internal" href="pspec_example.html#pspec-tutorial"><span class="std std-ref">PowerSpectrum tutorial</span></a> for a discussion of the two-dimensional fitting.</p>
+<p>The fit here is not very good since the spectrum deviates from a single power-law on small scales. In this case, the deviation is caused by the <a class="reference internal" href="../data_for_tutorials.html#data-for-tutorial"><span class="std std-ref">limited inertial range in the simulation</span></a> from which this spectral-line data cube was created. We can specify <code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code> in frequency units to limit the fitting to the inertial range:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.02</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.952</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.948</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     255.9</span>
+<span class="go">Date:                Mon, 10 Jul 2017   Prob (F-statistic):           6.22e-10</span>
+<span class="go">Time:                        16:34:01   Log-Likelihood:                 10.465</span>
+<span class="go">No. Observations:                  15   AIC:                            -16.93</span>
+<span class="go">Df Residuals:                      13   BIC:                            -15.51</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         16.7121      0.220     75.957      0.000      16.237      17.187</span>
+<span class="go">x1            -2.7357      0.171    -15.997      0.000      -3.105      -2.366</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.814   Durbin-Watson:                   2.077</span>
+<span class="go">Prob(Omnibus):                  0.666   Jarque-Bera (JB):                0.614</span>
+<span class="go">Skew:                          -0.445   Prob(JB):                        0.736</span>
+<span class="go">Kurtosis:                       2.564   Cond. No.                         13.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_design4_limitedfreq.png" src="../../_images/mvc_design4_limitedfreq.png" />
+<p>Note the drastic change in the slope! Specifying the correct fit region for the data you are using is critical for interpreting the results of the method. This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with <code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_fit=True</span></code> (this cannot be used for the segmented model described below).</p>
+<p>Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, <code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC</span></code> can be passed a break point to enable fitting with a segmented linear model (<a class="reference internal" href="../../api/turbustat.statistics.Lm_Seg.html#turbustat.statistics.Lm_Seg" title="turbustat.statistics.Lm_Seg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Lm_Seg</span></code></a>). Note that the 2D fitting is disabled for this section as it does not handle fitting break points. From the above plot, we can estimate the break point to be near <code class="xref py py-obj docutils literal notranslate"><span class="pre">0.1</span> <span class="pre">/</span> <span class="pre">u.pix</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.02</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.4</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">fit_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">brk</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">),</span> <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.994</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.994</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     4023.</span>
+<span class="go">Date:                Mon, 10 Jul 2017   Prob (F-statistic):           1.50e-75</span>
+<span class="go">Time:                        16:41:34   Log-Likelihood:                 53.269</span>
+<span class="go">No. Observations:                  71   AIC:                            -98.54</span>
+<span class="go">Df Residuals:                      67   BIC:                            -89.49</span>
+<span class="go">Df Model:                           3</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         16.1749      0.094    172.949      0.000      15.988      16.362</span>
+<span class="go">x1            -3.1436      0.085    -36.870      0.000      -3.314      -2.973</span>
+<span class="go">x2            -5.0895      0.205    -24.855      0.000      -5.498      -4.681</span>
+<span class="go">x3            -0.0020      0.054     -0.037      0.970      -0.110       0.106</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        9.161   Durbin-Watson:                   1.074</span>
+<span class="go">Prob(Omnibus):                  0.010   Jarque-Bera (JB):                8.815</span>
+<span class="go">Skew:                          -0.747   Prob(JB):                       0.0122</span>
+<span class="go">Kurtosis:                       3.865   Cond. No.                         21.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_design4_breakfit.png" src="../../_images/mvc_design4_breakfit.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">brk</span></code> is the initial guess at where the break point is. Here I’ve set it to near the extent of the inertial range of the simulation. <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_break</span></code> should be enabled if the given <code class="xref py py-obj docutils literal notranslate"><span class="pre">brk</span></code> is already the log (base-10) value (since the fitting is done in log-space). The segmented linear model iteratively optimizes the location of the break point, trying to minimize the gap between the different components. This is the <code class="xref py py-obj docutils literal notranslate"><span class="pre">x3</span></code> parameter above. The slopes of the components are <code class="xref py py-obj docutils literal notranslate"><span class="pre">x1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">x2</span></code>, but the second slope is defined <em>relative to the first slope</em> (i.e., if <code class="xref py py-obj docutils literal notranslate"><span class="pre">x2=0</span></code>, the slopes of the components would be the same). The true slopes can be accessed through <code class="xref py py-obj docutils literal notranslate"><span class="pre">mvc.slope</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">mvc.slope_err</span></code>. The location of the fitted break point is given by <code class="xref py py-obj docutils literal notranslate"><span class="pre">mvc.brk</span></code>, and its uncertainty <code class="xref py py-obj docutils literal notranslate"><span class="pre">mvc.brk_err</span></code>. If the fit does not find a good break point, it will revert to a linear fit without the break.</p>
+<p>Many of the techniques in TurbuStat are derived from two-dimensional power spectra. Because of this, the radial averaging and fitting code for these techniques are contained within a common base class, <code class="xref py py-obj docutils literal notranslate"><span class="pre">StatisticBase_PSpec2D</span></code>. Fitting options may be passed as keyword arguments to <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC.run" title="turbustat.statistics.MVC.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>. Alterations to the power-spectrum binning can be passed in <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC.compute_radial_pspec" title="turbustat.statistics.MVC.compute_radial_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_radial_pspec</span></code></a>, after which the fitting routine (<a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC.fit_pspec" title="turbustat.statistics.MVC.fit_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pspec</span></code></a>) may be run.</p>
+<p>The frequency units of the final plot (<code class="xref py py-obj docutils literal notranslate"><span class="pre">xunit</span></code>) and the units of <code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code> can be given in angular units, as well as physical units when a distance is given. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">moment0</span><span class="p">,</span> <span class="n">lwidth</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">250</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.02</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.952</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.948</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     255.9</span>
+<span class="go">Date:                Sun, 16 Jul 2017   Prob (F-statistic):           6.22e-10</span>
+<span class="go">Time:                        14:18:45   Log-Likelihood:                 10.465</span>
+<span class="go">No. Observations:                  15   AIC:                            -16.93</span>
+<span class="go">Df Residuals:                      13   BIC:                            -15.51</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         16.7121      0.220     75.957      0.000      16.237      17.187</span>
+<span class="go">x1            -2.7357      0.171    -15.997      0.000      -3.105      -2.366</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.814   Durbin-Watson:                   2.077</span>
+<span class="go">Prob(Omnibus):                  0.666   Jarque-Bera (JB):                0.614</span>
+<span class="go">Skew:                          -0.445   Prob(JB):                        0.736</span>
+<span class="go">Kurtosis:                       2.564   Cond. No.                         13.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_design4_physunits.png" src="../../_images/mvc_design4_physunits.png" />
+<p>Alternatively, the fitting limits could be passed in units of <code class="xref py py-obj docutils literal notranslate"><span class="pre">u.pc**-1</span></code>.</p>
+<p>Constraints on the azimuthal angles used to compute the one-dimensional power-spectrum can also be given:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">moment0</span><span class="p">,</span> <span class="n">lwidth</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">250</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.02</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">radial_pspec_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;theta_0&quot;</span><span class="p">:</span> <span class="mf">1.13</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="s2">&quot;delta_theta&quot;</span><span class="p">:</span> <span class="mi">40</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">})</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.806</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.791</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     53.85</span>
+<span class="go">Date:                Fri, 29 Sep 2017   Prob (F-statistic):           5.68e-06</span>
+<span class="go">Time:                        14:51:27   Log-Likelihood:                 1.4445</span>
+<span class="go">No. Observations:                  15   AIC:                             1.111</span>
+<span class="go">Df Residuals:                      13   BIC:                             2.527</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         17.3709      0.401     43.271      0.000      16.504      18.238</span>
+<span class="go">x1            -2.2897      0.312     -7.338      0.000      -2.964      -1.616</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        1.198   Durbin-Watson:                   2.743</span>
+<span class="go">Prob(Omnibus):                  0.549   Jarque-Bera (JB):                0.809</span>
+<span class="go">Skew:                          -0.185   Prob(JB):                        0.667</span>
+<span class="go">Kurtosis:                       1.924   Cond. No.                         13.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_design4_physunits_azimlimits.png" src="../../_images/mvc_design4_physunits_azimlimits.png" />
+<p>The azimuthal limits now appear as contours on the two-dimensional power-spectrum in the figure. See the <a class="reference internal" href="pspec_example.html#pspec-tutorial"><span class="std std-ref">PowerSpectrum tutorial</span></a> for more information on giving azimuthal constraints.</p>
+<p>If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. This effect and the use of apodizing kernels to taper the data is covered <a class="reference internal" href="../applying_apodizing_functions.html#apodkerns"><span class="std std-ref">here</span></a>.</p>
+<p>Most observational data will be smoothed over the beam size, which will steepen the power spectrum on small scales.  To account for this, the 2D power spectrum can be divided by the beam response. This is demonstrated <a class="reference internal" href="../correcting_for_the_beam.html#correcting-for-beam"><span class="std std-ref">here</span></a> for spatial power-spectra.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract">Miesch &amp; Bally 1994</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract">Lazarian &amp; Esquivel 2003</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract">Esquivel &amp; Lazarian 2005</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

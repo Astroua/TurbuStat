@@ -1,0 +1,6 @@
+make_3dfield
+============
+
+.. currentmodule:: turbustat.simulator
+
+.. autofunction:: make_3dfield

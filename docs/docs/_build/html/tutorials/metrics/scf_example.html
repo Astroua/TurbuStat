@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>SCF Distance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Statistical Moments Distance" href="statmoments_example.html" />
+    <link rel="prev" title="Spatial Power Spectrum Distance" href="pspec_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">SCF Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="pspec_example.html" title="Previous Chapter: Spatial Power Spectrum Distance"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Spatial Power...</span>
+    </a>
+  </li>
+  <li>
+    <a href="statmoments_example.html" title="Next Chapter: Statistical Moments Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Statistical M... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/metrics/scf_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">SCF Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="scf-distance">
+<span id="scfdistmet"></span><h1>SCF Distance<a class="headerlink" href="#scf-distance" title="Permalink to this headline">¶</a></h1>
+<p>See <a class="reference internal" href="../statistics/scf_example.html#scf-tutorial"><span class="std std-ref">the tutorial</span></a> for a description of the Spectral Correlation Function (SCF).</p>
+<p>The SCF creates a surface by shifting a spectral-line cube and calculating the correlation of the shifted cube with the original cube. The distance metric defined in <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a> is the L2 distance between the correlation surfaces, weighted by the inverse of the lag:</p>
+<div class="math notranslate nohighlight">
+\[d_{\mathrm{SCF}} = \left( \frac{\sum_{\boldsymbol{\ell}}[S_1(\boldsymbol{\ell})-S_2(\boldsymbol{\ell})]^2/|\boldsymbol{\ell}|}{\sum_{\boldsymbol{\ell}} 1/|\boldsymbol{\ell}|}\right)^{1/2}.\]</div>
+<p>where <span class="math notranslate nohighlight">\(S_i\)</span> is the correlation surface and <span class="math notranslate nohighlight">\(\ell\)</span> is the spatial lag between the shifted and original cubes.</p>
+<p>This direct comparison between the correlation surfaces requires that a common set of spatial lags be used. <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a> creates a common set of angular lags to compare two data cubes.</p>
+<p>More information on the distance metric definitions can be found in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a> class, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">SCF_Distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a> takes two data cubes as input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scf</span> <span class="o">=</span> <span class="n">SCF_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>This call runs <a class="reference internal" href="../../api/turbustat.statistics.SCF.html#turbustat.statistics.SCF" title="turbustat.statistics.SCF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF</span></code></a> for the two cubes, which can be accessed with <code class="xref py py-obj docutils literal notranslate"><span class="pre">scf1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">scf2</span></code>.</p>
+<p>The default setting assumes that the boundaries are continuous (e.g., simulated observations from a periodic-box simulation, like this example). To change how boundaries are handled, <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary</span></code> can be set in <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a>. For example, for observational data, <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary='cut'</span></code> should be used. When comparing a simulated observation to a real observation, different boundary conditions can be given: <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary=['cut',</span> <span class="pre">'continuous']</span></code>. The first list item will be used for the first cube given to <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a> and the same for the second list item.</p>
+<p>To calculate the distance between the cubes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scf</span><span class="o">.</span><span class="n">distance_metric</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/scf_distmet.png" src="../../_images/scf_distmet.png" />
+<p>With <code class="xref py py-obj docutils literal notranslate"><span class="pre">verbose=True</span></code>, this function creates a plot of the SCF correlation surfaces (top row), the weighted difference between the surfaces (left, second row), and azimuthally-averaged SCF curves for both cubes (right, second row).</p>
+<p>The distance between the SCF surfaces is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scf</span><span class="o">.</span><span class="n">distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.08101015924738914</span>
+</pre></div>
+</div>
+<p>By default, the distance between the surfaces is weighted by the lag (see equation above). This weighting can be disabled by setting <code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted=False</span></code> in <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance.distance_metric" title="turbustat.statistics.SCF_Distance.distance_metric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance_metric</span></code></a>, and the distance metrics reduces to the L2 norm between the surfaces.</p>
+<p>If many data sets are being compared to a fiducial, a pre-computed <a class="reference internal" href="../../api/turbustat.statistics.SCF.html#turbustat.statistics.SCF" title="turbustat.statistics.SCF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF</span></code></a> class can be passed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">SCF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scf_fid</span> <span class="o">=</span> <span class="n">SCF</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scf</span> <span class="o">=</span> <span class="n">SCF_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">fiducial_model</span><span class="o">=</span><span class="n">scf_fid</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>It is critical that the lags used in <a class="reference internal" href="../../api/turbustat.statistics.SCF.html#turbustat.statistics.SCF" title="turbustat.statistics.SCF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF</span></code></a> match the common set of lags that are used in <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a>. Also note that the data still need to be passed to <a class="reference internal" href="../../api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a>.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2014ApJ...783...93Y/abstract">Yeremi et al. 2015</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract">Boyden et al. 2016</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract">Boyden et al. 2018</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

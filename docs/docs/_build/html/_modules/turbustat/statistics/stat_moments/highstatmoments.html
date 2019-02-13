@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.statistics.stat_moments.highstatmoments &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.statistics.stat_moments.highstatmoments</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.wcs</span> <span class="k">import</span> <span class="n">WCS</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.utils.console</span> <span class="k">import</span> <span class="n">ProgressBar</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">..stats_utils</span> <span class="k">import</span> <span class="p">(</span><span class="n">hellinger</span><span class="p">,</span> <span class="n">kl_divergence</span><span class="p">,</span> <span class="n">common_histogram_bins</span><span class="p">,</span>
+                           <span class="n">common_scale</span><span class="p">,</span> <span class="n">padwithnans</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..base_statistic</span> <span class="k">import</span> <span class="n">BaseStatisticMixIn</span>
+<span class="kn">from</span> <span class="nn">...io</span> <span class="k">import</span> <span class="n">common_types</span><span class="p">,</span> <span class="n">twod_types</span><span class="p">,</span> <span class="n">input_data</span>
+
+
+<div class="viewcode-block" id="StatMoments"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments">[docs]</a><span class="k">class</span> <span class="nc">StatMoments</span><span class="p">(</span><span class="n">BaseStatisticMixIn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Statistical Moments of an image. See Burkhart et al. (2010) for the methods</span>
+<span class="sd">    used. By specifying the radius of circular mask, the mean, variance,</span>
+<span class="sd">    skewness, and kurtosis are calculated within the circular mask for every</span>
+<span class="sd">    pixel in the image. The distributions of these moments can be compared</span>
+<span class="sd">    between data sets.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : %(dtypes)s</span>
+<span class="sd">        2D image.</span>
+<span class="sd">    header : FITS header, optional</span>
+<span class="sd">        The image header. Needed for the pixel scale.</span>
+<span class="sd">    weights : %(dtypes)s</span>
+<span class="sd">        2D array of weights. Uniform weights are used if none are given.</span>
+<span class="sd">    radius : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Radius of circle to use when computing moments. When angular or</span>
+<span class="sd">        physical units are given, they will be rounded *down* to the nearest</span>
+<span class="sd">        pixel size.</span>
+<span class="sd">    nbins : array or int, optional</span>
+<span class="sd">        Number of bins to use in the histogram.</span>
+<span class="sd">    distance : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Physical distance to the region in the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+                 <span class="n">nbins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StatMoments</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_data_header</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">no_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+
+        <span class="k">if</span> <span class="n">nbins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="o">=</span> <span class="n">nbins</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbins</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radius</span>
+
+    <span class="nd">@radius</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;radius must be an astropy.units.Quantity.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Must be convertible to pixel scales!</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pix_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="c1"># The radius should be larger than a pixel</span>
+        <span class="k">if</span> <span class="n">pix_rad</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The chosen radius is smaller than two pixels. &quot;</span>
+                             <span class="s2">&quot;Increase the size of the radius.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Finally, limit the radius to a maximum of half the image size.</span>
+        <span class="k">if</span> <span class="n">pix_rad</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The chosen radius is larger than half the image &quot;</span>
+                             <span class="s2">&quot;size. Reduce the size of the radius.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radius</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="StatMoments.array_moments"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.array_moments">[docs]</a>    <span class="k">def</span> <span class="nf">array_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Moments over the entire image.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">skewness</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis</span> <span class="o">=</span> \
+            <span class="n">compute_moments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StatMoments.compute_spatial_distrib"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.compute_spatial_distrib">[docs]</a>    <span class="k">def</span> <span class="nf">compute_spatial_distrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">min_frac</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the moments over circular region with the specified radius.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        radius : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Override the radius size of the region.</span>
+<span class="sd">        periodic : bool, optional</span>
+<span class="sd">            Specify whether the boundaries can be wrapped. Default is True.</span>
+<span class="sd">        min_frac : float, optional</span>
+<span class="sd">            A number between 0 and 1 that sets the minimum fraction of data in</span>
+<span class="sd">            each region that are finite. A value of 1.0 requires that no NaNs</span>
+<span class="sd">            be in the region.</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Require the fraction to be &gt; 0 and &lt;=1</span>
+        <span class="k">if</span> <span class="n">min_frac</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">min_frac</span> <span class="o">&gt;</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_frac must be larger than 0 and less than&quot;</span>
+                             <span class="s2">&quot;or equal to 1.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variance_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skewness_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kurtosis_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Use the new radius when another given</span>
+        <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+
+        <span class="c1"># Convert to pixels. We need this to be an integer so round down to</span>
+        <span class="c1"># the nearest integer values</span>
+        <span class="n">pix_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
+            <span class="n">pad_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wrap&quot;</span><span class="p">)</span>
+            <span class="n">pad_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wrap&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">padwithnans</span><span class="p">)</span>
+            <span class="n">pad_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">padwithnans</span><span class="p">)</span>
+
+        <span class="n">circle_mask</span> <span class="o">=</span> <span class="n">circular_region</span><span class="p">(</span><span class="n">pix_rad</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">bar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">((</span><span class="n">pad_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pix_rad</span><span class="p">)</span> <span class="o">*</span>
+                              <span class="p">(</span><span class="n">pad_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pix_rad</span><span class="p">))</span>
+
+        <span class="c1"># Loop through every point within the non-padded shape.</span>
+        <span class="n">prod</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pix_rad</span><span class="p">,</span> <span class="n">pad_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">),</span>
+                       <span class="nb">range</span><span class="p">(</span><span class="n">pix_rad</span><span class="p">,</span> <span class="n">pad_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">prod</span><span class="p">):</span>
+                <span class="n">img_slice</span> <span class="o">=</span> <span class="n">pad_img</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">pix_rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                    <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">pix_rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">wgt_slice</span> <span class="o">=</span> <span class="n">pad_weights</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">pix_rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">pix_rad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+                <span class="n">valid_img_frac</span> <span class="o">=</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">img_slice</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">img_slice</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                <span class="n">valid_wgt_frac</span> <span class="o">=</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">wgt_slice</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">wgt_slice</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">valid_img_frac</span> <span class="o">&lt;</span> <span class="n">min_frac</span> <span class="ow">or</span> <span class="n">valid_wgt_frac</span> <span class="o">&lt;</span> <span class="n">min_frac</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">img_slice</span> <span class="o">=</span> <span class="n">img_slice</span> <span class="o">*</span> <span class="n">circle_mask</span>
+                    <span class="n">wgt_slice</span> <span class="o">=</span> <span class="n">wgt_slice</span> <span class="o">*</span> <span class="n">circle_mask</span>
+
+                    <span class="n">moments</span> <span class="o">=</span> <span class="n">compute_moments</span><span class="p">(</span><span class="n">img_slice</span><span class="p">,</span> <span class="n">wgt_slice</span><span class="p">)</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">moments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">moments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">moments</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="n">pix_rad</span><span class="p">]</span> <span class="o">=</span> <span class="n">moments</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                    <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The array of local means.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_array</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variance_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The array of local variances.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variance_array</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">skewness_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The array of local skewnesss.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skewness_array</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kurtosis_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The array of local kurtosiss.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kurtosis_array</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_extrema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The extrema of the mean array.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variance_extrema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The extrema of the variance array.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">skewness_extrema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The extrema of the skewness array.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kurtosis_extrema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The extrema of the kurtosis array.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StatMoments.make_spatial_histograms"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.make_spatial_histograms">[docs]</a>    <span class="k">def</span> <span class="nf">make_spatial_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">variance_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">skewness_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kurtosis_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create histograms of the moments. If an optional set of bins is not</span>
+<span class="sd">        given, :math:`\sqrt{N}` equally-size bins will be created, where</span>
+<span class="sd">        :math:`N` is the number of elements in the array. The histogram</span>
+<span class="sd">        values are normalized so that the sum of the values in the bins,</span>
+<span class="sd">        multiplied by the bin width is 1.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mean_bins : array, optional</span>
+<span class="sd">            Bins to use for the histogram of the mean array.</span>
+<span class="sd">        variance_bins : array, optional</span>
+<span class="sd">            Bins to use for the histogram of the variance array.</span>
+<span class="sd">        skewness_bins : array, optional</span>
+<span class="sd">            Bins to use for the histogram of the skewness array.</span>
+<span class="sd">        kurtosis_bins : array, optional</span>
+<span class="sd">            Bins to use for the histogram of the kurtosis array.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Mean</span>
+        <span class="k">if</span> <span class="n">mean_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span>
+        <span class="n">mean_hist</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">)],</span>
+                         <span class="n">mean_bins</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">mean_bin_centres</span> <span class="o">=</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean_hist</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_bin_centres</span><span class="p">,</span> <span class="n">mean_hist</span><span class="p">]</span>
+
+        <span class="c1"># Variance</span>
+        <span class="k">if</span> <span class="n">variance_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">variance_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span>
+        <span class="n">variance_hist</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">)],</span>
+                         <span class="n">variance_bins</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">var_bin_centres</span> <span class="o">=</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variance_hist</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_bin_centres</span><span class="p">,</span> <span class="n">variance_hist</span><span class="p">]</span>
+
+        <span class="c1"># Skewness</span>
+        <span class="k">if</span> <span class="n">skewness_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">skewness_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span>
+        <span class="n">skewness_hist</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">)],</span>
+                         <span class="n">skewness_bins</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">skew_bin_centres</span> <span class="o">=</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skewness_hist</span> <span class="o">=</span> <span class="p">[</span><span class="n">skew_bin_centres</span><span class="p">,</span> <span class="n">skewness_hist</span><span class="p">]</span>
+        <span class="c1"># Kurtosis</span>
+        <span class="k">if</span> <span class="n">kurtosis_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kurtosis_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span>
+        <span class="n">kurtosis_hist</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">)],</span>
+                         <span class="n">kurtosis_bins</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">kurt_bin_centres</span> <span class="o">=</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kurtosis_hist</span> <span class="o">=</span> <span class="p">[</span><span class="n">kurt_bin_centres</span><span class="p">,</span> <span class="n">kurtosis_hist</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The histogram bins and values for the mean array. The first element is</span>
+<span class="sd">        the array of bins, and the second contains the values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_hist</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variance_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The histogram bins and values for the variance array. The first element</span>
+<span class="sd">        is the array of bins, and the second contains the values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variance_hist</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">skewness_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The histogram bins and values for the skewness array. The first element</span>
+<span class="sd">        is the array of bins, and the second contains the values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skewness_hist</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kurtosis_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The histogram bins and values for the kurtosis array. The first element</span>
+<span class="sd">        is the array of bins, and the second contains the values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kurtosis_hist</span>
+
+<div class="viewcode-block" id="StatMoments.plot_histograms"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.plot_histograms">[docs]</a>    <span class="k">def</span> <span class="nf">plot_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_figure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">hist_color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">face_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the histograms of each moment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_figure : bool, optional</span>
+<span class="sd">            Creates a new matplotlib figure.</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            The filename to save the plot as. This enables saving of the plot.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;mean_hist&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The histograms have not been computed. Run&quot;</span>
+                            <span class="s2">&quot; StatMoments.make_spatial_histograms first.&quot;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="k">if</span> <span class="n">new_figure</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">mean_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">hist_color</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">mean_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">face_color</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Mean&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">variance_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">hist_color</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">variance_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">face_color</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Variance&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">hist_color</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">face_color</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Skewness&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">hist_color</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">face_color</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Kurtosis&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StatMoments.plot_maps"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.plot_maps">[docs]</a>    <span class="k">def</span> <span class="nf">plot_maps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span>
+                  <span class="n">contour_cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the maps of locally-estimated moments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Save name for the figure. Enables saving the plot.</span>
+<span class="sd">        cmap : {str, matplotlib colormap}, optional</span>
+<span class="sd">            Colormap for the images.</span>
+<span class="sd">        contour_cmap : {str, matplotlib colormap}, optional</span>
+<span class="sd">            Colormap for the contours.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                   <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Mean&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">contour_cmap</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance_array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                   <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Variance&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">contour_cmap</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">skewness_array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                   <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Skewness&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">contour_cmap</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                   <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Kurtosis&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">contour_cmap</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StatMoments.run"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments.html#turbustat.statistics.StatMoments.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_frac</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="o">**</span><span class="n">hist_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the entire method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        radius : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Override the radius size of the region.</span>
+<span class="sd">        periodic : bool, optional</span>
+<span class="sd">            Specify whether the boundaries can be wrapped. Default is True.</span>
+<span class="sd">        min_frac : float, optional</span>
+<span class="sd">            A number between 0 and 1 that sets the minimum fraction of data in</span>
+<span class="sd">            each region that are finite. A value of 1.0 requires that no NaNs</span>
+<span class="sd">            be in the region.</span>
+<span class="sd">        hist_kwargs : Passed to `~StatMoments.make_spatial_histograms`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_moments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_spatial_distrib</span><span class="p">(</span><span class="n">periodic</span><span class="o">=</span><span class="n">periodic</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+                                     <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_spatial_histograms</span><span class="p">(</span><span class="o">**</span><span class="n">hist_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_maps</span><span class="p">(</span><span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="StatMoments_Distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments_Distance.html#turbustat.statistics.StatMoments_Distance">[docs]</a><span class="k">class</span> <span class="nc">StatMoments_Distance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute the distance between two images based on their moments.</span>
+<span class="sd">    The distance is calculated for the skewness and kurtosis. The distance</span>
+<span class="sd">    values for each for computed using the Hellinger Distance (default),</span>
+<span class="sd">    or the Kullback-Leidler Divergence.</span>
+
+<span class="sd">    Unlike the other distance classes in TurbuStat, the computation of the</span>
+<span class="sd">    histograms needed for the distance metric has been split into its own</span>
+<span class="sd">    method. However, the change is fairly transparent, since it is called</span>
+<span class="sd">    within distance_metric.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image1 : %(dtypes)s</span>
+<span class="sd">        2D Image.</span>
+<span class="sd">    image2 : %(dtypes)s</span>
+<span class="sd">        2D Image.</span>
+<span class="sd">    radius : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Radius of circle to use when computing moments. When given in pixel</span>
+<span class="sd">        units, the radius will be adjusted such that a common *angular* scale</span>
+<span class="sd">        is used between the two images, defined by whichever image has the</span>
+<span class="sd">        coarser spatial grid. *This assumes the pixels can be treated as square</span>
+<span class="sd">        in the celestial frame!* If an angular unit is given, there</span>
+<span class="sd">        is no adjustment made.</span>
+<span class="sd">    weights1 : %(dtypes)s</span>
+<span class="sd">        2D array of weights. Uniform weights are used if none are given.</span>
+<span class="sd">    weights2 : %(dtypes)s</span>
+<span class="sd">        2D array of weights. Uniform weights are used if none are given.</span>
+<span class="sd">    nbins : int, optional</span>
+<span class="sd">        Number of bins to use when constructing histograms.</span>
+<span class="sd">    periodic1 : bool, optional</span>
+<span class="sd">        If image1 is periodic in the spatial boundaries, set to True.</span>
+<span class="sd">    periodic2 : bool, optional</span>
+<span class="sd">        If image2 is periodic in the spatial boundaries, set to True.</span>
+<span class="sd">    fiducial_model : StatMoments</span>
+<span class="sd">        Computed StatMoments object. use to avoid recomputing.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image1</span><span class="p">,</span> <span class="n">image2</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">min_frac</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+                 <span class="n">weights1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">nbins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">periodic1</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">fiducial_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StatMoments_Distance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">image1</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">image1</span><span class="p">,</span> <span class="n">no_header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">image2</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">image2</span><span class="p">,</span> <span class="n">no_header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Compute the scale so the radius is common between the two datasets</span>
+        <span class="k">if</span> <span class="n">radius</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">common_scale</span><span class="p">(</span><span class="n">WCS</span><span class="p">(</span><span class="n">image1</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">WCS</span><span class="p">(</span><span class="n">image2</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">radius1</span> <span class="o">=</span> <span class="n">radius</span>
+                <span class="n">radius2</span> <span class="o">=</span> <span class="n">radius</span>
+            <span class="k">elif</span> <span class="n">scale</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">radius1</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">radius</span>
+                <span class="n">radius2</span> <span class="o">=</span> <span class="n">radius</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">radius1</span> <span class="o">=</span> <span class="n">radius</span>
+                <span class="n">radius2</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">radius1</span> <span class="o">=</span> <span class="n">radius</span>
+            <span class="n">radius2</span> <span class="o">=</span> <span class="n">radius</span>
+
+        <span class="k">if</span> <span class="n">nbins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="o">=</span> <span class="n">_auto_nbins</span><span class="p">(</span><span class="n">image1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">image2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="o">=</span> <span class="n">nbins</span>
+
+        <span class="k">if</span> <span class="n">fiducial_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span> <span class="o">=</span> <span class="n">fiducial_model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span> <span class="o">=</span> <span class="n">StatMoments</span><span class="p">(</span><span class="n">image1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius1</span><span class="p">,</span>
+                                        <span class="n">nbins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nbins</span><span class="p">,</span>
+                                        <span class="n">weights</span><span class="o">=</span><span class="n">weights1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">compute_spatial_distrib</span><span class="p">(</span><span class="n">periodic</span><span class="o">=</span><span class="n">periodic1</span><span class="p">,</span>
+                                                  <span class="n">min_frac</span><span class="o">=</span><span class="n">min_frac</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span> <span class="o">=</span> <span class="n">StatMoments</span><span class="p">(</span><span class="n">image2</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius2</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nbins</span><span class="p">,</span>
+                                    <span class="n">weights</span><span class="o">=</span><span class="n">weights2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">compute_spatial_distrib</span><span class="p">(</span><span class="n">periodic</span><span class="o">=</span><span class="n">periodic2</span><span class="p">,</span>
+                                              <span class="n">min_frac</span><span class="o">=</span><span class="n">min_frac</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StatMoments_Distance.create_common_histograms"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments_Distance.html#turbustat.statistics.StatMoments_Distance.create_common_histograms">[docs]</a>    <span class="k">def</span> <span class="nf">create_common_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the histograms using a common set of bins. Only</span>
+<span class="sd">        histograms of the kurtosis and skewness are calculated, since only</span>
+<span class="sd">        they are used in the distance metric.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nbins : int, optional</span>
+<span class="sd">            Bins to use in the histogram calculation.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">skew_bins</span> <span class="o">=</span> \
+            <span class="n">common_histogram_bins</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_array</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_array</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                  <span class="n">nbins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="k">if</span> <span class="n">nbins</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nbins</span><span class="p">)</span>
+
+        <span class="n">kurt_bins</span> <span class="o">=</span> \
+            <span class="n">common_histogram_bins</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_array</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                  <span class="n">nbins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nbins</span> <span class="k">if</span> <span class="n">nbins</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nbins</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">make_spatial_histograms</span><span class="p">(</span><span class="n">skewness_bins</span><span class="o">=</span><span class="n">skew_bins</span><span class="p">,</span>
+                                              <span class="n">kurtosis_bins</span><span class="o">=</span><span class="n">kurt_bins</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">make_spatial_histograms</span><span class="p">(</span><span class="n">skewness_bins</span><span class="o">=</span><span class="n">skew_bins</span><span class="p">,</span>
+                                              <span class="n">kurtosis_bins</span><span class="o">=</span><span class="n">kurt_bins</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StatMoments_Distance.distance_metric"><a class="viewcode-back" href="../../../../api/turbustat.statistics.StatMoments_Distance.html#turbustat.statistics.StatMoments_Distance.distance_metric">[docs]</a>    <span class="k">def</span> <span class="nf">distance_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">plot_kwargs1</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">},</span>
+                        <span class="n">plot_kwargs2</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">},</span>
+                        <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the distance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metric : &#39;Hellinger&#39; (default) or &quot;KL Divergence&quot;, optional</span>
+<span class="sd">            Set the metric to use compare the histograms.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        nbins : int, optional</span>
+<span class="sd">            Bins to use in the histogram calculation.</span>
+<span class="sd">        label1 : str, optional</span>
+<span class="sd">            Object or region name for image1</span>
+<span class="sd">        label2 : str, optional</span>
+<span class="sd">            Object or region name for image2</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_common_histograms</span><span class="p">(</span><span class="n">nbins</span><span class="o">=</span><span class="n">nbins</span><span class="p">)</span>
+
+        <span class="n">kurt_bw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kurtosis_distance</span> <span class="o">=</span> <span class="n">hellinger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                           <span class="n">bin_width</span><span class="o">=</span><span class="n">kurt_bw</span><span class="p">)</span>
+
+        <span class="n">skew_bw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skewness_distance</span> <span class="o">=</span> <span class="n">hellinger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                           <span class="n">bin_width</span><span class="o">=</span><span class="n">skew_bw</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+            <span class="n">defaults1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">}</span>
+            <span class="n">defaults2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                    <span class="n">plot_kwargs1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                    <span class="n">plot_kwargs2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">kurtosis_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Kurtosis&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments1</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">moments2</span><span class="o">.</span><span class="n">skewness_hist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                     <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Skewness&quot;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">circular_region</span><span class="p">(</span><span class="n">radius</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a circular region with nans outside the radius.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="n">radius</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">circle</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">**</span> <span class="mf">2.</span> <span class="o">+</span> <span class="n">yy</span> <span class="o">**</span> <span class="mf">2.</span>
+    <span class="n">circle</span> <span class="o">=</span> <span class="n">circle</span> <span class="o">&lt;</span> <span class="n">radius</span> <span class="o">**</span> <span class="mf">2.</span>
+
+    <span class="n">circle</span> <span class="o">=</span> <span class="n">circle</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">circle</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">circle</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+    <span class="k">return</span> <span class="n">circle</span>
+
+
+<span class="k">def</span> <span class="nf">compute_moments</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute the moments of the given image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : numpy.ndarray</span>
+<span class="sd">        2D image.</span>
+<span class="sd">    weights : numpy.ndarray</span>
+<span class="sd">        2D weight image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mean : float</span>
+<span class="sd">        The 1st moment.</span>
+<span class="sd">    variance : float</span>
+<span class="sd">        The 2nd moment.</span>
+<span class="sd">    skewness : float</span>
+<span class="sd">        The 3rd moment.</span>
+<span class="sd">    kurtosis : float</span>
+<span class="sd">        The 4th moment.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">img</span> <span class="o">*</span> <span class="n">weights</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="n">img</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
+
+    <span class="n">skewness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="p">((</span><span class="n">img</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">)</span> <span class="o">**</span> <span class="mf">3.</span><span class="p">)</span> <span class="o">/</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">kurtosis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="p">((</span><span class="n">img</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">)</span> <span class="o">**</span> <span class="mf">4.</span><span class="p">)</span> <span class="o">/</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">-</span> <span class="mi">3</span>
+
+    <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">skewness</span><span class="p">,</span> <span class="n">kurtosis</span>
+
+
+<span class="k">def</span> <span class="nf">_auto_nbins</span><span class="p">(</span><span class="n">size1</span><span class="p">,</span> <span class="n">size2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Set bins to the sqrt of the smaller size.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">size1</span><span class="p">,</span> <span class="n">size2</span><span class="p">)))</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

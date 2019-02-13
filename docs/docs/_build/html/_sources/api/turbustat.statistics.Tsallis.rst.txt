@@ -1,0 +1,65 @@
+Tsallis
+=======
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Tsallis
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Tsallis.data
+      ~Tsallis.distance
+      ~Tsallis.header
+      ~Tsallis.lag_arrays
+      ~Tsallis.lag_distribs
+      ~Tsallis.lags
+      ~Tsallis.need_header_flag
+      ~Tsallis.no_data_flag
+      ~Tsallis.tsallis_chisq
+      ~Tsallis.tsallis_params
+      ~Tsallis.tsallis_stderrs
+      ~Tsallis.tsallis_table
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Tsallis.fit_tsallis
+      ~Tsallis.input_data_header
+      ~Tsallis.load_beam
+      ~Tsallis.load_results
+      ~Tsallis.make_tsallis
+      ~Tsallis.plot_fit
+      ~Tsallis.plot_parameters
+      ~Tsallis.run
+      ~Tsallis.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: header
+   .. autoattribute:: lag_arrays
+   .. autoattribute:: lag_distribs
+   .. autoattribute:: lags
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: tsallis_chisq
+   .. autoattribute:: tsallis_params
+   .. autoattribute:: tsallis_stderrs
+   .. autoattribute:: tsallis_table
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: fit_tsallis
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: make_tsallis
+   .. automethod:: plot_fit
+   .. automethod:: plot_parameters
+   .. automethod:: run
+   .. automethod:: save_results

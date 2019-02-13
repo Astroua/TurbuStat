@@ -1,0 +1,6 @@
+WidthEstimate1D
+===============
+
+.. currentmodule:: turbustat.statistics
+
+.. autofunction:: WidthEstimate1D

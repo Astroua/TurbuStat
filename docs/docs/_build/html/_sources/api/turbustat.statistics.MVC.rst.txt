@@ -1,0 +1,91 @@
+MVC
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: MVC
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~MVC.brk
+      ~MVC.brk_err
+      ~MVC.centroid
+      ~MVC.data
+      ~MVC.distance
+      ~MVC.ellip2D
+      ~MVC.ellip2D_err
+      ~MVC.freqs
+      ~MVC.header
+      ~MVC.linewidth
+      ~MVC.moment0
+      ~MVC.need_header_flag
+      ~MVC.no_data_flag
+      ~MVC.ps1D
+      ~MVC.ps1D_stddev
+      ~MVC.ps2D
+      ~MVC.slope
+      ~MVC.slope2D
+      ~MVC.slope2D_err
+      ~MVC.slope_err
+      ~MVC.theta2D
+      ~MVC.theta2D_err
+      ~MVC.wavenumbers
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~MVC.apodizing_kernel
+      ~MVC.compute_pspec
+      ~MVC.compute_radial_pspec
+      ~MVC.fit_2Dpspec
+      ~MVC.fit_pspec
+      ~MVC.input_data_header
+      ~MVC.load_beam
+      ~MVC.load_results
+      ~MVC.plot_fit
+      ~MVC.run
+      ~MVC.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: centroid
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: ellip2D
+   .. autoattribute:: ellip2D_err
+   .. autoattribute:: freqs
+   .. autoattribute:: header
+   .. autoattribute:: linewidth
+   .. autoattribute:: moment0
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: ps1D
+   .. autoattribute:: ps1D_stddev
+   .. autoattribute:: ps2D
+   .. autoattribute:: slope
+   .. autoattribute:: slope2D
+   .. autoattribute:: slope2D_err
+   .. autoattribute:: slope_err
+   .. autoattribute:: theta2D
+   .. autoattribute:: theta2D_err
+   .. autoattribute:: wavenumbers
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: apodizing_kernel
+   .. automethod:: compute_pspec
+   .. automethod:: compute_radial_pspec
+   .. automethod:: fit_2Dpspec
+   .. automethod:: fit_pspec
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

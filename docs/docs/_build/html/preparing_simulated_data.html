@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Preparing Simulated Data &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="create_cube_header" href="api/turbustat.io.sim_tools.create_cube_header.html" />
+    <link rel="prev" title="Accepted Data Types" href="accepted_input_formats.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Preparing Simulated Data</a><ul>
+<li><a class="reference internal" href="#units">Units</a></li>
+<li><a class="reference internal" href="#noise-and-missing-data">Noise and missing data</a><ul>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#excluding-the-dissipation-range">Excluding the dissipation range</a><ul>
+<li><a class="reference internal" href="#source-code">Source Code</a></li>
+<li><a class="reference internal" href="#module-turbustat.io.sim_tools">turbustat.io.sim_tools Module</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="accepted_input_formats.html" title="Previous Chapter: Accepted Data Types"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Accepted Data Types</span>
+    </a>
+  </li>
+  <li>
+    <a href="api/turbustat.io.sim_tools.create_cube_header.html" title="Next Chapter: create_cube_header"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">create_cube_header &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/preparing_simulated_data.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Preparing Simulated Data</a><ul>
+<li><a class="reference internal" href="#units">Units</a></li>
+<li><a class="reference internal" href="#noise-and-missing-data">Noise and missing data</a><ul>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#excluding-the-dissipation-range">Excluding the dissipation range</a><ul>
+<li><a class="reference internal" href="#source-code">Source Code</a></li>
+<li><a class="reference internal" href="#module-turbustat.io.sim_tools">turbustat.io.sim_tools Module</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="preparing-simulated-data">
+<span id="simobs-tutorial"></span><h1>Preparing Simulated Data<a class="headerlink" href="#preparing-simulated-data" title="Permalink to this headline">¶</a></h1>
+<p>TurbuStat requires the input data be in a valid FITS format. Since simulated observations do not always include a valid observational FITS header, we provide a few convenience functions to create a valid format.</p>
+<p>We start with a numpy array of data from some source. First consider a spectral-line data cube with 2 spatial dimensions and one spectral dimension (also called a PPV cube; position-position-velocity). We will need to specify several quantities, like the angular pixel scale, to create the header:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.io.sim_tools</span> <span class="k">import</span> <span class="n">create_fits_hdu</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pixel_scale</span> <span class="o">=</span> <span class="mf">0.001</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec_pixel_scale</span> <span class="o">=</span> <span class="mf">1000.</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beamfwhm</span> <span class="o">=</span> <span class="mf">0.003</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">imshape</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">restfreq</span> <span class="o">=</span> <span class="mf">1.4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bunit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">K</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube_hdu</span> <span class="o">=</span> <span class="n">create_fits_hdu</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">spec_pixel_scale</span><span class="p">,</span> <span class="n">beamfwhm</span><span class="p">,</span> <span class="n">imshape</span><span class="p">,</span> <span class="n">restfreq</span><span class="p">,</span> <span class="n">bunit</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cube_hdu</span></code> can now be passed to the TurbuStat statistics, or loaded into a <code class="xref py py-obj docutils literal notranslate"><span class="pre">spectral_cube.SpectralCube</span></code> with <code class="xref py py-obj docutils literal notranslate"><span class="pre">SpectralCube.read(cube_hdu)</span></code> for easy manipulation of the PPV cube.</p>
+<p>For a two-dimensional image, the FITS HDU can be made in almost the same way, minus <code class="xref py py-obj docutils literal notranslate"><span class="pre">spec_pixel_scale</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">imshape</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img_hdu</span> <span class="o">=</span> <span class="n">create_fits_hdu</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">beamfwhm</span><span class="p">,</span> <span class="n">imshape</span><span class="p">,</span> <span class="n">restfreq</span><span class="p">,</span> <span class="n">bunit</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The FITS HDU can be given to TurbuStat statistics, or converted to a <code class="xref py py-obj docutils literal notranslate"><span class="pre">spectral_cube.Projection</span></code> with <code class="xref py py-obj docutils literal notranslate"><span class="pre">Projection.from_hdu(img_hdu)</span></code>.</p>
+<p>You can also create just the FITS headers with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.io.sim_tools</span> <span class="k">import</span> <span class="n">create_image_header</span><span class="p">,</span> <span class="n">create_cube_header</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img_hdr</span> <span class="o">=</span> <span class="n">create_image_header</span><span class="p">(</span><span class="n">pixel_scale</span><span class="p">,</span> <span class="n">beamfwhm</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">restfreq</span><span class="p">,</span> <span class="n">bunit</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube_hdr</span> <span class="o">=</span> <span class="n">create_cube_header</span><span class="p">(</span><span class="n">pixel_scale</span><span class="p">,</span> <span class="n">spec_pixel_scale</span><span class="p">,</span> <span class="n">beamfwhm</span><span class="p">,</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">restfreq</span><span class="p">,</span> <span class="n">bunit</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="units">
+<h2>Units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h2>
+<p>The units should be an equivalent observational unit, depending on the required data product (PPV cube, zeroth moment, centroid, etc…). While TurbuStat does not explicitly check for the input data units, two things should be kept in mind:</p>
+<ol class="arabic simple">
+<li>The data cannot be log-scaled.</li>
+<li>When comparing data sets, both should have the same unit. Most statistics are not based on the absolute scale in the data, but it is best to avoid possible misinterpretation of the results.</li>
+</ol>
+</div>
+<div class="section" id="noise-and-missing-data">
+<h2>Noise and missing data<a class="headerlink" href="#noise-and-missing-data" title="Permalink to this headline">¶</a></h2>
+<p>To create realistic data, noise could be added to <code class="xref py py-obj docutils literal notranslate"><span class="pre">img</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">cube</span></code> in the above examples.  The simplest form of noise is Gaussian and can be added to the data with:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">noisy_cube</span> <span class="o">=</span> <span class="n">cube</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">cube</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, Gaussian noise with standard deviation of 0.1 and mean of 0. is added to the cube.</p>
+<p>A common observational practice is to mask noise-only regions of an image or data cube.  A simple example is, with knowledge of the standard deviation of the noise, to impose an <span class="math notranslate nohighlight">\(N-\sigma\)</span> cut to the data:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mf">3.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create a boolean array, where True is above the noise threshold.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">signal_mask</span> <span class="o">=</span> <span class="n">noisy_cube</span> <span class="o">&gt;</span> <span class="n">N</span> <span class="o">*</span> <span class="n">sigma</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set all places below the noise threshold to NaN in the cube</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">masked_cube</span> <span class="o">=</span> <span class="n">signal_mask</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">masked_cube</span><span class="p">[</span><span class="o">~</span><span class="n">signal_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+</pre></div>
+</div>
+<p>TurbuStat does not contain routines to create robust signal masks. Examples of creating signal masks can be found in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2006PASP..118..590R/abstract">Rosolowsky &amp; Leroy 2006</a> and <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2011arXiv1101.1499D/abstract">Dame 2011</a>.</p>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2011arXiv1101.1499D/abstract">Dame 2011</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2006PASP..118..590R/abstract">Rosolowsky &amp; Leroy 2006</a></p>
+</div>
+</div>
+<div class="section" id="excluding-the-dissipation-range">
+<h2>Excluding the dissipation range<a class="headerlink" href="#excluding-the-dissipation-range" title="Permalink to this headline">¶</a></h2>
+<p>When using synthetic observations from simulations, care should be taken to only fit scales in the inertial range. The <a class="reference internal" href="tutorials/statistics/pspec_example.html#pspec-tutorial"><span class="std std-ref">power-spectrum tutorial</span></a> shows an example of limiting the fit to the inertial range.  The power-spectrum in the dissipation range in that example steepens significantly and is not representative of the turbulent index.  This warning should be heeded for power-spectrum-based methods, like the spatial power-spectrum, MVC, VCA and VCS. Spatial structure functions, like the wavelet transform and the delta-variance should also be examined closely for the inflence of the dissipation range on small scales.</p>
+<div class="section" id="source-code">
+<h3>Source Code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="module-turbustat.io.sim_tools">
+<span id="turbustat-io-sim-tools-module"></span><h3>turbustat.io.sim_tools Module<a class="headerlink" href="#module-turbustat.io.sim_tools" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="functions">
+<h4>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="api/turbustat.io.sim_tools.create_cube_header.html#turbustat.io.sim_tools.create_cube_header" title="turbustat.io.sim_tools.create_cube_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_cube_header</span></code></a>(pixel_scale,&nbsp;…[,&nbsp;v0])</td>
+<td>Create a basic FITS header for a PPV cube.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="api/turbustat.io.sim_tools.create_fits_hdu.html#turbustat.io.sim_tools.create_fits_hdu" title="turbustat.io.sim_tools.create_fits_hdu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fits_hdu</span></code></a>(data,&nbsp;*header_args)</td>
+<td>Return a FITS hdu for a numpy array of data.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="api/turbustat.io.sim_tools.create_image_header.html#turbustat.io.sim_tools.create_image_header" title="turbustat.io.sim_tools.create_image_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_image_header</span></code></a>(pixel_scale,&nbsp;beamfwhm,&nbsp;…)</td>
+<td>Create a basic FITS header for an image.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

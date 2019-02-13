@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VCA &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="VCA_Distance" href="turbustat.statistics.VCA_Distance.html" />
+    <link rel="prev" title="Tsallis" href="turbustat.statistics.Tsallis.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics.html">Statistics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">VCA</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="turbustat.statistics.Tsallis.html" title="Previous Chapter: Tsallis"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Tsallis</span>
+    </a>
+  </li>
+  <li>
+    <a href="turbustat.statistics.VCA_Distance.html" title="Next Chapter: VCA_Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VCA_Distance &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/api/turbustat.statistics.VCA.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">VCA</a></li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="vca">
+<h1>VCA<a class="headerlink" href="#vca" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="turbustat.statistics.VCA">
+<em class="property">class </em><code class="descclassname">turbustat.statistics.</code><code class="descname">VCA</code><span class="sig-paren">(</span><em>cube</em>, <em>header=None</em>, <em>distance=None</em>, <em>beam=None</em>, <em>channel_width=None</em>, <em>downsample_kwargs={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/vca_vcs/vca.html#VCA"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/vca_vcs/vca.py#L18" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">turbustat.statistics.base_statistic.BaseStatisticMixIn</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">turbustat.statistics.base_pspec2.StatisticBase_PSpec2D</span></code></p>
+<p>The VCA technique (Lazarian &amp; Pogosyan, 2004).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cube</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or SpectralCube</span></dt>
+<dd><p class="first last">Data cube.</p>
+</dd>
+<dt><strong>header</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FITS header, optional</span></dt>
+<dd><p class="first last">Corresponding FITS header.</p>
+</dd>
+<dt><strong>distance</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Physical distance to the region in the data.</p>
+</dd>
+<dt><strong>beam</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radio_beam.Beam</span></code>, optional</span></dt>
+<dd><p class="first last">Beam object for correcting for the effect of a finite beam.</p>
+</dd>
+<dt><strong>channel_width</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Set the width of channels to compute the VCA with. The channel width
+in the data is used by default. Given widths will be used to
+spectrally down-sample the data before calculating the VCA. Up-sampling
+to smaller channel sizes than the original is not supported.</p>
+</dd>
+<dt><strong>downsample_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Passed to <code class="xref py py-obj docutils literal notranslate"><span class="pre">spectral_regrid_cube</span></code>.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes Summary</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.brk" title="turbustat.statistics.VCA.brk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">brk</span></code></a></td>
+<td>Fitted break point.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.brk_err" title="turbustat.statistics.VCA.brk_err"><code class="xref py py-obj docutils literal notranslate"><span class="pre">brk_err</span></code></a></td>
+<td>1-sigma on the break point.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.data" title="turbustat.statistics.VCA.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.distance" title="turbustat.statistics.VCA.distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.ellip2D" title="turbustat.statistics.VCA.ellip2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ellip2D</span></code></a></td>
+<td>Fitted ellipticity of the 2D power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.ellip2D_err" title="turbustat.statistics.VCA.ellip2D_err"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ellip2D_err</span></code></a></td>
+<td>Ellipticity standard error of the 2D power spectrum.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.freqs" title="turbustat.statistics.VCA.freqs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freqs</span></code></a></td>
+<td>Corresponding spatial frequencies of the 1D power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.header" title="turbustat.statistics.VCA.header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">header</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.need_header_flag" title="turbustat.statistics.VCA.need_header_flag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">need_header_flag</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.no_data_flag" title="turbustat.statistics.VCA.no_data_flag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">no_data_flag</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.ps1D" title="turbustat.statistics.VCA.ps1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ps1D</span></code></a></td>
+<td>One-dimensional power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.ps1D_stddev" title="turbustat.statistics.VCA.ps1D_stddev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ps1D_stddev</span></code></a></td>
+<td>1-sigma standard deviation of the 1D power spectrum.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.ps2D" title="turbustat.statistics.VCA.ps2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ps2D</span></code></a></td>
+<td>Two-dimensional power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.slope" title="turbustat.statistics.VCA.slope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slope</span></code></a></td>
+<td>Power spectrum slope(s).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.slope2D" title="turbustat.statistics.VCA.slope2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slope2D</span></code></a></td>
+<td>Fitted slope of the 2D power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.slope2D_err" title="turbustat.statistics.VCA.slope2D_err"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slope2D_err</span></code></a></td>
+<td>Slope standard error of the 2D power spectrum.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.slope_err" title="turbustat.statistics.VCA.slope_err"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slope_err</span></code></a></td>
+<td>1-sigma error on the power spectrum slope(s).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.theta2D" title="turbustat.statistics.VCA.theta2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">theta2D</span></code></a></td>
+<td>Fitted position angle of the 2D power spectrum.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.theta2D_err" title="turbustat.statistics.VCA.theta2D_err"><code class="xref py py-obj docutils literal notranslate"><span class="pre">theta2D_err</span></code></a></td>
+<td>Position angle standard error of the 2D power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.wavenumbers" title="turbustat.statistics.VCA.wavenumbers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wavenumbers</span></code></a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Summary</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.apodizing_kernel" title="turbustat.statistics.VCA.apodizing_kernel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apodizing_kernel</span></code></a>([kernel_type,&nbsp;alpha,&nbsp;beta])</td>
+<td>Return an apodizing kernel to be applied to the image before taking Fourier transform</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.compute_pspec" title="turbustat.statistics.VCA.compute_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_pspec</span></code></a>([beam_correct,&nbsp;…])</td>
+<td>Compute the 2D power spectrum.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.compute_radial_pspec" title="turbustat.statistics.VCA.compute_radial_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_radial_pspec</span></code></a>([logspacing,&nbsp;max_bin])</td>
+<td>Computes the radially averaged power spectrum.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.fit_2Dpspec" title="turbustat.statistics.VCA.fit_2Dpspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_2Dpspec</span></code></a>([fit_method,&nbsp;p0,&nbsp;low_cut,&nbsp;…])</td>
+<td>Model the 2D power-spectrum surface with an elliptical power-law model.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.fit_pspec" title="turbustat.statistics.VCA.fit_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pspec</span></code></a>([brk,&nbsp;log_break,&nbsp;low_cut,&nbsp;…])</td>
+<td>Fit the 1D Power spectrum using a segmented linear model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.input_data_header" title="turbustat.statistics.VCA.input_data_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_data_header</span></code></a>(data,&nbsp;header[,&nbsp;need_copy])</td>
+<td>Check if the header is given separately from the data type.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.load_beam" title="turbustat.statistics.VCA.load_beam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_beam</span></code></a>([beam])</td>
+<td>Try loading the beam from the header or a given object.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.load_results" title="turbustat.statistics.VCA.load_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_results</span></code></a>(pickle_file)</td>
+<td>Load in a saved pickle file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.plot_fit" title="turbustat.statistics.VCA.plot_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_fit</span></code></a>([show_2D,&nbsp;show_residual,&nbsp;color,&nbsp;…])</td>
+<td>Plot the fitted model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.VCA.run" title="turbustat.statistics.VCA.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>([verbose,&nbsp;beam_correct,&nbsp;apodize_kernel,&nbsp;…])</td>
+<td>Full computation of VCA.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.VCA.save_results" title="turbustat.statistics.VCA.save_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_results</span></code></a>(output_name[,&nbsp;keep_data])</td>
+<td>Save the results of the SCF to avoid re-computing.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes Documentation</p>
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.brk">
+<code class="descname">brk</code><a class="headerlink" href="#turbustat.statistics.VCA.brk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitted break point.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.brk_err">
+<code class="descname">brk_err</code><a class="headerlink" href="#turbustat.statistics.VCA.brk_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>1-sigma on the break point.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.data">
+<code class="descname">data</code><a class="headerlink" href="#turbustat.statistics.VCA.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.distance">
+<code class="descname">distance</code><a class="headerlink" href="#turbustat.statistics.VCA.distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.ellip2D">
+<code class="descname">ellip2D</code><a class="headerlink" href="#turbustat.statistics.VCA.ellip2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitted ellipticity of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.ellip2D_err">
+<code class="descname">ellip2D_err</code><a class="headerlink" href="#turbustat.statistics.VCA.ellip2D_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ellipticity standard error of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.freqs">
+<code class="descname">freqs</code><a class="headerlink" href="#turbustat.statistics.VCA.freqs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corresponding spatial frequencies of the 1D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.header">
+<code class="descname">header</code><a class="headerlink" href="#turbustat.statistics.VCA.header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.need_header_flag">
+<code class="descname">need_header_flag</code><em class="property"> = True</em><a class="headerlink" href="#turbustat.statistics.VCA.need_header_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.no_data_flag">
+<code class="descname">no_data_flag</code><em class="property"> = False</em><a class="headerlink" href="#turbustat.statistics.VCA.no_data_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.ps1D">
+<code class="descname">ps1D</code><a class="headerlink" href="#turbustat.statistics.VCA.ps1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-dimensional power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.ps1D_stddev">
+<code class="descname">ps1D_stddev</code><a class="headerlink" href="#turbustat.statistics.VCA.ps1D_stddev" title="Permalink to this definition">¶</a></dt>
+<dd><p>1-sigma standard deviation of the 1D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.ps2D">
+<code class="descname">ps2D</code><a class="headerlink" href="#turbustat.statistics.VCA.ps2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two-dimensional power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.slope">
+<code class="descname">slope</code><a class="headerlink" href="#turbustat.statistics.VCA.slope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power spectrum slope(s).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.slope2D">
+<code class="descname">slope2D</code><a class="headerlink" href="#turbustat.statistics.VCA.slope2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitted slope of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.slope2D_err">
+<code class="descname">slope2D_err</code><a class="headerlink" href="#turbustat.statistics.VCA.slope2D_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slope standard error of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.slope_err">
+<code class="descname">slope_err</code><a class="headerlink" href="#turbustat.statistics.VCA.slope_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>1-sigma error on the power spectrum slope(s).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.theta2D">
+<code class="descname">theta2D</code><a class="headerlink" href="#turbustat.statistics.VCA.theta2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitted position angle of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.theta2D_err">
+<code class="descname">theta2D_err</code><a class="headerlink" href="#turbustat.statistics.VCA.theta2D_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>Position angle standard error of the 2D power spectrum.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.VCA.wavenumbers">
+<code class="descname">wavenumbers</code><a class="headerlink" href="#turbustat.statistics.VCA.wavenumbers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="turbustat.statistics.VCA.apodizing_kernel">
+<code class="descname">apodizing_kernel</code><span class="sig-paren">(</span><em>kernel_type='tukey'</em>, <em>alpha=0.1</em>, <em>beta=0.0</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_pspec2.py#L272" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.apodizing_kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an apodizing kernel to be applied to the image before taking
+Fourier transform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>window</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt>
+<dd><p class="first last">Apodizing kernel</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.compute_pspec">
+<code class="descname">compute_pspec</code><span class="sig-paren">(</span><em>beam_correct=False</em>, <em>apodize_kernel=None</em>, <em>alpha=0.3</em>, <em>beta=0.0</em>, <em>use_pyfftw=False</em>, <em>threads=1</em>, <em>**pyfftw_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/vca_vcs/vca.html#VCA.compute_pspec"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/vca_vcs/vca.py#L72" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.compute_pspec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the 2D power spectrum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beam_correct</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If a beam object was given, divide the 2D FFT by the beam response.</p>
+</dd>
+<dt><strong>apodize_kernel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">None or ‘splitcosinebell’, ‘hanning’, ‘tukey’, ‘cosinebell’, ‘tophat’</span></dt>
+<dd><p class="first last">If None, no apodization kernel is applied. Otherwise, the type of
+apodizing kernel is given.</p>
+</dd>
+<dt><strong>alpha</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">alpha shape parameter of the apodization kernel. See
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">apodizing_kernel</span></code> for more information.</p>
+</dd>
+<dt><strong>beta</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">beta shape parameter of the apodization kernel. See
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">apodizing_kernel</span></code> for more information.</p>
+</dd>
+<dt><strong>use_pyfftw</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enable to use pyfftw, if it is installed.</p>
+</dd>
+<dt><strong>threads</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Number of threads to use in FFT when using pyfftw.</p>
+</dd>
+<dt><strong>pyfftw_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">Passed to</span></dt>
+<dd><p class="first last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rfft_to_fft</span></code>. See
+<a class="reference external" href="http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html">here</a>
+for a list of accepted kwargs.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.compute_radial_pspec">
+<code class="descname">compute_radial_pspec</code><span class="sig-paren">(</span><em>logspacing=False</em>, <em>max_bin=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_pspec2.py#L56" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.compute_radial_pspec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the radially averaged power spectrum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>logspacing</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Return logarithmically spaced bins for the lags.</p>
+</dd>
+<dt><strong>max_bin</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Maximum spatial frequency to bin values at.</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">passed to <code class="xref py py-obj docutils literal notranslate"><span class="pre">pspec</span></code>.</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.fit_2Dpspec">
+<code class="descname">fit_2Dpspec</code><span class="sig-paren">(</span><em>fit_method='LevMarq'</em>, <em>p0=()</em>, <em>low_cut=None</em>, <em>high_cut=None</em>, <em>bootstrap=True</em>, <em>niters=100</em>, <em>use_azimmask=False</em>, <em>radial_weighting=False</em>, <em>fix_ellip_params=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_pspec2.py#L310" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.fit_2Dpspec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model the 2D power-spectrum surface with an elliptical power-law model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>fit_method</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">The algorithm fitting to use. Only ‘LevMarq’ is currently
+available.</p>
+</dd>
+<dt><strong>p0</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Initial parameters for fitting. If no values are given, the initial
+parameters start from the 1D fit parameters.</p>
+</dd>
+<dt><strong>low_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Lowest frequency to consider in the fit.</p>
+</dd>
+<dt><strong>high_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Highest frequency to consider in the fit.</p>
+</dd>
+<dt><strong>bootstrap</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Bootstrap using the model residuals to estimate the parameter
+standard errors. This tends to give more realistic intervals than
+the covariance matrix.</p>
+</dd>
+<dt><strong>niters</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Number of bootstrap iterations.</p>
+</dd>
+<dt><strong>use_azimmask</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Use the azimuthal mask defined for the 1D spectrum, when azimuthal
+limit have been given.</p>
+</dd>
+<dt><strong>radial_weighting</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">To account for the increasing number of samples at greater radii,
+the fit can be weighted by <span class="math notranslate nohighlight">\(1/\mathrm{radius}\)</span> to emphasize the
+points at small radii. DO NOT enabled weighting when the field is
+elliptical! This will bias the fit parameters! Default is False.</p>
+</dd>
+<dt><strong>fix_ellip_params</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If the field is expected to be isotropic, the ellipticity and theta
+parameters can be fixed in the fit. This will help the fit since
+the isotropic case sits at the edge of the ellipticity parameter
+space and can be difficult to correctly converge to.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.fit_pspec">
+<code class="descname">fit_pspec</code><span class="sig-paren">(</span><em>brk=None</em>, <em>log_break=False</em>, <em>low_cut=None</em>, <em>high_cut=None</em>, <em>min_fits_pts=10</em>, <em>weighted_fit=False</em>, <em>bootstrap=False</em>, <em>bootstrap_kwargs={}</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_pspec2.py#L88" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.fit_pspec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the 1D Power spectrum using a segmented linear model. Note that
+the current implementation allows for only 1 break point in the
+model. If the break point is estimated via a spline, the breaks are
+tested, starting from the largest, until the model finds a good fit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>brk</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or None, optional</span></dt>
+<dd><p class="first last">Guesses for the break points. If given as a list, the length of
+the list sets the number of break points to be fit. If a choice is
+outside of the allowed range from the data, Lm_Seg will raise an
+error. If None, a spline is used to estimate the breaks.</p>
+</dd>
+<dt><strong>log_break</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Sets whether the provided break estimates are log-ed (base 10)
+values. This is disabled by default. When enabled, the brk must
+be a unitless <a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>
+(<code class="xref py py-obj docutils literal notranslate"><span class="pre">u.dimensionless_unscaled</span></code>).</p>
+</dd>
+<dt><strong>low_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Lowest frequency to consider in the fit.</p>
+</dd>
+<dt><strong>high_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Highest frequency to consider in the fit.</p>
+</dd>
+<dt><strong>min_fits_pts</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Sets the minimum number of points needed to fit. If not met, the
+break found is rejected.</p>
+</dd>
+<dt><strong>weighted_fit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Fit using weighted least-squares. The weights are
+the inverse-squared standard deviations in each radial bin.</p>
+</dd>
+<dt><strong>bootstrap</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Bootstrap using the model residuals to estimate the parameter
+standard errors. This tends to give more realistic intervals than
+the covariance matrix.</p>
+</dd>
+<dt><strong>bootstrap_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Pass keyword arguments to <code class="xref py py-obj docutils literal notranslate"><span class="pre">residual_bootstrap</span></code>.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enables verbose mode in Lm_Seg.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.input_data_header">
+<code class="descname">input_data_header</code><span class="sig-paren">(</span><em>data</em>, <em>header</em>, <em>need_copy=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L96" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.input_data_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the header is given separately from the data type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.load_beam">
+<code class="descname">load_beam</code><span class="sig-paren">(</span><em>beam=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L49" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.load_beam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try loading the beam from the header or a given object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beam</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Beam</span></code>, optional</span></dt>
+<dd><p class="first last">The beam.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="turbustat.statistics.VCA.load_results">
+<em class="property">static </em><code class="descname">load_results</code><span class="sig-paren">(</span><em>pickle_file</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L134" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.load_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in a saved pickle file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pickle_file</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of filename to load in.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>self</strong> <span class="classifier-delimiter">:</span> <span class="classifier">SCF instance</span></dt>
+<dd><p class="first last">SCF instance with saved results.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Load saved results.
+&gt;&gt;&gt; scf = SCF.load_results(“scf_saved.pkl”) # doctest: +SKIP</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.plot_fit">
+<code class="descname">plot_fit</code><span class="sig-paren">(</span><em>show_2D=False</em>, <em>show_residual=True</em>, <em>color='r'</em>, <em>fit_color='k'</em>, <em>label=None</em>, <em>fillin_errs=True</em>, <em>symbol='o'</em>, <em>xunit=Unit(&quot;1 / pix&quot;)</em>, <em>save_name=None</em>, <em>use_wavenumber=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_pspec2.py#L468" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.plot_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the fitted model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>show_2D</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Plot the 2D power spectrum with contours for the masked regions
+and 2D fit contours (if the 2D power spectrum was fit).</p>
+</dd>
+<dt><strong>show_residual</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Plot the residuals for the 1D power-spectrum fit.</p>
+</dd>
+<dt><strong>color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Color to use in the plotted points.</p>
+</dd>
+<dt><strong>fit_color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Color to show the fitted relation in. Defaults to <code class="xref py py-obj docutils literal notranslate"><span class="pre">color</span></code> when
+no color is given.</p>
+</dd>
+<dt><strong>label</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Apply a label to the 1D plot. Useful for overplotting multiple
+power-spectra.</p>
+</dd>
+<dt><strong>fillin_errs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Show the range of the standard deviation with as a transparent
+filled in region. When disabled, the standard deviations are shown
+as error bars.</p>
+</dd>
+<dt><strong>symbol</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Plot symbols for the 1D power spectrum.</p>
+</dd>
+<dt><strong>xunit</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Unit.html#astropy.units.Unit" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">astropy.units.Unit</span></code></a>, optional</span></dt>
+<dd><p class="first last">Units for the x-axis. If a header is given, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xunit</span></code> can be given
+in inverse angular units. And if a distance is given, an inverse
+physical unit can also be passed.</p>
+</dd>
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">File name for the plot to be saved. Enables saving when a string
+is given.</p>
+</dd>
+<dt><strong>use_wavenumber</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Convert spatial frequencies to a wavenumber.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>verbose=False</em>, <em>beam_correct=False</em>, <em>apodize_kernel=None</em>, <em>alpha=0.2</em>, <em>beta=0.0</em>, <em>use_pyfftw=False</em>, <em>threads=1</em>, <em>pyfftw_kwargs={}</em>, <em>radial_pspec_kwargs={}</em>, <em>low_cut=None</em>, <em>high_cut=None</em>, <em>fit_2D=True</em>, <em>fit_kwargs={}</em>, <em>fit_2D_kwargs={}</em>, <em>save_name=None</em>, <em>xunit=Unit(&quot;1 / pix&quot;)</em>, <em>use_wavenumber=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/vca_vcs/vca.html#VCA.run"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/vca_vcs/vca.py#L134" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full computation of VCA.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enables plotting.</p>
+</dd>
+<dt><strong>beam_correct</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If a beam object was given, divide the 2D FFT by the beam response.</p>
+</dd>
+<dt><strong>apodize_kernel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">None or ‘splitcosinebell’, ‘hanning’, ‘tukey’, ‘cosinebell’, ‘tophat’</span></dt>
+<dd><p class="first last">If None, no apodization kernel is applied. Otherwise, the type of
+apodizing kernel is given.</p>
+</dd>
+<dt><strong>alpha</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">alpha shape parameter of the apodization kernel. See
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">apodizing_kernel</span></code> for more information.</p>
+</dd>
+<dt><strong>beta</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">beta shape parameter of the apodization kernel. See
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">apodizing_kernel</span></code> for more information.</p>
+</dd>
+<dt><strong>use_pyfftw</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enable to use pyfftw, if it is installed.</p>
+</dd>
+<dt><strong>threads</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Number of threads to use in FFT when using pyfftw.</p>
+</dd>
+<dt><strong>pyfft_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">Passed to</span></dt>
+<dd><p class="first last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rfft_to_fft</span></code>. See
+<a class="reference external" href="https://hgomersall.github.io/pyFFTW/pyfftw/interfaces/interfaces.html#interfaces-additional-args">here</a>
+for a list of accepted kwargs.</p>
+</dd>
+<dt><strong>radial_pspec_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Passed to <a class="reference internal" href="turbustat.statistics.PowerSpectrum.html#turbustat.statistics.PowerSpectrum.compute_radial_pspec" title="turbustat.statistics.PowerSpectrum.compute_radial_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_radial_pspec</span></code></a>.</p>
+</dd>
+<dt><strong>low_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Low frequency cut off in frequencies used in the fitting.</p>
+</dd>
+<dt><strong>high_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">High frequency cut off in frequencies used in the fitting.</p>
+</dd>
+<dt><strong>fit_2D</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Fit an elliptical power-law model to the 2D power spectrum.</p>
+</dd>
+<dt><strong>fit_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Passed to <a class="reference internal" href="turbustat.statistics.PowerSpectrum.html#turbustat.statistics.PowerSpectrum.fit_pspec" title="turbustat.statistics.PowerSpectrum.fit_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pspec</span></code></a>.</p>
+</dd>
+<dt><strong>fit_2D_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Keyword arguments for <a class="reference internal" href="#turbustat.statistics.VCA.fit_2Dpspec" title="turbustat.statistics.VCA.fit_2Dpspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_2Dpspec</span></code></a>. Use the
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code> keywords to provide fit limits.</p>
+</dd>
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str,optional</span></dt>
+<dd><p class="first last">Save the figure when a file name is given.</p>
+</dd>
+<dt><strong>xunit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">u.Unit, optional</span></dt>
+<dd><p class="first last">Choose the unit to convert the x-axis in the plot to.</p>
+</dd>
+<dt><strong>use_wavenumber</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Plot the x-axis as the wavenumber rather than spatial frequency.</p>
+</dd>
+<dt><strong>fit_kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">Passed to <a class="reference internal" href="#turbustat.statistics.VCA.fit_pspec" title="turbustat.statistics.VCA.fit_pspec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pspec</span></code></a>.</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.VCA.save_results">
+<code class="descname">save_results</code><span class="sig-paren">(</span><em>output_name</em>, <em>keep_data=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L109" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.VCA.save_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the results of the SCF to avoid re-computing.
+The pickled file will not include the data cube by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>output_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of the outputted pickle file.</p>
+</dd>
+<dt><strong>keep_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Save the data cube in the pickle file when enabled.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

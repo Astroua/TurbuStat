@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VCS Distance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Wavelet Distance" href="wavelet_example.html" />
+    <link rel="prev" title="VCA Distance" href="vca_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">VCS Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="vca_example.html" title="Previous Chapter: VCA Distance"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; VCA Distance</span>
+    </a>
+  </li>
+  <li>
+    <a href="wavelet_example.html" title="Next Chapter: Wavelet Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Wavelet Distance &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/metrics/vcs_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">VCS Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="vcs-distance">
+<span id="vcsdistmet"></span><h1>VCS Distance<a class="headerlink" href="#vcs-distance" title="Permalink to this headline">¶</a></h1>
+<p>See <a class="reference internal" href="../statistics/vcs_example.html#vcs-tutorial"><span class="std std-ref">the tutorial</span></a> for a description of Velocity Coordinate Spectrum (VCS).</p>
+<p>There are two asymptotic regimes of the VCS corresponding to high and low resolution (<a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2006ApJ...652.1348L/abstract">Lazarian &amp; Pogosyan 2006</a>). The transition between these regimes depends on the spatial resolution (i.e., beam size) of the data, the spectral resolution of the data, and the velocity dispersion. The current VCS implementation in TurbuStat fits a broken linear model to approximate the asymptotic regimes, rather than fitting with the full VCS formalism (<a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2010ApJ...714.1398C/abstract">Chepurnov et al. 2010</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015ApJ...810...33C/abstract">Chepurnov et al. 2015</a>).  We assume that the break point lies at the transition point between the regimes and label velocity frequencies smaller than the break as “large-scale” and frequencies larger than the break as “small-scale”.</p>
+<p>There are four distance definitions for the VCS based on the broken linear modelling described above. All of these distance metrics are based on t-statistics between the VCS for each cube:</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>The difference between the fitted slopes on “large-scales” (below the break position): <code class="xref py py-obj docutils literal notranslate"><span class="pre">large_scale_distance</span></code>.</dt>
+<dd><div class="first math notranslate nohighlight">
+\[d_{\rm large-scale} = \frac{|\beta_{{\rm LS}, 1} - \beta_{{\rm LS}, 2}|}{\sqrt{\sigma_{\beta_{{\rm LS}, 1}}^2 + \sigma_{\beta_{{\rm LS}, 2}}^2}}\]</div>
+<p class="last"><span class="math notranslate nohighlight">\(\beta_{{\rm LS}, i}\)</span> are the slopes of the VCS on large-scales and <span class="math notranslate nohighlight">\(\sigma_{\beta_{{\rm LS}, i}}\)</span> are the uncertainty of the slopes.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>The difference between the fitted slopes on “small-scales” (above the break position): <code class="xref py py-obj docutils literal notranslate"><span class="pre">small_scale_distance</span></code>.</dt>
+<dd><div class="first math notranslate nohighlight">
+\[d_{\rm small-scale} = \frac{|\beta_{{\rm SS}, 1} - \beta_{{\rm SS}, 2}|}{\sqrt{\sigma_{\beta_{{\rm SS}, 1}}^2 + \sigma_{\beta_{{\rm SS}, 2}}^2}}\]</div>
+<p class="last"><span class="math notranslate nohighlight">\(\beta_{{\rm SS}, i}\)</span> are the slopes of the VCS on small-scales and <span class="math notranslate nohighlight">\(\sigma_{\beta_{{\rm SS}, i}}\)</span> are the uncertainty of the slopes.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>The sum of the differences between the slopes in both regimes: <code class="xref py py-obj docutils literal notranslate"><span class="pre">distance</span></code></dt>
+<dd><div class="first last math notranslate nohighlight">
+\[d_{{\rm all}} = d_{\rm large-scale} + d_{\rm small-scale}\]</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>The difference in the fitted break points: <code class="xref py py-obj docutils literal notranslate"><span class="pre">break_distance</span></code></dt>
+<dd><div class="first math notranslate nohighlight">
+\[d_{\rm break} = \frac{|b_{1} - b_{2}|}{\sqrt{\sigma_{b_{1}}^2 + \sigma_{b_{2}}^2}}\]</div>
+<p class="last"><span class="math notranslate nohighlight">\(b_{i}\)</span> are the break locations of the VCS and <span class="math notranslate nohighlight">\(\sigma_{b_{i}}\)</span> are the uncertainties.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<p>More information on the distance metric definitions can be found in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a>.</p>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.VCS_Distance.html#turbustat.statistics.VCS_Distance" title="turbustat.statistics.VCS_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VCS_Distance</span></code></a> class, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">VCS_Distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../api/turbustat.statistics.VCS_Distance.html#turbustat.statistics.VCS_Distance" title="turbustat.statistics.VCS_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VCS_Distance</span></code></a> takes two data cubes as input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>From the <a class="reference internal" href="../statistics/vcs_example.html#vcs-tutorial"><span class="std std-ref">VCS tutorial</span></a>, we know that limits should be placed on the power-spectra.  These limits can be specified with <code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span> <span class="o">=</span> <span class="n">VCS_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">fit_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">low_cut</span><span class="o">=</span><span class="mf">0.025</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>                                   <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">))</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>This will run <a class="reference internal" href="../../api/turbustat.statistics.VCS.html#turbustat.statistics.VCS" title="turbustat.statistics.VCS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VCS</span></code></a> on the given cubes, which can be accessed as <code class="xref py py-obj docutils literal notranslate"><span class="pre">vcs1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">vcs2</span></code>.</p>
+<p>Settings for the VCS fitting can be passed with <code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_kwargs</span></code>, and <code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_kwargs2</span></code> when different setting are required for the second cube. In this example, we set the fitting limits to be used.</p>
+<dl class="docutils">
+<dt>To find the distances between the cube:</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span><span class="o">.</span><span class="n">distance_metric</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.993</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.992</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     3678.</span>
+<span class="go">Date:                Fri, 16 Nov 2018   Prob (F-statistic):           1.96e-86</span>
+<span class="go">Time:                        11:20:09   Log-Likelihood:                -17.089</span>
+<span class="go">No. Observations:                  85   AIC:                             42.18</span>
+<span class="go">Df Residuals:                      81   BIC:                             51.95</span>
+<span class="go">Df Model:                           3</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.2848      0.295      4.354      0.000       0.698       1.872</span>
+<span class="go">x1            -2.1220      0.171    -12.428      0.000      -2.462      -1.782</span>
+<span class="go">x2           -14.5354      0.317    -45.812      0.000     -15.167     -13.904</span>
+<span class="go">x3             0.0715      0.129      0.553      0.582      -0.186       0.329</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        2.570   Durbin-Watson:                   0.089</span>
+<span class="go">Prob(Omnibus):                  0.277   Jarque-Bera (JB):                2.546</span>
+<span class="go">Skew:                          -0.378   Prob(JB):                        0.280</span>
+<span class="go">Kurtosis:                       2.616   Cond. No.                         21.5</span>
+<span class="go">==============================================================================</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.988</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.987</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     2212.</span>
+<span class="go">Date:                Fri, 16 Nov 2018   Prob (F-statistic):           1.43e-77</span>
+<span class="go">Time:                        11:20:09   Log-Likelihood:                -38.551</span>
+<span class="go">No. Observations:                  85   AIC:                             85.10</span>
+<span class="go">Df Residuals:                      81   BIC:                             94.87</span>
+<span class="go">Df Model:                           3</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.5246      0.380      4.014      0.000       0.769       2.280</span>
+<span class="go">x1            -1.9578      0.220     -8.908      0.000      -2.395      -1.520</span>
+<span class="go">x2           -14.7109      0.408    -36.020      0.000     -15.524     -13.898</span>
+<span class="go">x3             0.1178      0.167      0.707      0.482      -0.214       0.449</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        7.714   Durbin-Watson:                   0.059</span>
+<span class="go">Prob(Omnibus):                  0.021   Jarque-Bera (JB):                3.123</span>
+<span class="go">Skew:                          -0.127   Prob(JB):                        0.210</span>
+<span class="go">Kurtosis:                       2.096   Cond. No.                         21.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<img alt="../../_images/vcs_distmet.png" src="../../_images/vcs_distmet.png" />
+<p>This function returns a summary of the broken linear fits to the VCS for each cube. The plot shows the VCS for both cubes; in this example, the two are quite similar.</p>
+<p>The distances between the cubes, as defined above, are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span><span class="o">.</span><span class="n">large_scale_distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.5901343561262037</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span><span class="o">.</span><span class="n">small_scale_distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.01921401163828633</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span><span class="o">.</span><span class="n">distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.60934836776449</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span><span class="o">.</span><span class="n">break_distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.0023172070537929865</span>
+</pre></div>
+</div>
+<p>The difference in the slopes is dominated by <code class="xref py py-obj docutils literal notranslate"><span class="pre">vcs.large_scale_distance</span></code>, while the small-scale slopes are quite similar. The break locations are also similar and give a small <code class="xref py py-obj docutils literal notranslate"><span class="pre">vcs.break_distance</span></code>.</p>
+<p>If many data sets are being compared to a fiducial, a pre-computed <a class="reference internal" href="../../api/turbustat.statistics.VCS.html#turbustat.statistics.VCS" title="turbustat.statistics.VCS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VCS</span></code></a> class can be passed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">VCS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcs_fid</span> <span class="o">=</span> <span class="n">VCS</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">low_cut</span><span class="o">=</span><span class="mf">0.025</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>                            <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcs</span> <span class="o">=</span> <span class="n">VCS_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">fiducial_model</span><span class="o">=</span><span class="n">vcs_fid</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">fit_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">low_cut</span><span class="o">=</span><span class="mf">0.025</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>                                   <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>Note that the data still need to be passed to <a class="reference internal" href="../../api/turbustat.statistics.VCS_Distance.html#turbustat.statistics.VCS_Distance" title="turbustat.statistics.VCS_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VCS_Distance</span></code></a>.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract">Boyden et al. 2016</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract">Boyden et al. 2018</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

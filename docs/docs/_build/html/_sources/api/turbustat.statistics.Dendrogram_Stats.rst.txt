@@ -1,0 +1,71 @@
+Dendrogram_Stats
+================
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Dendrogram_Stats
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Dendrogram_Stats.data
+      ~Dendrogram_Stats.distance
+      ~Dendrogram_Stats.fitvals
+      ~Dendrogram_Stats.header
+      ~Dendrogram_Stats.hists
+      ~Dendrogram_Stats.min_deltas
+      ~Dendrogram_Stats.model
+      ~Dendrogram_Stats.need_header_flag
+      ~Dendrogram_Stats.no_data_flag
+      ~Dendrogram_Stats.numfeatures
+      ~Dendrogram_Stats.tail_slope
+      ~Dendrogram_Stats.tail_slope_err
+      ~Dendrogram_Stats.values
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Dendrogram_Stats.autoset_min_deltas
+      ~Dendrogram_Stats.compute_dendro
+      ~Dendrogram_Stats.fit_numfeat
+      ~Dendrogram_Stats.input_data_header
+      ~Dendrogram_Stats.load_beam
+      ~Dendrogram_Stats.load_dendrogram
+      ~Dendrogram_Stats.load_results
+      ~Dendrogram_Stats.make_hists
+      ~Dendrogram_Stats.plot_fit
+      ~Dendrogram_Stats.run
+      ~Dendrogram_Stats.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: fitvals
+   .. autoattribute:: header
+   .. autoattribute:: hists
+   .. autoattribute:: min_deltas
+   .. autoattribute:: model
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: numfeatures
+   .. autoattribute:: tail_slope
+   .. autoattribute:: tail_slope_err
+   .. autoattribute:: values
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: autoset_min_deltas
+   .. automethod:: compute_dendro
+   .. automethod:: fit_numfeat
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_dendrogram
+   .. automethod:: load_results
+   .. automethod:: make_hists
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

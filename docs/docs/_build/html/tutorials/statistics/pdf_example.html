@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>PDF &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Spatial Power Spectrum" href="pspec_example.html" />
+    <link rel="prev" title="PCA" href="pca_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">PDF</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="pca_example.html" title="Previous Chapter: PCA"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; PCA</span>
+    </a>
+  </li>
+  <li>
+    <a href="pspec_example.html" title="Next Chapter: Spatial Power Spectrum"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Spatial Power... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/statistics/pdf_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">PDF</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="pdf">
+<span id="pdf-tutorial"></span><h1>PDF<a class="headerlink" href="#pdf" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A common technique used in ISM and molecular cloud studies is measurement of the shape of the probability density function (PDF). Often, column density or extinction values are used to construct the PDF. Intensities may also be used, but may be subject to more severe optical depth effects. Properties of the PDF, when related to an analytical form, have been found to correlate with changes in the turbulent properties (e.g., <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract">Kowal et al. 2007</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2010A&amp;A...512A..81F/abstract">Federrath et al. 2010</a>) and gravity (e.g., <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract">Burkhart et al. 2015</a>, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017ApJ...834L...1B/abstract">Burkhart et al. 2017</a>).</p>
+<p>A plethora of papers are devoted to this topic, and there is much debate over the form of these PDFs (<a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015A&amp;A...576L...1L/abstract">Lombardi et al. 2015</a>). TurbuStat’s implementation seeks to be flexible because of this. Parametric and non-parametric measures to describe PDFs are shown below.</p>
+</div>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF" title="turbustat.statistics.PDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDF</span></code></a> code, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">PDF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+</pre></div>
+</div>
+<p>Since the PDF is a one-dimensional view of the data, any dimension data can be passed. For this tutorial, we will use the zeroth moment (integrated intensity):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">Optimization terminated successfully.</span>
+<span class="go">         Current function value: 6.007851</span>
+<span class="go">         Iterations: 34</span>
+<span class="go">         Function evaluations: 69</span>
+<span class="go">                              Likelihood Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   Log-Likelihood:                -98433.</span>
+<span class="go">Model:                     Likelihood   AIC:                         1.969e+05</span>
+<span class="go">Method:            Maximum Likelihood   BIC:                         1.969e+05</span>
+<span class="go">Date:                Sun, 16 Jul 2017</span>
+<span class="go">Time:                        15:06:22</span>
+<span class="go">No. Observations:               16384</span>
+<span class="go">Df Residuals:                   16382</span>
+<span class="go">Df Model:                           2</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">par0           0.4360      0.002    181.019      0.000       0.431       0.441</span>
+<span class="go">par1         225.6771      0.769    293.602      0.000     224.171     227.184</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0.png" src="../../_images/pdf_design4_mom0.png" />
+<p>The resulting PDF and ECDF of the data are plotted, along with a log-normal fit to the PDF. ECDF is the empirical cumulative distribution function defined as the cumulative sum of the data. By default, <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF" title="turbustat.statistics.PDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDF</span></code></a> will fit a log-normal to the PDF. Choosing other models and disabling the fitting are discussed below.</p>
+<p>The fit parameters can be accessed from <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.model_params" title="turbustat.statistics.PDF.model_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_params</span></code></a> and the standard errors from <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.model_stderrs" title="turbustat.statistics.PDF.model_stderrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_stderrs</span></code></a>. The fitting in <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF" title="turbustat.statistics.PDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDF</span></code></a> uses the <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/stats.html#module-scipy.stats" title="(in SciPy v1.2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stats</span></code></a> distributions. The scipy implementation for a <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html">log-normal</a> defines the two fit parameters as <code class="xref py py-obj docutils literal notranslate"><span class="pre">par0</span> <span class="pre">=</span> <span class="pre">exp(mu)</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">par1</span> <span class="pre">=</span> <span class="pre">sigma</span></code>.</p>
+<p>There are several options that can be set. Using <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_val</span></code> will set the lower limit on values to consider in the PDF. <code class="xref py py-obj docutils literal notranslate"><span class="pre">bins</span></code> allows a custom array of bins (edges) to be given. By default, the bins are of equal width, with the number set by the square root of the number of data points (a good estimate when the number of samples is &gt;100).</p>
+<p>With the ECDF calculated, we can check the percentile of different values in the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">find_percentile</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">96.3134765625</span>
+</pre></div>
+</div>
+<p>Or if we want to find the value at a certain percentile:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">find_at_percentile</span><span class="p">(</span><span class="mf">96.3134765625</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">499.98911349468841</span>
+</pre></div>
+</div>
+<p>The values are not exact between the two operations because the ECDF function was computed with finite values. <em>Note that brightness unit conversions are not yet supported and data values should be passed as floats.</em></p>
+<p>If an array of the uncertainties is available, these may be passed as weights:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0_err</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">moment0_error</span><span class="o">.</span><span class="n">data</span><span class="o">**-</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">Optimization terminated successfully.</span>
+<span class="go">         Current function value: 8.470342</span>
+<span class="go">         Iterations: 43</span>
+<span class="go">         Function evaluations: 86</span>
+<span class="go">                              Likelihood Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   Log-Likelihood:            -1.3878e+05</span>
+<span class="go">Model:                     Likelihood   AIC:                         2.776e+05</span>
+<span class="go">Method:            Maximum Likelihood   BIC:                         2.776e+05</span>
+<span class="go">Date:                Sun, 16 Jul 2017</span>
+<span class="go">Time:                        15:06:23</span>
+<span class="go">No. Observations:               16384</span>
+<span class="go">Df Residuals:                   16382</span>
+<span class="go">Df Model:                           2</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">par0           0.4468      0.002    181.019      0.000       0.442       0.452</span>
+<span class="go">par1        2584.0353      9.019    286.499      0.000    2566.358    2601.713</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_weights.png" src="../../_images/pdf_design4_mom0_weights.png" />
+<p>Since the data are now defined as <code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span> <span class="pre">/</span> <span class="pre">stderr^2</span></code>, the fit parameters have changed. While this scaling makes it difficult to use the fit parameters to compare with theoretical preductions, it can be useful when comparing data sets non-parametrically.</p>
+<p>When comparing to the PDFs from other data, adopting a common normalization scheme can aid in highlighting similarities and differences. The four normalizations that can be set with <code class="xref py py-obj docutils literal notranslate"><span class="pre">normalization_type</span></code> are demonstrated below. Adopting different normalizations highlights different portions of the data, making it important to choose a normalization appropriate for the data. Each of these normalizations subtly makes assumptions on the data’s properties. Note that fitting is disabled here since some of the normalization types scale the data to negative values and cannot be fit with a log-normal distribution.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">standardize</span></code> subtracts the mean and divides by the standard deviation; this is appropriate for normally-distributed data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="s1">&#39;standardize&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_stand.png" src="../../_images/pdf_design4_mom0_stand.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">center</span></code> subtracts the mean from the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_center.png" src="../../_images/pdf_design4_mom0_center.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize</span></code> subtracts the minimum in the data and divides by the range in the data, thereby scaling the data between 0 and 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="s1">&#39;normalize&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_norm.png" src="../../_images/pdf_design4_mom0_norm.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_by_mean</span></code> divides the data by its mean. This is the most common normalization found in the literature on PDFs since the commonly used parametric forms (log-normal and power-laws) can be arbitrarily scaled by the mean.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="s1">&#39;normalize_by_mean&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_normmean.png" src="../../_images/pdf_design4_mom0_normmean.png" />
+<p>The example data are well-described by a log-normal, making the normalization by the mean an appropriate choice. Note how the shape of the distribution appears unchanged in these examples, but the axis they’re defined on changes.</p>
+<p>The distribution fitting shown above uses a maximum likelihood estimate (MLE) to find the parameter values and their uncertainties. This works well for well-behaved data, like those used in this tutorial, where the parametric description fits the data well. When this is not the case, the standard errors can be extremely under-estimated. One solution is to adopt a Monte Carlo approach for fitting. When the <a class="reference external" href="http://dan.iel.fm/emcee/current/">emcee</a> package is installed, <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.fit_pdf" title="turbustat.statistics.PDF.fit_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pdf</span></code></a> will fit the distribution using MCMC. Note that all keyword arguments to <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.fit_pdf" title="turbustat.statistics.PDF.fit_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_pdf</span></code></a> can also be passed to <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.run" title="turbustat.statistics.PDF.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fit_type</span><span class="o">=</span><span class="s1">&#39;mcmc&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">Ran chain for 2000 iterations</span>
+<span class="go">Used 20 walkers</span>
+<span class="go">Mean acceptance fraction of 0.722775</span>
+<span class="go">Parameter values: [   0.43589657  225.69177379]</span>
+<span class="go">15th to 85th percentile ranges: [ 0.00498541  1.51322986]</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_mcmc.png" src="../../_images/pdf_design4_mom0_mcmc.png" />
+<p>The MCMC fit finds the same parameter values (see the first example above) with a ~1-sigma range about twice that of the MLE fit. The MCMC chain is ran for 200 burn-in steps, followed by 2000 steps that are used to estimate the distribution parameters. These can be altered by passing <code class="xref py py-obj docutils literal notranslate"><span class="pre">burnin</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">steps</span></code> to the run command above. Other accepted keywords can be found in the <a class="reference external" href="http://dan.iel.fm/emcee/current/api/#emcee.EnsembleSampler.run_mcmc">emcee documentation</a>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">MCMC results should <strong>not</strong> be blindly accepted. It is important to check the behaviour of the chain to ensure it converged and has adequately explored the parameter space around the converged result.</p>
+</div>
+<p>To check if the MCMC has converged, a trace plot of parameter value versus step in the chain can be made:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">trace_plot</span><span class="p">()</span>  
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_mcmc_trace.png" src="../../_images/pdf_design4_mom0_mcmc_trace.png" />
+<p>We can also look at the sample distributions for each fit parameter using a corner plot. This requires the <a class="reference external" href="https://corner.readthedocs.io/en/latest/">corner.py</a> package to be installed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">corner_plot</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_mcmc_corner.png" src="../../_images/pdf_design4_mom0_mcmc_corner.png" />
+<p>Each parameter distribution is showed (1D histograms) and their interaction (2D histogram), which is useful for exploring covariant parameters in the fit. The dotted lines show the 16th, 50th, and 84th quantiles. Each of the distributions here is close to normally-distributed and appears well-behaved.</p>
+<p>The log-normal distribution is typically not used for observational data since low column densities or extinction regions have greater uncertainties and/or are incompletely sampled in the data (see <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015A&amp;A...576L...1L/abstract">Lombardi et al. 2015</a>). A power-law model may be a better model choice in this case. We can choose to fit other models by passing different <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rv_continuous</span></code></a> models to <code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code> in <a class="reference internal" href="../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.run" title="turbustat.statistics.PDF.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>. Note that the fit will fail if the data are outside of the accepted range for the given model (such as negative values for the log-normal distribution).</p>
+<p>For this example, let us consider values below 250 K m/s to be unreliable. We will fit a <a class="reference external" href="https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.stats.pareto.html#scipy.stats.pareto">pareto</a> distribution to the integrated intensities above this (the scipy powerlaw model requires a positive index).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">stats</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_data</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pareto</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="mf">250.0</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_mom0</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">stats</span><span class="o">.</span><span class="n">pareto</span><span class="p">,</span>
+<span class="gp">... </span>             <span class="n">fit_type</span><span class="o">=</span><span class="s1">&#39;mle&#39;</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">Optimization terminated successfully.</span>
+<span class="go">         Current function value: 5.641058</span>
+<span class="go">         Iterations: 84</span>
+<span class="go">         Function evaluations: 159</span>
+<span class="go">Fitted parameters: [   3.27946996   -0.58133183  250.61486355]</span>
+<span class="go">Covariance calculation failed.</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4_mom0_plaw.png" src="../../_images/pdf_design4_mom0_plaw.png" />
+<p>Based on the deviations in the ECDF plot, the log-normal fit was better for this data, though the power-law does adequately describe the data at high integrated intensities. But, there are issues with the fit. The MLE routine diverges when calculating the covariance matrix and standard errors. There are important nuances for fitting heavy-tailed distributions that are not included in the MLE fitting here. See the <a class="reference external" href="https://github.com/jeffalstott/powerlaw">powerlaw</a> package for the correct approach.</p>
+<p>Note that an additional parameter, <code class="xref py py-obj docutils literal notranslate"><span class="pre">floc</span></code>, has been set. This stops the <code class="xref py py-obj docutils literal notranslate"><span class="pre">loc</span></code> parameter from being fixed in the fit, which is appropriate for the default fitting of a log-normal distribution. The <code class="xref py py-obj docutils literal notranslate"><span class="pre">scale</span></code> parameter can similarly be fixed with <code class="xref py py-obj docutils literal notranslate"><span class="pre">fscale</span></code>. See the <a class="reference external" href="https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous">scipy.stats documentation</a> for an explanation of these parameters.</p>
+<p>All of these examples use the zeroth moment from the data. Since PDFs are equally valid for any dimension of data, we can also find the PDF for the PPV cube. The class and function calls are identical:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spectral_cube</span> <span class="k">import</span> <span class="n">SpectralCube</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span> <span class="o">=</span> <span class="n">SpectralCube</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf_cube</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/pdf_design4.png" src="../../_images/pdf_design4.png" />
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>As stated above, there are a ton of papers measuring properties of the PDF. Below are just a few examples with different PDF uses and discussions:</p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1995ApJ...450L..27M/abstract">Miesch et al. 1995</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001ApJ...546..980O/abstract">Ostriker et al. 2001</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract">Kowal et al. 2007</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008ApJ...688L..79F/abstract">Federrath et al. 2008</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2009ApJ...692...91G/abstract">Goodman et al. 2009</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2010A&amp;A...512A..81F/abstract">Federrath et al. 2010</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract">Burkhart et al. 2015</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015A&amp;A...576L...1L/abstract">Lombardi et al. 2015</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017A&amp;A...606L...2A/abstract">Alves et al. 2017</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017ApJ...834L...1B/abstract">Burkhart et al. 2017</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2018ApJ...859..162C/abstract">Chen et al. 2018</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

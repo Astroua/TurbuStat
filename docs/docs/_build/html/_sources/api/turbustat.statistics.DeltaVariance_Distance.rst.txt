@@ -1,0 +1,29 @@
+DeltaVariance_Distance
+======================
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: DeltaVariance_Distance
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~DeltaVariance_Distance.curve_distance
+      ~DeltaVariance_Distance.slope_distance
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~DeltaVariance_Distance.distance_metric
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: curve_distance
+   .. autoattribute:: slope_distance
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: distance_metric

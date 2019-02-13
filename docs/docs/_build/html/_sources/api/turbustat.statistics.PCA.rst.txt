@@ -1,0 +1,95 @@
+PCA
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: PCA
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~PCA.data
+      ~PCA.distance
+      ~PCA.eigvals
+      ~PCA.eigvecs
+      ~PCA.gamma
+      ~PCA.gamma_error_range
+      ~PCA.header
+      ~PCA.index
+      ~PCA.index_error_range
+      ~PCA.n_eigs
+      ~PCA.need_header_flag
+      ~PCA.no_data_flag
+      ~PCA.total_variance
+      ~PCA.var_proportion
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~PCA.autocorr_images
+      ~PCA.autocorr_spec
+      ~PCA.compute_pca
+      ~PCA.eigimages
+      ~PCA.find_spatial_widths
+      ~PCA.find_spectral_widths
+      ~PCA.fit_plaw
+      ~PCA.input_data_header
+      ~PCA.intercept
+      ~PCA.intercept_error_range
+      ~PCA.load_beam
+      ~PCA.load_results
+      ~PCA.model
+      ~PCA.noise_ACF
+      ~PCA.plot_fit
+      ~PCA.run
+      ~PCA.save_results
+      ~PCA.sonic_length
+      ~PCA.spatial_width
+      ~PCA.spatial_width_error
+      ~PCA.spectral_width
+      ~PCA.spectral_width_error
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: eigvals
+   .. autoattribute:: eigvecs
+   .. autoattribute:: gamma
+   .. autoattribute:: gamma_error_range
+   .. autoattribute:: header
+   .. autoattribute:: index
+   .. autoattribute:: index_error_range
+   .. autoattribute:: n_eigs
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: total_variance
+   .. autoattribute:: var_proportion
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: autocorr_images
+   .. automethod:: autocorr_spec
+   .. automethod:: compute_pca
+   .. automethod:: eigimages
+   .. automethod:: find_spatial_widths
+   .. automethod:: find_spectral_widths
+   .. automethod:: fit_plaw
+   .. automethod:: input_data_header
+   .. automethod:: intercept
+   .. automethod:: intercept_error_range
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: model
+   .. automethod:: noise_ACF
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results
+   .. automethod:: sonic_length
+   .. automethod:: spatial_width
+   .. automethod:: spatial_width_error
+   .. automethod:: spectral_width
+   .. automethod:: spectral_width_error

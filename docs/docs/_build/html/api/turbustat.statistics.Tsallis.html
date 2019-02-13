@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tsallis &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="VCA" href="turbustat.statistics.VCA.html" />
+    <link rel="prev" title="StatMoments_Distance" href="turbustat.statistics.StatMoments_Distance.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics.html">Statistics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Tsallis</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="turbustat.statistics.StatMoments_Distance.html" title="Previous Chapter: StatMoments_Distance"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; StatMoments_Distance</span>
+    </a>
+  </li>
+  <li>
+    <a href="turbustat.statistics.VCA.html" title="Next Chapter: VCA"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VCA &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/api/turbustat.statistics.Tsallis.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Tsallis</a></li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="tsallis">
+<h1>Tsallis<a class="headerlink" href="#tsallis" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="turbustat.statistics.Tsallis">
+<em class="property">class </em><code class="descclassname">turbustat.statistics.</code><code class="descname">Tsallis</code><span class="sig-paren">(</span><em>img</em>, <em>header=None</em>, <em>lags=None</em>, <em>distance=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L15" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">turbustat.statistics.base_statistic.BaseStatisticMixIn</span></code></p>
+<p>The Tsallis Distribution (see Tofflemire et al., 2011)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>img</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or spectral_cube.Projection or spectral_cube.Slice</span></dt>
+<dd><p class="first last">2D image.</p>
+</dd>
+<dt><strong>header</strong> <span class="classifier-delimiter">:</span> <span class="classifier">FITS header, optional</span></dt>
+<dd><p class="first last">The image header. Needed for the pixel scale.</p>
+</dd>
+<dt><strong>lags</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Give the spatial lag values to compute the distribution at. The
+default lag sizes are powers of 2 up to half the image size (so for a
+128 by 128 image, the lags will be [1, 2, 4, 8, 16, 32, 64]).</p>
+</dd>
+<dt><strong>distance</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code></a>, optional</span></dt>
+<dd><p class="first last">Physical distance to the region in the data.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes Summary</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.data" title="turbustat.statistics.Tsallis.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.distance" title="turbustat.statistics.Tsallis.distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.header" title="turbustat.statistics.Tsallis.header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">header</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.lag_arrays" title="turbustat.statistics.Tsallis.lag_arrays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lag_arrays</span></code></a></td>
+<td>Arrays of the image computed at different lags.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.lag_distribs" title="turbustat.statistics.Tsallis.lag_distribs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lag_distribs</span></code></a></td>
+<td>Histogram bins and values compute from <a class="reference internal" href="#turbustat.statistics.Tsallis.lag_arrays" title="turbustat.statistics.Tsallis.lag_arrays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lag_arrays</span></code></a>.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.lags" title="turbustat.statistics.Tsallis.lags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lags</span></code></a></td>
+<td>Lag values to calculate the statistics at.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.need_header_flag" title="turbustat.statistics.Tsallis.need_header_flag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">need_header_flag</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.no_data_flag" title="turbustat.statistics.Tsallis.no_data_flag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">no_data_flag</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.tsallis_chisq" title="turbustat.statistics.Tsallis.tsallis_chisq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsallis_chisq</span></code></a></td>
+<td>Reduced chi-squared values for the fit at each lag value.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.tsallis_params" title="turbustat.statistics.Tsallis.tsallis_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsallis_params</span></code></a></td>
+<td>Parameters of the Tsallis distribution fit at each lag value.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.tsallis_stderrs" title="turbustat.statistics.Tsallis.tsallis_stderrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsallis_stderrs</span></code></a></td>
+<td>Standard errors of the Tsallis distribution fit at each lag value.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.tsallis_table" title="turbustat.statistics.Tsallis.tsallis_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsallis_table</span></code></a></td>
+<td>Return the fit parameters, standard error, and chi-squared values as an <a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.table.Table.html#astropy.table.Table" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Table</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Summary</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.fit_tsallis" title="turbustat.statistics.Tsallis.fit_tsallis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_tsallis</span></code></a>([sigma_clip])</td>
+<td>Fit the Tsallis distributions.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.input_data_header" title="turbustat.statistics.Tsallis.input_data_header"><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_data_header</span></code></a>(data,&nbsp;header[,&nbsp;need_copy])</td>
+<td>Check if the header is given separately from the data type.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.load_beam" title="turbustat.statistics.Tsallis.load_beam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_beam</span></code></a>([beam])</td>
+<td>Try loading the beam from the header or a given object.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.load_results" title="turbustat.statistics.Tsallis.load_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_results</span></code></a>(pickle_file)</td>
+<td>Load in a saved pickle file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.make_tsallis" title="turbustat.statistics.Tsallis.make_tsallis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tsallis</span></code></a>([periodic,&nbsp;num_bins])</td>
+<td>Calculate the Tsallis distribution at each lag.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.plot_fit" title="turbustat.statistics.Tsallis.plot_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_fit</span></code></a>([save_name,&nbsp;color,&nbsp;fit_color])</td>
+<td>Plot the distributions and fits to the Tsallis function.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.plot_parameters" title="turbustat.statistics.Tsallis.plot_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_parameters</span></code></a>([save_name])</td>
+<td>Plot the fit parameters as a function of lag.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.run" title="turbustat.statistics.Tsallis.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>([verbose,&nbsp;num_bins,&nbsp;periodic,&nbsp;…])</td>
+<td>Run all steps.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.Tsallis.save_results" title="turbustat.statistics.Tsallis.save_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_results</span></code></a>(output_name[,&nbsp;keep_data])</td>
+<td>Save the results of the SCF to avoid re-computing.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes Documentation</p>
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.data">
+<code class="descname">data</code><a class="headerlink" href="#turbustat.statistics.Tsallis.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.distance">
+<code class="descname">distance</code><a class="headerlink" href="#turbustat.statistics.Tsallis.distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.header">
+<code class="descname">header</code><a class="headerlink" href="#turbustat.statistics.Tsallis.header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.lag_arrays">
+<code class="descname">lag_arrays</code><a class="headerlink" href="#turbustat.statistics.Tsallis.lag_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrays of the image computed at different lags.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.lag_distribs">
+<code class="descname">lag_distribs</code><a class="headerlink" href="#turbustat.statistics.Tsallis.lag_distribs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Histogram bins and values compute from <a class="reference internal" href="#turbustat.statistics.Tsallis.lag_arrays" title="turbustat.statistics.Tsallis.lag_arrays"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lag_arrays</span></code></a>. The
+histogram values are in log10.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.lags">
+<code class="descname">lags</code><a class="headerlink" href="#turbustat.statistics.Tsallis.lags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lag values to calculate the statistics at.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.need_header_flag">
+<code class="descname">need_header_flag</code><em class="property"> = True</em><a class="headerlink" href="#turbustat.statistics.Tsallis.need_header_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.no_data_flag">
+<code class="descname">no_data_flag</code><em class="property"> = False</em><a class="headerlink" href="#turbustat.statistics.Tsallis.no_data_flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.tsallis_chisq">
+<code class="descname">tsallis_chisq</code><a class="headerlink" href="#turbustat.statistics.Tsallis.tsallis_chisq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduced chi-squared values for the fit at each lag value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.tsallis_params">
+<code class="descname">tsallis_params</code><a class="headerlink" href="#turbustat.statistics.Tsallis.tsallis_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters of the Tsallis distribution fit at each lag value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.tsallis_stderrs">
+<code class="descname">tsallis_stderrs</code><a class="headerlink" href="#turbustat.statistics.Tsallis.tsallis_stderrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard errors of the Tsallis distribution fit at each lag value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="turbustat.statistics.Tsallis.tsallis_table">
+<code class="descname">tsallis_table</code><a class="headerlink" href="#turbustat.statistics.Tsallis.tsallis_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the fit parameters, standard error, and chi-squared values as
+an <a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.table.Table.html#astropy.table.Table" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Table</span></code></a>.</p>
+</dd></dl>
+
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.fit_tsallis">
+<code class="descname">fit_tsallis</code><span class="sig-paren">(</span><em>sigma_clip=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis.fit_tsallis"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L161" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.fit_tsallis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the Tsallis distributions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>sigma_clip</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">Sets the sigma value to clip data at. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>,
+no clipping is performed on the data. Defaults to 5.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.input_data_header">
+<code class="descname">input_data_header</code><span class="sig-paren">(</span><em>data</em>, <em>header</em>, <em>need_copy=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L96" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.input_data_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the header is given separately from the data type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.load_beam">
+<code class="descname">load_beam</code><span class="sig-paren">(</span><em>beam=None</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L49" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.load_beam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try loading the beam from the header or a given object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beam</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Beam</span></code>, optional</span></dt>
+<dd><p class="first last">The beam.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="turbustat.statistics.Tsallis.load_results">
+<em class="property">static </em><code class="descname">load_results</code><span class="sig-paren">(</span><em>pickle_file</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L134" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.load_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in a saved pickle file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pickle_file</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of filename to load in.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>self</strong> <span class="classifier-delimiter">:</span> <span class="classifier">SCF instance</span></dt>
+<dd><p class="first last">SCF instance with saved results.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Load saved results.
+&gt;&gt;&gt; scf = SCF.load_results(“scf_saved.pkl”) # doctest: +SKIP</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.make_tsallis">
+<code class="descname">make_tsallis</code><span class="sig-paren">(</span><em>periodic=True</em>, <em>num_bins=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis.make_tsallis"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L85" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.make_tsallis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the Tsallis distribution at each lag.
+We standardize each distribution such that it has a mean of zero and
+variance of one before fitting.</p>
+<p>If the lag values are fractions of a pixel when converted to pixel
+units, the lag is rounded down to the next smallest integer value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>periodic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Use for simulations with periodic boundaries.</p>
+</dd>
+<dt><strong>num_bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Number of bins to use in the histograms. Defaults to the
+square-root of the number of finite points in the image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.plot_fit">
+<code class="descname">plot_fit</code><span class="sig-paren">(</span><em>save_name=None</em>, <em>color='r'</em>, <em>fit_color='k'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis.plot_fit"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L279" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.plot_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the distributions and fits to the Tsallis function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Save name for the figure. Enables saving the plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.plot_parameters">
+<code class="descname">plot_parameters</code><span class="sig-paren">(</span><em>save_name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis.plot_parameters"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L238" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.plot_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the fit parameters as a function of lag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str,optional</span></dt>
+<dd><p class="first last">Save name for the figure. Enables saving the plot.</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">passed to <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.errorbar.html#matplotlib.pyplot.errorbar" title="(in Matplotlib v3.0.2)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">errorbar</span></code></a>.</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>verbose=False</em>, <em>num_bins=None</em>, <em>periodic=True</em>, <em>sigma_clip=5</em>, <em>save_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/tsallis/tsallis.html#Tsallis.run"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/tsallis/tsallis.py#L324" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run all steps.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enables plotting.</p>
+</dd>
+<dt><strong>num_bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Sets the number of bins to use in the lag histograms. Passed
+to <a class="reference internal" href="#turbustat.statistics.Tsallis.make_tsallis" title="turbustat.statistics.Tsallis.make_tsallis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tsallis</span></code></a>.</p>
+</dd>
+<dt><strong>periodic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Treat periodic boundaries. Passed
+to <a class="reference internal" href="#turbustat.statistics.Tsallis.make_tsallis" title="turbustat.statistics.Tsallis.make_tsallis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tsallis</span></code></a>. Enabled by default.</p>
+</dd>
+<dt><strong>sigma_clip</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">Sets the sigma value to clip data at.
+Passed to <a class="reference internal" href="#turbustat.statistics.Tsallis.fit_tsallis" title="turbustat.statistics.Tsallis.fit_tsallis"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_tsallis()</span></code></a>.</p>
+</dd>
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str,optional</span></dt>
+<dd><p class="first last">Save the figure when a file name is given.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.Tsallis.save_results">
+<code class="descname">save_results</code><span class="sig-paren">(</span><em>output_name</em>, <em>keep_data=False</em><span class="sig-paren">)</span><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/base_statistic.py#L109" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.Tsallis.save_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the results of the SCF to avoid re-computing.
+The pickled file will not include the data cube by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>output_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Name of the outputted pickle file.</p>
+</dd>
+<dt><strong>keep_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Save the data cube in the pickle file when enabled.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

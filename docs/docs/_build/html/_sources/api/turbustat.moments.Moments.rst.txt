@@ -1,0 +1,55 @@
+Moments
+=======
+
+.. currentmodule:: turbustat.moments
+
+.. autoclass:: Moments
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Moments.linewidth
+      ~Moments.linewidth_err
+      ~Moments.moment0
+      ~Moments.moment0_err
+      ~Moments.moment1
+      ~Moments.moment1_err
+      ~Moments.scale
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Moments.all_moment_errs
+      ~Moments.all_moments
+      ~Moments.apply_mask
+      ~Moments.from_fits
+      ~Moments.get_prop_hdrs
+      ~Moments.make_moment_errors
+      ~Moments.make_moments
+      ~Moments.to_dict
+      ~Moments.to_fits
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: linewidth
+   .. autoattribute:: linewidth_err
+   .. autoattribute:: moment0
+   .. autoattribute:: moment0_err
+   .. autoattribute:: moment1
+   .. autoattribute:: moment1_err
+   .. autoattribute:: scale
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: all_moment_errs
+   .. automethod:: all_moments
+   .. automethod:: apply_mask
+   .. automethod:: from_fits
+   .. automethod:: get_prop_hdrs
+   .. automethod:: make_moment_errors
+   .. automethod:: make_moments
+   .. automethod:: to_dict
+   .. automethod:: to_fits

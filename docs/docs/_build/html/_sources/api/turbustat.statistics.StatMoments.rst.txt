@@ -1,0 +1,79 @@
+StatMoments
+===========
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: StatMoments
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~StatMoments.data
+      ~StatMoments.distance
+      ~StatMoments.header
+      ~StatMoments.kurtosis_array
+      ~StatMoments.kurtosis_extrema
+      ~StatMoments.kurtosis_hist
+      ~StatMoments.mean_array
+      ~StatMoments.mean_extrema
+      ~StatMoments.mean_hist
+      ~StatMoments.need_header_flag
+      ~StatMoments.no_data_flag
+      ~StatMoments.radius
+      ~StatMoments.skewness_array
+      ~StatMoments.skewness_extrema
+      ~StatMoments.skewness_hist
+      ~StatMoments.variance_array
+      ~StatMoments.variance_extrema
+      ~StatMoments.variance_hist
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~StatMoments.array_moments
+      ~StatMoments.compute_spatial_distrib
+      ~StatMoments.input_data_header
+      ~StatMoments.load_beam
+      ~StatMoments.load_results
+      ~StatMoments.make_spatial_histograms
+      ~StatMoments.plot_histograms
+      ~StatMoments.plot_maps
+      ~StatMoments.run
+      ~StatMoments.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: header
+   .. autoattribute:: kurtosis_array
+   .. autoattribute:: kurtosis_extrema
+   .. autoattribute:: kurtosis_hist
+   .. autoattribute:: mean_array
+   .. autoattribute:: mean_extrema
+   .. autoattribute:: mean_hist
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: radius
+   .. autoattribute:: skewness_array
+   .. autoattribute:: skewness_extrema
+   .. autoattribute:: skewness_hist
+   .. autoattribute:: variance_array
+   .. autoattribute:: variance_extrema
+   .. autoattribute:: variance_hist
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: array_moments
+   .. automethod:: compute_spatial_distrib
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: make_spatial_histograms
+   .. automethod:: plot_histograms
+   .. automethod:: plot_maps
+   .. automethod:: run
+   .. automethod:: save_results

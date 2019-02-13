@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>PDF_Distance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PSpec_Distance" href="turbustat.statistics.PSpec_Distance.html" />
+    <link rel="prev" title="PDF" href="turbustat.statistics.PDF.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics.html">Statistics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">PDF_Distance</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="turbustat.statistics.PDF.html" title="Previous Chapter: PDF"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; PDF</span>
+    </a>
+  </li>
+  <li>
+    <a href="turbustat.statistics.PSpec_Distance.html" title="Next Chapter: PSpec_Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">PSpec_Distance &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/api/turbustat.statistics.PDF_Distance.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">PDF_Distance</a></li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="pdf-distance">
+<h1>PDF_Distance<a class="headerlink" href="#pdf-distance" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="turbustat.statistics.PDF_Distance">
+<em class="property">class </em><code class="descclassname">turbustat.statistics.</code><code class="descname">PDF_Distance</code><span class="sig-paren">(</span><em>img1</em>, <em>img2</em>, <em>min_val1=-inf</em>, <em>min_val2=-inf</em>, <em>do_fit=True</em>, <em>normalization_type=None</em>, <em>nbins=None</em>, <em>weights1=None</em>, <em>weights2=None</em>, <em>bin_min=None</em>, <em>bin_max=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L543" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Calculate the distance between two arrays using their PDFs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>img1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or spectral_cube.Projection or spectral_cube.Slice or SpectralCube</span></dt>
+<dd><p class="first last">Array (1-3D).</p>
+</dd>
+<dt><strong>img2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or spectral_cube.Projection or spectral_cube.Slice or SpectralCube</span></dt>
+<dd><p class="first last">Array (1-3D).</p>
+</dd>
+<dt><strong>min_val1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Minimum value to keep in img1</p>
+</dd>
+<dt><strong>min_val2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Minimum value to keep in img2</p>
+</dd>
+<dt><strong>do_fit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enables fitting a lognormal distribution to each data set.</p>
+</dd>
+<dt><strong>normalization_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">{“normalize”, “normalize_by_mean”}, optional</span></dt>
+<dd><p class="first last">See <code class="xref py py-obj docutils literal notranslate"><span class="pre">data_normalization</span></code>.</p>
+</dd>
+<dt><strong>nbins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Manually set the number of bins to use for creating the PDFs.</p>
+</dd>
+<dt><strong>weights1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or spectral_cube.Projection or spectral_cube.Slice or SpectralCube, optional</span></dt>
+<dd><p class="first last">Weights to be used with img1</p>
+</dd>
+<dt><strong>weights2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray or astropy.io.fits.PrimaryHDU or astropy.io.fits.ImageHDU or spectral_cube.Projection or spectral_cube.Slice or SpectralCube, optional</span></dt>
+<dd><p class="first last">Weights to be used with img2</p>
+</dd>
+<dt><strong>bin_min</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Minimum value to use for the histogram bins <em>after</em> normalization is
+applied.</p>
+</dd>
+<dt><strong>bin_max</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Maximum value to use for the histogram bins <em>after</em> normalization is
+applied.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Summary</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.PDF_Distance.compute_ad_distance" title="turbustat.statistics.PDF_Distance.compute_ad_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_ad_distance</span></code></a>()</td>
+<td>Compute the distance using the Anderson-Darling Test.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.PDF_Distance.compute_hellinger_distance" title="turbustat.statistics.PDF_Distance.compute_hellinger_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_hellinger_distance</span></code></a>()</td>
+<td>Computes the Hellinger Distance between the two PDFs.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.PDF_Distance.compute_ks_distance" title="turbustat.statistics.PDF_Distance.compute_ks_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_ks_distance</span></code></a>()</td>
+<td>Compute the distance using the KS Test.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#turbustat.statistics.PDF_Distance.compute_lognormal_distance" title="turbustat.statistics.PDF_Distance.compute_lognormal_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_lognormal_distance</span></code></a>()</td>
+<td>Compute the combined t-statistic for the difference in the widths of a lognormal distribution.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#turbustat.statistics.PDF_Distance.distance_metric" title="turbustat.statistics.PDF_Distance.distance_metric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance_metric</span></code></a>([statistic,&nbsp;verbose,&nbsp;…])</td>
+<td>Calculate the distance.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="method">
+<dt id="turbustat.statistics.PDF_Distance.compute_ad_distance">
+<code class="descname">compute_ad_distance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance.compute_ad_distance"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L630" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance.compute_ad_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the distance using the Anderson-Darling Test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.PDF_Distance.compute_hellinger_distance">
+<code class="descname">compute_hellinger_distance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance.compute_hellinger_distance"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L609" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance.compute_hellinger_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Hellinger Distance between the two PDFs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.PDF_Distance.compute_ks_distance">
+<code class="descname">compute_ks_distance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance.compute_ks_distance"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L620" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance.compute_ks_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the distance using the KS Test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.PDF_Distance.compute_lognormal_distance">
+<code class="descname">compute_lognormal_distance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance.compute_lognormal_distance"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L644" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance.compute_lognormal_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the combined t-statistic for the difference in the widths of
+a lognormal distribution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="turbustat.statistics.PDF_Distance.distance_metric">
+<code class="descname">distance_metric</code><span class="sig-paren">(</span><em>statistic='all'</em>, <em>verbose=False</em>, <em>plot_kwargs1={'color': 'b'</em>, <em>'label': '1'</em>, <em>'marker': 'D'}</em>, <em>plot_kwargs2={'color': 'g'</em>, <em>'label': '2'</em>, <em>'marker': 'o'}</em>, <em>save_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/turbustat/statistics/pdf/compare_pdf.html#PDF_Distance.distance_metric"><span class="viewcode-link">[source]</span></a><a class="reference external" href="http://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics/pdf/compare_pdf.py#L663" title="Push the Edit button on the next page"><span class="edit-on-github viewcode-link">&nbsp;[edit on github]</span></a><a class="headerlink" href="#turbustat.statistics.PDF_Distance.distance_metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance.
+<em>NOTE:</em> The data are standardized before comparing to ensure the
+distance is calculated on the same scales.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>statistic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">‘all’, ‘hellinger’, ‘ks’, ‘lognormal’</span></dt>
+<dd><p class="first last">Which measure of distance to use.</p>
+</dd>
+<dt><strong>labels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">Sets the labels in the output plot.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Enables plotting.</p>
+</dd>
+<dt><strong>plot_kwargs1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Pass kwargs to <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.0.2)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a> for
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset1</span></code>.</p>
+</dd>
+<dt><strong>plot_kwargs2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict, optional</span></dt>
+<dd><p class="first last">Pass kwargs to <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.0.2)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a> for
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset2</span></code>.</p>
+</dd>
+<dt><strong>save_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str,optional</span></dt>
+<dd><p class="first last">Save the figure when a file name is given.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

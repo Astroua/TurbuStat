@@ -1,0 +1,69 @@
+Wavelet
+=======
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Wavelet
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Wavelet.Wf
+      ~Wavelet.brk
+      ~Wavelet.brk_err
+      ~Wavelet.data
+      ~Wavelet.distance
+      ~Wavelet.fit_range
+      ~Wavelet.header
+      ~Wavelet.need_header_flag
+      ~Wavelet.no_data_flag
+      ~Wavelet.scales
+      ~Wavelet.slope
+      ~Wavelet.slope_err
+      ~Wavelet.stddev
+      ~Wavelet.values
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Wavelet.compute_transform
+      ~Wavelet.fit_transform
+      ~Wavelet.fitted_model
+      ~Wavelet.input_data_header
+      ~Wavelet.load_beam
+      ~Wavelet.load_results
+      ~Wavelet.plot_transform
+      ~Wavelet.run
+      ~Wavelet.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: Wf
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: fit_range
+   .. autoattribute:: header
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: scales
+   .. autoattribute:: slope
+   .. autoattribute:: slope_err
+   .. autoattribute:: stddev
+   .. autoattribute:: values
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: compute_transform
+   .. automethod:: fit_transform
+   .. automethod:: fitted_model
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_transform
+   .. automethod:: run
+   .. automethod:: save_results

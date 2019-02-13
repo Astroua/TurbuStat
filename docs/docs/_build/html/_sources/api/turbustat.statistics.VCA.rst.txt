@@ -1,0 +1,85 @@
+VCA
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: VCA
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~VCA.brk
+      ~VCA.brk_err
+      ~VCA.data
+      ~VCA.distance
+      ~VCA.ellip2D
+      ~VCA.ellip2D_err
+      ~VCA.freqs
+      ~VCA.header
+      ~VCA.need_header_flag
+      ~VCA.no_data_flag
+      ~VCA.ps1D
+      ~VCA.ps1D_stddev
+      ~VCA.ps2D
+      ~VCA.slope
+      ~VCA.slope2D
+      ~VCA.slope2D_err
+      ~VCA.slope_err
+      ~VCA.theta2D
+      ~VCA.theta2D_err
+      ~VCA.wavenumbers
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~VCA.apodizing_kernel
+      ~VCA.compute_pspec
+      ~VCA.compute_radial_pspec
+      ~VCA.fit_2Dpspec
+      ~VCA.fit_pspec
+      ~VCA.input_data_header
+      ~VCA.load_beam
+      ~VCA.load_results
+      ~VCA.plot_fit
+      ~VCA.run
+      ~VCA.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: ellip2D
+   .. autoattribute:: ellip2D_err
+   .. autoattribute:: freqs
+   .. autoattribute:: header
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: ps1D
+   .. autoattribute:: ps1D_stddev
+   .. autoattribute:: ps2D
+   .. autoattribute:: slope
+   .. autoattribute:: slope2D
+   .. autoattribute:: slope2D_err
+   .. autoattribute:: slope_err
+   .. autoattribute:: theta2D
+   .. autoattribute:: theta2D_err
+   .. autoattribute:: wavenumbers
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: apodizing_kernel
+   .. automethod:: compute_pspec
+   .. automethod:: compute_radial_pspec
+   .. automethod:: fit_2Dpspec
+   .. automethod:: fit_pspec
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.statistics.pca.pca &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.statistics.pca.pca</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">..base_statistic</span> <span class="k">import</span> <span class="n">BaseStatisticMixIn</span>
+<span class="kn">from</span> <span class="nn">...io</span> <span class="k">import</span> <span class="n">common_types</span><span class="p">,</span> <span class="n">threed_types</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">find_beam_width</span>
+
+<span class="c1"># PCA utilities</span>
+<span class="kn">from</span> <span class="nn">..threeD_to_twoD</span> <span class="k">import</span> <span class="n">var_cov_cube</span>
+<span class="kn">from</span> <span class="nn">.width_estimate</span> <span class="k">import</span> <span class="n">WidthEstimate1D</span><span class="p">,</span> <span class="n">WidthEstimate2D</span>
+
+<span class="c1"># Fitting utilities</span>
+<span class="kn">from</span> <span class="nn">..fitting_utils</span> <span class="k">import</span> <span class="n">bayes_linear</span><span class="p">,</span> <span class="n">leastsq_linear</span>
+
+
+<div class="viewcode-block" id="PCA"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA">[docs]</a><span class="k">class</span> <span class="nc">PCA</span><span class="p">(</span><span class="n">BaseStatisticMixIn</span><span class="p">):</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Implementation of Principal Component Analysis (Heyer &amp; Brunt, 2002)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cube : %(dtypes)s</span>
+<span class="sd">        Data cube.</span>
+<span class="sd">    n_eigs : int</span>
+<span class="sd">        Deprecated. Input using `~PCA.compute_pca` or `~PCA.run`.</span>
+<span class="sd">    distance : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Distance to object in physical units. The output spatial widths will</span>
+<span class="sd">        be converted to the units given here.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from turbustat.statistics import PCA</span>
+<span class="sd">    &gt;&gt;&gt; from spectral_cube import SpectralCube</span>
+<span class="sd">    &gt;&gt;&gt; import astropy.units as u</span>
+<span class="sd">    &gt;&gt;&gt; cube = SpectralCube.read(&quot;adv.fits&quot;) # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; pca = PCA(cube, distance=250 * u.pc) # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; pca.run(verbose=True) # doctest: +SKIP</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">threed_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PCA</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+
+        <span class="n">_enforce_velocity_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># We need to check for completely empty channels. These cause</span>
+        <span class="c1"># issues for the decomposition of the covariance matrix (eigenvectors</span>
+        <span class="c1"># will have significant imaginary components).</span>
+        <span class="c1"># Now doing this on a per-channel basis in var_cov_cube</span>
+        <span class="c1"># self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectral_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s2">&quot;Input of n_eigs is deprecated. Use &quot;</span>
+                                     <span class="s2">&quot;inputs in `compute_pca` or `run`.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_eigs</span>
+
+    <span class="nd">@n_eigs</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">n_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_eigs must be &gt; 0.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_eigs</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="PCA.compute_pca"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.compute_pca">[docs]</a>    <span class="k">def</span> <span class="nf">compute_pca</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean_sub</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">min_eigval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">eigen_cut_method</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the covariance matrix and its eigenvalues.</span>
+
+<span class="sd">        If `mean_sub` is disabled, the first eigenvalue is dominated by the</span>
+<span class="sd">        mean of the data, not the variance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mean_sub : bool, optional</span>
+<span class="sd">            When enabled, subtracts the means of the channels before</span>
+<span class="sd">            calculating the covariance. By default, this is disabled to</span>
+<span class="sd">            match the Heyer &amp; Brunt method.</span>
+<span class="sd">        n_eigs : {int, &#39;auto&#39;}, optional</span>
+<span class="sd">            Number of eigenvalues to compute. The default setting is &#39;auto&#39;,</span>
+<span class="sd">            which requires `min_eigval` to be set. Otherwise, the number of</span>
+<span class="sd">            eigenvalues used can be set using an int. Setting to -1 will use</span>
+<span class="sd">            all of the eigenvalues.</span>
+<span class="sd">        min_eigval : float, optional</span>
+<span class="sd">            The cut-off value to determine the number of important eigenvalues.</span>
+<span class="sd">            When `eigen_cut_method` is `proportional`, min_eigval is the</span>
+<span class="sd">            total proportion of variance described up to the Nth eigenvalue.</span>
+<span class="sd">            When `eigen_cut_method` is `value`, min_eigval is the minimum</span>
+<span class="sd">            variance described by that eigenvalue.</span>
+<span class="sd">        eigen_cut_method : {&#39;proportion&#39;, &#39;value&#39;}, optional</span>
+<span class="sd">            Set whether `min_eigval` is the proportion of variance determined</span>
+<span class="sd">            up to the Nth eigenvalue (`proportion`) or the minimum value of</span>
+<span class="sd">            variance (`value`).</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Define the decomposition-only flag, if not yet set. Will get</span>
+        <span class="c1"># overridden later if the size-line width relation is fit.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_decomp_only&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span> <span class="ow">and</span> <span class="n">min_eigval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_eigval must be given when using &quot;</span>
+                             <span class="s2">&quot;n_eigs=&#39;auto&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">var_cov_cube</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">mean_sub</span><span class="o">=</span><span class="n">mean_sub</span><span class="p">,</span>
+                                       <span class="n">progress_bar</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
+
+        <span class="n">all_eigsvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">)</span>
+        <span class="n">all_eigsvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">)</span>
+        <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">all_eigsvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Sort by maximum</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">=</span> <span class="n">set_n_eigs</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">,</span> <span class="n">min_eigval</span><span class="p">,</span>
+                                     <span class="n">method</span><span class="o">=</span><span class="n">eigen_cut_method</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">n_eigs</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectral_shape</span>
+        <span class="k">elif</span> <span class="n">n_eigs</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">n_eigs</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectral_shape</span> <span class="ow">or</span> <span class="n">n_eigs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;n_eigs must be less than the number of velocity&quot;</span>
+                          <span class="s2">&quot; channels (</span><span class="si">{}</span><span class="s2">) or -1 for&quot;</span>
+                          <span class="s2">&quot; all&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectral_shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">=</span> <span class="n">n_eigs</span>
+
+        <span class="k">if</span> <span class="n">mean_sub</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var_prop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span><span class="p">])</span> <span class="o">/</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">total_variance</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var_prop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_eigsvals</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span><span class="p">])</span> <span class="o">/</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">total_variance</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigvals</span> <span class="o">=</span> <span class="n">all_eigsvals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigvecs</span> <span class="o">=</span> <span class="n">eigvecs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean_sub</span> <span class="o">=</span> <span class="n">mean_sub</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">var_proportion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Proportion of variance described by the first `~PCA.n_eigs`</span>
+<span class="sd">        eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_prop</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">total_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Total variance of all eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_variance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigvals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        All eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvals</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigvecs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        All eigenvectors.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigvecs</span>
+
+    <span class="k">def</span> <span class="nf">_valid_eigenvectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Find the indices where the eigenvalues are above the machine precision</span>
+<span class="sd">        limit of self.data&#39;s dtype. This stops us from running into</span>
+<span class="sd">        eigenvectors with significant imaginary components (which we expect to</span>
+<span class="sd">        get for empty channels).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PCA.eigimages"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.eigimages">[docs]</a>    <span class="k">def</span> <span class="nf">eigimages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create eigenimages up to the n_eigs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_eigs : None or int</span>
+<span class="sd">            The number of eigenimages to create. When n_eigs is negative, the</span>
+<span class="sd">            last -n_eig eigenimages are created. If None is given, the number</span>
+<span class="sd">            in `~PCA.n_eigs` will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eigimgs : `~numpy.ndarray`</span>
+<span class="sd">            3D array, where the first dimension if the number of eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">iterat</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_eigs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">n_eigs</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># We&#39;re looking for the noisy components whenever n_eigs &lt; 0</span>
+            <span class="c1"># Find where we have valid eigenvalues, and use the last</span>
+            <span class="c1"># n_eigs of those.</span>
+            <span class="n">iterat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_eigenvectors</span><span class="p">()[</span><span class="n">n_eigs</span><span class="p">:]</span>
+
+        <span class="k">for</span> <span class="n">ct</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">iterat</span><span class="p">):</span>
+            <span class="n">eigimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_sub</span><span class="p">:</span>
+                    <span class="n">mean_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">channel</span><span class="p">])</span>
+                    <span class="n">eigimg</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_value</span><span class="p">)</span> <span class="o">*</span>
+                                            <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">channel</span><span class="p">,</span> <span class="n">idx</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">eigimg</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span> <span class="o">*</span>
+                                            <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">channel</span><span class="p">,</span> <span class="n">idx</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">ct</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">eigimgs</span> <span class="o">=</span> <span class="n">eigimg</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">eigimgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">eigimgs</span><span class="p">,</span> <span class="n">eigimg</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">eigimgs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">eigimgs</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">eigimgs</span></div>
+
+<div class="viewcode-block" id="PCA.autocorr_images"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.autocorr_images">[docs]</a>    <span class="k">def</span> <span class="nf">autocorr_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the autocorrelation of the eigenimages.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_eigs : None or int</span>
+<span class="sd">            The number of autocorrelation images to create. When n_eigs is</span>
+<span class="sd">            negative, the last -n_eig autocorrelation images are created.</span>
+<span class="sd">            If None is given, the number in `~PCA.n_eigs` will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        acors : np.ndarray</span>
+<span class="sd">            3D array, where the first dimension if the number of eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span>
+
+        <span class="c1"># Calculate the eigenimages</span>
+        <span class="n">eigimgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigimages</span><span class="p">(</span><span class="n">n_eigs</span><span class="o">=</span><span class="n">n_eigs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eigimgs</span><span class="p">):</span>
+            <span class="n">fftx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">fftxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">fftx</span><span class="p">)</span>
+            <span class="n">acor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft2</span><span class="p">((</span><span class="n">fftx</span> <span class="o">-</span> <span class="n">fftx</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="n">fftxs</span> <span class="o">-</span> <span class="n">fftxs</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+            <span class="n">acor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">acor</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">acors</span> <span class="o">=</span> <span class="n">acor</span><span class="o">.</span><span class="n">real</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">acors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">acors</span><span class="p">,</span> <span class="n">acor</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">acors</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">acors</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">acors</span></div>
+
+<div class="viewcode-block" id="PCA.autocorr_spec"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.autocorr_spec">[docs]</a>    <span class="k">def</span> <span class="nf">autocorr_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the autocorrelation spectra of the eigenvectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_eigs : None or int</span>
+<span class="sd">            The number of autocorrelation vectors to create. When n_eigs is</span>
+<span class="sd">            negative, the last -n_eig autocorrelation vectors are created.</span>
+<span class="sd">            If None is given, the number in `~PCA.n_eigs` will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        acors : np.ndarray</span>
+<span class="sd">            2D array, where the first dimension if the number of eigenvalues.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_eigs</span><span class="p">):</span>
+            <span class="n">fftx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+            <span class="n">fftxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">fftx</span><span class="p">)</span>
+            <span class="n">acor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">((</span><span class="n">fftx</span> <span class="o">-</span> <span class="n">fftx</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="n">fftxs</span> <span class="o">-</span> <span class="n">fftxs</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">acors</span> <span class="o">=</span> <span class="n">acor</span><span class="o">.</span><span class="n">real</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">acors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">((</span><span class="n">acors</span><span class="p">,</span> <span class="n">acor</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">acors</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PCA.noise_ACF"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.noise_ACF">[docs]</a>    <span class="k">def</span> <span class="nf">noise_ACF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=-</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the noise autocorrelation function based off of the eigenvalues</span>
+<span class="sd">        beyond `PCA.n_eigs`. By default the final 10 eigenvectors **whose</span>
+<span class="sd">        eigenvalues are above the machine precision limit of the data cube&#39;s</span>
+<span class="sd">        dtype** are used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_eigs : int, optional</span>
+<span class="sd">            The number of eigenvalues to use for estimating the noise ACF.</span>
+<span class="sd">            The default is to use the last 10 eigenvectors.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span>
+
+        <span class="n">acors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_images</span><span class="p">(</span><span class="n">n_eigs</span><span class="o">=</span><span class="n">n_eigs</span><span class="p">)</span>
+
+        <span class="n">noise_ACF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">acors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_eigs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">noise_ACF</span></div>
+
+<div class="viewcode-block" id="PCA.find_spatial_widths"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.find_spatial_widths">[docs]</a>    <span class="k">def</span> <span class="nf">find_spatial_widths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;contour&#39;</span><span class="p">,</span>
+                            <span class="n">brunt_beamcorrect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">beam_fwhm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">diagnosticplots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Derive the spatial widths using the autocorrelation of the</span>
+<span class="sd">        eigenimages.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        methods : {&#39;contour&#39;, &#39;fit&#39;, &#39;interpolate&#39;, &#39;xinterpolate&#39;}, optional</span>
+<span class="sd">            Spatial fitting method to use. The default method is &#39;contour&#39;</span>
+<span class="sd">            (fits an ellipse to the 1/e contour about the peak; this is the</span>
+<span class="sd">            method used by the Heyer &amp; Brunt works).</span>
+<span class="sd">            See `~turbustat.statistics.pca.WidthEstimate2D` for a description</span>
+<span class="sd">            of all methods.</span>
+<span class="sd">        brunt_beamcorrect : bool, optional</span>
+<span class="sd">            Apply the beam correction described in Chris Brunt&#39;s</span>
+<span class="sd">            `thesis &lt;http://search.proquest.com/docview/304529913&gt;`_. A beam</span>
+<span class="sd">            will be searched for in the given header (looking for &quot;BMAJ&quot;). If</span>
+<span class="sd">            this fails, the value must be given in `beam_fwhm` with angular</span>
+<span class="sd">            units.</span>
+<span class="sd">        beam_fwhm : None of `~astropy.units.Quantity`, optional</span>
+<span class="sd">            When beam correction is enabled, the FWHM beam size can be given</span>
+<span class="sd">            here.</span>
+<span class="sd">        distance : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Distance to object in physical units. The output spatial widths</span>
+<span class="sd">            will be converted to the units given here.</span>
+<span class="sd">        diagnosticplots : bool, optional</span>
+<span class="sd">            Plot the first 9 autocorrelation images with the contour fits.</span>
+<span class="sd">            *Only implemented for* `method=&#39;contour&#39;`.</span>
+<span class="sd">        fit_kwargs : dict, optional</span>
+<span class="sd">            Used when method is &#39;contour&#39;. Passed to</span>
+<span class="sd">            `turbustat.statistics.stats_utils.EllipseModel.estimate_stderrs`.</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Try reading beam width from the header is it is not given.</span>
+        <span class="k">if</span> <span class="n">brunt_beamcorrect</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">beam_fwhm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">beam_fwhm</span> <span class="o">=</span> <span class="n">find_beam_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+        <span class="n">acors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_images</span><span class="p">(</span><span class="n">n_eigs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span><span class="p">)</span>
+        <span class="n">noise_ACF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_ACF</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width_error</span> <span class="o">=</span> \
+            <span class="n">WidthEstimate2D</span><span class="p">(</span><span class="n">acors</span><span class="p">,</span> <span class="n">noise_ACF</span><span class="o">=</span><span class="n">noise_ACF</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                            <span class="n">brunt_beamcorrect</span><span class="o">=</span><span class="n">brunt_beamcorrect</span><span class="p">,</span>
+                            <span class="n">beam_fwhm</span><span class="o">=</span><span class="n">beam_fwhm</span><span class="p">,</span>
+                            <span class="n">spatial_cdelt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CDELT2&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                            <span class="n">diagnosticplots</span><span class="o">=</span><span class="n">diagnosticplots</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width_error</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span></div>
+
+<div class="viewcode-block" id="PCA.spatial_width"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.spatial_width">[docs]</a>    <span class="k">def</span> <span class="nf">spatial_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Spatial widths for the first `~PCA.n_eigs` components.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spatial unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            an angular unit, or (if distance is given) a physical unit.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.spatial_width_error"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.spatial_width_error">[docs]</a>    <span class="k">def</span> <span class="nf">spatial_width_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The 1-sigma error bounds on the spatial widths for the first</span>
+<span class="sd">        `~PCA.n_eigs` components.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spatial unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            an angular unit, or (if distance is given) a physical unit.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spatial_width_error</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.find_spectral_widths"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.find_spectral_widths">[docs]</a>    <span class="k">def</span> <span class="nf">find_spectral_widths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;walk-down&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Derive the spectral widths using the autocorrelation of the</span>
+<span class="sd">        eigenvectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : {&quot;walk-down&quot;, &quot;fit&quot;, &quot;interpolate&quot;}, optional</span>
+<span class="sd">            Spectral fitting method to use. The default method is &#39;walk-down&#39;</span>
+<span class="sd">            (starting at the peak, continue until reaching 1/e of the peak;</span>
+<span class="sd">            this is the method used by the Heyer &amp; Brunt works). See</span>
+<span class="sd">            `~turbustat.statistics.pca.WidthEstimate1D` for a description</span>
+<span class="sd">            of all methods.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">acorr_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_spec</span><span class="p">(</span><span class="n">n_eigs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width_error</span> <span class="o">=</span> \
+            <span class="n">WidthEstimate1D</span><span class="p">(</span><span class="n">acorr_spec</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width_error</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span></div>
+
+<div class="viewcode-block" id="PCA.spectral_width"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.spectral_width">[docs]</a>    <span class="k">def</span> <span class="nf">spectral_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Spectral widths for the first `~PCA.n_eigs` components.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spectral unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            or a spectral unit equivalent to the unit specified in the</span>
+<span class="sd">            `~PCA.header`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.spectral_width_error"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.spectral_width_error">[docs]</a>    <span class="k">def</span> <span class="nf">spectral_width_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The error bounds on the spectral widths for the first</span>
+<span class="sd">        `~PCA.n_eigs` components.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spectral unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            or a spectral unit equivalent to the unit specified in the</span>
+<span class="sd">            `~PCA.header`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width_error</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.fit_plaw"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.fit_plaw">[docs]</a>    <span class="k">def</span> <span class="nf">fit_plaw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_method</span><span class="o">=</span><span class="s1">&#39;odr&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Fit the size-linewidth relation. This is done through Orthogonal</span>
+<span class="sd">        Distance Regression (via scipy), or through MCMC (requires</span>
+<span class="sd">        installing `emcee &lt;http://dan.iel.fm/emcee/current/&gt;`_).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fit_method : {&#39;odr&#39;, &#39;bayes&#39;}, optional</span>
+<span class="sd">            Set the type of fitting to perform. Options are &#39;odr&#39;</span>
+<span class="sd">            (orthogonal distance regression) or &#39;bayes&#39; (MCMC). Note that</span>
+<span class="sd">            &#39;bayes&#39; requires the emcee package to be installed.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Prints out additional information about the fitting and plots the</span>
+<span class="sd">            solution.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Passed to `~turbustat.statistics.fitting_utils.bayes_linear`</span>
+<span class="sd">            when fit_method is bayes.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Set the decomposition flag to False if not defined yet</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_decomp_only&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">fit_method</span> <span class="o">!=</span> <span class="s1">&#39;odr&#39;</span> <span class="ow">and</span> <span class="n">fit_method</span> <span class="o">!=</span> <span class="s1">&#39;bayes&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;fit_method must be &#39;odr&#39; or &#39;bayes&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Hang on to this. We can&#39;t propagate the asymmetric errors when using</span>
+        <span class="c1"># MCMC in sonic_length, and the laziest way is just to keep the samples</span>
+        <span class="c1"># around, and estimate CIs directly.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_method</span> <span class="o">=</span> <span class="n">fit_method</span>
+
+        <span class="c1"># Only keep the width estimations that worked</span>
+        <span class="n">are_finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectral_width</span><span class="p">())</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">())</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width_error</span><span class="p">())</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectral_width_error</span><span class="p">())</span>
+
+        <span class="c1"># Check to make sure there are enough points to fit to (minimum 2).</span>
+        <span class="n">num_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectral_width</span><span class="p">()</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="p">(</span><span class="o">~</span><span class="n">are_finite</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">num_pts</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Less then 2 valid points. Cannot fit model.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">num_pts</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There are less than 5 points to fit to. The fit will not be&quot;</span>
+                 <span class="s2">&quot; well constrained and results should be closely examined.&quot;</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectral_width</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">y_err</span> <span class="o">=</span> <span class="mf">0.434</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectral_width_error</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">spectral_width</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">x_err</span> <span class="o">=</span> <span class="mf">0.434</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_width_error</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">()[</span><span class="n">are_finite</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;odr&#39;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">leastsq_linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_err</span><span class="p">,</span> <span class="n">y_err</span><span class="p">,</span>
+                                            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="c1"># Turn into +/- range values, as would be returned by the MCMC fit</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">params</span> <span class="o">-</span> <span class="n">errors</span><span class="p">,</span> <span class="n">params</span> <span class="o">+</span> <span class="n">errors</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">samps</span> <span class="o">=</span> <span class="n">bayes_linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_err</span><span class="p">,</span> <span class="n">y_err</span><span class="p">,</span>
+                                                 <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                                                 <span class="n">return_samples</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_samps</span> <span class="o">=</span> <span class="n">samps</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_error_range</span> <span class="o">=</span> <span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Take the intercept out of log scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_intercept</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span><span class="o">.</span><span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_intercept_error_range</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">errors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spectral_width</span><span class="o">.</span><span class="n">unit</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Power-law index.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_error_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        One-sigma error bounds on the index.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_error_range</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Slope of the size-linewidth relation with correction from</span>
+<span class="sd">        `Brunt &amp; Heyer 2002 &lt;https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract&gt;`_</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">brunt_index_correct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gamma_error_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        One-sigma error bounds on gamma.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">brunt_index_correct_range</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">index_error_range</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PCA.intercept"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.intercept">[docs]</a>    <span class="k">def</span> <span class="nf">intercept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Intercept from the fits, converted out of the log value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spectral unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            or a spectral unit equivalent to the unit specified in the</span>
+<span class="sd">            `~PCA.header`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intercept</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.intercept_error_range"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.intercept_error_range">[docs]</a>    <span class="k">def</span> <span class="nf">intercept_error_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        One-sigma error bounds on the intercept.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spectral unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            or a spectral unit equivalent to the unit specified in the</span>
+<span class="sd">            `~PCA.header`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_intercept_error_range</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.model"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.model">[docs]</a>    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Model with the fit parameters from `~PCA.fit_plaw`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PCA.sonic_length"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.sonic_length">[docs]</a>    <span class="k">def</span> <span class="nf">sonic_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T_k</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">1.36</span><span class="p">,</span> <span class="n">use_gamma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Estimate of the sonic length based on a given temperature. Uses the</span>
+<span class="sd">        intercept from the fit.</span>
+
+<span class="sd">        Based on sonic.pro used in the Heyer &amp; Brunt PCA implementation.</span>
+
+<span class="sd">        Because error from the MCMC fit need not be symmetric, the MCMC</span>
+<span class="sd">        samples are needed to provide the correct CIs for the sonic length.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        T_k : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Temperature given in units convertible to Kelvin.</span>
+<span class="sd">        mu : float, optional</span>
+<span class="sd">            Factor to multiply by m_H to account for He and metals.</span>
+<span class="sd">        use_gamma : bool, optional</span>
+<span class="sd">            Toggle whether to use `~PCA.gamma` or `~PCA.index`. See link given</span>
+<span class="sd">            in `~PCA.gamma`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lambd : `~astropy.units.Quantity`</span>
+<span class="sd">            Value of the sonic length. If distance was provided, this will</span>
+<span class="sd">            be in the units given in the distance. Otherwise, the result will</span>
+<span class="sd">            be in pixel units.</span>
+<span class="sd">        lambd_error_range : `~astropy.units.Quantity`</span>
+<span class="sd">            The 1-sigma bounds on the sonic length. The units will match lambd.</span>
+<span class="sd">        unit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            The spatial unit to convert the widths to. Can be in pixels,</span>
+<span class="sd">            an angular unit, or (if distance is given) a physical unit.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="kn">import</span> <span class="nn">astropy.constants</span> <span class="k">as</span> <span class="nn">const</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">T_k</span> <span class="o">=</span> <span class="n">T_k</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">(</span><span class="s2">&quot;Cannot convert T_k to Kelvin.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Sound speed in m/s</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">k_B</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span> <span class="o">*</span> <span class="n">T_k</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">const</span><span class="o">.</span><span class="n">m_p</span><span class="p">))</span>
+        <span class="c1"># Convert to the same spectral unit</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="n">c_s</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_gamma</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+            <span class="n">index_error_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_error_range</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">index_error_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_error_range</span>
+
+        <span class="n">lambd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">c_s</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">(),</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_method</span> <span class="o">==</span> <span class="s1">&#39;odr&#39;</span><span class="p">:</span>
+            <span class="c1"># Added in quadrature and simplified</span>
+            <span class="n">index_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">index</span> <span class="o">-</span> <span class="n">index_error_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">intercept_err</span> <span class="o">=</span> <span class="mf">0.434</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">()</span> <span class="o">-</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">intercept_error_range</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">()</span>
+
+            <span class="n">term1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">c_s</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">())</span> <span class="o">*</span> \
+                <span class="p">(</span><span class="n">index_err</span> <span class="o">/</span> <span class="n">index</span><span class="p">)</span>
+            <span class="n">term2</span> <span class="o">=</span> <span class="n">intercept_err</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">()</span>
+            <span class="n">lambd_error</span> <span class="o">=</span> <span class="p">(</span><span class="n">lambd</span> <span class="o">/</span> <span class="n">index</span><span class="p">)</span> <span class="o">*</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">term1</span><span class="o">.</span><span class="n">value</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">term2</span><span class="o">.</span><span class="n">value</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">lambd_error_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lambd</span> <span class="o">-</span> <span class="n">lambd_error</span><span class="p">,</span>
+                                          <span class="n">lambd</span> <span class="o">+</span> <span class="n">lambd_error</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Don&#39;t propagate asymmetric errors in quadrature! Instead,</span>
+            <span class="c1"># calculate CI directly from the samples.</span>
+            <span class="n">percentiles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">85</span><span class="p">]</span>
+            <span class="n">slopes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_samps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">intercepts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_samps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">use_gamma</span><span class="p">:</span>
+                <span class="n">slopes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">brunt_index_correct</span><span class="p">(</span><span class="n">slope</span><span class="p">)</span>
+                                   <span class="k">for</span> <span class="n">slope</span> <span class="ow">in</span> <span class="n">slopes</span><span class="p">])</span>
+
+            <span class="n">all_lambds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">c_s</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">intercepts</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">index</span><span class="p">)</span>
+
+            <span class="n">lambd_error_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">all_lambds</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">)</span>
+
+        <span class="c1"># Convert to specified units.</span>
+        <span class="n">lambd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="n">lambd</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+        <span class="n">lambd_error_range</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="n">lambd_error_range</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lambd</span><span class="p">,</span> <span class="n">lambd_error_range</span></div>
+
+<div class="viewcode-block" id="PCA.plot_fit"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.plot_fit">[docs]</a>    <span class="k">def</span> <span class="nf">plot_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_cov_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_sl_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">n_eigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">fit_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span>
+                 <span class="n">cov_cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+                 <span class="n">spatial_unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">spectral_unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">show_residual</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the covariance matrix, bar plot of eigenvalues, and the fitted</span>
+<span class="sd">        size-line width relation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Save name for the figure. Enables saving the plot.</span>
+<span class="sd">        show_cov_bar : bool, optional</span>
+<span class="sd">            Show the covariance matrix and eigenvalue variance bar plot.</span>
+<span class="sd">        show_sl_fit : bool, optional</span>
+<span class="sd">            Show the size-line width relation, if fit.</span>
+<span class="sd">        n_eigs : int, optional</span>
+<span class="sd">            Number of eigenvalues to show in the bar plot. Defaults to the</span>
+<span class="sd">            automatically-set value (`PCA.n_eigs`).</span>
+<span class="sd">        color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color to use in the plots. Defaults to red.</span>
+<span class="sd">        fit_color : {str, RBG tuple}, optional</span>
+<span class="sd">            Colour to show the fit line in. Defaults to `color` when `None` is</span>
+<span class="sd">            given.</span>
+<span class="sd">        symbol : str, optional</span>
+<span class="sd">            Marker shape to plot the data.</span>
+<span class="sd">        cov_cmap : {str, matplotlib colormap}, optional</span>
+<span class="sd">            Colormap to show the covariance matrix in.</span>
+<span class="sd">        show_residual : bool, optional</span>
+<span class="sd">            Plot the fit residuals.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="ow">and</span> <span class="n">show_sl_fit</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Size-line width fit not performed. Disabling show_sl_fit.&quot;</span><span class="p">)</span>
+            <span class="n">show_sl_fit</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="k">import</span> <span class="n">make_axes_locatable</span>
+
+        <span class="k">if</span> <span class="n">show_cov_bar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">show_sl_fit</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">im1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+                             <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cov_cmap</span><span class="p">)</span>
+            <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">())</span>
+            <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s2">&quot;3%&quot;</span><span class="p">)</span>
+            <span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
+
+            <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;Covariance&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_sl_fit</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">n_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">n_eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[:</span><span class="n">n_eigs</span><span class="p">],</span>
+                    <span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_eigs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Variance&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_sl_fit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fit_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fit_color</span> <span class="o">=</span> <span class="n">color</span>
+
+            <span class="k">if</span> <span class="n">show_cov_bar</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_residual</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_residual</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+            <span class="n">spatial_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">spatial_unit</span><span class="p">)</span>
+            <span class="n">spatial_width_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_width_error</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">spatial_unit</span><span class="p">)</span>
+
+            <span class="n">spectral_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectral_width</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">spectral_unit</span><span class="p">)</span>
+            <span class="n">spectral_width_error</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">spectral_width_error</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">spectral_unit</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                         <span class="n">xerr</span><span class="o">=</span><span class="mf">0.434</span> <span class="o">*</span> <span class="n">spatial_width_error</span> <span class="o">/</span>
+                         <span class="n">spatial_width</span><span class="p">,</span>
+                         <span class="n">yerr</span><span class="o">=</span><span class="mf">0.434</span> <span class="o">*</span> <span class="n">spectral_width_error</span> <span class="o">/</span>
+                         <span class="n">spectral_width</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">symbol</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;log Linewidth / &quot;</span>
+                       <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">()))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+            <span class="n">xvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">spatial_width</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">spatial_width</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                                <span class="n">spatial_width</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+
+            <span class="n">xvals_pix</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)),</span>
+                            <span class="n">spatial_width</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+
+            <span class="n">intercept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>
+
+            <span class="n">spec_conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_spectral</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">spectral_unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xvals</span><span class="p">,</span>
+                     <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="n">xvals_pix</span> <span class="o">+</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">intercept</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">*</span> <span class="n">spec_conv</span><span class="p">),</span>
+                     <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">)</span>
+
+            <span class="c1"># Some very large error bars makes it difficult to see the model</span>
+            <span class="c1"># Limit the range shown in the plot.</span>
+            <span class="n">x_range</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                       <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">spatial_width</span><span class="p">)])</span>
+            <span class="n">y_range</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                       <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">spectral_width</span><span class="p">)])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">-</span>
+                      <span class="n">y_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">+</span>
+                      <span class="n">y_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">-</span>
+                      <span class="n">x_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">+</span>
+                      <span class="n">x_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">show_residual</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_cov_bar</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">x_log_pix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_width</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">resids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spectral_width</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">-</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="n">x_log_pix</span> <span class="o">+</span>
+                                  <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">intercept</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">*</span> <span class="n">spec_conv</span><span class="p">)</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">resids</span><span class="p">,</span>
+                             <span class="n">xerr</span><span class="o">=</span><span class="mf">0.434</span> <span class="o">*</span> <span class="n">spatial_width_error</span> <span class="o">/</span>
+                             <span class="n">spatial_width</span><span class="p">,</span>
+                             <span class="n">yerr</span><span class="o">=</span><span class="mf">0.434</span> <span class="o">*</span> <span class="n">spectral_width_error</span> <span class="o">/</span>
+                             <span class="n">spectral_width</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Residuals&quot;</span><span class="p">)</span>
+
+                <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">-</span>
+                          <span class="n">y_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="o">+</span>
+                          <span class="n">y_range</span> <span class="o">/</span> <span class="mi">4</span><span class="p">])</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;log Spatial Length / &quot;</span>
+                       <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spatial_width</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">()))</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PCA.run"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA.html#turbustat.statistics.PCA.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">mean_sub</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">decomp_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">min_eigval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">eigen_cut_method</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">spatial_method</span><span class="o">=</span><span class="s1">&#39;contour&#39;</span><span class="p">,</span>
+            <span class="n">spectral_method</span><span class="o">=</span><span class="s1">&#39;walk-down&#39;</span><span class="p">,</span> <span class="n">fit_method</span><span class="o">=</span><span class="s1">&#39;odr&#39;</span><span class="p">,</span>
+            <span class="n">beam_fwhm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">brunt_beamcorrect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">spatial_output_unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">spectral_output_unit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Run the decomposition and fitting in one step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">            Enabled by default.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting of the results.</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        mean_sub : bool, optional</span>
+<span class="sd">            See `~PCA.compute_pca`</span>
+<span class="sd">        decomp_only : bool, optional</span>
+<span class="sd">            Only run the PCA decomposition, not the entire procedure to derive</span>
+<span class="sd">            the size-linewidth relation. This should be enabled when using</span>
+<span class="sd">            PCA_Distance.</span>
+<span class="sd">        n_eigs : {&quot;auto&quot;, int}, optional</span>
+<span class="sd">            See `~PCA.compute_pca`</span>
+<span class="sd">        min_eigval : float, optional</span>
+<span class="sd">            See `~PCA.compute_pca`</span>
+<span class="sd">        eigen_cut_method : {&#39;proportion&#39;, &#39;value&#39;}, optional</span>
+<span class="sd">            See `~PCA.compute_pca`</span>
+<span class="sd">        spatial_method : str, optional</span>
+<span class="sd">            See `~PCA.fit_spatial_widths`.</span>
+<span class="sd">        spectral_method : str, optional</span>
+<span class="sd">            See `~PCA.fit_spectral_widths`.</span>
+<span class="sd">        fit_method : str, optional</span>
+<span class="sd">            See `~PCA.fit_plaw`.</span>
+<span class="sd">        beam_fwhm : None of `~astropy.units.Quantity`, optional</span>
+<span class="sd">            See `~PCA.fit_spatial_widths`.</span>
+<span class="sd">        brunt_beamcorrect : bool, optional</span>
+<span class="sd">            See `~PCA.fit_spatial_widths`.</span>
+<span class="sd">        spatial_output_unit : `astropy.units.Unit`, optional</span>
+<span class="sd">            Pixel, anglular, or physical unit to convert the spatial sizes to</span>
+<span class="sd">            when plotting. Defaults to pixels. Physical unit conversion</span>
+<span class="sd">            requires a distance to be given.</span>
+<span class="sd">        spectral_output_unit : `astropy.units.Unit`, optional</span>
+<span class="sd">            Pixel or spectral unit to convert spectral sizes to when plotting.</span>
+<span class="sd">            Defaults to pixels. The spectral unit *MUST* match the spectral</span>
+<span class="sd">            unit defined in the data cube.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Check if the beam can be loaded. Otherwise, turn off the beam</span>
+        <span class="c1"># correction before computing the covariance matrix</span>
+        <span class="k">if</span> <span class="n">beam_fwhm</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">brunt_beamcorrect</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">decomp_only</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">beam_fwhm</span> <span class="o">=</span> <span class="n">find_beam_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+            <span class="c1"># Don&#39;t check for type. Otherwise I need to check if radio_beam</span>
+            <span class="c1"># is installed.</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot load beam size from the header. &quot;</span>
+                                 <span class="s2">&quot;Please give the beam FWHM or set &quot;</span>
+                                 <span class="s2">&quot;`brunt_beamcorrect=False`.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_pca</span><span class="p">(</span><span class="n">mean_sub</span><span class="o">=</span><span class="n">mean_sub</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="n">n_eigs</span><span class="p">,</span>
+                         <span class="n">min_eigval</span><span class="o">=</span><span class="n">min_eigval</span><span class="p">,</span>
+                         <span class="n">eigen_cut_method</span><span class="o">=</span><span class="n">eigen_cut_method</span><span class="p">,</span>
+                         <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decomp_only</span> <span class="o">=</span> <span class="n">decomp_only</span>
+
+        <span class="c1"># Run rest of the analysis</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">decomp_only</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">find_spatial_widths</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">spatial_method</span><span class="p">,</span>
+                                     <span class="n">beam_fwhm</span><span class="o">=</span><span class="n">beam_fwhm</span><span class="p">,</span>
+                                     <span class="n">brunt_beamcorrect</span><span class="o">=</span><span class="n">brunt_beamcorrect</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">find_spectral_widths</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">spectral_method</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_plaw</span><span class="p">(</span><span class="n">fit_method</span><span class="o">=</span><span class="n">fit_method</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Proportion of Variance kept: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_proportion</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">decomp_only</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Index: </span><span class="si">{0:.2f}</span><span class="s2"> (</span><span class="si">{1:.2f}</span><span class="s2">, </span><span class="si">{2:.2f}</span><span class="s2">)&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">index_error_range</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Gamma: </span><span class="si">{0:.2f}</span><span class="s2"> (</span><span class="si">{1:.2f}</span><span class="s2">, </span><span class="si">{2:.2f}</span><span class="s2">)&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma_error_range</span><span class="p">))</span>
+
+                <span class="c1"># Compute sonic length assuming 10 K</span>
+                <span class="n">T_k</span> <span class="o">=</span> <span class="mf">10.</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">K</span>
+                <span class="n">sl</span><span class="p">,</span> <span class="n">sl_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sonic_length</span><span class="p">(</span><span class="n">T_k</span><span class="o">=</span><span class="n">T_k</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sonic length: </span><span class="si">{0:.3e}</span><span class="s2"> (</span><span class="si">{4:.3e}</span><span class="s2">, </span><span class="si">{5:.3e}</span><span class="s2">) </span><span class="si">{1}</span><span class="s2"> at </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{3}</span><span class="s2">&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">(),</span> <span class="n">T_k</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                              <span class="n">T_k</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">to_string</span><span class="p">(),</span> <span class="o">*</span><span class="n">sl_range</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span> <span class="n">show_sl_fit</span><span class="o">=</span><span class="ow">not</span> <span class="n">decomp_only</span><span class="p">,</span>
+                          <span class="n">spatial_unit</span><span class="o">=</span><span class="n">spatial_output_unit</span><span class="p">,</span>
+                          <span class="n">spectral_unit</span><span class="o">=</span><span class="n">spectral_output_unit</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="PCA_Distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA_Distance.html#turbustat.statistics.PCA_Distance">[docs]</a><span class="k">class</span> <span class="nc">PCA_Distance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compare two data cubes based on the eigenvalues of the PCA decomposition.</span>
+<span class="sd">    The distance is the Euclidean distance between the eigenvalues.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cube1 : %(dtypes)s</span>
+<span class="sd">        Data cube.</span>
+<span class="sd">    cube2 : %(dtypes)s</span>
+<span class="sd">        Data cube.</span>
+<span class="sd">    n_eigs : int</span>
+<span class="sd">        Number of eigenvalues to compute.</span>
+<span class="sd">    fiducial_model : PCA</span>
+<span class="sd">        Computed PCA object. Use to avoid recomputing.</span>
+<span class="sd">    mean_sub : bool, optional</span>
+<span class="sd">        Subtracts the mean before computing the covariance matrix. Not</span>
+<span class="sd">        subtracting the mean is done in the original Heyer &amp; Brunt works.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">threed_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube1</span><span class="p">,</span> <span class="n">cube2</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">fiducial_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">mean_sub</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PCA_Distance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">n_eigs</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;auto&#39; n_eigs mode is disabled for distance &quot;</span>
+                             <span class="s2">&quot;computation. The metric requires having the same&quot;</span>
+                             <span class="s2">&quot; number of eigenvalues to compare.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fiducial_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pca1</span> <span class="o">=</span> <span class="n">fiducial_model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pca1</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">cube1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">mean_sub</span><span class="o">=</span><span class="n">mean_sub</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="n">n_eigs</span><span class="p">,</span> <span class="n">decomp_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">cube2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">mean_sub</span><span class="o">=</span><span class="n">mean_sub</span><span class="p">,</span> <span class="n">n_eigs</span><span class="o">=</span><span class="n">n_eigs</span><span class="p">,</span> <span class="n">decomp_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean_sub</span> <span class="o">=</span> <span class="n">mean_sub</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_eigs</span> <span class="o">=</span> <span class="n">n_eigs</span>
+
+<div class="viewcode-block" id="PCA_Distance.distance_metric"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PCA_Distance.html#turbustat.statistics.PCA_Distance.distance_metric">[docs]</a>    <span class="k">def</span> <span class="nf">distance_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">plot_kwargs1</span><span class="o">=</span><span class="p">{},</span>
+                        <span class="n">plot_kwargs2</span><span class="o">=</span><span class="p">{},</span>
+                        <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Computes the distance between the cubes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        plot_kwargs1 : dict, optional</span>
+<span class="sd">            Set the color, symbol, and label for dataset1</span>
+<span class="sd">            (e.g., plot_kwargs1={&#39;color&#39;: &#39;b&#39;, &#39;symbol&#39;: &#39;D&#39;, &#39;label&#39;: &#39;1&#39;}).</span>
+<span class="sd">        plot_kwargs2 : dict, optional</span>
+<span class="sd">            Set the color, symbol, and label for dataset2.</span>
+<span class="sd">        cmap : str, optional</span>
+<span class="sd">            The colormap to use when plotting the covariance matrices.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># The eigenvalues need to be normalized before being compared. If</span>
+        <span class="c1"># mean_sub is False, the first eigenvalue is not used.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_sub</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_eigs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slicer</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_eigs</span><span class="p">)</span>
+
+        <span class="n">eigvals1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">slicer</span><span class="p">])</span>
+        <span class="n">eigvals2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span> <span class="o">/</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">slicer</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">eigvals1</span> <span class="o">-</span> <span class="n">eigvals2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+            <span class="n">defaults1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">}</span>
+            <span class="n">defaults2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                    <span class="n">plot_kwargs1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                    <span class="n">plot_kwargs2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;xunit&#39;</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;xunit&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;xunit&#39;</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;xunit&#39;</span><span class="p">]</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Proportions of total variance: 1 - </span><span class="si">%0.3f</span><span class="s2">, 2 - </span><span class="si">%0.3f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">var_proportion</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">var_proportion</span><span class="p">))</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">,</span>
+                       <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                       <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
+                       <span class="n">vmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigvals1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">eigvals1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pca1</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Proportion of Variance&quot;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
+                <span class="n">vmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">cov_matrix</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigvals2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">eigvals2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pca2</span><span class="o">.</span><span class="n">n_eigs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">brunt_index_correct</span><span class="p">(</span><span class="n">alpha</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply empirical corrections from Heyer &amp; Brunt</span>
+
+<span class="sd">    Using the empirical correction from Brunt &amp; Heyer 2002a, where</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \alpha = (0.33 \pm 0.04)\beta -(0.05 \pm 0.08)</span>
+
+<span class="sd">    :math:`\beta` is the index of the integrated velocity spectrum. This is</span>
+<span class="sd">    Equation 4.1. The relation to the velocity structure index is:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \beta = 2\gamma + 1</span>
+
+<span class="sd">    Then the conversion to :math:`\gamma` is:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \gamma = (1.5 \pm 0.18) \alpha - (0.19 \pm 0.20)</span>
+
+<span class="sd">    These values are based off a broken linear fit in Section 3.3.1 from</span>
+<span class="sd">    Chris Brunt&#39;s thesis. These are based off calibrating against uniform</span>
+<span class="sd">    density field&#39;s with different indices.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># term1 = 1.52 * alpha</span>
+    <span class="c1"># term1_err = term1 * np.sqrt((0.18 / 1.52)**2 + (alpha_err / alpha)**2)</span>
+
+    <span class="k">return</span> <span class="mf">1.52</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">-</span> <span class="mf">0.19</span>
+
+
+<span class="k">def</span> <span class="nf">brunt_index_correct_range</span><span class="p">(</span><span class="n">alpha_low</span><span class="p">,</span> <span class="n">alpha_up</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Upper and low error ranges. See `brunt_index_correct`.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="mf">1.52</span> <span class="o">-</span> <span class="mf">0.18</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha_low</span> <span class="o">-</span> <span class="p">(</span><span class="mf">0.19</span> <span class="o">+</span> <span class="mf">0.2</span><span class="p">),</span> \
+        <span class="p">(</span><span class="mf">1.52</span> <span class="o">+</span> <span class="mf">0.18</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha_up</span> <span class="o">-</span> <span class="p">(</span><span class="mf">0.19</span> <span class="o">-</span> <span class="mf">0.2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">set_n_eigs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">min_eigval</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Based on a minimum eigenvalue, find the number of components to consider.</span>
+<span class="sd">    The cut-off may be the proportion of variance (method=&#39;proportion&#39;) or a</span>
+<span class="sd">    minimum value for the variance (method=&#39;value&#39;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    eigenvalues : `~numpy.ndarray`</span>
+<span class="sd">        Array of eigenvalues.</span>
+<span class="sd">    min_eigval : float</span>
+<span class="sd">        Value to determine the cut-off for important eigenvalues.</span>
+<span class="sd">    method : {&quot;value&quot;, &quot;proportion&quot;}, optional</span>
+<span class="sd">        If `value`, `min_eigval` is the smallest eigenvalue to consider</span>
+<span class="sd">        important. If `proportion`, `min_eigval` is the proportion of</span>
+<span class="sd">        variance at which to cut at (i.e., 0.99 for 99%).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    above.size : int</span>
+<span class="sd">        The number of eigenvalues satisfying the given criteria.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span>
+        <span class="n">above</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eigenvalues</span> <span class="o">&gt;=</span> <span class="n">min_eigval</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">above</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;proportion&quot;</span><span class="p">:</span>
+
+        <span class="n">cumulative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">eigenvalues</span> <span class="o">/</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+        <span class="n">above</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cumulative</span> <span class="o">&lt;=</span> <span class="n">min_eigval</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">above</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># The first one has a greater proportion than the limit.</span>
+            <span class="c1"># Set to 1</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">above</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;method must be &#39;value&#39; or &#39;proportion&#39;.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_enforce_velocity_axis</span><span class="p">(</span><span class="n">pca_obj</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Enforce spectral_size be in velocity units.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pca_obj</span><span class="o">.</span><span class="n">_spectral_size</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;PCA requires the spectral axis to be in velocity units.&quot;</span>
+                      <span class="s2">&quot; If using a spectral cube, perform this conversion with&quot;</span>
+                      <span class="s2">&quot; &#39;cube_vel = cube.with_spectral_unit(u.m / u.s, &quot;</span>
+                      <span class="s2">&quot;rest_value=113 * u.GHz)&#39;, changing to the appropriate&quot;</span>
+                      <span class="s2">&quot; rest frequency and desired velocity unit.&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

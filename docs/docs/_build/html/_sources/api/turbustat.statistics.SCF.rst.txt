@@ -1,0 +1,83 @@
+SCF
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: SCF
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~SCF.data
+      ~SCF.distance
+      ~SCF.ellip2D
+      ~SCF.ellip2D_err
+      ~SCF.header
+      ~SCF.lags
+      ~SCF.need_header_flag
+      ~SCF.no_data_flag
+      ~SCF.scf_spectrum
+      ~SCF.scf_spectrum_stddev
+      ~SCF.scf_surface
+      ~SCF.slope
+      ~SCF.slope2D
+      ~SCF.slope2D_err
+      ~SCF.slope_err
+      ~SCF.theta2D
+      ~SCF.theta2D_err
+      ~SCF.xhigh
+      ~SCF.xlow
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~SCF.compute_spectrum
+      ~SCF.compute_surface
+      ~SCF.fit_2Dplaw
+      ~SCF.fit_plaw
+      ~SCF.fitted_model
+      ~SCF.input_data_header
+      ~SCF.load_beam
+      ~SCF.load_results
+      ~SCF.plot_fit
+      ~SCF.run
+      ~SCF.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: ellip2D
+   .. autoattribute:: ellip2D_err
+   .. autoattribute:: header
+   .. autoattribute:: lags
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: scf_spectrum
+   .. autoattribute:: scf_spectrum_stddev
+   .. autoattribute:: scf_surface
+   .. autoattribute:: slope
+   .. autoattribute:: slope2D
+   .. autoattribute:: slope2D_err
+   .. autoattribute:: slope_err
+   .. autoattribute:: theta2D
+   .. autoattribute:: theta2D_err
+   .. autoattribute:: xhigh
+   .. autoattribute:: xlow
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: compute_spectrum
+   .. automethod:: compute_surface
+   .. automethod:: fit_2Dplaw
+   .. automethod:: fit_plaw
+   .. automethod:: fitted_model
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

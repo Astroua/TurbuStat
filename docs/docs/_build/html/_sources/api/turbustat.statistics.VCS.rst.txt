@@ -1,0 +1,59 @@
+VCS
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: VCS
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~VCS.brk
+      ~VCS.brk_err
+      ~VCS.data
+      ~VCS.distance
+      ~VCS.header
+      ~VCS.need_header_flag
+      ~VCS.no_data_flag
+      ~VCS.ps1D
+      ~VCS.slope
+      ~VCS.slope_err
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~VCS.compute_pspec
+      ~VCS.fit_pspec
+      ~VCS.input_data_header
+      ~VCS.load_beam
+      ~VCS.load_results
+      ~VCS.plot_fit
+      ~VCS.run
+      ~VCS.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: header
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: ps1D
+   .. autoattribute:: slope
+   .. autoattribute:: slope_err
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: compute_pspec
+   .. automethod:: fit_pspec
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

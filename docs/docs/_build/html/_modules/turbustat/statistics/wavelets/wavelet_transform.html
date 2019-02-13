@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.statistics.wavelets.wavelet_transform &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.statistics.wavelets.wavelet_transform</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">astropy.convolution</span> <span class="k">import</span> <span class="n">convolve_fft</span><span class="p">,</span> <span class="n">MexicanHat2DKernel</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">astropy.utils.console</span> <span class="k">import</span> <span class="n">ProgressBar</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyfftw.interfaces.numpy_fft</span> <span class="k">import</span> <span class="n">fftn</span><span class="p">,</span> <span class="n">ifftn</span>
+    <span class="n">PYFFTW_FLAG</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">PYFFTW_FLAG</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="kn">from</span> <span class="nn">..base_statistic</span> <span class="k">import</span> <span class="n">BaseStatisticMixIn</span>
+<span class="kn">from</span> <span class="nn">...io</span> <span class="k">import</span> <span class="n">common_types</span><span class="p">,</span> <span class="n">twod_types</span>
+<span class="kn">from</span> <span class="nn">..fitting_utils</span> <span class="k">import</span> <span class="n">check_fit_limits</span><span class="p">,</span> <span class="n">residual_bootstrap</span>
+<span class="kn">from</span> <span class="nn">..lm_seg</span> <span class="k">import</span> <span class="n">Lm_Seg</span>
+
+
+<div class="viewcode-block" id="Wavelet"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet">[docs]</a><span class="k">class</span> <span class="nc">Wavelet</span><span class="p">(</span><span class="n">BaseStatisticMixIn</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute the wavelet transform of a 2D array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array : %(dtypes)s</span>
+<span class="sd">        2D data.</span>
+<span class="sd">    header : FITS header, optional</span>
+<span class="sd">        Header for the array.</span>
+<span class="sd">    scales : numpy.ndarray or list</span>
+<span class="sd">        The scales where the transform is calculated.</span>
+<span class="sd">    num : int, optional</span>
+<span class="sd">        Number of scales to compute the transform at.</span>
+<span class="sd">    distance : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        Physical distance to the region in the data.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                 <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_data_header</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
+
+        <span class="c1"># NOTE: can&#39;t use nan_interpolating from astropy</span>
+        <span class="c1"># until the normalization for sum to zeros kernels is fixed!!!</span>
+        <span class="n">isnan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">isnan</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">distance</span>
+
+        <span class="k">if</span> <span class="n">scales</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a_min</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="mf">5.</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Smallest scale given by paper</span>
+            <span class="n">a_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+            <span class="c1"># Log spaces scales up to half of the smallest size of the array</span>
+            <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">a_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">a_max</span><span class="p">),</span> <span class="n">num</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">scales</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scales</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wavelet scales.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span>
+
+    <span class="nd">@scales</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">scales</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;scales must be given as a &quot;</span>
+                            <span class="s2">&quot;astropy.units.Quantity.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Now make sure that we can convert into pixels before setting.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pix_scal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="c1"># The radius should be larger than a pixel</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">pix_scal</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One of the chosen lags is smaller than one &quot;</span>
+                             <span class="s2">&quot;pixel.&quot;</span>
+                             <span class="s2">&quot; Ensure that all lag values are larger than one &quot;</span>
+                             <span class="s2">&quot;pixel.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Catch floating point issues in comparing to half the image shape</span>
+        <span class="n">half_comp</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">pix_scal</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">half_comp</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one of the lags is larger than half of&quot;</span>
+                             <span class="s2">&quot; the image size. Remove these lags from the &quot;</span>
+                             <span class="s2">&quot;array.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span> <span class="o">=</span> <span class="n">values</span>
+
+<div class="viewcode-block" id="Wavelet.compute_transform"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet.compute_transform">[docs]</a>    <span class="k">def</span> <span class="nf">compute_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scale_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">keep_convolved_arrays</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">convolve_kwargs</span><span class="o">=</span><span class="p">{},</span>
+                          <span class="n">use_pyfftw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pyfftw_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the wavelet transform at each scale.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">        scale_normalization: bool, optional</span>
+<span class="sd">            Compute the transform with the correct scale-invariant</span>
+<span class="sd">            normalization.</span>
+<span class="sd">        keep_convolved_arrays: bool, optional</span>
+<span class="sd">            Keep the image convolved at all wavelet scales. For large images,</span>
+<span class="sd">            this can require a large amount memory. Default is False.</span>
+<span class="sd">        convolve_kwargs : dict, optional</span>
+<span class="sd">            Passed to `~astropy.convolution.convolve_fft`.</span>
+<span class="sd">        use_pyfftw : bool, optional</span>
+<span class="sd">            Enable to use pyfftw, if it is installed.</span>
+<span class="sd">        threads : int, optional</span>
+<span class="sd">            Number of threads to use in FFT when using pyfftw.</span>
+<span class="sd">        pyfftw_kwargs : Passed to</span>
+<span class="sd">            See `here &lt;http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html&gt;`_</span>
+<span class="sd">            for a list of accepted kwargs.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">use_pyfftw</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">PYFFTW_FLAG</span><span class="p">:</span>
+                <span class="n">use_fftn</span> <span class="o">=</span> <span class="n">fftn</span>
+                <span class="n">use_ifftn</span> <span class="o">=</span> <span class="n">ifftn</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;pyfftw not installed. Using numpy.fft functions.&quot;</span><span class="p">)</span>
+                <span class="n">use_fftn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span>
+                <span class="n">use_ifftn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_fftn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span>
+            <span class="n">use_ifftn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span>
+
+        <span class="n">n0</span><span class="p">,</span> <span class="n">m0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">keep_convolved_arrays</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Wf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">A</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">m0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Wf</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">factor</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">scale_normalization</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Transform values are only reliable with the proper scale&quot;</span>
+                    <span class="s2">&quot; normalization. When disabled, the slope of the transform&quot;</span>
+                    <span class="s2">&quot; CANNOT be used for physical interpretation.&quot;</span><span class="p">)</span>
+
+        <span class="n">pix_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+            <span class="n">bar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pix_scales</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">an</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pix_scales</span><span class="p">):</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">MexicanHat2DKernel</span><span class="p">(</span><span class="n">an</span><span class="p">)</span>
+
+            <span class="n">conv_arr</span> <span class="o">=</span> \
+                <span class="n">convolve_fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">normalize_kernel</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">fftn</span><span class="o">=</span><span class="n">use_fftn</span><span class="p">,</span> <span class="n">ifftn</span><span class="o">=</span><span class="n">use_ifftn</span><span class="p">,</span>
+                             <span class="n">nan_treatment</span><span class="o">=</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span>
+                             <span class="n">preserve_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">convolve_kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> \
+                <span class="n">an</span><span class="o">**</span><span class="n">factor</span>
+
+            <span class="k">if</span> <span class="n">keep_convolved_arrays</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_Wf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">conv_arr</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">conv_arr</span><span class="p">[</span><span class="n">conv_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="c1"># The standard deviation should take into account the number of</span>
+            <span class="c1"># kernel elements at that scale.</span>
+            <span class="n">kern_area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">an</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">nindep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">conv_arr</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">//</span> <span class="n">kern_area</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">conv_arr</span><span class="p">[</span><span class="n">conv_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="n">nindep</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Wf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The wavelet transforms of the image. Each plane is the transform at</span>
+<span class="sd">        different wavelet sizes.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Wf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`keep_convolved_arrays` was disabled in &quot;</span>
+                 <span class="s2">&quot;`compute_transform`.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Wf</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The 1-dimensional wavelet transform.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stddev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Standard deviation of the 1-dimensional wavelet transform.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span>
+
+<div class="viewcode-block" id="Wavelet.fit_transform"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet.fit_transform">[docs]</a>    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xlow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">brk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_fits_pts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                      <span class="n">weighted_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">bootstrap_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Perform a fit to the transform in log-log space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xlow : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Lower scale value to consider in the fit.</span>
+<span class="sd">        xhigh : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Upper scale value to consider in the fit.</span>
+<span class="sd">        brk : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Give an initial guess for a break point. This enables fitting</span>
+<span class="sd">            with a `turbustat.statistics.Lm_Seg`.</span>
+<span class="sd">        min_fits_pts : int, optional</span>
+<span class="sd">            Minimum number of points required above or below the fitted break</span>
+<span class="sd">            for it to be considered a valid fit. Only used when a segmented</span>
+<span class="sd">            line is fit, i.e. when a value for `brk` is given.</span>
+<span class="sd">        weighted_fit: bool, optional</span>
+<span class="sd">            Use the `~Wavelet.stddev` to perform a weighted fit.</span>
+<span class="sd">        bootstrap : bool, optional</span>
+<span class="sd">            Bootstrap using the model residuals to estimate the standard</span>
+<span class="sd">            errors.</span>
+<span class="sd">        bootstrap_kwargs : dict, optional</span>
+<span class="sd">            Pass keyword arguments to `~turbustat.statistics.fitting_utils.residual_bootstrap`.</span>
+<span class="sd">        fit_kwargs : Passed to `turbustat.statistics.Lm_Seg.fit_model`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">pix_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">pix_scales</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">weighted_fit</span><span class="p">:</span>
+            <span class="n">y_err</span> <span class="o">=</span> <span class="mf">0.434</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stddev</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">y_err</span><span class="p">[</span><span class="n">y_err</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">y_err</span><span class="o">**-</span><span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">xlow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xlow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">xlow</span><span class="p">)</span>
+
+            <span class="n">lower_limit</span> <span class="o">=</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xlow</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lower_limit</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">xlow</span> <span class="o">=</span> <span class="n">pix_scales</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.99</span>
+
+        <span class="k">if</span> <span class="n">xhigh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xhigh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">xhigh</span><span class="p">)</span>
+
+            <span class="n">upper_limit</span> <span class="o">=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xhigh</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upper_limit</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">xhigh</span> <span class="o">=</span> <span class="n">pix_scales</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.01</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_range</span> <span class="o">=</span> <span class="p">[</span><span class="n">xlow</span><span class="p">,</span> <span class="n">xhigh</span><span class="p">]</span>
+
+        <span class="n">within_limits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">lower_limit</span><span class="p">,</span> <span class="n">upper_limit</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">within_limits</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">within_limits</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">weighted_fit</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">within_limits</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">brk</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Try fitting a segmented model</span>
+
+            <span class="n">pix_brk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="n">brk</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pix_brk</span> <span class="o">&lt;</span> <span class="n">xlow</span> <span class="ow">or</span> <span class="n">pix_brk</span> <span class="o">&gt;</span> <span class="n">xhigh</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;brk must be within xlow and xhigh.&quot;</span><span class="p">)</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Lm_Seg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">pix_brk</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+
+            <span class="n">fit_kwargs</span><span class="p">[</span><span class="s1">&#39;cov_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;HC3&#39;</span>
+
+            <span class="n">model</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span>
+
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+
+                <span class="c1"># Check to make sure this leaves enough to fit to.</span>
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">model</span><span class="o">.</span><span class="n">brk</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_fits_pts</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Not enough points to fit to.&quot;</span> <span class="o">+</span>
+                                  <span class="s2">&quot; Ignoring break.&quot;</span><span class="p">)</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_brk</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">good_pts</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">model</span><span class="o">.</span><span class="n">brk</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">good_pts</span><span class="p">]</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">good_pts</span><span class="p">]</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_brk</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">brk</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_slope</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">slopes</span>
+
+                    <span class="k">if</span> <span class="n">bootstrap</span><span class="p">:</span>
+                        <span class="n">stderrs</span> <span class="o">=</span> <span class="n">residual_bootstrap</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">,</span>
+                                                     <span class="o">**</span><span class="n">bootstrap_kwargs</span><span class="p">)</span>
+
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_slope_err</span> <span class="o">=</span> <span class="n">stderrs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_brk_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">brk</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> \
+                            <span class="n">stderrs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_slope_err</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">slope_errs</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_brk_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">brk</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> \
+                            <span class="n">model</span><span class="o">.</span><span class="n">brk_err</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_brk</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="c1"># Break fit failed, revert to normal model</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Model with break failed, reverting to model</span><span class="se">\</span>
+<span class="s2">                               without break.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_brk</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Revert to model without break if none is given, or if the segmented</span>
+        <span class="c1"># model failed.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">brk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">add_constant</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">weighted_fit</span><span class="p">:</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">WLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s1">&#39;drop&#39;</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">OLS</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s1">&#39;drop&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">cov_type</span><span class="o">=</span><span class="s1">&#39;HC3&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_slope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">bootstrap</span><span class="p">:</span>
+                <span class="n">stderrs</span> <span class="o">=</span> <span class="n">residual_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">,</span>
+                                             <span class="o">**</span><span class="n">bootstrap_kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_slope_err</span> <span class="o">=</span> <span class="n">stderrs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_slope_err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">bse</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap_flag</span> <span class="o">=</span> <span class="n">bootstrap</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Fitted slope.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slope</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">slope_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Standard error on the fitted slope.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slope_err</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">brk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Break point in the segmented linear model.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_brk</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">brk_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        1-sigma on the break point in the segmented linear model.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_brk_err</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fit_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Range of scales used in the fit.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_range</span>
+
+<div class="viewcode-block" id="Wavelet.fitted_model"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet.fitted_model">[docs]</a>    <span class="k">def</span> <span class="nf">fitted_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xvals</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Computes the fitted power-law in log-log space using the</span>
+<span class="sd">        given x values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xvals : `~numpy.ndarray`</span>
+<span class="sd">            Values of log(lags) to compute the model at (base 10 log).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        model_values : `~numpy.ndarray`</span>
+<span class="sd">            Values of the model at the given values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">Lm_Seg</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">xvals</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">xvals</span></div>
+
+<div class="viewcode-block" id="Wavelet.plot_transform"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet.plot_transform">[docs]</a>    <span class="k">def</span> <span class="nf">plot_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">fit_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                       <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_residual</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the transform and the fit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Save name for the figure. Enables saving the plot.</span>
+<span class="sd">        xunit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            Choose the angular unit to convert to when ang_units is enabled.</span>
+<span class="sd">        color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color to plot the wavelet curve.</span>
+<span class="sd">        symbol : str, optional</span>
+<span class="sd">            Symbol to use for the data.</span>
+<span class="sd">        fit_color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color of the 1D fit.</span>
+<span class="sd">        label : str, optional</span>
+<span class="sd">            Label to later be used in a legend.</span>
+<span class="sd">        show_residual : bool, optional</span>
+<span class="sd">            Plot the fit residuals.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="k">if</span> <span class="n">fit_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_color</span> <span class="o">=</span> <span class="n">color</span>
+
+        <span class="c1"># Check for already existing subplots</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">show_residual</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rowspan</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">ax_r</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">rowspan</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">sharex</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ax_r</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+
+        <span class="n">pix_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_pixel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="n">pix_scales</span><span class="p">,</span> <span class="n">xunit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="c1"># Check for NaNs</span>
+        <span class="n">fin_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stddev</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="n">fin_vals</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">fin_vals</span><span class="p">],</span>
+                    <span class="n">yerr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stddev</span><span class="p">[</span><span class="n">fin_vals</span><span class="p">],</span>
+                    <span class="n">fmt</span><span class="o">=</span><span class="n">symbol</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                    <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                    <span class="n">elinewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># Plot the fit within the fitting range.</span>
+        <span class="n">low_lim</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fit_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xunit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">high_lim</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_unit_conversion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fit_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xunit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">scales</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">pix_scales</span><span class="o">.</span><span class="n">value</span><span class="p">)),</span>
+                  <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">,</span>
+                  <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">low_lim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">high_lim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$T_g$&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_residual</span><span class="p">:</span>
+            <span class="n">resids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> \
+                <span class="mi">10</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fitted_model</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">pix_scales</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">scales</span><span class="p">,</span> <span class="n">resids</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stddev</span><span class="p">[</span><span class="n">fin_vals</span><span class="p">],</span>
+                          <span class="n">fmt</span><span class="o">=</span><span class="n">symbol</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                          <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                          <span class="n">elinewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">low_lim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">high_lim</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Residuals&quot;</span><span class="p">)</span>
+            <span class="n">ax_r</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Scales (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xunit</span><span class="p">))</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Scales (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xunit</span><span class="p">))</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Wavelet.run"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet.html#turbustat.statistics.Wavelet.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+            <span class="n">convolve_kwargs</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">use_pyfftw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">pyfftw_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">scale_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">xlow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">brk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fit_kwargs</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the Wavelet transform.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_progress : bool, optional</span>
+<span class="sd">            Show a progress bar during the creation of the covariance matrix.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Plot wavelet transform.</span>
+<span class="sd">        xunit : u.Unit, optional</span>
+<span class="sd">            Choose the unit to convert to when ang_units is enabled.</span>
+<span class="sd">        convolve_kwargs : dict, optional</span>
+<span class="sd">            Passed to `~astropy.convolution.convolve_fft`.</span>
+<span class="sd">        scale_normalization: bool, optional</span>
+<span class="sd">            Compute the transform with the correct scale-invariant</span>
+<span class="sd">            normalization.</span>
+<span class="sd">        use_pyfftw : bool, optional</span>
+<span class="sd">            Enable to use pyfftw, if it is installed.</span>
+<span class="sd">        threads : int, optional</span>
+<span class="sd">            Number of threads to use in FFT when using pyfftw.</span>
+<span class="sd">        pyfftw_kwargs : Passed to</span>
+<span class="sd">            See `here &lt;http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html&gt;`_</span>
+<span class="sd">            for a list of accepted kwargs.</span>
+<span class="sd">        scale_normalization: bool, optional</span>
+<span class="sd">            Multiply the wavelet transform by the correct normalization</span>
+<span class="sd">            factor.</span>
+<span class="sd">        xlow : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Lower scale value to consider in the fit.</span>
+<span class="sd">        xhigh : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Upper scale value to consider in the fit.</span>
+<span class="sd">        brk : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            Give an initial guess for a break point. This enables fitting</span>
+<span class="sd">            with a `turbustat.statistics.Lm_Seg`.</span>
+<span class="sd">        fit_kwargs : dict, optional</span>
+<span class="sd">            Passed to `~Wavelet.fit_transform`</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        plot_kwargs : Passed to `~Wavelet.plot_transform`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_transform</span><span class="p">(</span><span class="n">scale_normalization</span><span class="o">=</span><span class="n">scale_normalization</span><span class="p">,</span>
+                               <span class="n">convolve_kwargs</span><span class="o">=</span><span class="n">convolve_kwargs</span><span class="p">,</span>
+                               <span class="n">use_pyfftw</span><span class="o">=</span><span class="n">use_pyfftw</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="n">threads</span><span class="p">,</span>
+                               <span class="n">pyfftw_kwargs</span><span class="o">=</span><span class="n">pyfftw_kwargs</span><span class="p">,</span>
+                               <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">xlow</span><span class="o">=</span><span class="n">xlow</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="n">xhigh</span><span class="p">,</span> <span class="n">brk</span><span class="o">=</span><span class="n">brk</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bootstrap_flag</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bootstrapping used to find stderrs! &quot;</span>
+                      <span class="s2">&quot;Errors may not equal those shown above.&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_transform</span><span class="p">(</span><span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">xunit</span><span class="p">,</span>
+                                <span class="o">**</span><span class="n">plot_kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="Wavelet_Distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet_Distance.html#turbustat.statistics.Wavelet_Distance">[docs]</a><span class="k">class</span> <span class="nc">Wavelet_Distance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute the distance between the two cubes using the Wavelet transform.</span>
+<span class="sd">    We fit a linear model to the two wavelet transforms. The distance is the</span>
+<span class="sd">    t-statistic of the interaction term describing the difference in the</span>
+<span class="sd">    slopes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset1 : %(dtypes)s</span>
+<span class="sd">        2D image.</span>
+<span class="sd">    dataset2 : %(dtypes)s</span>
+<span class="sd">        2D image.</span>
+<span class="sd">    scales : numpy.ndarray or list</span>
+<span class="sd">        The scales where the transform is calculated.</span>
+<span class="sd">    num : int</span>
+<span class="sd">        Number of scales to calculate the transform at.</span>
+<span class="sd">    xlow : `astropy.units.Quantity`, optional</span>
+<span class="sd">        The lower lag fitting limit. An array with 2 elements can be passed to</span>
+<span class="sd">        give separate lower limits for the datasets.</span>
+<span class="sd">    xhigh : `astropy.units.Quantity`, optional</span>
+<span class="sd">        The upper lag fitting limit. See `xlow` above.</span>
+<span class="sd">    fit_kwargs : dict, optional</span>
+<span class="sd">        Passed to `~turbustat.statistics.Wavelet.run`.</span>
+<span class="sd">    fit_kwargs2 : dict, optional</span>
+<span class="sd">        Passed to `~turbustat.statistics.Wavelet.run` for `dataset2`. When</span>
+<span class="sd">        `None` is given, `fit_kwargs` is used for `dataset2`.</span>
+<span class="sd">    fiducial_model : None or `~turbustat.statistics.Wavelet`</span>
+<span class="sd">        A computed Wavelet model. Used to avoid recomputing.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset1</span><span class="p">,</span> <span class="n">dataset2</span><span class="p">,</span>
+                 <span class="n">scales</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">xlow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fit_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">fit_kwargs2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fiducial_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Wavelet_Distance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">xlow</span><span class="p">,</span> <span class="n">xhigh</span> <span class="o">=</span> <span class="n">check_fit_limits</span><span class="p">(</span><span class="n">xlow</span><span class="p">,</span> <span class="n">xhigh</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fiducial_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wt1</span> <span class="o">=</span> <span class="n">Wavelet</span><span class="p">(</span><span class="n">dataset1</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="n">scales</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wt1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">xlow</span><span class="o">=</span><span class="n">xlow</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xhigh</span><span class="o">=</span><span class="n">xhigh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">fit_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wt1</span> <span class="o">=</span> <span class="n">fiducial_model</span>
+
+        <span class="k">if</span> <span class="n">fit_kwargs2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_kwargs2</span> <span class="o">=</span> <span class="n">fit_kwargs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wt2</span> <span class="o">=</span> <span class="n">Wavelet</span><span class="p">(</span><span class="n">dataset2</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="n">scales</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wt2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">xlow</span><span class="o">=</span><span class="n">xlow</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xhigh</span><span class="o">=</span><span class="n">xhigh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">fit_kwargs2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Wavelet_Distance.distance_metric"><a class="viewcode-back" href="../../../../api/turbustat.statistics.Wavelet_Distance.html#turbustat.statistics.Wavelet_Distance.distance_metric">[docs]</a>    <span class="k">def</span> <span class="nf">distance_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+                        <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_kwargs1</span><span class="o">=</span><span class="p">{},</span>
+                        <span class="n">plot_kwargs2</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Implements the distance metric for 2 wavelet transforms.</span>
+<span class="sd">        We fit the linear portion of the transform to represent the powerlaw</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        xunit : `~astropy.units.Unit`, optional</span>
+<span class="sd">            Unit of the x-axis in the plot in pixel, angular, or</span>
+<span class="sd">            physical units.</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Name of the save file. Enables saving the figure.</span>
+<span class="sd">        plot_kwargs1 : dict, optional</span>
+<span class="sd">            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for</span>
+<span class="sd">            `dataset1`.</span>
+<span class="sd">        plot_kwargs2 : dict, optional</span>
+<span class="sd">            Pass kwargs to `~turbustat.statistics.Wavelet.plot_transform` for</span>
+<span class="sd">            `dataset2`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Construct t-statistic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">wt1</span><span class="o">.</span><span class="n">slope</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt2</span><span class="o">.</span><span class="n">slope</span><span class="p">)</span> <span class="o">/</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt1</span><span class="o">.</span><span class="n">slope_err</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">wt2</span><span class="o">.</span><span class="n">slope_err</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt1</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt2</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+            <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+            <span class="n">defaults1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">}</span>
+            <span class="n">defaults2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                    <span class="n">plot_kwargs1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                    <span class="n">plot_kwargs2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;xunit&#39;</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;xunit&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;xunit&#39;</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;xunit&#39;</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">wt1</span><span class="o">.</span><span class="n">plot_transform</span><span class="p">(</span><span class="n">xunit</span><span class="o">=</span><span class="n">xunit</span><span class="p">,</span>
+                                    <span class="o">**</span><span class="n">plot_kwargs1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wt2</span><span class="o">.</span><span class="n">plot_transform</span><span class="p">(</span><span class="n">xunit</span><span class="o">=</span><span class="n">xunit</span><span class="p">,</span>
+                                    <span class="o">**</span><span class="n">plot_kwargs2</span><span class="p">)</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()</span>
+            <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

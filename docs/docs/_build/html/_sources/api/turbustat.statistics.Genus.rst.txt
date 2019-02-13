@@ -1,0 +1,55 @@
+Genus
+=====
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Genus
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Genus.data
+      ~Genus.distance
+      ~Genus.genus_stats
+      ~Genus.header
+      ~Genus.need_header_flag
+      ~Genus.no_data_flag
+      ~Genus.smoothed_images
+      ~Genus.smoothing_radii
+      ~Genus.thresholds
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Genus.input_data_header
+      ~Genus.load_beam
+      ~Genus.load_results
+      ~Genus.make_genus_curve
+      ~Genus.plot_fit
+      ~Genus.run
+      ~Genus.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: genus_stats
+   .. autoattribute:: header
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: smoothed_images
+   .. autoattribute:: smoothing_radii
+   .. autoattribute:: thresholds
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: make_genus_curve
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

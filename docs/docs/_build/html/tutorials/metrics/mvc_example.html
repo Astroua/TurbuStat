@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>MVC Distance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PCA Distance" href="pca_example.html" />
+    <link rel="prev" title="Genus Distance" href="genus_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">MVC Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="genus_example.html" title="Previous Chapter: Genus Distance"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Genus Distance</span>
+    </a>
+  </li>
+  <li>
+    <a href="pca_example.html" title="Next Chapter: PCA Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">PCA Distance &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/metrics/mvc_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">MVC Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="mvc-distance">
+<span id="mvcdistmet"></span><h1>MVC Distance<a class="headerlink" href="#mvc-distance" title="Permalink to this headline">¶</a></h1>
+<p>See <a class="reference internal" href="../statistics/mvc_example.html#mvc-tutorial"><span class="std std-ref">the tutorial</span></a> for a description of Modified Velocity Centroids (MVC).</p>
+<p>The distance metric for MVC is based on the t-statistics of teh difference between the power spectrum slopes:</p>
+<div class="math notranslate nohighlight">
+\[d_{\rm MVC} = \frac{\left| \beta_1 - \beta_2 \right|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}\]</div>
+<p><span class="math notranslate nohighlight">\(\beta_i\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\beta_i}\)</span> is the index and index uncertainty, respectively.</p>
+<p>More information on the distance metric definitions can be found in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a>.</p>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.MVC_Distance.html#turbustat.statistics.MVC_Distance" title="turbustat.statistics.MVC_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC_Distance</span></code></a> class, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">MVC_Distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<p>MVC is the only (current) statistic in TurbuStat that requires multiple moment arrays. Because of this, the input for <a class="reference internal" href="../../api/turbustat.statistics.MVC_Distance.html#turbustat.statistics.MVC_Distance" title="turbustat.statistics.MVC_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC_Distance</span></code></a> has a different format than the other distance metrics: a dictionary that contains the array and headers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centroid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_centroid.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lwidth</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_linewidth.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;moment0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">moment0</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">moment0</span><span class="o">.</span><span class="n">header</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s2">&quot;centroid&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">centroid</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">centroid</span><span class="o">.</span><span class="n">header</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">lwidth</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">lwidth</span><span class="o">.</span><span class="n">header</span><span class="p">]}</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>And we create a second dictionary for the data set to compare with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centroid_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc_centroid.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lwidth_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc_linewidth.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data_fid</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;moment0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">moment0</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">moment0</span><span class="o">.</span><span class="n">header</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s2">&quot;centroid&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">centroid</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">centroid</span><span class="o">.</span><span class="n">header</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">lwidth</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">lwidth</span><span class="o">.</span><span class="n">header</span><span class="p">]}</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>These dictionaries can optionally include uncertainty arrays for the moments using the same format with keywords <code class="xref py py-obj docutils literal notranslate"><span class="pre">moment0_error</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">centroid_error</span></code>, and <code class="xref py py-obj docutils literal notranslate"><span class="pre">linewidth_error</span></code>.</p>
+<p>These dictionaries get passed to <a class="reference internal" href="../../api/turbustat.statistics.MVC_Distance.html#turbustat.statistics.MVC_Distance" title="turbustat.statistics.MVC_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC_Distance</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC_Distance</span><span class="p">(</span><span class="n">data_fid</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>To calculate the distance between the MVC power-spectra is calculated with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">distance_metric</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.925</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.924</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     378.5</span>
+<span class="go">Date:                Tue, 13 Nov 2018   Prob (F-statistic):           8.18e-34</span>
+<span class="go">Time:                        10:21:40   Log-Likelihood:                -62.343</span>
+<span class="go">No. Observations:                  91   AIC:                             128.7</span>
+<span class="go">Df Residuals:                      89   BIC:                             133.7</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:                  HC3</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         15.2461      0.161     94.965      0.000      14.931      15.561</span>
+<span class="go">x1            -4.8788      0.251    -19.455      0.000      -5.370      -4.387</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        5.193   Durbin-Watson:                   0.068</span>
+<span class="go">Prob(Omnibus):                  0.075   Jarque-Bera (JB):                4.522</span>
+<span class="go">Skew:                          -0.459   Prob(JB):                        0.104</span>
+<span class="go">Kurtosis:                       2.408   Cond. No.                         4.40</span>
+<span class="go">==============================================================================</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.941</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.941</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     477.5</span>
+<span class="go">Date:                Tue, 13 Nov 2018   Prob (F-statistic):           1.55e-37</span>
+<span class="go">Time:                        10:21:40   Log-Likelihood:                -52.867</span>
+<span class="go">No. Observations:                  91   AIC:                             109.7</span>
+<span class="go">Df Residuals:                      89   BIC:                             114.8</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:                  HC3</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         14.0302      0.144     97.714      0.000      13.749      14.312</span>
+<span class="go">x1            -5.0144      0.229    -21.853      0.000      -5.464      -4.565</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        3.541   Durbin-Watson:                   0.129</span>
+<span class="go">Prob(Omnibus):                  0.170   Jarque-Bera (JB):                3.488</span>
+<span class="go">Skew:                          -0.469   Prob(JB):                        0.175</span>
+<span class="go">Kurtosis:                       2.800   Cond. No.                         4.40</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_distmet.png" src="../../_images/mvc_distmet.png" />
+<p>The MVC spectra are plotted in the figure and the fit summaries are printed out. The distance between the indices is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.3988169606167437</span>
+</pre></div>
+</div>
+<p>This is an awful fit. We want to limit where the spectra are fit. Keywords for <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC" title="turbustat.statistics.MVC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC</span></code></a> can be passed with <code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">breaks</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">pspec_kwargs</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">pspec2_kwargs</span></code>. If separate parameters need to be set, a two-element list or array can be given to <code class="xref py py-obj docutils literal notranslate"><span class="pre">low_cut</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">high_cut</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">breaks</span></code>; the second element will be used for the second data set. For example, limiting the fit region can be done with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC_Distance</span><span class="p">(</span><span class="n">data_fid</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.02</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.4</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">distance_metric</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.946</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.942</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     135.6</span>
+<span class="go">Date:                Tue, 13 Nov 2018   Prob (F-statistic):           2.99e-08</span>
+<span class="go">Time:                        10:36:41   Log-Likelihood:                 10.700</span>
+<span class="go">No. Observations:                  15   AIC:                            -17.40</span>
+<span class="go">Df Residuals:                      13   BIC:                            -15.98</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:                  HC3</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         17.9988      0.266     67.588      0.000      17.477      18.521</span>
+<span class="go">x1            -2.5502      0.219    -11.647      0.000      -2.979      -2.121</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        1.189   Durbin-Watson:                   2.376</span>
+<span class="go">Prob(Omnibus):                  0.552   Jarque-Bera (JB):                0.814</span>
+<span class="go">Skew:                          -0.200   Prob(JB):                        0.666</span>
+<span class="go">Kurtosis:                       1.931   Cond. No.                         13.5</span>
+<span class="go">==============================================================================</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.951</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.948</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     70.08</span>
+<span class="go">Date:                Tue, 13 Nov 2018   Prob (F-statistic):           1.36e-06</span>
+<span class="go">Time:                        10:36:41   Log-Likelihood:                 10.420</span>
+<span class="go">No. Observations:                  15   AIC:                            -16.84</span>
+<span class="go">Df Residuals:                      13   BIC:                            -15.42</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:                  HC3</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          z      P&gt;|z|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         16.7135      0.390     42.879      0.000      15.950      17.477</span>
+<span class="go">x1            -2.7335      0.327     -8.371      0.000      -3.373      -2.094</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.831   Durbin-Watson:                   2.076</span>
+<span class="go">Prob(Omnibus):                  0.660   Jarque-Bera (JB):                0.621</span>
+<span class="go">Skew:                          -0.449   Prob(JB):                        0.733</span>
+<span class="go">Kurtosis:                       2.568   Cond. No.                         13.5</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/mvc_distmet_lims.png" src="../../_images/mvc_distmet_lims.png" />
+<p>The distance is now:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span><span class="o">.</span><span class="n">distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.46621655722371613</span>
+</pre></div>
+</div>
+<p>If many data sets are being compared to a fiducial, a pre-computed <a class="reference internal" href="../../api/turbustat.statistics.MVC.html#turbustat.statistics.MVC" title="turbustat.statistics.MVC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC</span></code></a> class can be passed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">MVC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc_fid</span> <span class="o">=</span> <span class="n">MVC</span><span class="p">(</span><span class="n">data_fid</span><span class="p">[</span><span class="s1">&#39;centroid&#39;</span><span class="p">],</span> <span class="n">data_fid</span><span class="p">[</span><span class="s1">&#39;moment0&#39;</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="n">data_fid</span><span class="p">[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">])</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc_fid</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mvc</span> <span class="o">=</span> <span class="n">MVC_Distance</span><span class="p">(</span><span class="n">data_fid</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fiducial_model</span><span class="o">=</span><span class="n">mvc_fid</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>Note that the data still need to be passed to <a class="reference internal" href="../../api/turbustat.statistics.MVC_Distance.html#turbustat.statistics.MVC_Distance" title="turbustat.statistics.MVC_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVC_Distance</span></code></a>.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract">Boyden et al. 2018</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

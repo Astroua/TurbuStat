@@ -1,0 +1,71 @@
+DeltaVariance
+=============
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: DeltaVariance
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~DeltaVariance.brk
+      ~DeltaVariance.brk_err
+      ~DeltaVariance.data
+      ~DeltaVariance.delta_var
+      ~DeltaVariance.delta_var_error
+      ~DeltaVariance.distance
+      ~DeltaVariance.fit_range
+      ~DeltaVariance.header
+      ~DeltaVariance.lags
+      ~DeltaVariance.need_header_flag
+      ~DeltaVariance.no_data_flag
+      ~DeltaVariance.slope
+      ~DeltaVariance.slope_err
+      ~DeltaVariance.weights
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~DeltaVariance.compute_deltavar
+      ~DeltaVariance.do_convolutions
+      ~DeltaVariance.fit_plaw
+      ~DeltaVariance.fitted_model
+      ~DeltaVariance.input_data_header
+      ~DeltaVariance.load_beam
+      ~DeltaVariance.load_results
+      ~DeltaVariance.plot_fit
+      ~DeltaVariance.run
+      ~DeltaVariance.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: data
+   .. autoattribute:: delta_var
+   .. autoattribute:: delta_var_error
+   .. autoattribute:: distance
+   .. autoattribute:: fit_range
+   .. autoattribute:: header
+   .. autoattribute:: lags
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: slope
+   .. autoattribute:: slope_err
+   .. autoattribute:: weights
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: compute_deltavar
+   .. automethod:: do_convolutions
+   .. automethod:: fit_plaw
+   .. automethod:: fitted_model
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

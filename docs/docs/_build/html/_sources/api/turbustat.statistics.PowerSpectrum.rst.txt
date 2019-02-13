@@ -1,0 +1,85 @@
+PowerSpectrum
+=============
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: PowerSpectrum
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~PowerSpectrum.brk
+      ~PowerSpectrum.brk_err
+      ~PowerSpectrum.data
+      ~PowerSpectrum.distance
+      ~PowerSpectrum.ellip2D
+      ~PowerSpectrum.ellip2D_err
+      ~PowerSpectrum.freqs
+      ~PowerSpectrum.header
+      ~PowerSpectrum.need_header_flag
+      ~PowerSpectrum.no_data_flag
+      ~PowerSpectrum.ps1D
+      ~PowerSpectrum.ps1D_stddev
+      ~PowerSpectrum.ps2D
+      ~PowerSpectrum.slope
+      ~PowerSpectrum.slope2D
+      ~PowerSpectrum.slope2D_err
+      ~PowerSpectrum.slope_err
+      ~PowerSpectrum.theta2D
+      ~PowerSpectrum.theta2D_err
+      ~PowerSpectrum.wavenumbers
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~PowerSpectrum.apodizing_kernel
+      ~PowerSpectrum.compute_pspec
+      ~PowerSpectrum.compute_radial_pspec
+      ~PowerSpectrum.fit_2Dpspec
+      ~PowerSpectrum.fit_pspec
+      ~PowerSpectrum.input_data_header
+      ~PowerSpectrum.load_beam
+      ~PowerSpectrum.load_results
+      ~PowerSpectrum.plot_fit
+      ~PowerSpectrum.run
+      ~PowerSpectrum.save_results
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: brk
+   .. autoattribute:: brk_err
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: ellip2D
+   .. autoattribute:: ellip2D_err
+   .. autoattribute:: freqs
+   .. autoattribute:: header
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: ps1D
+   .. autoattribute:: ps1D_stddev
+   .. autoattribute:: ps2D
+   .. autoattribute:: slope
+   .. autoattribute:: slope2D
+   .. autoattribute:: slope2D_err
+   .. autoattribute:: slope_err
+   .. autoattribute:: theta2D
+   .. autoattribute:: theta2D_err
+   .. autoattribute:: wavenumbers
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: apodizing_kernel
+   .. automethod:: compute_pspec
+   .. automethod:: compute_radial_pspec
+   .. automethod:: fit_2Dpspec
+   .. automethod:: fit_pspec
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: plot_fit
+   .. automethod:: run
+   .. automethod:: save_results

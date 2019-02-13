@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.statistics.pdf.compare_pdf &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.statistics.pdf.compare_pdf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">ks_2samp</span><span class="p">,</span> <span class="n">lognorm</span>  <span class="c1"># , anderson_ksamp</span>
+<span class="kn">from</span> <span class="nn">statsmodels.distributions.empirical_distribution</span> <span class="k">import</span> <span class="n">ECDF</span>
+<span class="kn">from</span> <span class="nn">statsmodels.base.model</span> <span class="k">import</span> <span class="n">GenericLikelihoodModel</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">..stats_utils</span> <span class="k">import</span> <span class="n">hellinger</span><span class="p">,</span> <span class="n">common_histogram_bins</span><span class="p">,</span> <span class="n">data_normalization</span>
+<span class="kn">from</span> <span class="nn">..base_statistic</span> <span class="k">import</span> <span class="n">BaseStatisticMixIn</span>
+<span class="kn">from</span> <span class="nn">...io</span> <span class="k">import</span> <span class="n">common_types</span><span class="p">,</span> <span class="n">twod_types</span><span class="p">,</span> <span class="n">threed_types</span><span class="p">,</span> <span class="n">input_data</span>
+
+
+<div class="viewcode-block" id="PDF"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF">[docs]</a><span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">BaseStatisticMixIn</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create the PDF of a given array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : %(dtypes)s</span>
+<span class="sd">        A 1-3D array.</span>
+<span class="sd">    min_val : float, optional</span>
+<span class="sd">        Minimum value to keep in the given image.</span>
+<span class="sd">    bins : list or numpy.ndarray or int, optional</span>
+<span class="sd">        Bins to compute the PDF from.</span>
+<span class="sd">    weights : %(dtypes)s, optional</span>
+<span class="sd">        Weights to apply to the image. Must have the same shape as the image.</span>
+<span class="sd">    normalization_type : {&quot;standardize&quot;, &quot;center&quot;, &quot;normalize&quot;, &quot;normalize_by_mean&quot;}, optional</span>
+<span class="sd">        See `~turbustat.statistics.stat_utils.data_normalization`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from turbustat.statistics import PDF</span>
+<span class="sd">    &gt;&gt;&gt; from astropy.io import fits</span>
+<span class="sd">    &gt;&gt;&gt; moment0 = fits.open(&quot;Design4_21_0_0_flatrho_0021_13co.moment0.fits&quot;)[0]  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; pdf_mom0 = PDF(moment0).run(verbose=True)  # doctest: +SKIP</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span> <span class="o">+</span>
+                                      <span class="n">threed_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">normalization_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PDF</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">need_header_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">output_data</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">no_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">img</span> <span class="o">=</span> <span class="n">output_data</span>
+
+        <span class="c1"># We want to remove NaNs and value below the threshold.</span>
+        <span class="n">keep_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">output_data</span><span class="p">),</span>
+                                     <span class="n">output_data</span> <span class="o">&gt;</span> <span class="n">min_val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">output_data</span><span class="p">[</span><span class="n">keep_values</span><span class="p">]</span>
+
+        <span class="c1"># Do the same for the weights, then apply weights to the data.</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output_weights</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">no_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">output_weights</span><span class="p">[</span><span class="n">keep_values</span><span class="p">]</span>
+
+            <span class="n">isfinite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">isfinite</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">isfinite</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">normalization_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalization_type</span> <span class="o">=</span> <span class="n">normalization_type</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data_normalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                           <span class="n">norm_type</span><span class="o">=</span><span class="n">normalization_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalization_type</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="n">bins</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="PDF.make_pdf"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.make_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">make_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the PDF.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bins : list or numpy.ndarray or int, optional</span>
+<span class="sd">            Bins to compute the PDF from. Overrides initial bin input.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="n">bins</span>
+
+        <span class="c1"># If the number of bins is not given, use sqrt of data length.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">))</span>
+
+        <span class="c1"># norm_weights = np.ones_like(self.data) / self.data.shape[0]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span>
+                                            <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                            <span class="c1"># weights=norm_weights)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bin_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">normalization_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalization_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        PDF values in `~PDF.bins`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Bin centers.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span>
+
+<div class="viewcode-block" id="PDF.make_ecdf"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.make_ecdf">[docs]</a>    <span class="k">def</span> <span class="nf">make_ecdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the ECDF.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_pdf</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf_function</span> <span class="o">=</span> <span class="n">ECDF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ecdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        ECDF values in `~PDF.bins`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf</span>
+
+<div class="viewcode-block" id="PDF.find_percentile"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.find_percentile">[docs]</a>    <span class="k">def</span> <span class="nf">find_percentile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return the percentiles of given values from the</span>
+<span class="sd">        data distribution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : float or np.ndarray</span>
+<span class="sd">            Value or array of values.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecdf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_ecdf</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecdf_function</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">*</span> <span class="mf">100.</span></div>
+
+<div class="viewcode-block" id="PDF.find_at_percentile"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.find_at_percentile">[docs]</a>    <span class="k">def</span> <span class="nf">find_at_percentile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return the values at the given percentiles.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        percentiles : float or np.ndarray</span>
+<span class="sd">            Percentile or array of percentiles. Must be between 0 and 100.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">percentiles</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">,</span> <span class="n">percentiles</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Percentiles must be between 0 and 100.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PDF.fit_pdf"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.fit_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">fit_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">lognorm</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">fit_type</span><span class="o">=</span><span class="s1">&#39;mle&#39;</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fscale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Fit a model to the PDF. Use statsmodel&#39;s generalized likelihood</span>
+<span class="sd">        setup to get uncertainty estimates and such.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : scipy.stats distribution, optional</span>
+<span class="sd">            Pass any scipy distribution. NOTE: All fits assume `loc` can be</span>
+<span class="sd">            fixed to 0. This is reasonable for all realistic PDF forms in the</span>
+<span class="sd">            ISM.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enable printing of the fit results.</span>
+<span class="sd">        fit_type : {&#39;mle&#39;, &#39;mcmc&#39;}, optional</span>
+<span class="sd">            Type of fitting to use. By default Maximum Likelihood Estimation</span>
+<span class="sd">             (&#39;mle&#39;) is used. An MCMC approach (&#39;mcmc&#39;) may also be used. This</span>
+<span class="sd">             requires the optional `emcee` to be installed. kwargs can be</span>
+<span class="sd">             passed to adjust various properties of the MCMC chain.</span>
+<span class="sd">        floc : bool, optional</span>
+<span class="sd">            Fix the `loc` parameter when fitting.</span>
+<span class="sd">        loc : float, optional</span>
+<span class="sd">            Value to set `loc` to when fixed.</span>
+<span class="sd">        fscale : bool, optional</span>
+<span class="sd">            Fix the `scale` parameter when fitting.</span>
+<span class="sd">        scale : float, optional</span>
+<span class="sd">            Value to set `scale` to when fixed.</span>
+<span class="sd">        kwargs : Passed to `~emcee.EnsembleSampler`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">fit_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mle&#39;</span><span class="p">,</span> <span class="s1">&#39;mcmc&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fit_type must be &#39;mle&#39; or &#39;mcmc&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">floc</span><span class="p">,</span> <span class="n">loc</span><span class="p">],</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">fscale</span><span class="p">,</span> <span class="n">scale</span><span class="p">]}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">class</span> <span class="nc">Likelihood</span><span class="p">(</span><span class="n">GenericLikelihoodModel</span><span class="p">):</span>
+
+            <span class="c1"># Get the number of parameters from shapes.</span>
+            <span class="c1"># Add one for scales, since we&#39;re assuming loc is frozen.</span>
+            <span class="c1"># Keeping loc=0 is appropriate for log-normal models.</span>
+            <span class="n">nparams</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">shapes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> \
+                <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="n">_loc</span> <span class="o">=</span> <span class="n">loc</span>
+            <span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span>
+
+            <span class="k">def</span> <span class="nf">loglike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">floc</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fscale</span><span class="p">:</span>
+                    <span class="n">loc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">cut</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">floc</span><span class="p">:</span>
+                    <span class="n">loc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+                    <span class="n">cut</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">fscale</span><span class="p">:</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
+                    <span class="n">cut</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+                <span class="n">loglikes</span> <span class="o">=</span> \
+                    <span class="n">model</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endog</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">[:</span><span class="n">cut</span><span class="p">],</span>
+                                 <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                                 <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">loglikes</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">loglikes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">emcee_fit</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">init_params</span><span class="p">,</span> <span class="n">burnin</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">emcee</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;emcee must be installed for MCMC fitting.&quot;</span><span class="p">)</span>
+
+            <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+            <span class="n">nwalkers</span> <span class="o">=</span> <span class="n">ndim</span> <span class="o">*</span> <span class="mi">10</span>
+            <span class="n">p0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">init_params</span><span class="p">):</span>
+                <span class="n">p0</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">+</span> <span class="n">val</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="n">nwalkers</span><span class="p">,</span>
+                                            <span class="n">ndim</span><span class="p">,</span>
+                                            <span class="n">model</span><span class="o">.</span><span class="n">loglike</span><span class="p">,</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">[])</span>
+            <span class="n">pos</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">burnin</span><span class="p">)</span>
+            <span class="n">sampler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="n">pos</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="n">thin</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">sampler</span>
+
+        <span class="c1"># Do an initial fit with the scipy model</span>
+        <span class="k">if</span> <span class="n">floc</span> <span class="ow">and</span> <span class="n">fscale</span><span class="p">:</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">floc</span><span class="p">:</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="n">loc</span><span class="p">)</span>
+            <span class="c1"># Remove loc from the params</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">init_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">init_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">fscale</span><span class="p">:</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">fscale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+            <span class="c1"># Remove scale from the params</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">init_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">init_params</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">init_params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">init_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">Likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scipy_model</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="k">if</span> <span class="n">fit_type</span> <span class="o">==</span> <span class="s1">&#39;mle&#39;</span><span class="p">:</span>
+            <span class="n">fitted_model</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">start_params</span><span class="o">=</span><span class="n">init_params</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mle_fit</span> <span class="o">=</span> <span class="n">fitted_model</span>
+            <span class="n">fitted_model</span><span class="o">.</span><span class="n">df_model</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+            <span class="n">fitted_model</span><span class="o">.</span><span class="n">df_resid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_params</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_params</span> <span class="o">=</span> <span class="n">fitted_model</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model_stderrs</span> <span class="o">=</span> <span class="n">fitted_model</span><span class="o">.</span><span class="n">bse</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">cov_calc_failed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Variance calculation failed.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model_stderrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+                <span class="n">cov_calc_failed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">fit_type</span> <span class="o">==</span> <span class="s1">&#39;mcmc&#39;</span><span class="p">:</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">emcee_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+                              <span class="n">init_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">flatchain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_stderrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">flatchain</span><span class="p">,</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">85</span><span class="p">],</span>
+                                                <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mcmc_chain</span> <span class="o">=</span> <span class="n">chain</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fit_type</span> <span class="o">==</span> <span class="s1">&#39;mle&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cov_calc_failed</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitted parameters: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Covariance calculation failed.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">fitted_model</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ran chain for </span><span class="si">{0}</span><span class="s2"> iterations&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">iterations</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Used </span><span class="si">{}</span><span class="s2"> walkers&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">acceptance_fraction</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mean acceptance fraction of </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">acceptance_fraction</span><span class="p">)))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parameter values: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;15th to 85th percentile ranges: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_stderrs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_stderrs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parameters of the fitted model.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_model_params&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_params</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No model has been fit. Run `fit_pdf` first.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model_stderrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Standard errors of the fitted model. If using an MCMC, the 15th and</span>
+<span class="sd">        85th percentiles are returned.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_model_stderrs&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_stderrs</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No model has been fit. Run `fit_pdf` first.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PDF.corner_plot"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.corner_plot">[docs]</a>    <span class="k">def</span> <span class="nf">corner_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create a corner plot from the MCMC. Requires the &#39;corner&#39; package.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs : Passed to `~corner.corner`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_mcmc_chain&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Must run MCMC fitting first.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">corner</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;The optional package &#39;corner&#39; is not &quot;</span>
+                              <span class="s2">&quot;installed.&quot;</span><span class="p">)</span>
+
+        <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mcmc_chain</span><span class="o">.</span><span class="n">flatchain</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PDF.trace_plot"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.trace_plot">[docs]</a>    <span class="k">def</span> <span class="nf">trace_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create a trace plot from the MCMC.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs : Passed to `~matplotlib.pyplot.plot`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_mcmc_chain&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Must run MCMC fitting first.&quot;</span><span class="p">)</span>
+
+        <span class="n">npars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mcmc_chain</span><span class="o">.</span><span class="n">flatchain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">npars</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">()):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mcmc_chain</span><span class="o">.</span><span class="n">flatchain</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;par</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Iterations&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PDF.plot_distrib"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.plot_distrib">[docs]</a>    <span class="k">def</span> <span class="nf">plot_distrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">fit_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+                     <span class="n">show_ecdf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot the PDF distribution and (if fitted) the best fit model.</span>
+<span class="sd">        Optionally show the ECDF and fit ECDF, too.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color to show the Genus curves in.</span>
+<span class="sd">        fit_color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color of the fitted line. Defaults to `color` when no input is</span>
+<span class="sd">            given.</span>
+<span class="sd">        show_ecdf : bool, optional</span>
+<span class="sd">            Plot the ECDF when enabled.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;standardize&quot;</span><span class="p">:</span>
+            <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;z-score&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;center&quot;</span><span class="p">:</span>
+            <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$I - \bar</span><span class="si">{I}</span><span class="s2">$&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;normalize_by_mean&quot;</span><span class="p">:</span>
+            <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$I/\bar</span><span class="si">{I}</span><span class="s2">$&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;Intensity&quot;</span>
+
+        <span class="k">if</span> <span class="n">fit_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fit_color</span> <span class="o">=</span> <span class="n">color</span>
+
+        <span class="c1"># PDF</span>
+        <span class="k">if</span> <span class="n">show_ecdf</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Data&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+            <span class="c1"># Plot the fitted model.</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1000</span><span class="p">)</span>
+
+            <span class="c1"># Check which of the parameters were kept fixed</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;loc&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_fixes</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_scipy_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">,</span>
+                                               <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                                               <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">),</span>
+                         <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Fit&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+
+        <span class="c1"># ECDF</span>
+        <span class="k">if</span> <span class="n">show_ecdf</span><span class="p">:</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">tick_right</span><span class="p">()</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_label_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">!=</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_scipy_model</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">,</span>
+                                                   <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                                                   <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">),</span>
+                             <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">_scipy_model</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">,</span>
+                                                       <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+                                                       <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                                 <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">fit_color</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;ECDF&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PDF.run"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF.html#turbustat.statistics.PDF.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">lognorm</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the PDF and ECDF. Enabling verbose provides</span>
+<span class="sd">        a summary plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting of the results.</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        bins : list or numpy.ndarray or int, optional</span>
+<span class="sd">            Bins to compute the PDF from. Overrides initial bin input.</span>
+<span class="sd">        do_fit : bool, optional</span>
+<span class="sd">            Enables (by default) fitting a given model.</span>
+<span class="sd">        model : scipy.stats distribution, optional</span>
+<span class="sd">            Pass any scipy distribution. See `~PDF.fit_pdf`.</span>
+<span class="sd">        color : {str, RGB tuple}, optional</span>
+<span class="sd">            Color to show the Genus curves in when `verbose=True`.</span>
+<span class="sd">        kwargs : Passed to `~PDF.fit_pdf`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_pdf</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_ecdf</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">do_fit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_pdf</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_distrib</span><span class="p">(</span><span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="PDF_Distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance">[docs]</a><span class="k">class</span> <span class="nc">PDF_Distance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the distance between two arrays using their PDFs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img1 : %(dtypes)s</span>
+<span class="sd">        Array (1-3D).</span>
+<span class="sd">    img2 : %(dtypes)s</span>
+<span class="sd">        Array (1-3D).</span>
+<span class="sd">    min_val1 : float, optional</span>
+<span class="sd">        Minimum value to keep in img1</span>
+<span class="sd">    min_val2 : float, optional</span>
+<span class="sd">        Minimum value to keep in img2</span>
+<span class="sd">    do_fit : bool, optional</span>
+<span class="sd">        Enables fitting a lognormal distribution to each data set.</span>
+<span class="sd">    normalization_type : {&quot;normalize&quot;, &quot;normalize_by_mean&quot;}, optional</span>
+<span class="sd">        See `~turbustat.statistics.stat_utils.data_normalization`.</span>
+<span class="sd">    nbins : int, optional</span>
+<span class="sd">        Manually set the number of bins to use for creating the PDFs.</span>
+<span class="sd">    weights1 : %(dtypes)s, optional</span>
+<span class="sd">        Weights to be used with img1</span>
+<span class="sd">    weights2 : %(dtypes)s, optional</span>
+<span class="sd">        Weights to be used with img2</span>
+<span class="sd">    bin_min : float, optional</span>
+<span class="sd">        Minimum value to use for the histogram bins *after* normalization is</span>
+<span class="sd">        applied.</span>
+<span class="sd">    bin_max : float, optional</span>
+<span class="sd">        Maximum value to use for the histogram bins *after* normalization is</span>
+<span class="sd">        applied.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__doc__</span> <span class="o">%=</span> <span class="p">{</span><span class="s2">&quot;dtypes&quot;</span><span class="p">:</span> <span class="s2">&quot; or &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">common_types</span> <span class="o">+</span> <span class="n">twod_types</span> <span class="o">+</span>
+                                      <span class="n">threed_types</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img1</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">min_val1</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">min_val2</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                 <span class="n">do_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalization_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">nbins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bin_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bin_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PDF_Distance</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">do_fit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalization_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;standardize&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot perform lognormal fit when using&quot;</span>
+                                <span class="s2">&quot; &#39;standardize&#39; or &#39;center&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">=</span> <span class="n">normalization_type</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">img1</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="n">min_val1</span><span class="p">,</span>
+                        <span class="n">normalization_type</span><span class="o">=</span><span class="n">normalization_type</span><span class="p">,</span>
+                        <span class="n">weights</span><span class="o">=</span><span class="n">weights1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">img2</span><span class="p">,</span> <span class="n">min_val</span><span class="o">=</span><span class="n">min_val2</span><span class="p">,</span>
+                        <span class="n">normalization_type</span><span class="o">=</span><span class="n">normalization_type</span><span class="p">,</span>
+                        <span class="n">weights</span><span class="o">=</span><span class="n">weights2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span> <span class="o">=</span> \
+            <span class="n">common_histogram_bins</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                  <span class="n">return_centered</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="n">nbins</span><span class="p">,</span>
+                                  <span class="n">min_val</span><span class="o">=</span><span class="n">bin_min</span><span class="p">,</span> <span class="n">max_val</span><span class="o">=</span><span class="n">bin_max</span><span class="p">)</span>
+
+        <span class="c1"># Feed the common set of bins to be used in the PDFs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span> <span class="o">=</span> <span class="n">do_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="n">do_fit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="n">do_fit</span><span class="o">=</span><span class="n">do_fit</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PDF_Distance.compute_hellinger_distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance.compute_hellinger_distance">[docs]</a>    <span class="k">def</span> <span class="nf">compute_hellinger_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Computes the Hellinger Distance between the two PDFs.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># We&#39;re using the same bins, so normalize each to unity to keep the</span>
+        <span class="c1"># distance normalized.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hellinger_distance</span> <span class="o">=</span> \
+            <span class="n">hellinger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">pdf</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">pdf</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="PDF_Distance.compute_ks_distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance.compute_ks_distance">[docs]</a>    <span class="k">def</span> <span class="nf">compute_ks_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the distance using the KS Test.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">D</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">ks_2samp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ks_distance</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ks_pval</span> <span class="o">=</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="PDF_Distance.compute_ad_distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance.compute_ad_distance">[docs]</a>    <span class="k">def</span> <span class="nf">compute_ad_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the distance using the Anderson-Darling Test.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Use of the Anderson-Darling test has been disabled&quot;</span>
+            <span class="s2">&quot; due to occurence of overflow errors.&quot;</span><span class="p">)</span></div>
+
+        <span class="c1"># D, _, p = anderson_ksamp([self.PDF1.data, self.PDF2.data])</span>
+
+        <span class="c1"># self.ad_distance = D</span>
+        <span class="c1"># self.ad_pval = p</span>
+
+<div class="viewcode-block" id="PDF_Distance.compute_lognormal_distance"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance.compute_lognormal_distance">[docs]</a>    <span class="k">def</span> <span class="nf">compute_lognormal_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Compute the combined t-statistic for the difference in the widths of</span>
+<span class="sd">        a lognormal distribution.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">model_params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">model_params</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Fitting has not been performed. &#39;do_fit&#39; must &quot;</span>
+                            <span class="s2">&quot;first be enabled.&quot;</span><span class="p">)</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">model_stderrs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">model_stderrs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lognormal_distance</span> <span class="o">=</span> <span class="n">diff</span> <span class="o">/</span> <span class="n">denom</span></div>
+
+<div class="viewcode-block" id="PDF_Distance.distance_metric"><a class="viewcode-back" href="../../../../api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance.distance_metric">[docs]</a>    <span class="k">def</span> <span class="nf">distance_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">plot_kwargs1</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">},</span>
+                        <span class="n">plot_kwargs2</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">},</span>
+                        <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the distance.</span>
+<span class="sd">        *NOTE:* The data are standardized before comparing to ensure the</span>
+<span class="sd">        distance is calculated on the same scales.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        statistic : &#39;all&#39;, &#39;hellinger&#39;, &#39;ks&#39;, &#39;lognormal&#39;</span>
+<span class="sd">            Which measure of distance to use.</span>
+<span class="sd">        labels : tuple, optional</span>
+<span class="sd">            Sets the labels in the output plot.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Enables plotting.</span>
+<span class="sd">        plot_kwargs1 : dict, optional</span>
+<span class="sd">            Pass kwargs to `~matplotlib.pyplot.plot` for</span>
+<span class="sd">            `dataset1`.</span>
+<span class="sd">        plot_kwargs2 : dict, optional</span>
+<span class="sd">            Pass kwargs to `~matplotlib.pyplot.plot` for</span>
+<span class="sd">            `dataset2`.</span>
+<span class="sd">        save_name : str,optional</span>
+<span class="sd">            Save the figure when a file name is given.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">statistic</span> <span class="ow">is</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_hellinger_distance</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_ks_distance</span><span class="p">()</span>
+            <span class="c1"># self.compute_ad_distance()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">compute_lognormal_distance</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">statistic</span> <span class="ow">is</span> <span class="s1">&#39;hellinger&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_hellinger_distance</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">statistic</span> <span class="ow">is</span> <span class="s1">&#39;ks&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_ks_distance</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">statistic</span> <span class="ow">is</span> <span class="s1">&#39;lognormal&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Fitting must be enabled to compute the&quot;</span>
+                                <span class="s2">&quot; lognormal distance.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_lognormal_distance</span><span class="p">()</span>
+        <span class="c1"># elif statistic is &#39;ad&#39;:</span>
+        <span class="c1">#     self.compute_ad_distance()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;statistic must be &#39;all&#39;,&quot;</span>
+                            <span class="s2">&quot;&#39;hellinger&#39;, &#39;ks&#39;, or &#39;lognormal&#39;.&quot;</span><span class="p">)</span>
+                            <span class="c1"># &quot;&#39;hellinger&#39;, &#39;ks&#39; or &#39;ad&#39;.&quot;)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+
+            <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+            <span class="n">defaults1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">}</span>
+            <span class="n">defaults2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs1</span><span class="p">:</span>
+                    <span class="n">plot_kwargs1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">defaults2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plot_kwargs2</span><span class="p">:</span>
+                    <span class="n">plot_kwargs2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaults2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;standardize&quot;</span><span class="p">:</span>
+                <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;z-score&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;center&quot;</span><span class="p">:</span>
+                <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$I - \bar</span><span class="si">{I}</span><span class="s2">$&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="o">==</span> <span class="s2">&quot;normalize_by_mean&quot;</span><span class="p">:</span>
+                <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;$I/\bar</span><span class="si">{I}</span><span class="s2">$&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xlabel</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;Intensity&quot;</span>
+
+            <span class="c1"># Print fit summaries if using fitting</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">_mle_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Covariance calculation failed. Check the fit quality&quot;</span>
+                         <span class="s2">&quot; for data set 1!&quot;</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">_mle_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Covariance calculation failed. Check the fit quality&quot;</span>
+                         <span class="s2">&quot; for data set 2!&quot;</span><span class="p">)</span>
+
+            <span class="c1"># PDF</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span>
+                         <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                         <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span>
+                         <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                         <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                <span class="c1"># Plot the fitted model.</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="mi">1000</span><span class="p">)</span>
+
+                <span class="n">fit_params1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">model_params</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                             <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_params1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">scale</span><span class="o">=</span><span class="n">fit_params1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+                <span class="n">fit_params2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">model_params</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                             <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_params2</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">scale</span><span class="o">=</span><span class="n">fit_params2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># ECDF</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">tick_right</span><span class="p">()</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_label_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalization_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span>
+                         <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                         <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+
+                <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span>
+                         <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                         <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                             <span class="n">lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                                         <span class="o">*</span><span class="n">fit_params1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">scale</span><span class="o">=</span><span class="n">fit_params1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,)</span>
+
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                             <span class="n">lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                                         <span class="o">*</span><span class="n">fit_params2</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">scale</span><span class="o">=</span><span class="n">fit_params2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF1</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                             <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                             <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+
+                <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF2</span><span class="o">.</span><span class="n">ecdf</span><span class="p">,</span>
+                             <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                             <span class="n">marker</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">],</span>
+                             <span class="n">label</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_fit</span><span class="p">:</span>
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                                 <span class="n">lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_params1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                             <span class="n">scale</span><span class="o">=</span><span class="n">fit_params1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                             <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs1</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,)</span>
+
+                    <span class="n">ax2</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span>
+                                 <span class="n">lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_params2</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                             <span class="n">scale</span><span class="o">=</span><span class="n">fit_params2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                             <span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="n">plot_kwargs2</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;ECDF&quot;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_name</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

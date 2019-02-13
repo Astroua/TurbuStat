@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Delta-Variance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Dendrograms" href="dendrogram_example.html" />
+    <link rel="prev" title="Bispectrum" href="bispectrum_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Delta-Variance</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="bispectrum_example.html" title="Previous Chapter: Bispectrum"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Bispectrum</span>
+    </a>
+  </li>
+  <li>
+    <a href="dendrogram_example.html" title="Next Chapter: Dendrograms"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Dendrograms &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/statistics/delta_variance_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Delta-Variance</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="delta-variance">
+<span id="delvar-tutorial"></span><h1>Delta-Variance<a class="headerlink" href="#delta-variance" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="math notranslate nohighlight">\(\Delta\)</span>-variance technique was introduced by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1998A&amp;A...336..697S/abstract">Stutzki et al. 1998</a> as a generalization of <em>Allan-variance</em>, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001A&amp;A...366..636B/abstract">Bensch et al. 2001.</a> to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this approach, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a>, where the computation using filters of different scales was moved into the Fourier domain, allowing for a significant improvement in speed. The following description uses the Fourier-domain formulation.</p>
+<p>Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with a spherically symmetric kernel - a French hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a> proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:</p>
+<div class="math notranslate nohighlight">
+\[F(r) = \frac{G_{\rm core}(r)}{W_{\rm core}(r)} - \frac{G_{\rm ann}(r)}{W_{\rm ann}(r)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(r\)</span> is the kernel size, <span class="math notranslate nohighlight">\(G\)</span> is the convolved image map, and <span class="math notranslate nohighlight">\(W\)</span> is the convolved weight map. The delta-variance is then,</p>
+<div class="math notranslate nohighlight">
+\[\sigma_{\delta}(r) = \frac{\Sigma_{\rm map} \mathrm{Var}(F(r)) W_{\rm tot}(r)}{\Sigma_{\rm map} W_{\rm tot}(r)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(W_{\rm tot}(r) = W_{\rm core}(r)\,W_{\rm ann}(r)\)</span>.</p>
+<p>Since the kernel is separated into two components, the ratio between their widths can be set independently. <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a> find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.</p>
+<p>Performing this operation yields a power-law-like relation between the scales <span class="math notranslate nohighlight">\(r\)</span> and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function (e.g., <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract">Miesch &amp; Bally 1994</a>). Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.</p>
+<p>This technique shares many similarities to the <a class="reference internal" href="wavelet_example.html#wavelet-tutorial"><span class="std std-ref">Wavelet transform</span></a>.</p>
+</div>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.DeltaVariance.html#turbustat.statistics.DeltaVariance" title="turbustat.statistics.DeltaVariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaVariance</span></code></a> code, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">DeltaVariance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+</pre></div>
+</div>
+<p>Then, we load in the data and the associated error array:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">moment0_err</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>Next, we initialize the <a class="reference internal" href="../../api/turbustat.statistics.DeltaVariance.html#turbustat.statistics.DeltaVariance" title="turbustat.statistics.DeltaVariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaVariance</span></code></a> class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span> <span class="o">=</span> <span class="n">DeltaVariance</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">moment0_err</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">250</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>The weight array is optional but is recommended to down-weight noisy data (particularly near the map edge). Note that this is not the exact form of the weight array used by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..719O/abstract">Ossenkopf at al. 2008b</a>; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn’t take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.</p>
+<p>To compute the delta-variance curve, the image is convolved with a set of kernels. The width of each kernel is referred to as the “lag.” By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the <code class="xref py py-obj docutils literal notranslate"><span class="pre">lags</span></code> keyword. If a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a> is passed, it is assumed to be in pixel units. Lags can also be given in angular units using <a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v3.1.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">astropy.units.Quantity</span></code></a> objects. The diameter between the inner and outer convolution kernels is set by <code class="xref py py-obj docutils literal notranslate"><span class="pre">diam_ratio</span></code>. By default, this is set to 1.5 (<a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a>).</p>
+<p>The entire process is performed through <a class="reference internal" href="../../api/turbustat.statistics.DeltaVariance.html#turbustat.statistics.DeltaVariance.run" title="turbustat.statistics.DeltaVariance.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            WLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.946</span>
+<span class="go">Model:                            WLS   Adj. R-squared:                  0.943</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     400.2</span>
+<span class="go">Date:                Wed, 18 Oct 2017   Prob (F-statistic):           4.80e-16</span>
+<span class="go">Time:                        18:38:51   Log-Likelihood:                 13.625</span>
+<span class="go">No. Observations:                  25   AIC:                            -23.25</span>
+<span class="go">Df Residuals:                      23   BIC:                            -20.81</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.6826      0.036     46.701      0.000       1.608       1.757</span>
+<span class="go">x1             1.2654      0.063     20.006      0.000       1.135       1.396</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.195   Durbin-Watson:                   0.506</span>
+<span class="go">Prob(Omnibus):                  0.907   Jarque-Bera (JB):                0.403</span>
+<span class="go">Skew:                          -0.047   Prob(JB):                        0.818</span>
+<span class="go">Kurtosis:                       2.385   Cond. No.                         10.6</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/delvar_design4.png" src="../../_images/delvar_design4.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">xunit</span></code> is the unit the lags will be converted to in the plot. The plot includes a linear fit to the Delta-variance curve, however there is a significant deviation from a single power-law on large scales. We can restrict the fitting to reflect this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">xlow</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="mi">30</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            WLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.994</span>
+<span class="go">Model:                            WLS   Adj. R-squared:                  0.993</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     2167.</span>
+<span class="go">Date:                Wed, 18 Oct 2017   Prob (F-statistic):           9.44e-17</span>
+<span class="go">Time:                        18:38:52   Log-Likelihood:                 38.238</span>
+<span class="go">No. Observations:                  16   AIC:                            -72.48</span>
+<span class="go">Df Residuals:                      14   BIC:                            -70.93</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.8620      0.017    106.799      0.000       1.825       1.899</span>
+<span class="go">x1             1.0630      0.023     46.549      0.000       1.014       1.112</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.142   Durbin-Watson:                   0.746</span>
+<span class="go">Prob(Omnibus):                  0.931   Jarque-Bera (JB):                0.271</span>
+<span class="go">Skew:                          -0.182   Prob(JB):                        0.873</span>
+<span class="go">Kurtosis:                       2.475   Cond. No.                         11.4</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/delvar_design4_wlimits.png" src="../../_images/delvar_design4_wlimits.png" />
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">xlow</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xhigh</span></code>, and <code class="xref py py-obj docutils literal notranslate"><span class="pre">xunit</span></code> can also be passed any angular unit, and since a distance was given, physical units can also be passed. For example, using the previous example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">,</span> <span class="n">xlow</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="mi">30</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            WLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.994</span>
+<span class="go">Model:                            WLS   Adj. R-squared:                  0.993</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     2167.</span>
+<span class="go">Date:                Wed, 18 Oct 2017   Prob (F-statistic):           9.44e-17</span>
+<span class="go">Time:                        18:38:52   Log-Likelihood:                 38.238</span>
+<span class="go">No. Observations:                  16   AIC:                            -72.48</span>
+<span class="go">Df Residuals:                      14   BIC:                            -70.93</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.8620      0.017    106.799      0.000       1.825       1.899</span>
+<span class="go">x1             1.0630      0.023     46.549      0.000       1.014       1.112</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.142   Durbin-Watson:                   0.746</span>
+<span class="go">Prob(Omnibus):                  0.931   Jarque-Bera (JB):                0.271</span>
+<span class="go">Skew:                          -0.182   Prob(JB):                        0.873</span>
+<span class="go">Kurtosis:                       2.475   Cond. No.                         11.4</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/delvar_design4_physunits.png" src="../../_images/delvar_design4_physunits.png" />
+<p>Since the Delta-variance is based on a series of convolutions, there is a choice for how the boundaries should be treated. This is set by the <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary</span></code> keyword in <a class="reference internal" href="../../api/turbustat.statistics.DeltaVariance.html#turbustat.statistics.DeltaVariance.run" title="turbustat.statistics.DeltaVariance.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>. By default, <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary='wrap'</span></code> as is appropriate for simulated data in a periodic box. If the data is <em>not</em> periodic in the spatial dimensions, <code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary='fill'</span></code> should be used. This mode pads the edges of the data based on the size of the convolution kernel used.</p>
+<p>When an image contains NaNs, there are two important parameters for the convolution: <code class="xref py py-obj docutils literal notranslate"><span class="pre">preserve_nan</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">nan_treatment</span></code>. Setting <code class="xref py py-obj docutils literal notranslate"><span class="pre">preserve_nan=True</span></code> will set pixels that were originally a NaN to a NaN in the convolved image.  This is useful for when the image has a border of NaNs. When the edges are not handled correctly, the delta-variance curve will have large spikes at small lag values.</p>
+<p>If an image has missing values within the image, setting <code class="xref py py-obj docutils literal notranslate"><span class="pre">nan_treatment='interpolate'</span></code> will interpolate over the missing regions, providing a smoothed version of the convolved image.</p>
+<p>If an image has both missing regions and a border of NaNs, manual treatment may be necessary to convert the edges to NaNs while correctly handling the interpolating regions in the interior. See the <a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.convolution.convolve_fft.html#astropy.convolution.convolve_fft">convolution</a> page on astropy for more information.</p>
+<p>Similar to the fitting for other statistics, the Delta-variance curve can be fit with a segmented linear model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">,</span> <span class="n">xlow</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">xhigh</span><span class="o">=</span><span class="mi">40</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">brk</span><span class="o">=</span><span class="mi">8</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            WLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.996</span>
+<span class="go">Model:                            WLS   Adj. R-squared:                  0.995</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     1168.</span>
+<span class="go">Date:                Thu, 19 Oct 2017   Prob (F-statistic):           4.97e-17</span>
+<span class="go">Time:                        15:36:23   Log-Likelihood:                 45.438</span>
+<span class="go">No. Observations:                  18   AIC:                            -82.88</span>
+<span class="go">Df Residuals:                      14   BIC:                            -79.31</span>
+<span class="go">Df Model:                           3</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          1.8454      0.015    121.610      0.000       1.813       1.878</span>
+<span class="go">x1             1.0860      0.020     54.133      0.000       1.043       1.129</span>
+<span class="go">x2            -1.1586      0.253     -4.585      0.000      -1.701      -0.617</span>
+<span class="go">x3            -0.0064      0.042     -0.153      0.881      -0.096       0.083</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        0.130   Durbin-Watson:                   1.082</span>
+<span class="go">Prob(Omnibus):                  0.937   Jarque-Bera (JB):                0.037</span>
+<span class="go">Skew:                           0.009   Prob(JB):                        0.982</span>
+<span class="go">Kurtosis:                       2.778   Cond. No.                         127.</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../../_images/delvar_design4_break.png" src="../../_images/delvar_design4_break.png" />
+<p>The range here was chosen to force the model to fit a break near the turn-over, and the result is not great. This is not a realistic example; it is included only to highlight how the segmented model is enabled.</p>
+<p>There will now be two slopes and a break point returned:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">slopes</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">array([ 1.08598566, -0.07259903])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">delvar</span><span class="o">.</span><span class="n">brk</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">&lt;Quantity 19.413294229328802 pix&gt;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The turn-over at large scales (usually larger than half the image size) tends to be dominated by the kernel shape rather than the data.  On scales smaller than the beam size, the curve will tend to steepen.  This is due to the enhanced correlations from over-sampling the beam, which is standard for radio and submillimetre observational data. See <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001A&amp;A...366..636B/abstract">Bensch et al. 2001.</a> for a discussion of how the beam affects the delta-variance curves.</p>
+</div>
+<p>Volker Ossenkopf-Okada’s IDL Delta-Variance codes is available <a class="reference external" href="https://hera.ph1.uni-koeln.de/~ossk/Myself/deltavariance.html">here</a>.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/1998A&amp;A...336..697S/abstract">Stutzki et al. 1998</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001A&amp;A...366..636B/abstract">Bensch et al. 2001.</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2001A&amp;A...379.1005O/abstract">Ossenkopf at al. 2001</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..917O/abstract">Ossenkopf at al. 2008a</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008A&amp;A...485..719O/abstract">Ossenkopf at al. 2008b</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015MNRAS.451..196B/abstract">Bertram et al. 2015</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

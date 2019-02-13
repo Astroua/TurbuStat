@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>turbustat.moments.make_moments &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for turbustat.moments.make_moments</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under an MIT open source license - see LICENSE</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="kn">from</span> <span class="nn">astropy.convolution</span> <span class="k">import</span> <span class="n">convolve</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">nd</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">operator</span> <span class="k">as</span> <span class="nn">op</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">spectral_cube</span> <span class="k">import</span> <span class="n">SpectralCube</span><span class="p">,</span> <span class="n">LazyMask</span>
+    <span class="kn">from</span> <span class="nn">spectral_cube.wcs_utils</span> <span class="k">import</span> <span class="n">drop_axis</span>
+    <span class="n">spectral_cube_flag</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;spectral-cube is not installed. Using Mask_and_Moments requires&quot;</span>
+         <span class="s2">&quot; spectral-cube to be installed.&quot;</span><span class="p">)</span>
+    <span class="n">spectral_cube_flag</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># try:</span>
+<span class="c1">#     from signal_id import Noise</span>
+<span class="c1">#     signal_id_flag = True</span>
+<span class="c1"># except ImportError:</span>
+<span class="c1">#     warn(&quot;signal-id is not installed. Disabling associated functionality.&quot;)</span>
+<span class="c1">#     signal_id_flag = False</span>
+
+<span class="kn">from</span> <span class="nn">._moment_errs</span> <span class="k">import</span> <span class="p">(</span><span class="n">moment0_error</span><span class="p">,</span> <span class="n">moment1_error</span><span class="p">,</span> <span class="n">linewidth_sigma_err</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Moments"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments">[docs]</a><span class="k">class</span> <span class="nc">Moments</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A unified approach to deriving the noise level in a cube, applying a</span>
+<span class="sd">    mask, and deriving moments along with their errors. All the heavy lifting</span>
+<span class="sd">    is done with</span>
+<span class="sd">    `spectral_cube &lt;http://spectral-cube.readthedocs.org/en/latest/&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cube : SpectralCube or str</span>
+<span class="sd">        Either a SpectralCube object, or the filename of a cube readable</span>
+<span class="sd">        by spectral-cube.</span>
+<span class="sd">    scale : `~astropy.units.Quantity`, optional</span>
+<span class="sd">        The noise level in the cube. Used to estimate uncertainties of the</span>
+<span class="sd">        moment maps.</span>
+<span class="sd">    moment_method : {&#39;slice&#39;, &#39;cube&#39;, &#39;ray&#39;}, optional</span>
+<span class="sd">        The method to use for creating the moments. See the spectral-cube</span>
+<span class="sd">        docs for an explanation of the differences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moment_method</span><span class="o">=</span><span class="s1">&#39;slice&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Moments</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spectral_cube_flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Mask_and_Moments requires the spectral-cube &quot;</span>
+                              <span class="s2">&quot; to be installed: https://github.com/&quot;</span>
+                              <span class="s2">&quot;radio-astro-tools/spectral-cube&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">SpectralCube</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cube</span> <span class="o">=</span> <span class="n">cube</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cube</span> <span class="o">=</span> <span class="n">SpectralCube</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+            <span class="c1"># Default save name to the cube name without the suffix.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">moment_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;slice&#39;</span><span class="p">,</span> <span class="s1">&#39;cube&#39;</span><span class="p">,</span> <span class="s1">&#39;ray&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Moment method must be &#39;slice&#39;, &#39;cube&#39;, or &#39;ray&#39;.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span> <span class="o">=</span> <span class="n">moment_method</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+
+    <span class="nd">@scale</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Given scale must be an `astropy.Quantity`&quot;</span>
+                                <span class="s2">&quot; with units matching the units of the cube.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitsError</span><span class="p">(</span><span class="s2">&quot;Given scale must have units equivalent&quot;</span>
+                                   <span class="s2">&quot; to the units of the cube.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Noise level is set to negative. The noise&quot;</span>
+                                 <span class="s2">&quot; must be zero (noiseless) or positive.&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Moments.apply_mask"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.apply_mask">[docs]</a>    <span class="k">def</span> <span class="nf">apply_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply a mask to the cube.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : spectral-cube Mask or numpy.ndarray, optional</span>
+<span class="sd">            The mask to be applied to the data. If None is given, RadioMask</span>
+<span class="sd">            is used with its default settings.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># if mask is None:</span>
+        <span class="c1">#     rad_mask = RadioMask(self.cube)</span>
+        <span class="c1">#     mask = rad_mask.to_mask()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cube</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">with_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Moments.make_moments"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.make_moments">[docs]</a>    <span class="k">def</span> <span class="nf">make_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the moments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            The axis to calculate the moments along.</span>
+<span class="sd">        units : bool, optional</span>
+<span class="sd">            If enabled, the units of the arrays are kept.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">moment0</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">moment1</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">linewidth_sigma</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">units</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span><span class="o">.</span><span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span><span class="o">.</span><span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment2</span><span class="o">.</span><span class="n">value</span></div>
+
+<div class="viewcode-block" id="Moments.make_moment_errors"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.make_moment_errors">[docs]</a>    <span class="k">def</span> <span class="nf">make_moment_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the errors in the moments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            The axis to calculate the moments along.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_moment0&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Run Moments.make_moments first.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;scale not set to the rms noise and will not be used in &quot;</span>
+                 <span class="s2">&quot;error calculations.&quot;</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">unit</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span> <span class="o">=</span> <span class="n">moment0_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span>
+                                              <span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span> <span class="o">=</span> <span class="n">moment1_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span>
+                                              <span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">,</span>
+                                              <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">moment0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="p">,</span>
+                                              <span class="n">moment1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span> <span class="o">=</span> \
+                <span class="n">linewidth_sigma_err</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span>
+                                    <span class="n">how</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment_how</span><span class="p">,</span> <span class="n">moment0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="p">,</span>
+                                    <span class="n">moment1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="p">,</span>
+                                    <span class="n">moment1_err</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1_err</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moment0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moment1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">linewidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moment0_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moment1_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">linewidth_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span>
+
+<div class="viewcode-block" id="Moments.all_moments"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.all_moments">[docs]</a>    <span class="k">def</span> <span class="nf">all_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Moments.all_moment_errs"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.all_moment_errs">[docs]</a>    <span class="k">def</span> <span class="nf">all_moment_errs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">linewidth_err</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Moments.to_dict"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a dictionary with the cube and the property arrays.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_prop_hdrs</span><span class="p">()</span>
+
+        <span class="n">prop_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Avoid reading in the whole cube when it is big, unless</span>
+        <span class="c1"># you set cube.allow_huge_operations=True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">_is_huge</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">allow_huge_operations</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;This will load the whole cube into memory. Set &quot;</span>
+                             <span class="s2">&quot;``cube.allow_huge_operations=True`` to&quot;</span>
+                             <span class="s2">&quot; allow this&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">filled_data</span><span class="p">[:]):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">filled_data</span><span class="p">[:]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">header</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">filled_data</span><span class="p">[:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">header</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;moment0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;moment0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0_err</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;moment0_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0_err</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;moment0_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment0_err</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;centroid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;centroid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1_err</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;centroid_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1_err</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;centroid_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">moment1_err</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth_err</span><span class="p">):</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;linewidth_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth_err</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;linewidth_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth_err</span><span class="p">,</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">prop_dict</span></div>
+
+<div class="viewcode-block" id="Moments.get_prop_hdrs"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.get_prop_hdrs">[docs]</a>    <span class="k">def</span> <span class="nf">get_prop_hdrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Generate headers for the moments.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">bunits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">spectral_axis</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">spectral_axis</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">unit</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">spectral_axis</span><span class="o">.</span><span class="n">unit</span><span class="p">]</span>
+
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Image of the Zeroth Moment&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Image of the First Moment&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Image of the Second Moment&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Image of the Integrated Intensity&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bunits</span><span class="p">)):</span>
+
+            <span class="n">wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">new_wcs</span> <span class="o">=</span> <span class="n">drop_axis</span><span class="p">(</span><span class="n">wcs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">hdr</span> <span class="o">=</span> <span class="n">new_wcs</span><span class="o">.</span><span class="n">to_header</span><span class="p">()</span>
+            <span class="n">hdr_err</span> <span class="o">=</span> <span class="n">new_wcs</span><span class="o">.</span><span class="n">to_header</span><span class="p">()</span>
+            <span class="n">hdr</span><span class="p">[</span><span class="s2">&quot;BUNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bunits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+            <span class="n">hdr_err</span><span class="p">[</span><span class="s2">&quot;BUNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bunits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+            <span class="n">hdr</span><span class="p">[</span><span class="s2">&quot;COMMENT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">hdr_err</span><span class="p">[</span><span class="s2">&quot;COMMENT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; Error.&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr_err</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Moments.to_fits"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.to_fits">[docs]</a>    <span class="k">def</span> <span class="nf">to_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Save the property arrays as fits files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_name : str, optional</span>
+<span class="sd">            Prefix to use when saving the moment arrays.</span>
+<span class="sd">            If None is given, &#39;default&#39; is used.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_prop_hdrs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;No save_name has been specified, using &#39;default&#39;&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="o">=</span> <span class="n">save_name</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_moment0&quot;</span><span class="p">,</span> <span class="s2">&quot;_centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;_linewidth&quot;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">hdr</span><span class="p">,</span> <span class="n">hdr_err</span><span class="p">)</span> <span class="ow">in</span> \
+          <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_moments</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_moment_errs</span><span class="p">(),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">prop_headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop_err_headers</span><span class="p">)):</span>
+
+            <span class="c1"># Can&#39;t write quantities.</span>
+            <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="k">if</span> <span class="n">_try_remove_unit</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">([</span><span class="n">fits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdr</span><span class="p">),</span>
+                                <span class="n">fits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdr_err</span><span class="p">)])</span>
+
+            <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_name</span> <span class="o">+</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.fits&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Moments.from_fits"><a class="viewcode-back" href="../../../api/turbustat.moments.Moments.html#turbustat.moments.Moments.from_fits">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_fits</span><span class="p">(</span><span class="n">fits_name</span><span class="p">,</span> <span class="n">moments_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moments_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">mask_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">moment0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Load pre-made moment arrays given a cube name. Saved moments must</span>
+<span class="sd">        match the naming of the cube for the automatic loading to work</span>
+<span class="sd">        (e.g. a cube called test.fits will have a moment 0 array with the name</span>
+<span class="sd">        test_moment0.fits). Otherwise, specify a path to one of the keyword</span>
+<span class="sd">        arguments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fits_name : str</span>
+<span class="sd">            Filename of the cube or a SpectralCube object. If a filename is</span>
+<span class="sd">            given, it is also used as the prefix to the saved moment files.</span>
+<span class="sd">        moments_prefix : str, optional</span>
+<span class="sd">            If a SpectralCube object is given in ``fits_name``, the prefix</span>
+<span class="sd">            for the saved files can be provided here.</span>
+<span class="sd">        moments_path : str, optional</span>
+<span class="sd">            Path to where the moments are saved.</span>
+<span class="sd">        mask_name : str, optional</span>
+<span class="sd">            Filename of a saved mask to be applied to the data.</span>
+<span class="sd">        moment0 : str, optional</span>
+<span class="sd">            Filename of the moment0 array. Use if naming scheme is not valid</span>
+<span class="sd">            for automatic loading.</span>
+<span class="sd">        centroid : str, optional</span>
+<span class="sd">            Filename of the centroid array. Use if naming scheme is not valid</span>
+<span class="sd">            for automatic loading.</span>
+<span class="sd">        linewidth : str, optional</span>
+<span class="sd">            Filename of the linewidth array. Use if naming scheme is not valid</span>
+<span class="sd">            for automatic loading.</span>
+<span class="sd">        scale : `~astropy.units.Quantity`, optional</span>
+<span class="sd">            The noise level in the cube. Overrides estimation using</span>
+<span class="sd">            `signal_id &lt;https://github.com/radio-astro-tools/signal-id&gt;`_</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spectral_cube_flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Mask_and_Moments requires the spectral-cube &quot;</span>
+                              <span class="s2">&quot; to be installed: https://github.com/&quot;</span>
+                              <span class="s2">&quot;radio-astro-tools/spectral-cube&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">moments_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">moments_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fits_name</span><span class="p">,</span> <span class="n">SpectralCube</span><span class="p">):</span>
+            <span class="n">root_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fits_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">root_name</span> <span class="o">=</span> <span class="n">moments_prefix</span>
+
+        <span class="bp">self</span> <span class="o">=</span> <span class="n">Moments</span><span class="p">(</span><span class="n">fits_name</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mask_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="n">mask_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">with_mask</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="c1"># Moment 0</span>
+        <span class="k">if</span> <span class="n">moment0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">moment0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span> <span class="o">=</span> <span class="n">moment0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span> <span class="o">=</span> <span class="n">moment0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">moments_path</span><span class="p">,</span>
+                                                 <span class="n">root_name</span> <span class="o">+</span> <span class="s2">&quot;_moment0.fits&quot;</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span> <span class="o">=</span> <span class="n">moment0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span> <span class="o">=</span> <span class="n">moment0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment0</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment0_err</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Moment 0 fits file not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">centroid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">moment1</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">centroid</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span> <span class="o">=</span> <span class="n">moment1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span> <span class="o">=</span> <span class="n">moment1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">moment1</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">moments_path</span><span class="p">,</span>
+                                                 <span class="n">root_name</span> <span class="o">+</span> <span class="s2">&quot;_centroid.fits&quot;</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span> <span class="o">=</span> <span class="n">moment1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span> <span class="o">=</span> <span class="n">moment1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment1</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_moment1_err</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Centroid fits file not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">linewidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">linewidth</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">linewidth</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">linewidth</span> <span class="o">=</span> \
+                    <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">moments_path</span><span class="p">,</span>
+                                           <span class="n">root_name</span> <span class="o">+</span> <span class="s2">&quot;_linewidth.fits&quot;</span><span class="p">))</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_linewidth_err</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Linewidth fits file not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">moment_masking</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">dilations</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">signal_id_flag</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;signal-id is not installed.&quot;</span>
+                          <span class="s2">&quot; This function is not available.&quot;</span><span class="p">)</span>
+
+    <span class="n">smooth_data</span> <span class="o">=</span> <span class="n">convolve</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">filled_data</span><span class="p">[:],</span> <span class="n">gauss_kern</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">))</span>
+
+    <span class="n">fake_mask</span> <span class="o">=</span> <span class="n">LazyMask</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">,</span> <span class="n">cube</span><span class="o">=</span><span class="n">cube</span><span class="p">)</span>
+
+    <span class="n">smooth_cube</span> <span class="o">=</span> <span class="n">SpectralCube</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">smooth_data</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">cube</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">fake_mask</span><span class="p">)</span>
+
+    <span class="n">smooth_scale</span> <span class="o">=</span> <span class="n">Noise</span><span class="p">(</span><span class="n">smooth_cube</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">smooth_cube</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">clip</span> <span class="o">*</span> <span class="n">smooth_scale</span><span class="p">))</span><span class="o">.</span><span class="n">include</span><span class="p">()</span>
+
+    <span class="c1"># Now dilate the mask once</span>
+
+    <span class="n">dilate_struct</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">generate_binary_structure</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_dilation</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="n">dilate_struct</span><span class="p">,</span>
+                              <span class="n">iterations</span><span class="o">=</span><span class="n">dilations</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mask</span>
+
+
+<span class="k">def</span> <span class="nf">gauss_kern</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">ysize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zsize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns a normalized 3D gauss kernel array for convolutions &quot;&quot;&quot;</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ysize</span><span class="p">:</span>
+        <span class="n">ysize</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ysize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ysize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">zsize</span><span class="p">:</span>
+        <span class="n">zsize</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">zsize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">zsize</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="n">size</span><span class="p">:</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">ysize</span><span class="p">:</span><span class="n">ysize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">zsize</span><span class="p">:</span><span class="n">zsize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">**</span>
+                 <span class="mi">2</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ysize</span><span class="p">)</span> <span class="o">+</span> <span class="n">z</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">zsize</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">g</span> <span class="o">/</span> <span class="n">g</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_try_remove_unit</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">unit</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+<span class="c1"># class Mask_and_Moments(object):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     A unified approach to deriving the noise level in a cube, applying a</span>
+<span class="c1">#     mask, and deriving moments along with their errors. All the heavy lifting</span>
+<span class="c1">#     is done with</span>
+<span class="c1">#     `spectral_-ube &lt;http://spectral-cube.readthedocs.org/en/latest/&gt;`_.</span>
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     cube : SpectralCube or str</span>
+<span class="c1">#         Either a SpectralCube object, or the filename of a cube readable</span>
+<span class="c1">#         by spectral-cube.</span>
+<span class="c1">#     noise_type : {&#39;constant&#39;}, optional</span>
+<span class="c1">#         *NO CURRENT FUNCTION* Once implemented, it will set parameters</span>
+<span class="c1">#         for deriving the noise level.</span>
+<span class="c1">#     clip : float, optional</span>
+<span class="c1">#         Sigma level to clip data at.</span>
+<span class="c1">#     scale : `~astropy.units.Quantity`, optional</span>
+<span class="c1">#         The noise level in the cube. Overrides estimation using</span>
+<span class="c1">#         `signal_id &lt;https://github.com/radio-astro-tools/signal-id&gt;`_</span>
+<span class="c1">#     moment_method : {&#39;slice&#39;, &#39;cube&#39;, &#39;ray&#39;}, optional</span>
+<span class="c1">#         The method to use for creating the moments. See the spectral-cube</span>
+<span class="c1">#         docs for an explanation of the differences.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     def __init__(self, cube, noise_type=&#39;constant&#39;, clip=3, scale=None,</span>
+<span class="c1">#                  moment_method=&#39;slice&#39;):</span>
+<span class="c1">#         super(Mask_and_Moments, self).__init__()</span>
+
+<span class="c1">#         if not spectral_cube_flag:</span>
+<span class="c1">#             raise ImportError(&quot;Mask_and_Moments requires the spectral-cube &quot;</span>
+<span class="c1">#                               &quot; to be installed: https://github.com/&quot;</span>
+<span class="c1">#                               &quot;radio-astro-tools/spectral-cube&quot;)</span>
+
+<span class="c1">#         if isinstance(cube, SpectralCube):</span>
+<span class="c1">#             self.cube = cube</span>
+<span class="c1">#             self.save_name = None</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.cube = SpectralCube.read(cube)</span>
+<span class="c1">#             # Default save name to the cube name without the suffix.</span>
+<span class="c1">#             self.save_name = &quot;.&quot;.join(cube.split(&quot;.&quot;)[:-1])</span>
+
+<span class="c1">#         self.noise_type = noise_type</span>
+<span class="c1">#         self.clip = clip</span>
+
+<span class="c1">#         if moment_method not in [&#39;slice&#39;, &#39;cube&#39;, &#39;ray&#39;]:</span>
+<span class="c1">#             raise TypeError(&quot;Moment method must be &#39;slice&#39;, &#39;cube&#39;, or &#39;ray&#39;.&quot;)</span>
+<span class="c1">#         self.moment_how = moment_method</span>
+
+<span class="c1">#         if scale is None:</span>
+<span class="c1">#             if not signal_id_flag:</span>
+<span class="c1">#                 raise ImportError(&quot;signal-id is not installed and error&quot;</span>
+<span class="c1">#                                   &quot; estimation is not available. You must &quot;</span>
+<span class="c1">#                                   &quot;provide the noise scale.&quot;)</span>
+
+<span class="c1">#             self.scale = Noise(self.cube).scale * self.cube.unit</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             if not isinstance(scale, u.Quantity):</span>
+<span class="c1">#                 raise TypeError(&quot;scale must be a Quantity with the same units&quot;</span>
+<span class="c1">#                                 &quot; as the given cube.&quot;)</span>
+<span class="c1">#             if not scale.unit == self.cube.unit:</span>
+<span class="c1">#                 raise u.UnitsError(&quot;scale must have the same units&quot;</span>
+<span class="c1">#                                    &quot; as the given cube.&quot;)</span>
+<span class="c1">#             self.scale = scale</span>
+
+<span class="c1">#         self.prop_headers = None</span>
+<span class="c1">#         self.prop_err_headers = None</span>
+
+<span class="c1">#     def find_noise(self, return_obj=False):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Returns noise estimate, or the whole Noise object.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         return_obj : bool, optional</span>
+<span class="c1">#             If True, returns the Noise object. Otherwise returns the estimated</span>
+<span class="c1">#             noise level.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         if not signal_id_flag:</span>
+<span class="c1">#             raise ImportError(&quot;signal-id is not installed.&quot;</span>
+<span class="c1">#                               &quot; This function is not available.&quot;)</span>
+
+<span class="c1">#         noise = Noise(self.cube)</span>
+
+<span class="c1">#         self.scale = noise.scale</span>
+
+<span class="c1">#         if return_obj:</span>
+<span class="c1">#             return noise</span>
+
+<span class="c1">#         return noise.scale</span>
+
+<span class="c1">#     def make_mask(self, mask):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Apply a mask to the cube.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         mask : spectral-cube Mask or numpy.ndarray, optional</span>
+<span class="c1">#             The mask to be applied to the data. If None is given, RadioMask</span>
+<span class="c1">#             is used with its default settings.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         # if mask is None:</span>
+<span class="c1">#         #     rad_mask = RadioMask(self.cube)</span>
+<span class="c1">#         #     mask = rad_mask.to_mask()</span>
+
+<span class="c1">#         self.cube = self.cube.with_mask(mask)</span>
+
+<span class="c1">#     def make_moments(self, axis=0, units=True):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Calculate the moments.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         axis : int, optional</span>
+<span class="c1">#             The axis to calculate the moments along.</span>
+<span class="c1">#         units : bool, optional</span>
+<span class="c1">#             If enabled, the units of the arrays are kept.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         self._moment0 = self.cube.moment0(axis=axis, how=self.moment_how)</span>
+<span class="c1">#         self._moment1 = self.cube.moment1(axis=axis, how=self.moment_how)</span>
+<span class="c1">#         self._linewidth = \</span>
+<span class="c1">#             self.cube.linewidth_sigma(how=self.moment_how)</span>
+
+<span class="c1">#         if not units:</span>
+<span class="c1">#             self._moment0 = self._moment0.value</span>
+<span class="c1">#             self._moment1 = self._moment1.value</span>
+<span class="c1">#             self._moment2 = self._moment2.value</span>
+
+<span class="c1">#     def make_moment_errors(self, axis=0):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Calculate the errors in the moments.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         axis : int, optional</span>
+<span class="c1">#             The axis to calculate the moments along.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         self._moment0_err = moment0_error(self.cube, self.scale,</span>
+<span class="c1">#                                           how=self.moment_how, axis=axis)</span>
+<span class="c1">#         self._moment1_err = moment1_error(self.cube, self.scale,</span>
+<span class="c1">#                                           how=self.moment_how,</span>
+<span class="c1">#                                           axis=axis, moment0=self.moment0,</span>
+<span class="c1">#                                           moment1=self.moment1)</span>
+<span class="c1">#         self._linewidth_err = \</span>
+<span class="c1">#             linewidth_sigma_err(self.cube, self.scale,</span>
+<span class="c1">#                                 how=self.moment_how, moment0=self.moment0,</span>
+<span class="c1">#                                 moment1=self.moment1,</span>
+<span class="c1">#                                 moment1_err=self.moment1_err)</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def moment0(self):</span>
+<span class="c1">#         return self._moment0</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def moment1(self):</span>
+<span class="c1">#         return self._moment1</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def linewidth(self):</span>
+<span class="c1">#         return self._linewidth</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def moment0_err(self):</span>
+<span class="c1">#         return self._moment0_err</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def moment1_err(self):</span>
+<span class="c1">#         return self._moment1_err</span>
+
+<span class="c1">#     @property</span>
+<span class="c1">#     def linewidth_err(self):</span>
+<span class="c1">#         return self._linewidth_err</span>
+
+<span class="c1">#     def all_moments(self):</span>
+<span class="c1">#         return [self._moment0, self._moment1, self.linewidth]</span>
+
+<span class="c1">#     def all_moment_errs(self):</span>
+<span class="c1">#         return [self._moment0_err, self._moment1_err, self.linewidth_err]</span>
+
+<span class="c1">#     def to_dict(self):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Returns a dictionary form containing the cube and the property arrays.</span>
+<span class="c1">#         This is the expected form for the wrapper scripts and methods in</span>
+<span class="c1">#         TurbuStat.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         self.get_prop_hdrs()</span>
+
+<span class="c1">#         prop_dict = {}</span>
+
+<span class="c1">#         if _try_remove_unit(self.cube.filled_data[:]):</span>
+<span class="c1">#             prop_dict[&#39;cube&#39;] = [self.cube.filled_data[:].value,</span>
+<span class="c1">#                                  self.cube.header]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;cube&#39;] = [self.cube.filled_data[:], self.cube.header]</span>
+
+<span class="c1">#         if _try_remove_unit(self.moment0):</span>
+<span class="c1">#             prop_dict[&#39;moment0&#39;] = [self.moment0.value, self.prop_headers[0]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;moment0&#39;] = [self.moment0, self.prop_headers[0]]</span>
+
+<span class="c1">#         if _try_remove_unit(self.moment0_err):</span>
+<span class="c1">#             prop_dict[&#39;moment0_error&#39;] = [self.moment0_err.value,</span>
+<span class="c1">#                                           self.prop_err_headers[0]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;moment0_error&#39;] = [self.moment0_err,</span>
+<span class="c1">#                                           self.prop_err_headers[0]]</span>
+
+<span class="c1">#         if _try_remove_unit(self.moment1):</span>
+<span class="c1">#             prop_dict[&#39;centroid&#39;] = [self.moment1.value, self.prop_headers[1]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;centroid&#39;] = [self.moment1, self.prop_headers[1]]</span>
+
+<span class="c1">#         if _try_remove_unit(self.moment1_err):</span>
+<span class="c1">#             prop_dict[&#39;centroid_error&#39;] = [self.moment1_err.value,</span>
+<span class="c1">#                                            self.prop_err_headers[1]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;centroid_error&#39;] = [self.moment1_err,</span>
+<span class="c1">#                                            self.prop_err_headers[1]]</span>
+
+<span class="c1">#         if _try_remove_unit(self.linewidth):</span>
+<span class="c1">#             prop_dict[&#39;linewidth&#39;] = [self.linewidth.value,</span>
+<span class="c1">#                                       self.prop_headers[2]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;linewidth&#39;] = [self.linewidth,</span>
+<span class="c1">#                                       self.prop_headers[2]]</span>
+
+<span class="c1">#         if _try_remove_unit(self.linewidth_err):</span>
+<span class="c1">#             prop_dict[&#39;linewidth_error&#39;] = [self.linewidth_err.value,</span>
+<span class="c1">#                                             self.prop_err_headers[2]]</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             prop_dict[&#39;linewidth_error&#39;] = [self.linewidth_err,</span>
+<span class="c1">#                                             self.prop_err_headers[2]]</span>
+
+<span class="c1">#         return prop_dict</span>
+
+<span class="c1">#     def get_prop_hdrs(self):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Generate headers for the moments.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         bunits = [self.cube.unit, self.cube.spectral_axis.unit,</span>
+<span class="c1">#                   self.cube.spectral_axis.unit,</span>
+<span class="c1">#                   self.cube.unit * self.cube.spectral_axis.unit]</span>
+
+<span class="c1">#         comments = [&quot;Image of the Zeroth Moment&quot;,</span>
+<span class="c1">#                     &quot;Image of the First Moment&quot;,</span>
+<span class="c1">#                     &quot;Image of the Second Moment&quot;,</span>
+<span class="c1">#                     &quot;Image of the Integrated Intensity&quot;]</span>
+
+<span class="c1">#         self.prop_headers = []</span>
+<span class="c1">#         self.prop_err_headers = []</span>
+
+<span class="c1">#         for i in range(len(bunits)):</span>
+
+<span class="c1">#             wcs = self.cube.wcs.copy()</span>
+<span class="c1">#             new_wcs = drop_axis(wcs, -1)</span>
+
+<span class="c1">#             hdr = new_wcs.to_header()</span>
+<span class="c1">#             hdr_err = new_wcs.to_header()</span>
+<span class="c1">#             hdr[&quot;BUNIT&quot;] = bunits[i].to_string()</span>
+<span class="c1">#             hdr_err[&quot;BUNIT&quot;] = bunits[i].to_string()</span>
+<span class="c1">#             hdr[&quot;COMMENT&quot;] = comments[i]</span>
+<span class="c1">#             hdr_err[&quot;COMMENT&quot;] = comments[i] + &quot; Error.&quot;</span>
+
+<span class="c1">#             self.prop_headers.append(hdr)</span>
+<span class="c1">#             self.prop_err_headers.append(hdr_err)</span>
+
+<span class="c1">#     def to_fits(self, save_name=None):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Save the property arrays as fits files.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         save_name : str, optional</span>
+<span class="c1">#             Prefix to use when saving the moment arrays.</span>
+<span class="c1">#             If None is given, &#39;default&#39; is used.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         if self.prop_headers is None:</span>
+<span class="c1">#             self.get_prop_hdrs()</span>
+
+<span class="c1">#         if save_name is None:</span>
+<span class="c1">#             if self.save_name is None:</span>
+<span class="c1">#                 Warning(&quot;No save_name has been specified, using &#39;default&#39;&quot;)</span>
+<span class="c1">#                 self.save_name = &#39;default&#39;</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.save_name = save_name</span>
+
+<span class="c1">#         labels = [&quot;_moment0&quot;, &quot;_centroid&quot;, &quot;_linewidth&quot;]</span>
+
+<span class="c1">#         for i, (arr, err, hdr, hdr_err) in \</span>
+<span class="c1">#           enumerate(zip(self.all_moments(), self.all_moment_errs(),</span>
+<span class="c1">#                         self.prop_headers, self.prop_err_headers)):</span>
+
+<span class="c1">#             # Can&#39;t write quantities.</span>
+<span class="c1">#             if _try_remove_unit(arr):</span>
+<span class="c1">#                 arr = arr.value</span>
+
+<span class="c1">#             if _try_remove_unit(err):</span>
+<span class="c1">#                 err = err.value</span>
+
+<span class="c1">#             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),</span>
+<span class="c1">#                                 fits.ImageHDU(err, header=hdr_err)])</span>
+
+<span class="c1">#             hdu.writeto(self.save_name + labels[i] + &quot;.fits&quot;)</span>
+
+<span class="c1">#     @staticmethod</span>
+<span class="c1">#     def from_fits(fits_name, moments_prefix=None, moments_path=None,</span>
+<span class="c1">#                   mask_name=None, moment0=None, centroid=None, linewidth=None,</span>
+<span class="c1">#                   scale=None):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Load pre-made moment arrays given a cube name. Saved moments must</span>
+<span class="c1">#         match the naming of the cube for the automatic loading to work</span>
+<span class="c1">#         (e.g. a cube called test.fits will have a moment 0 array solved</span>
+<span class="c1">#         test_moment0.fits). Otherwise, specify a path to one of the keyword</span>
+<span class="c1">#         arguments.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         fits_name : str</span>
+<span class="c1">#             Filename of the cube or a SpectralCube object. If a filename is</span>
+<span class="c1">#             given, it is also used as the prefix to the saved moment files.</span>
+<span class="c1">#         moments_prefix : str, optional</span>
+<span class="c1">#             If a SpectralCube object is given in ``fits_name``, the prefix</span>
+<span class="c1">#             for the saved files can be provided here.</span>
+<span class="c1">#         moments_path : str, optional</span>
+<span class="c1">#             Path to where the moments are saved.</span>
+<span class="c1">#         mask_name : str, optional</span>
+<span class="c1">#             Filename of a saved mask to be applied to the data.</span>
+<span class="c1">#         moment0 : str, optional</span>
+<span class="c1">#             Filename of the moment0 array. Use if naming scheme is not valid</span>
+<span class="c1">#             for automatic loading.</span>
+<span class="c1">#         centroid : str, optional</span>
+<span class="c1">#             Filename of the centroid array. Use if naming scheme is not valid</span>
+<span class="c1">#             for automatic loading.</span>
+<span class="c1">#         linewidth : str, optional</span>
+<span class="c1">#             Filename of the linewidth array. Use if naming scheme is not valid</span>
+<span class="c1">#             for automatic loading.</span>
+<span class="c1">#         scale : `~astropy.units.Quantity`, optional</span>
+<span class="c1">#             The noise level in the cube. Overrides estimation using</span>
+<span class="c1">#             `signal_id &lt;https://github.com/radio-astro-tools/signal-id&gt;`_</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         if not spectral_cube_flag:</span>
+<span class="c1">#             raise ImportError(&quot;Mask_and_Moments requires the spectral-cube &quot;</span>
+<span class="c1">#                               &quot; to be installed: https://github.com/&quot;</span>
+<span class="c1">#                               &quot;radio-astro-tools/spectral-cube&quot;)</span>
+
+<span class="c1">#         if moments_path is None:</span>
+<span class="c1">#             moments_path = &quot;&quot;</span>
+
+<span class="c1">#         if not isinstance(fits_name, SpectralCube):</span>
+<span class="c1">#             root_name = os.path.basename(fits_name[:-5])</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             root_name = moments_prefix</span>
+
+<span class="c1">#         self = Mask_and_Moments(fits_name, scale=scale)</span>
+
+<span class="c1">#         if mask_name is not None:</span>
+<span class="c1">#             mask = fits.getdata(mask_name)</span>
+<span class="c1">#             self.with_mask(mask=mask)</span>
+
+<span class="c1">#         # Moment 0</span>
+<span class="c1">#         if moment0 is not None:</span>
+<span class="c1">#             moment0 = fits.open(moment0)</span>
+<span class="c1">#             self._moment0 = moment0[0].data</span>
+<span class="c1">#             self._moment0_err = moment0[1].data</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             try:</span>
+<span class="c1">#                 moment0 = fits.open(os.path.join(moments_path,</span>
+<span class="c1">#                                                  root_name + &quot;_moment0.fits&quot;))</span>
+<span class="c1">#                 self._moment0 = moment0[0].data</span>
+<span class="c1">#                 self._moment0_err = moment0[1].data</span>
+<span class="c1">#             except IOError as e:</span>
+<span class="c1">#                 self._moment0 = None</span>
+<span class="c1">#                 self._moment0_err = None</span>
+<span class="c1">#                 print(e)</span>
+<span class="c1">#                 print(&quot;Moment 0 fits file not found.&quot;)</span>
+
+<span class="c1">#         if centroid is not None:</span>
+<span class="c1">#             moment1 = fits.open(centroid)</span>
+<span class="c1">#             self._moment1 = moment1[0].data</span>
+<span class="c1">#             self._moment1_err = moment1[1].data</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             try:</span>
+<span class="c1">#                 moment1 = fits.open(os.path.join(moments_path,</span>
+<span class="c1">#                                                  root_name + &quot;_centroid.fits&quot;))</span>
+<span class="c1">#                 self._moment1 = moment1[0].data</span>
+<span class="c1">#                 self._moment1_err = moment1[1].data</span>
+<span class="c1">#             except IOError as e:</span>
+<span class="c1">#                 self._moment1 = None</span>
+<span class="c1">#                 self._moment1_err = None</span>
+<span class="c1">#                 print(e)</span>
+<span class="c1">#                 print(&quot;Centroid fits file not found.&quot;)</span>
+
+<span class="c1">#         if linewidth is not None:</span>
+<span class="c1">#             linewidth = fits.open(linewidth)</span>
+
+<span class="c1">#             self._linewidth = linewidth[0].data</span>
+<span class="c1">#             self._linewidth_err = linewidth[1].data</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             try:</span>
+<span class="c1">#                 linewidth = \</span>
+<span class="c1">#                     fits.open(os.path.join(moments_path,</span>
+<span class="c1">#                                            root_name + &quot;_linewidth.fits&quot;))</span>
+
+<span class="c1">#                 self._linewidth = linewidth[0].data</span>
+<span class="c1">#                 self._linewidth_err = linewidth[1].data</span>
+<span class="c1">#             except IOError as e:</span>
+<span class="c1">#                 self._linewidth = None</span>
+<span class="c1">#                 self._linewidth_err = None</span>
+<span class="c1">#                 print(e)</span>
+<span class="c1">#                 print(&quot;Linewidth fits file not found.&quot;)</span>
+
+<span class="c1">#         return self</span>
+
+<span class="c1">#     def _get_int_intensity(self, axis=0):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Get an integrated intensity image of the cube.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         axis : int, optional</span>
+<span class="c1">#             Axis to perform operations along.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+
+<span class="c1">#         shape = self.cube.shape</span>
+<span class="c1">#         view = [slice(None)] * 3</span>
+
+<span class="c1">#         if self.moment_how is &#39;cube&#39;:</span>
+<span class="c1">#             channel_max = \</span>
+<span class="c1">#                 np.nanmax(self.cube.filled_data[:].reshape(-1, shape[1] * shape[2]),</span>
+<span class="c1">#                           axis=1).value</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             channel_max = np.empty((shape[axis]))</span>
+<span class="c1">#             for i in range(shape[axis]):</span>
+<span class="c1">#                 view[axis] = i</span>
+<span class="c1">#                 plane = self.cube[view]</span>
+
+<span class="c1">#                 channel_max[i] = np.nanmax(plane).value</span>
+<span class="c1">#             channel_max = u.Quantity(channel_max, unit=self.cube.unit)</span>
+
+<span class="c1">#         good_channels = np.where(channel_max &gt; self.clip * self.scale)[0]</span>
+
+<span class="c1">#         if not np.any(good_channels):</span>
+<span class="c1">#             raise ValueError(&quot;Cannot find any channels with signal.&quot;)</span>
+
+<span class="c1">#         # Get the longest sequence</span>
+<span class="c1">#         good_channels = longestSequence(good_channels)</span>
+
+<span class="c1">#         self.channel_range = self.cube.spectral_axis[good_channels][[0, -1]]</span>
+
+<span class="c1">#         slab = self.cube.spectral_slab(*self.channel_range)</span>
+
+<span class="c1">#         return slab.moment0(axis=axis, how=self.moment_how)</span>
+
+<span class="c1">#     def _get_int_intensity_err(self, axis=0, how=&#39;auto&#39;):</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         axis : int, optional</span>
+<span class="c1">#             Axis to perform operations along.</span>
+<span class="c1">#         &#39;&#39;&#39;</span>
+<span class="c1">#         slab = self.cube.spectral_slab(*self.channel_range)</span>
+
+<span class="c1">#         return moment0_error(slab, self.scale, axis=axis, how=self.moment_how)</span>
+
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

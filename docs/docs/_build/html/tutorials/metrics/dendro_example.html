@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dendrogram Distance &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Genus Distance" href="genus_example.html" />
+    <link rel="prev" title="Delta-Variance Distance" href="delvar_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Dendrogram Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="delvar_example.html" title="Previous Chapter: Delta-Variance Distance"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Delta-Varianc...</span>
+    </a>
+  </li>
+  <li>
+    <a href="genus_example.html" title="Next Chapter: Genus Distance"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Genus Distance &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/metrics/dendro_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Dendrogram Distance</a><ul>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="dendrogram-distance">
+<span id="dendrodist"></span><h1>Dendrogram Distance<a class="headerlink" href="#dendrogram-distance" title="Permalink to this headline">¶</a></h1>
+<p>See <a class="reference internal" href="../statistics/dendrogram_example.html#dendro-tutorial"><span class="std std-ref">the tutorial</span></a> for a description of the dendrogram statistics.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><strong>Requires the optional astrodendro package to be installed. See the</strong> <a class="reference external" href="http://dendrograms.org/">documentation</a></p>
+</div>
+<p>Using the two comparisons defined by <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract">Burkhart et al. 2013</a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendro_Distance</span></code> provides two distance metrics:</p>
+<ol class="arabic">
+<li><p class="first">The distance between histograms of peak intensity in the leaves of the dendrogram, measured over a range of minimum branch heights, is:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[d_{\mathrm{Hist}} = \left[\sum H(p_{1,\delta_I},p_{2,\delta_I})\right]/N_\delta\]</div>
+<p><span class="math notranslate nohighlight">\(p_{i,\delta_I}\)</span> are the histograms with minimum branch height of <span class="math notranslate nohighlight">\(\delta_I\)</span>, <span class="math notranslate nohighlight">\(H(i, j)\)</span> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Hellinger_distance#Discrete_distributions">Hellinger distance</a>, and <span class="math notranslate nohighlight">\(N_{\delta}\)</span> is the number of branch heights (and histograms) that the dendrogram was computed for.</p>
+</div></blockquote>
+</li>
+<li><p class="first">The slopes of the linear relation fit to the log of the number of features in the tree as a function of minimum branch height:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}\]</div>
+<p><span class="math notranslate nohighlight">\(\beta_i\)</span> are the slopes of the fitted lines and <span class="math notranslate nohighlight">\(\sigma_{\beta_i}\)</span> are the uncertainty of the slopes.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>More information on the distance metric definitions can be found in <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a> class, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">Dendrogram_Distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<p>And we load in the two data sets. <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a> can be given two 2D images or cubes. For this example, we will use two cubes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube_fid</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Fiducial0_flatrho_0021_00_radmc.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a> requires the two datasets to be given. A number of other parameters can be specified to control the dendrogram settings or fitting settings. This example sets the minimum deltas (branch height) for the dendrograms, as explained in the <a class="reference internal" href="../statistics/dendrogram_example.html#dendro-tutorial"><span class="std std-ref">dendrogram tutorial</span></a>. Other dendrogram settings, such as the minimum pixel intensity to use and the minimum number of pixels per structure, are also set.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span> <span class="o">=</span> <span class="n">Dendrogram_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">min_deltas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+<span class="gp">... </span>                                <span class="n">min_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">dendro_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_value&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+<span class="gp">... </span>                                               <span class="s2">&quot;min_npix&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">})</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_features</span></code> sets a threshold on the number of ‘features’ in a dendrogram needed for it to be included to calculate the distances. “Features” is the number of branches and leaves in the dendrogram. As delta is increased in the dendrogram, the number of features drops significantly, with large values leaving only a few features in the dendrogram. <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_features</span></code> ensures a meaningful histogram can be measured from the dendrogram properties.</p>
+<p>If additional parameters need to be set to create the dendrograms, <code class="xref py py-obj docutils literal notranslate"><span class="pre">dendro_kwargs</span></code> takes a dictionary as input and passes the arguments to <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats.run" title="turbustat.statistics.Dendrogram_Stats.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>. Separate settings can be given for each dataset by specifying both <code class="xref py py-obj docutils literal notranslate"><span class="pre">dendro_kwargs</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">dendro2_kwargs</span></code>. The individual <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a> objects can be also be accessed as <code class="xref py py-obj docutils literal notranslate"><span class="pre">dendro1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">dendro2</span></code> (see the <a class="reference internal" href="../statistics/dendrogram_example.html#dendro-tutorial"><span class="std std-ref">dendrogram tutorial</span></a> for more information).</p>
+<dl class="docutils">
+<dt>To calculate the two dendrogram distances, we run:</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span><span class="o">.</span><span class="n">distance_metric</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The distance computation is very fast for both methods so both distance metrics are always computed.</p>
+<p>Verbose mode creates two plots, which can be saved by specifying <code class="xref py py-obj docutils literal notranslate"><span class="pre">save_name</span></code> in the call above. The first plot shows the histograms used in the Hellinger distance.</p>
+<img alt="../../_images/dendrogram_distmet.hist_distance.png" src="../../_images/dendrogram_distmet.hist_distance.png" />
+<p>The top two panels are the ECDFs of the histograms of peak intensity within features (branches or leaves) of the dendrogram.  The histograms are shown in the bottom two panels. The first dataset is shown in the first column plots and the second in the second column plots.  Note that the intensity values are <a class="reference external" href="https://en.wikipedia.org/wiki/Standard_score#Calculation_from_raw_score">standardized</a> in all plots.  There are several curves/histograms shown in each plot. Each one is the dendrogram with different cut-offs of the minimum delta (branch height).</p>
+<p>The histogram distance is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span><span class="o">.</span><span class="n">histogram_distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">0.14298381514818145</span>
+</pre></div>
+</div>
+<p>The second plot shows the log of the number of features (branches + leaves) in a dendrogram as a function of log delta (minimum branch height):</p>
+<img alt="../../_images/dendrogram_distmet.num_distance.png" src="../../_images/dendrogram_distmet.num_distance.png" />
+<p>A line is fit to this relation, and the difference in the slopes of those lines is used to calculate the distance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span><span class="o">.</span><span class="n">num_distance</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">2.7987025053709766</span>
+</pre></div>
+</div>
+<p>For both plots, the plotting labels can be changed from <code class="xref py py-obj docutils literal notranslate"><span class="pre">1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">2</span></code> by setting <code class="xref py py-obj docutils literal notranslate"><span class="pre">label1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">label2</span></code> in <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance.distance_metric" title="turbustat.statistics.Dendrogram_Distance.distance_metric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance_metric</span></code></a>.</p>
+<p>For large data sets, creating the dendrogram can be slow. Particularly when comparing many datasets to a fiducial dataset, recomputing the dendrogram each time wastes a lot of time. <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a> can be passed a precomputed <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a> object in two ways:</p>
+<ol class="arabic">
+<li><p class="first">A precomputed <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a> object can be given to <code class="xref py py-obj docutils literal notranslate"><span class="pre">fiducial_model</span></code> in <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">Dendrogram_Stats</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dend_stat</span> <span class="o">=</span> <span class="n">Dendrogram_Stats</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">min_deltas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+<span class="gp">... </span>                             <span class="n">dendro_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_value&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+<span class="gp">... </span>                                            <span class="s2">&quot;min_npix&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">})</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dend_stat</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span> <span class="o">=</span> <span class="n">Dendrogram_Distance</span><span class="p">(</span><span class="n">cube_fid</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">min_deltas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+<span class="gp">... </span>                                <span class="n">min_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">dendro_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_value&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+<span class="gp">... </span>                                               <span class="s2">&quot;min_npix&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+<span class="gp">... </span>                                <span class="n">fiducial_model</span><span class="o">=</span><span class="n">dend_stat</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>Note that the data (<code class="xref py py-obj docutils literal notranslate"><span class="pre">cube_fid</span></code>) still need to be given to <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Distance.html#turbustat.statistics.Dendrogram_Distance" title="turbustat.statistics.Dendrogram_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Distance</span></code></a>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The object given to <code class="xref py py-obj docutils literal notranslate"><span class="pre">fiducial_model</span></code> should be run with the same <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_deltas</span></code> given to <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a>. The histogram distance is only valid when comparing dendrograms measured with the same deltas.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a> can be saved as pickle files. When <code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset1</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">dataset2</span></code> are given to`~turbustat.statistics.Dendrogram_Distance` as strings, it is assumed that these are pickle files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dend_stat</span><span class="o">.</span><span class="n">save_results</span><span class="p">(</span><span class="n">output_name</span><span class="o">=</span><span class="s2">&quot;Fiducial_Dendrogram_Stats.pkl&quot;</span><span class="p">,</span> <span class="n">keep_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dend_dist</span> <span class="o">=</span> <span class="n">Dendrogram_Distance</span><span class="p">(</span><span class="s2">&quot;Fiducial_Dendrogram_Stats.pkl&quot;</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">min_deltas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+<span class="gp">... </span>                                <span class="n">min_features</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">dendro_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_value&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+<span class="gp">... </span>                                               <span class="s2">&quot;min_npix&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+<span class="gp">... </span>                                <span class="n">fiducial_model</span><span class="o">=</span><span class="n">dend_stat</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">In both cases, the saved dendrograms should be run with the same <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_deltas</span></code> given to <a class="reference internal" href="../../api/turbustat.statistics.Dendrogram_Stats.html#turbustat.statistics.Dendrogram_Stats" title="turbustat.statistics.Dendrogram_Stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dendrogram_Stats</span></code></a>. The histogram distance is only valid when comparing dendrograms measured with the same deltas.</p>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract">Boyden et al. 2016</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract">Boyden et al. 2018</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract">Koch et al. 2017</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

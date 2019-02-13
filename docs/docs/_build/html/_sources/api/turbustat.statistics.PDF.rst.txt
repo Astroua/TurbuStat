@@ -1,0 +1,71 @@
+PDF
+===
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: PDF
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~PDF.bins
+      ~PDF.data
+      ~PDF.distance
+      ~PDF.ecdf
+      ~PDF.header
+      ~PDF.model_params
+      ~PDF.model_stderrs
+      ~PDF.need_header_flag
+      ~PDF.no_data_flag
+      ~PDF.normalization_type
+      ~PDF.pdf
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~PDF.corner_plot
+      ~PDF.find_at_percentile
+      ~PDF.find_percentile
+      ~PDF.fit_pdf
+      ~PDF.input_data_header
+      ~PDF.load_beam
+      ~PDF.load_results
+      ~PDF.make_ecdf
+      ~PDF.make_pdf
+      ~PDF.plot_distrib
+      ~PDF.run
+      ~PDF.save_results
+      ~PDF.trace_plot
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: bins
+   .. autoattribute:: data
+   .. autoattribute:: distance
+   .. autoattribute:: ecdf
+   .. autoattribute:: header
+   .. autoattribute:: model_params
+   .. autoattribute:: model_stderrs
+   .. autoattribute:: need_header_flag
+   .. autoattribute:: no_data_flag
+   .. autoattribute:: normalization_type
+   .. autoattribute:: pdf
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: corner_plot
+   .. automethod:: find_at_percentile
+   .. automethod:: find_percentile
+   .. automethod:: fit_pdf
+   .. automethod:: input_data_header
+   .. automethod:: load_beam
+   .. automethod:: load_results
+   .. automethod:: make_ecdf
+   .. automethod:: make_pdf
+   .. automethod:: plot_distrib
+   .. automethod:: run
+   .. automethod:: save_results
+   .. automethod:: trace_plot

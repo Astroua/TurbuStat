@@ -1,0 +1,6 @@
+make_extended
+=============
+
+.. currentmodule:: turbustat.simulator
+
+.. autofunction:: make_extended

@@ -1,0 +1,6 @@
+make_ppv
+========
+
+.. currentmodule:: turbustat.simulator
+
+.. autofunction:: make_ppv

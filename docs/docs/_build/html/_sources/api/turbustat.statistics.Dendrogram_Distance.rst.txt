@@ -1,0 +1,33 @@
+Dendrogram_Distance
+===================
+
+.. currentmodule:: turbustat.statistics
+
+.. autoclass:: Dendrogram_Distance
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Dendrogram_Distance.histogram_distance
+      ~Dendrogram_Distance.num_distance
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Dendrogram_Distance.distance_metric
+      ~Dendrogram_Distance.histogram_stat
+      ~Dendrogram_Distance.numfeature_stat
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: histogram_distance
+   .. autoattribute:: num_distance
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: distance_metric
+   .. automethod:: histogram_stat
+   .. automethod:: numfeature_stat

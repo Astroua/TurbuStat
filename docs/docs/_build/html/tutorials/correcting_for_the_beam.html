@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Accounting for the beam shape &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bispectrum" href="statistics/bispectrum_example.html" />
+    <link rel="prev" title="Applying Apodizing Kernels to Data" href="applying_apodizing_functions.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Accounting for the beam shape</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="applying_apodizing_functions.html" title="Previous Chapter: Applying Apodizing Kernels to Data"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Applying Apod...</span>
+    </a>
+  </li>
+  <li>
+    <a href="statistics/bispectrum_example.html" title="Next Chapter: Bispectrum"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Bispectrum &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/tutorials/correcting_for_the_beam.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Accounting for the beam shape</a></li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="accounting-for-the-beam-shape">
+<span id="correcting-for-beam"></span><h1>Accounting for the beam shape<a class="headerlink" href="#accounting-for-the-beam-shape" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The beam size of an observation introduces artificial correlations into the data
+on scales near to and below the beam size. This affects the shape of various turbulence statistics that
+measure spatial properties (Spatial Power-Spectrum, MVC, VCA, Delta-Variance, Wavelets, SCF).</p>
+</div>
+<p>The beam size is typically expressed as the full-width-half-max (FWHM). However, it is
+important to note that the data will still be correlated beyond the FWHM. For example,
+consider a randomly-drawn image with a specified power-law index:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.simulator</span> <span class="k">import</span> <span class="n">make_extended</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.io.sim_tools</span> <span class="k">import</span> <span class="n">create_fits_hdu</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Image drawn from red-noise</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rnoise_img</span> <span class="o">=</span> <span class="n">make_extended</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="n">powerlaw</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define properties to generate WCS information</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pixel_scale</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">arcsec</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beamfwhm</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">arcsec</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">imshape</span> <span class="o">=</span> <span class="n">rnoise_img</span><span class="o">.</span><span class="n">shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">restfreq</span> <span class="o">=</span> <span class="mf">1.4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bunit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">K</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create a FITS HDU</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_hdu</span> <span class="o">=</span> <span class="n">create_fits_hdu</span><span class="p">(</span><span class="n">rnoise_img</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">beamfwhm</span><span class="p">,</span> <span class="n">imshape</span><span class="p">,</span> <span class="n">restfreq</span><span class="p">,</span> <span class="n">bunit</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">plaw_hdu</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_slope3_img.png" src="../_images/rednoise_slope3_img.png" />
+<p>The power-spectrum of the image should give a slope of 3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">PowerSpectrum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec</span> <span class="o">=</span> <span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">plaw_hdu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">radial_pspec_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;binsize&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+<span class="gp">... </span>          <span class="n">fit_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;weighted_fit&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">low_cut</span><span class="o">=</span><span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">))</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       1.000</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  1.000</span>
+<span class="go">Method:                 Least Squares   F-statistic:                 8.070e+06</span>
+<span class="go">Date:                Thu, 21 Jun 2018   Prob (F-statistic):               0.00</span>
+<span class="go">Time:                        11:43:47   Log-Likelihood:                 701.40</span>
+<span class="go">No. Observations:                 177   AIC:                            -1399.</span>
+<span class="go">Df Residuals:                     175   BIC:                            -1392.</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const          0.0032      0.001      3.952      0.000       0.002       0.005</span>
+<span class="go">x1            -2.9946      0.001  -2840.850      0.000      -2.997      -2.992</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                      252.943   Durbin-Watson:                   1.077</span>
+<span class="go">Prob(Omnibus):                  0.000   Jarque-Bera (JB):            26797.433</span>
+<span class="go">Skew:                          -5.963   Prob(JB):                         0.00</span>
+<span class="go">Kurtosis:                      62.087   Cond. No.                         4.55</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_pspec_slope3.png" src="../_images/rednoise_pspec_slope3.png" />
+<p>Now we will smooth this image with a Gaussian beam. The easiest way to do this is to use the built-in
+tools from the <a class="reference external" href="https://spectral-cube.readthedocs.io/en/latest/">spectral-cube</a> and
+<a class="reference external" href="https://github.com/radio-astro-tools/radio-beam/blob/master/docs/index.rst">radio_beam</a> packages.
+We will convert the FITS HDU to a spectral-cube <code class="xref py py-obj docutils literal notranslate"><span class="pre">Projection</span></code>, and define a pencil beam for the
+initial image:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spectral_cube</span> <span class="k">import</span> <span class="n">Projection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">radio_beam</span> <span class="k">import</span> <span class="n">Beam</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pencil_beam</span> <span class="o">=</span> <span class="n">Beam</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_proj</span> <span class="o">=</span> <span class="n">Projection</span><span class="o">.</span><span class="n">from_hdu</span><span class="p">(</span><span class="n">plaw_hdu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_proj</span> <span class="o">=</span> <span class="n">plaw_proj</span><span class="o">.</span><span class="n">with_beam</span><span class="p">(</span><span class="n">pencil_beam</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next we will define the beam to smooth to. A 3-pixel wide FWHM is reasonable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_beam</span> <span class="o">=</span> <span class="n">Beam</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">plaw_hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CDELT2&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_conv</span> <span class="o">=</span> <span class="n">plaw_proj</span><span class="o">.</span><span class="n">convolve_to</span><span class="p">(</span><span class="n">new_beam</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plaw_conv</span><span class="o">.</span><span class="n">quicklook</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_slope3_img_smoothed.png" src="../_images/rednoise_slope3_img_smoothed.png" />
+<p>How has smoothing changed the shape of the power-spectrum?</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Change the colours and comment these lines if you don&#39;t use seaborn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sb</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">col_pal</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec2</span> <span class="o">=</span> <span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">plaw_conv</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.025</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">radial_pspec_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;binsize&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+<span class="gp">... </span>           <span class="n">apodize_kernel</span><span class="o">=</span><span class="s1">&#39;tukey&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.988</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.988</span>
+<span class="go">Method:                 Least Squares   F-statistic:                     2059.</span>
+<span class="go">Date:                Thu, 21 Jun 2018   Prob (F-statistic):           1.54e-25</span>
+<span class="go">Time:                        14:23:19   Log-Likelihood:                 35.997</span>
+<span class="go">No. Observations:                  27   AIC:                            -67.99</span>
+<span class="go">Df Residuals:                      25   BIC:                            -65.40</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         -1.0626      0.098    -10.848      0.000      -1.264      -0.861</span>
+<span class="go">x1            -3.5767      0.079    -45.378      0.000      -3.739      -3.414</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        3.417   Durbin-Watson:                   0.840</span>
+<span class="go">Prob(Omnibus):                  0.181   Jarque-Bera (JB):                2.072</span>
+<span class="go">Skew:                          -0.650   Prob(JB):                        0.355</span>
+<span class="go">Kurtosis:                       3.391   Cond. No.                         15.7</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_pspec_slope3_smoothed.png" src="../_images/rednoise_pspec_slope3_smoothed.png" />
+<p>The slope of the power-spectrum is significantly steepened on small scales by the beam (see the reported result in variable <code class="docutils literal notranslate"><span class="pre">x1</span></code> above).
+And this steepening occurs on scales much larger than the beam FWHM, which is indicated by
+the thick purple vertical line in the left-hand side of the plot.  The fitting was restricted to scales much larger than three times the beam width. However, the recovered slope is still steeper than the original -3.</p>
+<p>Also note that convolving the image with the beam causes some tapering at the edges of the
+image, breaking the periodicity at the edges. The image was apodized with a Tukey window,
+which causes some of the deviations at large scales (small frequencies). See the
+<a class="reference internal" href="applying_apodizing_functions.html#apodkerns"><span class="std std-ref">tutorial page on apodizing kernels for more</span></a>.</p>
+<p>The beam size must be corrected for in the image prior to fitting the power-spectrum. This can
+be done by (1) including a Gaussian beam component in the model used to fit the power-spectrum,
+or (2) divide the power-spectrum of the image by the power-spectrum of the beam response. The
+former requires using a non-linear model, and is not currently implemented in TurbuStat (see <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2015ApJ...809..153M/abstract">Martin et al. 2015</a> for an example). The
+latter method can be applied prior to fitting, allowing a linear model to still be used for
+fitting.</p>
+<p>The beam correction in TurbuStat requires the optional package <a class="reference external" href="https://github.com/radio-astro-tools/radio-beam/blob/master/docs/index.rst">radio_beam</a> to be installed. <code class="xref py py-obj docutils literal notranslate"><span class="pre">radio_beam</span></code> allows the beam response for any 2D elliptical Gaussian to be returned. For statistics that create a power-spectrum (Spatial Power-Spectrum, VCA, MVC), the beam correction can be applied by specifying <code class="xref py py-obj docutils literal notranslate"><span class="pre">beam_correct=True</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pspec3</span> <span class="o">=</span> <span class="n">PowerSpectrum</span><span class="p">(</span><span class="n">plaw_conv</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec3</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xunit</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="o">**-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fit_2D</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">low_cut</span><span class="o">=</span><span class="mf">0.025</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span> <span class="n">high_cut</span><span class="o">=</span><span class="mf">0.4</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="n">apodize_kernel</span><span class="o">=</span><span class="s1">&#39;tukey&#39;</span><span class="p">,</span> <span class="n">beam_correct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">                            OLS Regression Results</span>
+<span class="go">==============================================================================</span>
+<span class="go">Dep. Variable:                      y   R-squared:                       0.998</span>
+<span class="go">Model:                            OLS   Adj. R-squared:                  0.998</span>
+<span class="go">Method:                 Least Squares   F-statistic:                 8.828e+04</span>
+<span class="go">Date:                Thu, 21 Jun 2018   Prob (F-statistic):          5.55e-192</span>
+<span class="go">Time:                        14:38:33   Log-Likelihood:                 268.87</span>
+<span class="go">No. Observations:                 137   AIC:                            -533.7</span>
+<span class="go">Df Residuals:                     135   BIC:                            -527.9</span>
+<span class="go">Df Model:                           1</span>
+<span class="go">Covariance Type:            nonrobust</span>
+<span class="go">==============================================================================</span>
+<span class="go">                 coef    std err          t      P&gt;|t|      [0.025      0.975]</span>
+<span class="go">------------------------------------------------------------------------------</span>
+<span class="go">const         -0.2247      0.008    -27.671      0.000      -0.241      -0.209</span>
+<span class="go">x1            -2.9961      0.010   -297.116      0.000      -3.016      -2.976</span>
+<span class="go">==============================================================================</span>
+<span class="go">Omnibus:                        7.089   Durbin-Watson:                   1.500</span>
+<span class="go">Prob(Omnibus):                  0.029   Jarque-Bera (JB):                9.274</span>
+<span class="go">Skew:                           0.285   Prob(JB):                      0.00969</span>
+<span class="go">Kurtosis:                       4.140   Cond. No.                         5.50</span>
+<span class="go">==============================================================================</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_pspec_slope3_smoothed_beamcorr.png" src="../_images/rednoise_pspec_slope3_smoothed_beamcorr.png" />
+<p>The shape of the power-spectrum has been restored and we recover the correct slope. The deviation on small scales (large frequencies) occurs on scales smaller than about the FWHM of the beam where the information has been lost by the spatial smoothing applied to the image. If the beam is over-sampled by a larger factor — say with a 6-pixel FWHM instead of 3 — the increase in power on small scales will affect a larger region of the power-spectrum. This region should be excluded from the power-spectrum fit. A reasonable lower-limit to fit the power-spectrum to is the FWHM of the beam. Additional noise in the image will tend to flatten the power-spectrum to larger scales, so setting the lower fitting limit to a couple times the beam width may be necessary. <strong>We recommend visually examining the quality of the fit.</strong></p>
+<p>Here are the three power-spectra shown above overplotted to highlight the shape changes from spatial smoothing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pspec</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Original&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec2</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Smoothed&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pspec3</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Beam-Corrected&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">col_pal</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">])</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../_images/rednoise_pspec_slope3_beam_comparisons.png" src="../_images/rednoise_pspec_slope3_beam_comparisons.png" />
+<p>Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be excluded from any fitting. For example, lag scales smaller than the beam in the <a class="reference internal" href="statistics/delta_variance_example.html#delvar-tutorial"><span class="std std-ref">Delta-Variance</span></a>, <a class="reference internal" href="statistics/wavelet_example.html#wavelet-tutorial"><span class="std std-ref">Wavelets</span></a>, and <a class="reference internal" href="statistics/scf_example.html#scf-tutorial"><span class="std std-ref">SCF</span></a> should not be fit. The spatial filtering used to measure <a class="reference internal" href="statistics/statmoments_example.html#statmoments-tutorial"><span class="std std-ref">Statistical Moments</span></a> should be set to a width of at least the beam size.</p>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

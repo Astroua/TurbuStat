@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Genus &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Modified Velocity Centroids" href="mvc_example.html" />
+    <link rel="prev" title="Dendrograms" href="dendrogram_example.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_requirements.html">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Genus</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="dendrogram_example.html" title="Previous Chapter: Dendrograms"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Dendrograms</span>
+    </a>
+  </li>
+  <li>
+    <a href="mvc_example.html" title="Next Chapter: Modified Velocity Centroids"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Modified Velo... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/tutorials/statistics/genus_example.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Genus</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using">Using</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="genus">
+<span id="genus-tutorial"></span><h1>Genus<a class="headerlink" href="#genus" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Genus statistics provide a measure of a region’s topology. At a given value in the data, the Genus value is the number of discrete regions above the value minus the number of regions below it. When this process is repeated over a range of values, a Genus curve can be constructed. The technique has previously been used to study CMB deviations from a Gaussian distribution.</p>
+<p>If a region has a negative Genus statistics, it is dominated by holes in the emission (“swiss cheese” morphology). A positive Genus value implies a “meatball” morphology, where the emission is localized into clumps. The Genus curve of a Gaussian field is shown below. Note that at the mean value (0.0), the Genus value is zero: at the mean intensity, there is no preference to either morphological type.</p>
+<img alt="../../_images/genus_random.png" src="../../_images/genus_random.png" />
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract">Kowal et al. 2007</a> constructed Genus curves for a set of simulations to investigate the effect of changing the Mach number and the Alfvenic Mach number. The isocontours were taken for a range of density values in the full position-position-position space. Applications to observations includes <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008ApJ...688.1021C/abstract">Chepurnov et al. 2008</a> and <a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2012ApJ...749..145B/abstract">Burkhart et al. 2012</a>.</p>
+</div>
+<div class="section" id="using">
+<h2>Using<a class="headerlink" href="#using" title="Permalink to this headline">¶</a></h2>
+<p><strong>The data in this tutorial are available</strong> <a class="reference external" href="https://girder.hub.yt/#user/57b31aee7b6f080001528c6d/folder/59721a30cc387500017dbe37">here</a>.</p>
+<p>We need to import the <a class="reference internal" href="../../api/turbustat.statistics.Genus.html#turbustat.statistics.Genus" title="turbustat.statistics.Genus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Genus</span></code></a> code, along with a few other common packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.statistics</span> <span class="k">import</span> <span class="n">Genus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+<p>And we load in the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Design4_flatrho_0021_00_radmc_moment0.fits&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>The FITS HDU is passed to initialize <a class="reference internal" href="../../api/turbustat.statistics.Genus.html#turbustat.statistics.Genus" title="turbustat.statistics.Genus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Genus</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span> <span class="o">=</span> <span class="n">Genus</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">lowdens_percent</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">highdens_percent</span><span class="o">=</span><span class="mi">85</span><span class="p">,</span> <span class="n">numpts</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">smoothing_radii</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">moment0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">10.</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lowdens_percent</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">highdens_percent</span></code> set the upper and lower percentiles in the data to measure the Genus value at. When using observational data, <code class="xref py py-obj docutils literal notranslate"><span class="pre">lowdens_percent</span></code> should be set above the noise level. Alternatively, specific values for the low and high cut-offs can be passed using <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_value</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_value</span></code>, respectively. The <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_value</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_value</span></code> settings are overridden when <code class="xref py py-obj docutils literal notranslate"><span class="pre">lowdens_percent</span> <span class="pre">&gt;</span> <span class="pre">min_value</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">highdens_percent</span> <span class="pre">&lt;</span> <span class="pre">max_value</span></code>.</p>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpts</span></code> parameter sets how many Genus values to compute between the given percentiles. Finally, <code class="xref py py-obj docutils literal notranslate"><span class="pre">smoothing_radii</span></code> allows for the data to be smoothed, minimizing the influence of noise on the Genus curve at the expense of resolution. The values given are used as the radii of a Gaussian smoothing kernel. The values given above (<code class="xref py py-obj docutils literal notranslate"><span class="pre">np.linspace(1,</span> <span class="pre">moment0.shape[0]</span> <span class="pre">/</span> <span class="pre">10.,</span> <span class="pre">5)</span></code>) are used by default when no values are given.</p>
+<p>Computing the curves is accomplished using <a class="reference internal" href="../../api/turbustat.statistics.Genus.html#turbustat.statistics.Genus.run" title="turbustat.statistics.Genus.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/genus_design4.png" src="../../_images/genus_design4.png" />
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_value</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_value</span></code> are set instead:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span> <span class="o">=</span> <span class="n">Genus</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">min_value</span><span class="o">=</span><span class="mi">137</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">353</span><span class="p">,</span> <span class="n">numpts</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/genus_design4_minmaxval.png" src="../../_images/genus_design4_minmaxval.png" />
+<p>I have set <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_value</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_value</span></code> to the same percentiles used above and so we get the same result.</p>
+<p>The basic sinusoid seen in the Genus curve of the Gaussian field is still evident. As we smooth the data on larger scales, the topological information is lost, and the curve becomes degraded. To avoid spurious noise features, the minimum area a region must have to be considered is set by <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_size</span></code>. This is simulated data, so a small value has been chosen.</p>
+<p>Often the smallest size that can be “trusted” in a radio image is the beam area. In this example, a FITS HDU was passed, including an associated header. If the beam information is contained in the header, the size threshold can be set to the beam area using <code class="xref py py-obj docutils literal notranslate"><span class="pre">use_beam=True</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">moment0</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;BMAJ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2e-5</span>  <span class="c1"># deg.   # doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span> <span class="o">=</span> <span class="n">Genus</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">lowdens_percent</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">highdens_percent</span><span class="o">=</span><span class="mi">85</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">smoothing_radii</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pix</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_beam</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/genus_design4_beamarea.png" src="../../_images/genus_design4_beamarea.png" />
+<p>The curve has far less detail than in the earlier example because of the new requirement for large, connected regions. Note that the FITS keywords “BMIN” and “BPA” are also read and used when available. More options for reading beam information are available when the optional package <a class="reference external" href="https://github.com/radio-astro-tools/radio_beam">radio_beam</a> is installed. If the beam information is not contained in the header, or you wish to use any other minimum area, the size can be passed using <code class="xref py py-obj docutils literal notranslate"><span class="pre">min_size</span></code>. To get the same result as the last example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_beam</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mf">2e-5</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>If a distance is given to <a class="reference internal" href="../../api/turbustat.statistics.Genus.html#turbustat.statistics.Genus" title="turbustat.statistics.Genus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Genus</span></code></a>, areas and smoothing radii can be passed in physical units:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span> <span class="o">=</span> <span class="n">Genus</span><span class="p">(</span><span class="n">moment0</span><span class="p">,</span> <span class="n">lowdens_percent</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">highdens_percent</span><span class="o">=</span><span class="mi">85</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">smoothing_radii</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="mf">0.04</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">]),</span> <span class="n">distance</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">pc</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genus</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">40</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">AU</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<img alt="../../_images/genus_design4_physunits.png" src="../../_images/genus_design4_physunits.png" />
+<p>Note that the smooth size shown in the plots is always the smoothing radius in pixels.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2007ApJ...658..423K/abstract">Kowal et al. 2007</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2008ApJ...688.1021C/abstract">Chepurnov et al. 2008</a></p>
+<p><a class="reference external" href="https://ui.adsabs.harvard.edu/#abs/2012ApJ...749..145B/abstract">Burkhart et al. 2012</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

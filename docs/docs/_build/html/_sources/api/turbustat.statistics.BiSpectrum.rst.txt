@@ -1,0 +1,6 @@
+BiSpectrum
+==========
+
+.. currentmodule:: turbustat.statistics
+
+.. autofunction:: BiSpectrum

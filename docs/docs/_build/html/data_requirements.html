@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Data Requirements &#8212; turbustat v1.0.dev2393</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Deriving Cube Moments" href="moments.html" />
+    <link rel="prev" title="create_image_header" href="api/turbustat.io.sim_tools.create_image_header.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          turbustat</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2393</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing TurbuStat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accepted_input_formats.html">Accepted Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preparing_simulated_data.html">Preparing Simulated Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="moments.html">Deriving Cube Moments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">TurbuStat Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generating_test_data.html">Creating testing data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics.html">Statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="statistics.html#distance-metrics">Distance Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to TurbuStat</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Data Requirements</a><ul>
+<li><a class="reference internal" href="#spatial-projection">Spatial Projection</a></li>
+<li><a class="reference internal" href="#considerations-for-distance-metrics">Considerations for distance metrics</a></li>
+<li><a class="reference internal" href="#data-units-for-distance-metrics">Data units for distance metrics</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="api/turbustat.io.sim_tools.create_image_header.html" title="Previous Chapter: create_image_header"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; create_image_header</span>
+    </a>
+  </li>
+  <li>
+    <a href="moments.html" title="Next Chapter: Deriving Cube Moments"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Deriving Cube Moments &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/data_requirements.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Data Requirements</a><ul>
+<li><a class="reference internal" href="#spatial-projection">Spatial Projection</a></li>
+<li><a class="reference internal" href="#considerations-for-distance-metrics">Considerations for distance metrics</a></li>
+<li><a class="reference internal" href="#data-units-for-distance-metrics">Data units for distance metrics</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="data-requirements">
+<span id="data-reqs"></span><h1>Data Requirements<a class="headerlink" href="#data-requirements" title="Permalink to this headline">¶</a></h1>
+<p>Use of the statistics and distance metrics require the input data to satisfy some criteria.</p>
+<div class="section" id="spatial-projection">
+<h2>Spatial Projection<a class="headerlink" href="#spatial-projection" title="Permalink to this headline">¶</a></h2>
+<p>TurbuStat assumes that the spatial dimensions of the data <strong>are square on the sky</strong>. All physical and angular dimensions will be incorrect, otherwise.  Data with non-square pixels should first be reprojected. This can be easily done using <a class="reference external" href="http://spectral-cube.readthedocs.io/en/latest/">spectral-cube</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reproj_cube</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">new_header</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reproj_proj</span> <span class="o">=</span> <span class="n">proj_2D</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">new_header_2D</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="considerations-for-distance-metrics">
+<h2>Considerations for distance metrics<a class="headerlink" href="#considerations-for-distance-metrics" title="Permalink to this headline">¶</a></h2>
+<p>The correct pre-processing of data sets is crucial for attaining a meaningful comparison. Listed here are pre-processing considerations that should be considered when using the distance metrics.</p>
+<p>The extent of these effects will differ for different data sets. We recommend testing a subset of the data by placing the data at a common resolution (physical or angular) and grid-size, depending on your application. Smoothing and reprojection operations are straightforward to perform with the <a class="reference external" href="http://spectral-cube.readthedocs.io/en/latest/smoothing.html">spectral-cube package</a>.</p>
+<ol class="arabic">
+<li><p class="first"><strong>Spatial scales</strong> – Unlike many of the statistics, the distance metrics do not consider physical spatial units.  Specifically, metrics that directly compare values at specific scales (<a class="reference internal" href="api/turbustat.statistics.DeltaVariance_Distance.html#turbustat.statistics.DeltaVariance_Distance" title="turbustat.statistics.DeltaVariance_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaVariance_Distance</span></code></a>, <a class="reference internal" href="api/turbustat.statistics.SCF_Distance.html#turbustat.statistics.SCF_Distance" title="turbustat.statistics.SCF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SCF_Distance</span></code></a>) will use the given WCS information for the data sets to find a common angular scale.</p>
+<blockquote>
+<div><p>Different spatial sizes are less of a concern for slope-based comparisons, but discrepancies can arise if the data sets have different noise levels. In these cases, the scales used to fit to the power-spectrum (or the equivalent statistic output) should be chosen carefully to avoid bias from the noise. A similar issue can arise when comparing different simulated data sets if the simulations have different inertial ranges.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Spectral scales</strong> – The spectral sampling and range should be considered for all methods that utilize the entire PPV cube (SCF, VCA, VCS, dendrograms, PCA, PDF). The issue with using different-sized spectral pixels affects the noise properties, and in some statistics, the measurement itself.</p>
+<blockquote>
+<div><p>For the former, the noise level can introduce a bias in the measured quantities.  To mitigate this, data can be masked prior to running metrics.  Otherwise, minimum cut-off values can be specified for metrics that utilize the actual intensity values of the data, such as dendrograms and the PDF.  For statistics that are independent of intensity, like a power-law slope or correlation, the fitting range can be specified for each statistic to minimize bias from noise. This is the same effect described above for spatial scales.</p>
+<p>For the second case, the VCA index is <em>expected</em> to change with spectral resolution depending on the underlying properties of the turbulent fields (see the <a class="reference internal" href="tutorials/statistics/vca_example.html#vca-tutorial"><span class="std std-ref">VCA tutorial</span></a>).</p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="data-units-for-distance-metrics">
+<h2>Data units for distance metrics<a class="headerlink" href="#data-units-for-distance-metrics" title="Permalink to this headline">¶</a></h2>
+<p>Most of the distance metrics will not depend on the absolute value of the data sets. The exceptions are when values of a statistic are directly compared. This includes <a class="reference internal" href="api/turbustat.statistics.Cramer_Distance.html#turbustat.statistics.Cramer_Distance" title="turbustat.statistics.Cramer_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Cramer_Distance</span></code></a>, the curve distance in <a class="reference internal" href="api/turbustat.statistics.DeltaVariance_Distance.html#turbustat.statistics.DeltaVariance_Distance" title="turbustat.statistics.DeltaVariance_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaVariance_Distance</span></code></a>, and the bins used in the histograms of <a class="reference internal" href="api/turbustat.statistics.StatMoments_Distance.html#turbustat.statistics.StatMoments_Distance" title="turbustat.statistics.StatMoments_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StatMoments_Distance</span></code></a> and <a class="reference internal" href="api/turbustat.statistics.PDF_Distance.html#turbustat.statistics.PDF_Distance" title="turbustat.statistics.PDF_Distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDF_Distance</span></code></a>.  While each of these methods applies some normalization scheme to the data, we advise converting both data sets to a common unit to minimize possible discrepancies.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, TurbuStat Development Team.<br/>
+      Last updated on 13 Feb 2019.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

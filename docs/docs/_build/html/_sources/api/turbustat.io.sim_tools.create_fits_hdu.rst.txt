@@ -1,0 +1,6 @@
+create_fits_hdu
+===============
+
+.. currentmodule:: turbustat.io.sim_tools
+
+.. autofunction:: create_fits_hdu
