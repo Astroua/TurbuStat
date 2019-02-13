@@ -55,7 +55,15 @@ The power spectrum is computed using:
 
 .. image:: images/design4_pspec.png
 
-The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.PowerSpectrum.run` (the default setting), the contours on the two-dimensional power-spectrum are fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits.
+The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.PowerSpectrum.run` (the default setting), the contours on the two-dimensional power-spectrum are fit using an elliptical power-law model. The dashed red lines (or contours) on both plots are the limits of the data used in the fits.  We use an elliptical power-law model:
+
+.. math::
+
+    A \left[-(q^2 \cos^2\theta + \sin^2\theta) x^2 
+    +  2(1 - q^2) \sin\theta \cos\theta xy
+    + (q^2 \sin^2\theta + \cos^2 \theta) y^2 \right]^{\Gamma/2}
+
+Here, the power-law index is :math:`\Gamma`, the orientation angle of the ellipse with respect to the :math:`x,y` coordinate system is given by :math:`\theta` and the ellipticity is :math:`q\in [0,1)`.
 
 The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the :ref:`limited inertial range in this simulation <data_for_tutorial>`. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
 

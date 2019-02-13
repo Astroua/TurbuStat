@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>turbustat.statistics.base_statistic &#8212; turbustat v1.0.dev2397</title>
+    <title>turbustat.statistics.base_statistic &#8212; turbustat v1.0.dev2400</title>
     <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
@@ -37,7 +37,7 @@
         </button>
         <a class="navbar-brand" href="../../../index.html">
           turbustat</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2397</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2400</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -219,6 +219,17 @@
                                    <span class="n">need_copy</span><span class="o">=</span><span class="n">need_copy</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Catch cases with no header and a numpy array</span>
+            <span class="c1"># But Projections are u.Quantity that inherit from</span>
+            <span class="c1"># np.ndarray... So need to make sure it is not a Quantity</span>
+            <span class="c1"># array either.</span>
+            <span class="n">np_not_quant_check</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np_not_quant_check</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;When data is given as a numpy array, a FITS &quot;</span>
+                                 <span class="s2">&quot;header must be given using the `header` &quot;</span>
+                                 <span class="s2">&quot;keyword argument.&quot;</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
                                                 <span class="n">need_copy</span><span class="o">=</span><span class="n">need_copy</span><span class="p">)</span>
 
