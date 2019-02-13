@@ -33,7 +33,7 @@ And we load in the data::
 
 Before running the statistics side, we can first compute the dendrogram itself to see what we're dealing with::
 
-    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)  # doctest: +SKIP
+    >>> d = Dendrogram.compute(cube.data, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)  # doctest: +SKIP
     >>> ax = plt.subplot(111)  # doctest: +SKIP
     >>> d.plotter().plot_tree(ax)  # doctest: +SKIP
     >>> plt.ylabel("Intensity (K)")  # doctest: +SKIP

@@ -114,7 +114,7 @@ Note the drastic change in the slope! Specifying the correct fit region for the 
 
 Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does not handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+    >>> mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix,
     ...         high_cut=0.4 / u.pix,
     ...         fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results
