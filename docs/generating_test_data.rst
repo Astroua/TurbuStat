@@ -70,7 +70,7 @@ The power-spectrum of the image should give a slope of 3:
 
 Anisotropic 2D images can also be produced:
 
-    >>> rnoise_img = make_extended(256, powerlaw=3.)
+    >>> rnoise_img = make_extended(256, powerlaw=3., ellip=0.5, theta=45 * u.deg)
     >>> plt.imshow(rnoise_img)  # doctest: +SKIP
 
 .. image:: tutorials/images/rednoise_slope3_ellip_05_theta_45.png
