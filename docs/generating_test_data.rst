@@ -181,10 +181,9 @@ The velocity centroid map:
 
 .. image:: tutorials/images/ppv_mom1.png
 
-And the mean spectra, averaged over the spatial dimensions:
+And the mean spectrum, averaged over the spatial dimensions:
 
     >>> cube.mean(axis=(1, 2)).quicklook()  # doctest: +SKIP
-    >>> plt.colorbar()  # doctest: +SKIP
 
 .. image:: tutorials/images/ppv_mean_spec.png
 
