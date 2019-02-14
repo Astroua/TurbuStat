@@ -11,7 +11,7 @@ Contributing a new statistic or distance metric
 
 Increasing the number of statistics implemented in TurbuStat is a key goal for the project. If you plan on providing a new implementation, the contribution should address the following criteria:
 
-1. Statistics and distance metrics should be a `python class <https://docs.python.org/3/tutorial/classes.html>`_. A new folder can be added to the `statistics <https://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics>`_ folder for the new classes. Note that the new folder should contain an `__init__.py` the imports the statistic and/or distance metric classes (see `here <https://github.com/Astroua/TurbuStat/blob/master/turbustat/statistics/pspec_bispec/__init__.py>` for an example).
+1. Statistics and distance metrics should be a `python class <https://docs.python.org/3/tutorial/classes.html>`_. A new folder can be added to the `statistics <https://github.com/Astroua/TurbuStat/tree/master/turbustat/statistics>`_ folder for the new classes. Note that the new folder should contain an `__init__.py` the imports the statistic and/or distance metric classes (see `here <https://github.com/Astroua/TurbuStat/blob/master/turbustat/statistics/pspec_bispec/__init__.py>`_ for an example).
 
 2. Statistics should inherit from the `BaseStatisticMixIn <https://github.com/Astroua/TurbuStat/blob/master/turbustat/statistics/base_statistic.py>`_ class. This mixin class handles unit conversions, extracts the required information from the FITS header, and allows the class to be saved and loaded.
 

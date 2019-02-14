@@ -70,7 +70,7 @@ The power-spectrum of the image should give a slope of 3:
 
 Anisotropic 2D images can also be produced:
 
-    >>> rnoise_img = make_extended(256, powerlaw=3.)
+    >>> rnoise_img = make_extended(256, powerlaw=3., ellip=0.5, theta=45 * u.deg)
     >>> plt.imshow(rnoise_img)  # doctest: +SKIP
 
 .. image:: tutorials/images/rednoise_slope3_ellip_05_theta_45.png
@@ -137,7 +137,7 @@ to test turbulent statistics in idealized conditions.
 
 The function to create the cubes is:
 
-    >>> from turbustat.simulator import make_3dfield
+    >>> from turbustat.simulator import make_3dfield, make_ppv
     >>> import astropy.units as u
 
 We need to create 3D velocity and density cubes. For this simple example, we will create
@@ -181,10 +181,9 @@ The velocity centroid map:
 
 .. image:: tutorials/images/ppv_mom1.png
 
-And the mean spectra, averaged over the spatial dimensions:
+And the mean spectrum, averaged over the spatial dimensions:
 
     >>> cube.mean(axis=(1, 2)).quicklook()  # doctest: +SKIP
-    >>> plt.colorbar()  # doctest: +SKIP
 
 .. image:: tutorials/images/ppv_mean_spec.png
 

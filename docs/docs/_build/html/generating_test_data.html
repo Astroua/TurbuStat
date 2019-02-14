@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Creating testing data &#8212; turbustat v1.0.dev2402</title>
+    <title>Creating testing data &#8212; turbustat v1.0.dev2406</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -39,7 +39,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           turbustat</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2402</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.dev2406</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -213,7 +213,7 @@ observations that can be used to test idealized regimes of turbulent statistics.
 </div>
 <img alt="_images/rednoise_pspec_slope3.png" src="_images/rednoise_pspec_slope3.png" />
 <p>Anisotropic 2D images can also be produced:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rnoise_img</span> <span class="o">=</span> <span class="n">make_extended</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="n">powerlaw</span><span class="o">=</span><span class="mf">3.</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rnoise_img</span> <span class="o">=</span> <span class="n">make_extended</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="n">powerlaw</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">ellip</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">45</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">rnoise_img</span><span class="p">)</span>  <span class="c1"># doctest: +SKIP</span>
 </pre></div>
 </div>
@@ -276,7 +276,7 @@ are shown below:</p>
 and is primarily intended for creating idealized optically-thin 21-cm HI emission
 to test turbulent statistics in idealized conditions.</p>
 <p>The function to create the cubes is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.simulator</span> <span class="k">import</span> <span class="n">make_3dfield</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">turbustat.simulator</span> <span class="k">import</span> <span class="n">make_3dfield</span><span class="p">,</span> <span class="n">make_ppv</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 </pre></div>
 </div>
@@ -318,9 +318,8 @@ small 32 pixel cubes so this is quick to compute:</p>
 </pre></div>
 </div>
 <img alt="_images/ppv_mom1.png" src="_images/ppv_mom1.png" />
-<p>And the mean spectra, averaged over the spatial dimensions:</p>
+<p>And the mean spectrum, averaged over the spatial dimensions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">quicklook</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
 </pre></div>
 </div>
 <img alt="_images/ppv_mean_spec.png" src="_images/ppv_mean_spec.png" />
@@ -374,7 +373,7 @@ small 32 pixel cubes so this is quick to compute:</p>
     </p>
     <p>
         &copy; Copyright 2019, TurbuStat Development Team.<br/>
-      Last updated on 13 Feb 2019.<br/>
+      Last updated on 14 Feb 2019.<br/>
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
