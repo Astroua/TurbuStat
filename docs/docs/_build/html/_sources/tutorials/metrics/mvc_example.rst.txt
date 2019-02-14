@@ -6,7 +6,7 @@ MVC Distance
 
 See :ref:`the tutorial <mvc_tutorial>` for a description of Modified Velocity Centroids (MVC).
 
-The distance metric for MVC is based on the t-statistics of teh difference between the power spectrum slopes:
+The distance metric for MVC is based on the t-statistics of the difference between the power spectrum slopes:
 
 .. math::
     d_{\rm MVC} = \frac{\left| \beta_1 - \beta_2 \right|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}

@@ -23,7 +23,7 @@ Using
 
 We need to import the `~turbustat.statistics.Genus_Distance` class, along with a few other common packages:
 
-    >>> from turbustat.statistics import Genus
+    >>> from turbustat.statistics import Genus_Distance
     >>> from astropy.io import fits
     >>> import astropy.units as u
     >>> import numpy as np

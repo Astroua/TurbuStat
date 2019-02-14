@@ -47,6 +47,7 @@ And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be gi
     >>> moment0_fid = fits.open(osjoin(data_path, "Fiducial0_flatrho_0021_00_radmc_moment0.fits"))[0]  # doctest: +SKIP
 
 These two images are given as the inputs to `~turbustat.statistics.PDF_Distance`. Other parameters can be set here, including the minimum images values to be included in the histograms (`min_val1`/`min_val2`), whether to fit a log-normal distribution (`do_fit`), and what type of normalization to use on the data (`normalization_type`; see the :ref:`PDF tutorial <pdf_tutorial>`):
+
     >>> pdf = PDF_Distance(moment0_fid, moment0, min_val1=0.0, min_val2=0.0,
     ...                    do_fit=True, normalization_type=None)  # doctest: +SKIP
 
