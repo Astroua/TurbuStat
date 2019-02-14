@@ -135,7 +135,7 @@ class DeltaVariance(BaseStatisticMixIn):
         self._weights = arr
 
     def do_convolutions(self, allow_huge=False, boundary='wrap',
-                        min_weight_frac=0.01, nan_treatment=False,
+                        min_weight_frac=0.01, nan_treatment='fill',
                         preserve_nan=False,
                         use_pyfftw=False, threads=1,
                         pyfftw_kwargs={},
@@ -586,7 +586,7 @@ class DeltaVariance(BaseStatisticMixIn):
             plt.show()
 
     def run(self, show_progress=True, verbose=False, xunit=u.pix,
-            nan_treatment='interpolate', preserve_nan=False,
+            nan_treatment='fill', preserve_nan=False,
             allow_huge=False, boundary='wrap',
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             xlow=None, xhigh=None,
