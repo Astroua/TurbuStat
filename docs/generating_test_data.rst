@@ -137,7 +137,7 @@ to test turbulent statistics in idealized conditions.
 
 The function to create the cubes is:
 
-    >>> from turbustat.simulator import make_3dfield
+    >>> from turbustat.simulator import make_3dfield, make_ppv
     >>> import astropy.units as u
 
 We need to create 3D velocity and density cubes. For this simple example, we will create
