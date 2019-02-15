@@ -15,13 +15,16 @@ from turbustat.io.sim_tools import create_fits_hdu
 from turbustat.statistics import PowerSpectrum
 
 # Use my default seaborn setting
-sb.set(font='Times New Roman', style='ticks')
-sb.set_context("poster", font_scale=1.0,
-               rc={'figure.figsize': (11.7, 8.27)})
+# sb.set(font='Times New Roman', style='ticks')
+# sb.set_context("poster", font_scale=1.0,
+#                rc={'figure.figsize': (11.7, 8.27)})
+
+sb.set(font='Sans-Serif', style='ticks')
+sb.set_context("paper", font_scale=1.)
 
 # For some reason, the figure size isn't getting updated by the context
 # change on my work desktop. Specify manually here
-plt.rcParams['figure.figsize'] = (11.8, 8.27)
+plt.rcParams['figure.figsize'] = (9, 6.3)
 
 col_pal = sb.color_palette('colorblind')
 
@@ -32,6 +35,7 @@ fig_path = 'images'
 run_apod_examples = False  # applying_apodizing_functions.rst
 run_beamcorr_examples = False  # correcting_for_the_beam.rst
 run_plawfield_examples = False  # generating_test_data.rst
+run_missing_data_noise = False  # missing_data_noise.rst
 
 if run_apod_examples:
 
@@ -331,3 +335,117 @@ if run_plawfield_examples:
     cube.mean(axis=(1, 2)).quicklook()
     plt.savefig(osjoin(fig_path, "ppv_mean_spec.png"))
     plt.close()
+
+if run_missing_data_noise:
+
+    from turbustat.statistics import PowerSpectrum, DeltaVariance
+
+    img = make_extended(256, powerlaw=3., randomseed=54398493)
+
+    # Now shuffle so the peak is near the centre
+    img = np.roll(img, (128, -30), (0, 1))
+
+    img -= img.min()
+
+    plt.imshow(img, origin='lower')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(osjoin(fig_path, 'missing_data_image.png'))
+    plt.close()
+
+    # Show image in the tutorial
+
+    pspec = PowerSpectrum(fits.PrimaryHDU(img))
+    pspec.run(verbose=True)
+    plt.savefig(osjoin(fig_path, 'missing_data_pspec.png'))
+    plt.close()
+
+    delvar = DeltaVariance(fits.PrimaryHDU(img))
+    delvar.run(verbose=True)
+    plt.savefig(osjoin(fig_path, 'missing_data_delvar.png'))
+    plt.close()
+
+    # Mask some of the data out
+
+    masked_img = img.copy()
+    masked_img[masked_img < np.percentile(img, 25)] = np.NaN
+
+    plt.imshow(masked_img, origin='lower')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(osjoin(fig_path, 'missing_data_image_masked.png'))
+    plt.close()
+
+    pspec_masked = PowerSpectrum(fits.PrimaryHDU(masked_img))
+    pspec_masked.run(verbose=True, high_cut=10**-1.25 / u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_pspec_masked.png'))
+    plt.close()
+
+    # Just masked
+    delvar_masked = DeltaVariance(fits.PrimaryHDU(masked_img))
+    delvar_masked.run(verbose=True, xlow=2 * u.pix, xhigh=50 * u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_delvar_masked.png'))
+    plt.close()
+
+    # What happens if we just pad that image with empty values
+
+    # From:
+    # https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.pad.html
+    def pad_with(vector, pad_width, iaxis, kwargs):
+        pad_value = kwargs.get('padder', 0.)
+        vector[:pad_width[0]] = pad_value
+        vector[-pad_width[1]:] = pad_value
+        return vector
+
+    padded_masked_img = np.pad(masked_img, 128, pad_with, padder=np.NaN)
+
+    from scipy import ndimage as nd
+    labs, num = nd.label(np.isfinite(padded_masked_img), np.ones((3, 3)))
+    # Keep the largest regions
+    padded_masked_img[np.where(labs > 1)] = np.NaN
+
+    plt.imshow(padded_masked_img, origin='lower')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(osjoin(fig_path, 'missing_data_image_masked_padded.png'))
+    plt.close()
+
+    pspec_masked_pad = PowerSpectrum(fits.PrimaryHDU(padded_masked_img))
+    pspec_masked_pad.run(verbose=True, high_cut=10**-1.25 / u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_pspec_masked_pad.png'))
+    plt.close()
+
+    delvar_masked_padded = DeltaVariance(fits.PrimaryHDU(padded_masked_img))
+    delvar_masked_padded.run(verbose=True, xlow=2 * u.pix, xhigh=70 * u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_delvar_masked_pad.png'))
+    plt.close()
+
+    noise_rms = 1.
+    noisy_img = img + np.random.normal(0., noise_rms, img.shape)
+
+    plt.imshow(noisy_img, origin='lower')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(osjoin(fig_path, 'missing_data_image_noisy.png'))
+    plt.close()
+
+    pspec_noisy = PowerSpectrum(fits.PrimaryHDU(noisy_img))
+    pspec_noisy.run(verbose=True, high_cut=10**-1.2 / u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_pspec_noisy.png'))
+    plt.close()
+
+    delvar_noisy = DeltaVariance(fits.PrimaryHDU(noisy_img))
+    delvar_noisy.run(verbose=True, xlow=10 * u.pix, xhigh=70 * u.pix)
+    plt.savefig(osjoin(fig_path, 'missing_data_delvar_noisy.png'))
+    plt.close()
+
+    # noisy_masked_img = noisy_img.copy()
+    # noisy_masked_img[noisy_masked_img < 5 * noise_rms] = np.NaN
+
+    # pspec_noisy_masked = PowerSpectrum(fits.PrimaryHDU(noisy_masked_img))
+    # pspec_noisy_masked.run(verbose=True, high_cut=10**-1.2 / u.pix)
+    # plt.savefig(osjoin(fig_path, 'missing_data_pspec_noisy.png'))
+    # plt.close()
+
+    # delvar_noisy_masked = DeltaVariance(fits.PrimaryHDU(noisy_masked_img))
+    # delvar_noisy_masked.run(verbose=True, xlow=10 * u.pix, xhigh=70 * u.pix)
