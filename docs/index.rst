@@ -57,7 +57,7 @@ TurbuStat Developers
 * Stella Offner
 * `Caleb Ward <https://github.com/Astrolebs>`_
 
-Many thanks to the everyone who has reported bugs and given feedback on TurbuStat!
+Many thanks to everyone who has reported bugs and given feedback on TurbuStat!
 
 * Dario Colombo
 * Jesse Feddersen
