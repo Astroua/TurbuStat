@@ -319,8 +319,9 @@ Where noise matters
 
 Noise will affect all the statistics and metrics in TurbuStat to some extent. This section lists common issues that may be encountered with observational data.
 
-* The previous section shows some examples of how noise flattens a power-spectrum. This will effect the spatial power-spectrum, MVC, VCA, VCS (at small scales), the Wavelet transform, and the delta-variance. If the noise level is moderate, the range that is fit can be altered to avoid the scales where noise severely flattens the power-spectrum or equivalent relation.
+* The previous section shows an example of how noise flattens a power-spectrum. This will effect the spatial power-spectrum, MVC, VCA, VCS (at small scales), the Wavelet transform, and the delta-variance. If the noise level is moderate, the range that is fit can be altered to avoid the scales where noise severely flattens the power-spectrum or equivalent relation.
 
-*
+* Fits to the PDF can be affected by noise. These values will tend to cluster the low values in an image to around 0. If the noise is (mostly) uncorrelated, the noise component will be a Gaussian. A minimum value to include in the PDF should be set to avoid this region. Furthermore, the default log-normal model cannot handle negative values and will raise an error in this case.
 
-* Distance metrics
+* Many of the distance metrics are defined in terms of the significance of the difference between two values. For example, the power-spectrum distance is the absolute difference between two indices normalized by the square root of the sum of the variance from the fit uncertainty (:math:`d=|\beta_1 - \beta_2|\, /\, \sqrt{\sigma_1^2 + \sigma_2^2}`). If one data set is significantly noisier than the other, this will _lower_ the distance. It is important to compare all distance to a common baseline. This will determine the _significance_ of a distance rather than its value. `Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_ explore this in detail.
+
