@@ -30,7 +30,7 @@ First, we will use both statistics on the unaltered image::
     >>> from astropy.io import fits
     >>> from turbustat.statistics import PowerSpectrum, DeltaVariance
     >>> pspec = PowerSpectrum(fits.PrimaryHDU(img))
-    >>> pspec.run(verbose=True)
+    >>> pspec.run(verbose=True)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       1.000
@@ -59,7 +59,7 @@ First, we will use both statistics on the unaltered image::
 The power-spectrum recovers the expected slope of :math:`-3`. The delta-variance slope should be :math:`-\beta -2`, where :math:`\beta` is the power-spectrum slope, so we should find a slope of :math:`1`::
 
     >>> delvar = DeltaVariance(fits.PrimaryHDU(img))
-    >>> delvar.run(verbose=True)
+    >>> delvar.run(verbose=True)  # doctest: +SKIP
                            WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.999
@@ -99,7 +99,7 @@ To demonstrate how masking affects each of these statistics, we will arbitrarily
 The central bright region remains but much of the fainter features around the image edges have been masked.::
 
     >>> pspec_masked = PowerSpectrum(fits.PrimaryHDU(masked_img))
-    >>> pspec_masked.run(verbose=True, high_cut=10**-1.25 / u.pix)
+    >>> pspec_masked.run(verbose=True, high_cut=10**-1.25 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.993
@@ -130,7 +130,7 @@ Masking has significantly flattened the power-spectrum, even with the restrictio
 The delta-variance avoids the filling issue for masked data by introducing weights. Places with missing data have a very low weight or remained masked. The `astropy convolution <>`_ package has routines for interpolating over masked data, which is useful when small regions are missing data but is not typically useful when the missing data lies at the edge of emission in a map. With the masked image, the delta-variance curve we find is::
 
     >>> delvar_masked = DeltaVariance(fits.PrimaryHDU(masked_img))
-    >>> delvar_masked.run(verbose=True, xlow=2 * u.pix, xhigh=50 * u.pix)
+    >>> delvar_masked.run(verbose=True, xlow=2 * u.pix, xhigh=50 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.999
@@ -181,7 +181,7 @@ We are also only going to keep the biggest continuous region in the padded image
 The unmasked region is now surrounded by huge empty regions. How does this affect the power-spectrum and delta-variance?::
 
     >>> pspec_masked_pad = PowerSpectrum(fits.PrimaryHDU(padded_masked_img))
-    >>> pspec_masked_pad.run(verbose=True, high_cut=10**-1.25 / u.pix)
+    >>> pspec_masked_pad.run(verbose=True, high_cut=10**-1.25 / u.pix)  # doctest: +SKIP
 
                                 OLS Regression Results
     ==============================================================================
@@ -211,7 +211,7 @@ The unmasked region is now surrounded by huge empty regions. How does this affec
 The power-spectrum is similarly flattened as in the non-padded case. However, the sharp cut-off at the edges of the non-masked region lead to the Gibbs phenomenon (i.e., ringing) evident from the horizontal and vertical stripes in the 2D power-spectrum on the right. The ringing can be minimized by utilizing an :ref:`apodizing kernel <apodkerns>`.
 
     >>> delvar_masked_padded = DeltaVariance(fits.PrimaryHDU(padded_masked_img))
-    >>> delvar_masked_padded.run(verbose=True, xlow=2 * u.pix, xhigh=70 * u.pix)
+    >>> delvar_masked_padded.run(verbose=True, xlow=2 * u.pix, xhigh=70 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.999
@@ -251,7 +251,7 @@ Now, we will compare the masking examples above to when noise is added to the im
 Since the noise distribution is spatially-uncorrelated, the power-spectrum of only the noise will be 0. We expect then that the power-spectrum will be flattened on small scales due to the noise::
 
     >>> pspec_noisy = PowerSpectrum(fits.PrimaryHDU(noisy_img))
-    >>> pspec_noisy.run(verbose=True, high_cut=10**-1.2 / u.pix)
+    >>> pspec_noisy.run(verbose=True, high_cut=10**-1.2 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.999
@@ -282,7 +282,7 @@ The power-spectrum does indeed approach an index of 0 on small scales due to the
 Running delta-variance on the noisy image gives::
 
     >>> delvar_noisy = DeltaVariance(fits.PrimaryHDU(noisy_img))
-    >>> delvar_noisy.run(verbose=True, xlow=10 * u.pix, xhigh=70 * u.pix)
+    >>> delvar_noisy.run(verbose=True, xlow=10 * u.pix, xhigh=70 * u.pix)  # doctest: +SKIP
                                 WLS Regression Results
     ==============================================================================
     Dep. Variable:                      y   R-squared:                       0.999

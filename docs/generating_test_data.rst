@@ -70,6 +70,7 @@ The power-spectrum of the image should give a slope of 3:
 
 Anisotropic 2D images can also be produced:
 
+    >>> import astropy.units as u
     >>> rnoise_img = make_extended(256, powerlaw=3., ellip=0.5, theta=45 * u.deg)
     >>> plt.imshow(rnoise_img)  # doctest: +SKIP
 
