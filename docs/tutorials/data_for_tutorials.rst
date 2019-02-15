@@ -25,3 +25,7 @@ The simulations were performed on a :math:`128^3` base grid with a fixed random 
 Moment maps can also be downloaded from the data cubes with the link above. Each data cube has a zeroth (integrated intensity), first (centroid), and square of the second (line width) moment maps.
 
 These data have a limited inertial range, which is evident in the :ref:`Spatial Power Spectrum tutorial <pspec_tutorial>`. Turbulent dissipation causes the power-spectrum to steepen on small scales and it is necessary to limit the range of scales that are fit.
+
+The following image shows the integrated intensity (zeroth moment) maps of the tutorial data::
+
+.. image:: images/design_fiducial_moment0.png

@@ -36,6 +36,7 @@ run_apod_examples = False  # applying_apodizing_functions.rst
 run_beamcorr_examples = False  # correcting_for_the_beam.rst
 run_plawfield_examples = False  # generating_test_data.rst
 run_missing_data_noise = False  # missing_data_noise.rst
+run_data_for_tutorials = False  # data_for_tutorials.rst
 
 if run_apod_examples:
 
@@ -449,3 +450,32 @@ if run_missing_data_noise:
 
     # delvar_noisy_masked = DeltaVariance(fits.PrimaryHDU(noisy_masked_img))
     # delvar_noisy_masked.run(verbose=True, xlow=10 * u.pix, xhigh=70 * u.pix)
+
+if run_data_for_tutorials:
+
+    # Make moment 0 maps for the tutorial data
+
+    fid_mom0 = fits.open("../../testingdata/Fiducial0_flatrho_0021_00_radmc_moment0.fits")[0]
+    des_mom0 = fits.open("../../testingdata/Design4_flatrho_0021_00_radmc_moment0.fits")[0]
+
+    from mpl_toolkits.axes_grid import make_axes_locatable
+
+    ax = plt.subplot(121)
+    im1 = plt.imshow(fid_mom0.data / 1000., origin='lower')
+    ax.set_title("Fiducial")
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", "5%", pad="3%")
+    cb = plt.colorbar(im1, cax=cax)
+
+    ax2 = plt.subplot(122)
+    im2 = plt.imshow(des_mom0.data / 1000., origin='lower')
+    ax2.set_title("Design")
+    divider = make_axes_locatable(ax2)
+    cax2 = divider.append_axes("right", "5%", pad="3%")
+    cb2 = plt.colorbar(im2, cax=cax2)
+    cb2.set_label(r"K km s$^{-1}$")
+
+    plt.tight_layout()
+
+    plt.savefig(osjoin(fig_path, "design_fiducial_moment0.png"))
+    plt.close()
