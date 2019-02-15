@@ -17,7 +17,7 @@ We will create a red noise image to use as an example::
     >>> plt.imshow(img, origin='lower')  # doctest: +SKIP
     >>> plt.colorbar()  # doctest: +SKIP
 
-.. image:: images/missing_data_img.png
+.. image:: images/missing_data_image.png
 
 After creating the image, we centered the peak of the map to be near the centre. We also subtracted the minimum value from the image to remove negative values to better mimic observational data.
 
