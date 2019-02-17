@@ -90,7 +90,7 @@ The smoothly-varying windows (Hanning and Cosine) have power-spectra that consis
 
 These apodizing kernels are azimuthally-symmetric. However, as an example, the 2D power-spectrum of the Tukey Window, which is used below, has this structure::
 
-    >>> plt.imshow(np.log10(np.fft.fftshift(np.abs(np.fft.fft2(data4))**2)))
+    >>> plt.imshow(np.log10(np.fft.fftshift(np.abs(np.fft.fft2(data4))**2)))  # doctest: +SKIP
 
 .. image:: images/2d_tukey_pspec.png
 
