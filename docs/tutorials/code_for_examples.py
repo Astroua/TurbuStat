@@ -109,6 +109,11 @@ if run_apod_examples:
     plt.savefig(osjoin(fig_path, '1d_apods_pspec.png'))
     plt.close()
 
+    # Example of 2D Tukey power-spectrum
+    plt.imshow(np.log10(np.fft.fftshift(np.abs(np.fft.fft2(data4))**2)))
+    plt.savefig(osjoin(fig_path, '2d_tukey_pspec.png'))
+    plt.close()
+
     # This is easier to show with a red noise image due to the limited
     # inertial range in the sim data.
     rnoise_img = make_extended(256, powerlaw=3.)
