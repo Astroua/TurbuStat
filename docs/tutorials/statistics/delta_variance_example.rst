@@ -140,7 +140,7 @@ Since the Delta-variance is based on a series of convolutions, there is a choice
 
 When an image contains NaNs, there are two important parameters for the convolution: `preserve_nan` and `nan_treatment`. Setting `preserve_nan=True` will set pixels that were originally a NaN to a NaN in the convolved image.  This is useful for when the image has a border of NaNs. When the edges are not handled correctly, the delta-variance curve will have large spikes at small lag values.
 
-If an image has missing values within the image, setting `nan_treatment='interpolate'` will interpolate over the missing regions, providing a smoothed version of the convolved image.
+If an image has missing values within the image, setting `nan_treatment='interpolate'` will interpolate over the missing regions, providing a smoothed version of the convolved image.  However, interpolation may perform poorly when the image has a border of NaNs. In this case, `nan_treatment='fill'` will fill NaN values with a constant value (the default is :math:`0.0`).  Since the edge effects may be extreme with interpolation, the default setting is `nan_treatment='fill'`.
 
 If an image has both missing regions and a border of NaNs, manual treatment may be necessary to convert the edges to NaNs while correctly handling the interpolating regions in the interior. See the `convolution <http://docs.astropy.org/en/stable/api/astropy.convolution.convolve_fft.html#astropy.convolution.convolve_fft>`_ page on astropy for more information.
 
