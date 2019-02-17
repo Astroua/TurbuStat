@@ -7,7 +7,6 @@ from astropy import units as u
 from astropy.wcs import WCS
 from copy import copy
 import statsmodels.api as sm
-from astropy.extern.six import string_types
 from warnings import warn
 from astropy.utils.console import ProgressBar
 
@@ -45,8 +44,8 @@ class DeltaVariance(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import DeltaVariance
     >>> from astropy.io import fits
     >>> moment0 = fits.open("2D.fits") # doctest: +SKIP
@@ -87,8 +86,8 @@ class DeltaVariance(BaseStatisticMixIn):
             else:
                 self.lags = self._to_pixel(lags)
 
-        self.convolved_arrays = []
-        self.convolved_weights = []
+        self._convolved_arrays = []
+        self._convolved_weights = []
 
     @property
     def lags(self):
@@ -135,14 +134,15 @@ class DeltaVariance(BaseStatisticMixIn):
 
         self._weights = arr
 
-    def do_convolutions(self, allow_huge=False, boundary='wrap',
-                        min_weight_frac=0.01, nan_treatment=False,
-                        preserve_nan=False,
-                        use_pyfftw=False, threads=1,
-                        pyfftw_kwargs={},
-                        show_progress=True):
+    def compute_deltavar(self, allow_huge=False, boundary='wrap',
+                         min_weight_frac=0.01, nan_treatment='fill',
+                         preserve_nan=False,
+                         use_pyfftw=False, threads=1,
+                         pyfftw_kwargs={},
+                         show_progress=True,
+                         keep_convolve_arrays=False):
         '''
-        Perform the convolutions at all lags.
+        Perform the convolution and calculate the delta variance at all lags.
 
         Parameters
         ----------
@@ -168,8 +168,15 @@ class DeltaVariance(BaseStatisticMixIn):
             See `here <http://hgomersall.github.io/pyFFTW/pyfftw/builders/builders.html>`_
             for a list of accepted kwargs.
         show_progress : bool, optional
-            Show a progress bar during the creation of the covariance matrix.
+            Show a progress bar while convolving the image at each lag.
+        keep_convolve_arrays : bool, optional
+            Keeps the convolved arrays at each lag. Disabled by default to
+            minimize memory usage.
+
         '''
+
+        self._delta_var = np.empty((len(self.lags)))
+        self._delta_var_error = np.empty((len(self.lags)))
 
         if show_progress:
             bar = ProgressBar(len(self.lags))
@@ -229,26 +236,13 @@ class DeltaVariance(BaseStatisticMixIn):
             weights_core[np.where(weights_core <= cutoff_val)] = np.NaN
             weights_annulus[np.where(weights_annulus <= cutoff_val)] = np.NaN
 
-            self.convolved_arrays.append((img_core / weights_core) -
-                                         (img_annulus / weights_annulus))
-            self.convolved_weights.append(weights_core * weights_annulus)
+            conv_arr = (img_core / weights_core) - \
+                (img_annulus / weights_annulus)
+            conv_weight = weights_core * weights_annulus
 
-            if show_progress:
-                bar.update(i + 1)
-
-    def compute_deltavar(self):
-        '''
-        Computes the delta-variance values and errors.
-        '''
-
-        self._delta_var = np.empty((len(self.lags)))
-        self._delta_var_error = np.empty((len(self.lags)))
-
-        for i, (conv_arr,
-                conv_weight,
-                lag) in enumerate(zip(self.convolved_arrays,
-                                      self.convolved_weights,
-                                      self.lags.value)):
+            if keep_convolve_arrays:
+                self._convolved_arrays.append(conv_arr)
+                self._convolved_weights.append(weights_core * weights_annulus)
 
             val, err = _delvar(conv_arr, conv_weight, lag)
 
@@ -258,6 +252,23 @@ class DeltaVariance(BaseStatisticMixIn):
             else:
                 self._delta_var[i] = val
                 self._delta_var_error[i] = err
+
+            if show_progress:
+                bar.update(i + 1)
+
+    @property
+    def convolve_arrays(self):
+        if len(self._convolved_arrays) == 0:
+            warn("Run `DeltaVariance.compute_deltavar` with "
+                 "`keep_convolve_arrays=True`")
+        return self._convolve_arrays
+
+    @property
+    def convolve_weights(self):
+        if len(self._convolved_weights) == 0:
+            warn("Run `DeltaVariance.compute_deltavar` with "
+                 "`keep_convolve_arrays=True`")
+        return self._convolve_arrays
 
     @property
     def delta_var(self):
@@ -474,8 +485,8 @@ class DeltaVariance(BaseStatisticMixIn):
         else:
             return self.fit.params[0] + self.fit.params[1] * xvals
 
-    def plot_fit(self, save_name=None, xunit=u.pix, symbol='D', color='r',
-                 fit_color=None, label=None,
+    def plot_fit(self, save_name=None, xunit=u.pix, symbol='o', color='r',
+                 fit_color='k', label=None,
                  show_residual=True):
         '''
         Plot the delta-variance curve and the fit.
@@ -531,7 +542,7 @@ class DeltaVariance(BaseStatisticMixIn):
         ax.errorbar(lags[fin_vals], self.delta_var[fin_vals],
                     yerr=self.delta_var_error[fin_vals],
                     fmt="{}-".format(symbol), color=color,
-                    label=label)
+                    label=label, zorder=-1)
 
         xvals = np.linspace(self._fit_range[0].value,
                             self._fit_range[1].value,
@@ -556,7 +567,8 @@ class DeltaVariance(BaseStatisticMixIn):
             resids = self.delta_var - 10**self.fitted_model(np.log10(lags))
             ax_r.errorbar(lags[fin_vals], resids[fin_vals],
                           yerr=self.delta_var_error[fin_vals],
-                          fmt="{}-".format(symbol), color=color)
+                          fmt="{}-".format(symbol), color=color,
+                          zorder=-1)
 
             ax_r.set_ylabel("Residuals")
 
@@ -568,7 +580,7 @@ class DeltaVariance(BaseStatisticMixIn):
             ax_r.axvline(xhigh, color=color, alpha=0.5, linestyle='-.')
             ax_r.grid()
 
-            ax.get_xaxis().set_ticks([])
+            plt.setp(ax.get_xticklabels(), visible=False)
 
         else:
             ax.set_xlabel("Lag ({})".format(xunit))
@@ -586,7 +598,7 @@ class DeltaVariance(BaseStatisticMixIn):
             plt.show()
 
     def run(self, show_progress=True, verbose=False, xunit=u.pix,
-            nan_treatment='interpolate', preserve_nan=False,
+            nan_treatment='fill', preserve_nan=False,
             allow_huge=False, boundary='wrap',
             use_pyfftw=False, threads=1, pyfftw_kwargs={},
             xlow=None, xhigh=None,
@@ -631,14 +643,13 @@ class DeltaVariance(BaseStatisticMixIn):
             Save the figure when a file name is given.
         '''
 
-        self.do_convolutions(allow_huge=allow_huge, boundary=boundary,
-                             nan_treatment=nan_treatment,
-                             preserve_nan=preserve_nan,
-                             use_pyfftw=use_pyfftw,
-                             threads=threads,
-                             pyfftw_kwargs=pyfftw_kwargs,
-                             show_progress=show_progress)
-        self.compute_deltavar()
+        self.compute_deltavar(allow_huge=allow_huge, boundary=boundary,
+                              nan_treatment=nan_treatment,
+                              preserve_nan=preserve_nan,
+                              use_pyfftw=use_pyfftw,
+                              threads=threads,
+                              pyfftw_kwargs=pyfftw_kwargs,
+                              show_progress=show_progress)
         self.fit_plaw(xlow=xlow, xhigh=xhigh, brk=brk, verbose=verbose,
                       **fit_kwargs)
 

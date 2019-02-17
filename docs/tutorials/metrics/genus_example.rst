@@ -23,7 +23,7 @@ Using
 
 We need to import the `~turbustat.statistics.Genus_Distance` class, along with a few other common packages:
 
-    >>> from turbustat.statistics import Genus
+    >>> from turbustat.statistics import Genus_Distance
     >>> from astropy.io import fits
     >>> import astropy.units as u
     >>> import numpy as np
@@ -40,7 +40,7 @@ The two images are passed to the `~turbustat.statistics.Genus_Distance` class:
     ...                        lowdens_percent=15, highdens_percent=85, numpts=100,
     ...                        genus_kwargs=dict(min_size=4 * u.pix**2))  # doctest: +SKIP
 
-`~turbustat.statistics.Genus_Distance` accepts similar keyword arguments to `~turbustat.statistics.Genus`. Keywords to `~turbustat.statistics.Genus.run` can be specified in a dictionary to `genus_kwargs`. Seperate keywords the second image (`moment0`) can be specified in a second dictionary to `genus2_kwargs`.
+`~turbustat.statistics.Genus_Distance` accepts similar keyword arguments to `~turbustat.statistics.Genus`. Keywords to `~turbustat.statistics.Genus.run` can be specified in a dictionary to `genus_kwargs`. Separate keywords for the second image (`moment0`) can be specified in a second dictionary to `genus2_kwargs`.
 
 To find the distance between the images:
 
@@ -60,4 +60,13 @@ When comparing many images to a fiducial image, a pre-computed `~turbustat.stati
     ...                        genus_kwargs=dict(min_size=4 * u.pix**2),
     ...                        fiducial_model=genus_fid)  # doctest: +SKIP
 
-Note that the data (`moment0_fid`) still needs to be given.
+Note that the data (`moment0_fid`) still need to be given.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_

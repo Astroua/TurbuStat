@@ -9,9 +9,9 @@ Delta-Variance
 Overview
 --------
 
-The :math:`\Delta`-variance technique was introduced by `Stutzki et al. 1998 <https://ui.adsabs.harvard.edu/#abs/1998A&A...336..697S/abstract>`_ as a generalization of *Allan-variance*, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_ to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_, where the computation using filters of different scales was moved in to the Fourier domain, allowing for a significant improvement in speed. The following description uses this formulation.
+The :math:`\Delta`-variance technique was introduced by `Stutzki et al. 1998 <https://ui.adsabs.harvard.edu/#abs/1998A&A...336..697S/abstract>`_ as a generalization of *Allan-variance*, a technique used to study the drift in instrumentation. They found that molecular cloud structures are well characterized by fractional Brownian motion structure, which results from a power-law power spectrum with a random phase distribution. The technique was extended by `Bensch et al. 2001. <https://ui.adsabs.harvard.edu/#abs/2001A&A...366..636B/abstract>`_ to account for the effects of beam smoothing and edge effects on a discretely sampled grid. With this approach, they identified a functional form to recover the index of the near power-law relation. The technique was extended again by `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_, where the computation using filters of different scales was moved into the Fourier domain, allowing for a significant improvement in speed. The following description uses the Fourier-domain formulation.
 
-Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with a spherically symmetric kernel - a French-hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:
+Delta-variance measures the amount of structure on a given range of scales. Each delta-variance point is calculated by filtering an image with an azimuthally symmetric kernel - a French hat or Mexican hat (Ricker) kernels - and computing the variance of the filtered map. Due to the effects of a finite grid that typically does not have periodic boundaries and the effects of noise, `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ proposed a convolution based method that splits the kernel into its central peak and outer annulus, convolves the separate regions, and subtracts the annulus-convolved map from the peak-convolved map. The Mexican-hat kernel separation can be defined using two Gaussian functions. A weight map was also introduced to minimize noise effects where there is low S/N regions in the data. Altogether, this is expressed as:
 
 .. math::
     F(r) = \frac{G_{\rm core}(r)}{W_{\rm core}(r)} - \frac{G_{\rm ann}(r)}{W_{\rm ann}(r)}
@@ -25,7 +25,7 @@ where :math:`W_{\rm tot}(r) = W_{\rm core}(r)\,W_{\rm ann}(r)`.
 
 Since the kernel is separated into two components, the ratio between their widths can be set independently. `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_ find an optimal ratio of 1.5 for the Mexican-hat kernel, which is the element used in TurbuStat.
 
-Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function. Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
+Performing this operation yields a power-law-like relation between the scales :math:`r` and the delta-variance. This power-law relation measured in the real-domain is analogous to the two-point structure function (e.g., `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_). Its use of the convolution kernel, as well as handling for map edges, makes it faster to compute and more robust to oddly-shaped regions of signal.
 
 This technique shares many similarities to the :ref:`Wavelet transform <wavelet_tutorial>`.
 
@@ -48,9 +48,9 @@ Next, we initialize the `~turbustat.statistics.DeltaVariance` class:
 
     >>> delvar = DeltaVariance(moment0, weights=moment0_err, distance=250 * u.pc)  # doctest: +SKIP
 
-The weight array is optional, but is recommended. Note that this is not the exact form of the weight array used by `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
+The weight array is optional but is recommended to down-weight noisy data (particularly near the map edge). Note that this is not the exact form of the weight array used by `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_; they use the square root of the number of elements along the line of sight used to create the integrated intensity map. This doesn't take into account the varying S/N of each element used, however. In the case with the simulated data, the two are nearly identical, since the noise value associated with each element is constant. If no weights are given, a uniform array of ones is used.
 
-By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the `lags` keyword. If a `~numpy.ndarray` is passed, it is assumed to be in pixel units. Lags can also be given in angular units. The diameter between the inner and outer convolution kernels is set by `diam_ratio`. By default, this is set to 1.5.
+To compute the delta-variance curve, the image is convolved with a set of kernels. The width of each kernel is referred to as the "lag." By default, 25 lag values will be used, logarithmically spaced between 3 pixels to half of the minimum axis size. Alternative lags can be specified by setting the `lags` keyword. If a `~numpy.ndarray` is passed, it is assumed to be in pixel units. Lags can also be given in angular units using `astropy.units.Quantity` objects. The diameter between the inner and outer convolution kernels is set by `diam_ratio`. By default, this is set to 1.5 (`Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_).
 
 The entire process is performed through `~turbustat.statistics.DeltaVariance.run`:
 
@@ -140,7 +140,7 @@ Since the Delta-variance is based on a series of convolutions, there is a choice
 
 When an image contains NaNs, there are two important parameters for the convolution: `preserve_nan` and `nan_treatment`. Setting `preserve_nan=True` will set pixels that were originally a NaN to a NaN in the convolved image.  This is useful for when the image has a border of NaNs. When the edges are not handled correctly, the delta-variance curve will have large spikes at small lag values.
 
-If an image has missing values within the image, setting `nan_treatment='interpolate'` will interpolate over the missing regions, providing a smoothed version of the convolved image.
+If an image has missing values within the image, setting `nan_treatment='interpolate'` will interpolate over the missing regions, providing a smoothed version of the convolved image.  However, interpolation may perform poorly when the image has a border of NaNs. In this case, `nan_treatment='fill'` will fill NaN values with a constant value (the default is :math:`0.0`).  Since the edge effects may be extreme with interpolation, the default setting is `nan_treatment='fill'`.
 
 If an image has both missing regions and a border of NaNs, manual treatment may be necessary to convert the edges to NaNs while correctly handling the interpolating regions in the interior. See the `convolution <http://docs.astropy.org/en/stable/api/astropy.convolution.convolve_fft.html#astropy.convolution.convolve_fft>`_ page on astropy for more information.
 
@@ -176,9 +176,9 @@ Similar to the fitting for other statistics, the Delta-variance curve can be fit
 
 The range here was chosen to force the model to fit a break near the turn-over, and the result is not great. This is not a realistic example; it is included only to highlight how the segmented model is enabled.
 
-There will now be two slopes, and a break point returned:
+There will now be two slopes and a break point returned:
 
-    >>> delvar.slopes  # doctest: +SKIP
+    >>> delvar.slope  # doctest: +SKIP
     array([ 1.08598566, -0.07259903])
     >>> delvar.brk  # doctest: +SKIP
     <Quantity 19.413294229328802 pix>
@@ -200,3 +200,5 @@ References
 `Ossenkopf at al. 2008a <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..917O/abstract>`_
 
 `Ossenkopf at al. 2008b <https://ui.adsabs.harvard.edu/#abs/2008A&A...485..719O/abstract>`_
+
+`Bertram et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015MNRAS.451..196B/abstract>`_

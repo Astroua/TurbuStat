@@ -22,7 +22,9 @@ def test_Genus_method():
 
     tester = Genus(dataset1["moment0"],
                    smoothing_radii=smooth_scales)
-    tester.run(match_kernel=True)
+    tester.run(match_kernel=True, verbose=True, save_name='test.png')
+
+    os.system("rm test.png")
 
     assert np.allclose(tester.genus_stats,
                        computed_data['genus_val'])
@@ -108,6 +110,8 @@ def test_Genus_distance():
                        dataset2["moment0"],
                        lowdens_percent=20,
                        genus_kwargs=dict(match_kernel=True))
-    tester_dist.distance_metric()
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['genus_distance'])

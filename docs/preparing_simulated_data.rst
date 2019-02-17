@@ -6,7 +6,7 @@ Preparing Simulated Data
 
 TurbuStat requires the input data be in a valid FITS format. Since simulated observations do not always include a valid observational FITS header, we provide a few convenience functions to create a valid format.
 
-We start with a numpy array of data from some source. First consider a PPV cube. We will need to specify several quantities, like the angular pixel scale, to create the header:
+We start with a numpy array of data from some source. First consider a spectral-line data cube with 2 spatial dimensions and one spectral dimension (also called a PPV cube; position-position-velocity). We will need to specify several quantities, like the angular pixel scale, to create the header:
 
     >>> import numpy as np
     >>> import astropy.units as u
@@ -46,6 +46,40 @@ The units should be an equivalent observational unit, depending on the required 
 1. The data cannot be log-scaled.
 
 2. When comparing data sets, both should have the same unit. Most statistics are not based on the absolute scale in the data, but it is best to avoid possible misinterpretation of the results.
+
+
+Noise and missing data
+**********************
+
+To create realistic data, noise could be added to `img` and `cube` in the above examples.  The simplest form of noise is Gaussian and can be added to the data with::
+
+    >>> sigma = 0.1
+    >>> noisy_cube = cube + np.random.normal(0., sigma, size=cube.shape)
+
+In this example, Gaussian noise with standard deviation of 0.1 and mean of 0. is added to the cube.
+
+A common observational practice is to mask noise-only regions of an image or data cube.  A simple example is, with knowledge of the standard deviation of the noise, to impose an :math:`N-\sigma` cut to the data::
+
+    >>> N = 3.
+    >>> # Create a boolean array, where True is above the noise threshold.
+    >>> signal_mask = noisy_cube > N * sigma
+    >>> # Set all places below the noise threshold to NaN in the cube
+    >>> masked_cube = signal_mask.copy()
+    >>> masked_cube[~signal_mask] = np.NaN
+
+TurbuStat does not contain routines to create robust signal masks. Examples of creating signal masks can be found in `Rosolowsky & Leroy 2006 <https://ui.adsabs.harvard.edu/#abs/2006PASP..118..590R/abstract>`_ and `Dame 2011 <https://ui.adsabs.harvard.edu/#abs/2011arXiv1101.1499D/abstract>`_.
+
+References
+----------
+
+`Dame 2011 <https://ui.adsabs.harvard.edu/#abs/2011arXiv1101.1499D/abstract>`_
+
+`Rosolowsky & Leroy 2006 <https://ui.adsabs.harvard.edu/#abs/2006PASP..118..590R/abstract>`_
+
+Excluding the dissipation range
+*******************************
+
+When using synthetic observations from simulations, care should be taken to only fit scales in the inertial range. The :ref:`power-spectrum tutorial <pspec_tutorial>` shows an example of limiting the fit to the inertial range.  The power-spectrum in the dissipation range in that example steepens significantly and is not representative of the turbulent index.  This warning should be heeded for power-spectrum-based methods, like the spatial power-spectrum, MVC, VCA and VCS. Spatial structure functions, like the wavelet transform and the delta-variance should also be examined closely for the inflence of the dissipation range on small scales.
 
 
 Source Code

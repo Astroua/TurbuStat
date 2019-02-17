@@ -35,8 +35,8 @@ class Bispectrum(BaseStatisticMixIn):
         2D image.
 
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import Bispectrum
     >>> from astropy.io import fits
     >>> moment0 = fits.open("Design4_21_0_0_flatrho_0021_13co.moment0.fits") # doctest: +SKIP
@@ -56,7 +56,10 @@ class Bispectrum(BaseStatisticMixIn):
         self.shape = self.data.shape
 
         # Set nans to min
-        self.data[np.isnan(self.data)] = np.nanmin(self.data)
+        isnan = np.isnan(self.data)
+        if isnan.any():
+            self.data = self.data.copy()
+            self.data[isnan] = 0.
 
     def compute_bispectrum(self, show_progress=True, use_pyfftw=False,
                            threads=1, nsamples=100, seed=1000,
@@ -412,29 +415,34 @@ class Bispectrum(BaseStatisticMixIn):
         '''
 
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         if show_bicoh:
-            plt.subplot(1, 2, 1)
+            ax1 = plt.subplot(1, 2, 1)
         else:
-            plt.subplot(1, 1, 1)
-        plt.imshow(self.bispectrum_logamp, origin="lower",
-                   interpolation="nearest", cmap=cmap)
-        cbar1 = plt.colorbar()
+            ax1 = plt.subplot(1, 1, 1)
+        im1 = ax1.imshow(self.bispectrum_logamp, origin="lower",
+                         interpolation="nearest", cmap=cmap)
+        divider = make_axes_locatable(ax1)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar1 = plt.colorbar(im1, cax=cax)
         cbar1.set_label(r"log$_{10}$ Bispectrum Amplitude")
-        plt.contour(self.bispectrum_logamp,
+        ax1.contour(self.bispectrum_logamp,
                     colors=contour_color)
-        plt.xlabel(r"$k_1$")
-        plt.ylabel(r"$k_2$")
+        ax1.set_xlabel(r"$k_1$")
+        ax1.set_ylabel(r"$k_2$")
 
         if show_bicoh:
-            plt.subplot(1, 2, 2)
-            plt.imshow(self.bicoherence, origin="lower",
-                       interpolation="nearest",
-                       cmap=cmap)
-            cbar2 = plt.colorbar()
+            ax2 = plt.subplot(1, 2, 2)
+            im2 = ax2.imshow(self.bicoherence, origin="lower",
+                             interpolation="nearest",
+                             cmap=cmap)
+            divider = make_axes_locatable(ax2)
+            cax2 = divider.append_axes("right", size="5%", pad=0.05)
+            cbar2 = plt.colorbar(im2, cax=cax2)
             cbar2.set_label("Bicoherence")
-            plt.xlabel(r"$k_1$")
-            plt.ylabel(r"$k_2$")
+            ax2.set_xlabel(r"$k_1$")
+            ax2.set_ylabel(r"$k_2$")
 
         plt.tight_layout()
 
@@ -545,7 +553,8 @@ class Bispectrum_Distance(object):
         return self._mean_distance
 
     def distance_metric(self, verbose=False, label1=None,
-                        label2=None, save_name=None):
+                        label2=None, save_name=None,
+                        cmap='viridis'):
         '''
         verbose : bool, optional
             Enable plotting.
@@ -555,6 +564,8 @@ class Bispectrum_Distance(object):
             Object or region name for data2
         save_name : str,optional
             Save the figure when a file name is given.
+        cmap : str, optional
+            Colormap to show the bicoherence surfaces.
         '''
 
         if self.bispec1.bicoherence.shape == self.bispec2.bicoherence.shape:
@@ -584,6 +595,7 @@ class Bispectrum_Distance(object):
             ax1 = fig.add_subplot(121)
             ax1.set_title(label1)
             ax1.imshow(self.bispec1.bicoherence, origin="lower",
+                       cmap=cmap,
                        interpolation="nearest", vmax=1.0, vmin=0.0)
             ax1.set_xlabel(r"$k_1$")
             ax1.set_ylabel(r"$k_2$")
@@ -591,6 +603,7 @@ class Bispectrum_Distance(object):
             ax2 = plt.subplot(122)
             ax2.set_title(label2)
             im = plt.imshow(self.bispec2.bicoherence, origin="lower",
+                            cmap=cmap,
                             interpolation="nearest", vmax=1.0, vmin=0.0)
             ax2.set_xlabel(r"$k_1$")
             ax2.set_yticklabels([])

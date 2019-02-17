@@ -39,17 +39,22 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
         super(PowerSpectrum, self).__init__()
 
         # Set data and header
-        self.input_data_header(img, header)
+        # Need to make a copy if there are NaNs
+        self.input_data_header(img, header, need_copy=False)
 
-        self.data[np.isnan(self.data)] = 0.0
+        if np.isnan(self.data).any():
+            self.data = self.data.copy()
+            self.data[np.isnan(self.data)] = 0.0
 
         if weights is None:
             weights = np.ones(self.data.shape)
         else:
             # Get rid of all NaNs
+            isnan = np.isnan(self.data)
+
             weights[np.isnan(weights)] = 0.0
-            weights[np.isnan(self.data)] = 0.0
-            self.data[np.isnan(self.data)] = 0.0
+            weights[isnan] = 0.0
+            self.data[isnan] = 0.0
 
         self.weighted_data = self.data * weights
 

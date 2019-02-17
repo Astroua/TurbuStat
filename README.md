@@ -3,8 +3,6 @@ TurbuStat
 
 [![Build Status](https://travis-ci.org/Astroua/TurbuStat.svg?branch=master)](https://travis-ci.org/Astroua/TurbuStat)
 
-**NOTE - this package is still under development. API may change!**
-
 *See the documentation at [http://turbustat.readthedocs.org/](http://turbustat.readthedocs.org/)*
 
 To be notified of future releases and updates to TurbuStat, please join the mailing list: https://groups.google.com/forum/#!forum/turbustat
@@ -34,9 +32,16 @@ Installing
 ----------
 
 Currently, the only way install TurbuStat is to clone the repository and run
-```python
+```
 python setup.py install
 ```
+
+The tests can be run with
+```
+MPLBACKEND='agg' python setup.py test
+```
+
+The matplotlib backend needs to be set to avoid having interactive plots pop up during the tests.
 
 Package Dependencies
 --------------------

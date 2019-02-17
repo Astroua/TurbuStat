@@ -7,7 +7,7 @@ Dendrograms
 Overview
 --------
 
-In general, dendrograms provide a hierarchical description of datasets, which may be used to identify clusters of similar objects or variables. This is known as `hierarchical clustering <https://en.wikipedia.org/wiki/Hierarchical_clustering>`_. In the case of position-position-velocity (PPV) cubes, a dendrogram is a hierarchical decomposition of the emission in the cube. This decomposition was introduced by `Rosolowsky et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...679.1338R/abstract>`_ to calculate the multiscale properties of molecular gas in nearby clouds. The tree structure is comprised of branches and leaves. Branches are the connections, while leaves are the tips of the branches.
+In general, dendrograms provide a hierarchical description of datasets, which may be used to identify clusters of similar objects or variables. This is known as `hierarchical clustering <https://en.wikipedia.org/wiki/Hierarchical_clustering>`_. In the case of position-position-velocity (PPV) cubes, a dendrogram is a hierarchical decomposition of the emission in the cube. This decomposition was introduced by `Rosolowsky et al. 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJ...679.1338R/abstract>`_ and `Goodman et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009Natur.457...63G/abstract>`_ to calculate the multiscale properties of molecular gas in nearby clouds. The tree structure is comprised of branches and leaves. Branches are the connections, while leaves are the tips of the branches.
 
 `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_ introduced two statistics for comparing the dendrograms of two cubes: the relationship between the number of leaves and branches in the tree versus the minimum branch length, and a histogram comparison of the peak intensity in a branch or leaf. The former statistic shows a power-law like turn-off with increasing branch length.
 
@@ -18,7 +18,7 @@ Using
 
 **Requires the optional astrodendro package to be installed. See the** `documentation <https://dendrograms.readthedocs.io>`_
 
-Importing the dendrograms code, along with a few other common packages:
+Importing the dendrograms code, along with a few other common packages::
 
     >>> from turbustat.statistics import Dendrogram_Stats
     >>> from astropy.io import fits
@@ -27,30 +27,32 @@ Importing the dendrograms code, along with a few other common packages:
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
 
-And we load in the data:
+And we load in the data::
 
     >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
 
-Before running the statistics side, we can first compute the dendrogram itself to see what we're dealing with:
+Before running the statistics side, we can first compute the dendrogram itself to see what we're dealing with::
 
-    >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)  # doctest: +SKIP
+    >>> d = Dendrogram.compute(cube.data, min_value=0.005, min_delta=0.1, min_npix=50, verbose=True)  # doctest: +SKIP
     >>> ax = plt.subplot(111)  # doctest: +SKIP
     >>> d.plotter().plot_tree(ax)  # doctest: +SKIP
     >>> plt.ylabel("Intensity (K)")  # doctest: +SKIP
 
 .. image:: images/design4_dendrogram.png
 
-We see a number of leaves of varying height throughout the tree. Their minimum height is set by `min_delta`. As we increase this value, the tree becomes *pruned*: more and more structure will be deleted, leaving only the brightest regions on the tree.
+We see a number of leaves of varying height throughout the tree. Their minimum height is set by ``min_delta``. As we increase this value, the tree becomes *pruned*: more and more structure will be merged, leaving only the brightest regions on the tree.
 
-**While this tutorial uses a PPV cube, a 2D image may also be used! The same tutorial code can be used for both, likely with changes needed for the choice of `min_delta`.**
+**While this tutorial uses a PPV cube, a 2D image may also be used! The same tutorial code can be used for both, with changes needed for the choice of** ``min_delta``.
 
-The statistics are computed through `~turbustat.statistics.Dendrogram_Stats`:
+The statistics are computed through `~turbustat.statistics.Dendrogram_Stats`::
 
-    >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50), dendro_params={"min_value": 0.005, "min_npix": 50})  # doctest: +SKIP
+    >>> dend_stat = Dendrogram_Stats(cube,
+    ...                              min_deltas=np.logspace(-2, 0, 50),
+    ...                              dendro_params={"min_value": 0.005, "min_npix": 50})  # doctest: +SKIP
 
-I've specified the values that `min_delta` should take. These are completely dependent on the range of intensities within your data cube. I've also specified the minimum number of pixels are region must have (`min_npix`) and the minimum intensity of the data to consider (`min_value`).
+There are two parameters that will change depending on the given data set: (1) ``min_deltas`` sets the minimum branch heights, which are completely dependent on the range of values within the data data, and (2) ``dendro_params``, which is a dictionary setting other dendrogram parameters such as the minimum number of pixels a region must have (``min_npix``) and the minimum values of the data to consider (``min_value``). The settings given above are specific for these data and **will need to be changed when using other data sets.**
 
-To run the statistics, we use `~turbustat.statistics.Dendrogram_Stats.run`:
+To run the statistics, we use `~turbustat.statistics.Dendrogram_Stats.run`::
 
     >>> dend_stat.run(verbose=True)  # doctest: +SKIP
                                 OLS Regression Results
@@ -81,7 +83,7 @@ To run the statistics, we use `~turbustat.statistics.Dendrogram_Stats.run`:
 
 On the left is the relationship between the value of `min_delta` and the number of features in the tree. On the right is a stack of histograms, showing the distribution of peak intensities for all values of `min_delta`. The results of the linear fit are also printed, where `x1` is the slope of the power-law tail.
 
-When using simulated data from a periodic box, the boundaries need to be handled across the edges. Setting `periodic_bounds=True` will treat the spatial dimensions as periodic. The simulated data shown here should have `periodic_bounds` enabled:
+When using simulated data from a periodic box, the boundaries need to be handled across the edges. Setting `periodic_bounds=True` will treat the spatial dimensions as periodic. The simulated data shown here should have `periodic_bounds` enabled::
 
     >>> dend_stat.run(verbose=True, periodic_bounds=True)  # doctest: +SKIP
                                 OLS Regression Results
@@ -109,31 +111,36 @@ When using simulated data from a periodic box, the boundaries need to be handled
 
 .. image:: images/design4_dendrogram_stats_periodic.png
 
-The results have slightly changed. The left panel shows fewer features at nearly every values of :math:`\delta` as regions along the edges are connected across the boundaries.
+The results have slightly changed. The left panel shows fewer features at nearly every value of :math:`\delta` as regions along the edges are connected across the boundaries.
 
-Creating the initial dendrogram is the most time-consuming step. To check the progress of building the dendrogram, `dendro_verbose=True` can be set to give a progress bar and time-to-completion estimate.
+**Creating the initial dendrogram is the most time-consuming step.** To check the progress of building the dendrogram, `dendro_verbose=True` can be set in the previous call to give a progress bar and time-to-completion estimate.
 
-Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file:
+Computing dendrograms can be time-consuming when working with large datasets. We can avoid recomputing a dendrogram by loading from an HDF5 file::
 
-    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5", min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
+    >>> dend_stat = Dendrogram_Stats.load_dendrogram("design4_dendrogram.hdf5",
+    ...                                              min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
 
-Saving the dendrogram structure is explained in the `astrodendro documentation <http://dendrograms.org/>`_. **The saved dendrogram must have `min_delta` set to the minimum of the given `min_deltas`. Otherwise pruning is ineffective.**
+Saving the dendrogram structure is explained in the `astrodendro documentation <http://dendrograms.org/>`_. **The saved dendrogram must have** ``min_delta`` **set to the minimum of the given** ``min_deltas``. **Otherwise pruning is ineffective.**
 
 
-If the dendrogram is not saved (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`:
+If the dendrogram is stored in a variable (say you have just run it in the same terminal), you may pass the computed dendrogram into `~turbustat.statistics.Dendrogram_Stats.run`::
+
     >>> d = Dendrogram.compute(cube, min_value=0.005, min_delta=0.01, min_npix=50, verbose=True)  # doctest: +SKIP
     >>> dend_stat = Dendrogram_Stats(cube, min_deltas=np.logspace(-2, 0, 50))  # doctest: +SKIP
     >>> dend_stat.run(verbose=True, dendro_obj=d)  # doctest: +SKIP
 
-Once the statistics have been run, the results can be saved as a pickle file:
+Once the statistics have been run, the results can be saved as a pickle file::
+
     >>> dend_stat.save_results(output_name="Design4_Dendrogram_Stats.pkl", keep_data=False)  # doctest: +SKIP
 
-`keep_data=False` will avoid saving the entire cube, and is the default setting.
+``keep_data=False`` will avoid saving the entire cube and is the default setting.
 
-Saving can also be enabled with `~turbustat.statistics.Dendrogram_Stats.run`:
+Saving can also be enabled with `~turbustat.statistics.Dendrogram_Stats.run`::
+
     >>> dend_stat.run(save_results=True, output_name="Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
-The results may then be reloaded:
+The results may then be reloaded::
+
     >>> dend_stat = Dendrogram_Stats.load_results("Design4_Dendrogram_Stats.pkl")  # doctest: +SKIP
 
 Note that the dendrogram and data are **NOT** saved, and only the statistic outputs will be accessible.

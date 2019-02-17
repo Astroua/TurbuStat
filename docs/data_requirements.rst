@@ -10,7 +10,7 @@ Use of the statistics and distance metrics require the input data to satisfy som
 Spatial Projection
 ******************
 
-TurbuStat assumes that the spatial dimensions of the data are square. All physical and angular dimensions will be incorrect, otherwise.  Data with non-square pixels should first be reprojected. This can be easily done using `spectral-cube <http://spectral-cube.readthedocs.io/en/latest/>`_:
+TurbuStat assumes that the spatial dimensions of the data **are square on the sky**. All physical and angular dimensions will be incorrect, otherwise.  Data with non-square pixels should first be reprojected. This can be easily done using `spectral-cube <http://spectral-cube.readthedocs.io/en/latest/>`_:
 
     >>> reproj_cube = cube.reproject(new_header)  # doctest: +SKIP
     >>> reproj_proj = proj_2D.reproject(new_header_2D)  # doctest: +SKIP
@@ -29,11 +29,11 @@ The extent of these effects will differ for different data sets. We recommend te
 
 2. **Spectral scales** -- The spectral sampling and range should be considered for all methods that utilize the entire PPV cube (SCF, VCA, VCS, dendrograms, PCA, PDF). The issue with using different-sized spectral pixels affects the noise properties, and in some statistics, the measurement itself.
 
-    For the former, the noise level can introduce a bias in the measured quantities.  To mitigate this, data can be masked prior to running metrics.  Otherwise, minimum cut-off values can be specified for metrics the utilize the actual intensity values of the data, such as dendrograms and the PDF.  For statistics that are independent of intensity, like a power-law slope or correlation, the fitting range can be specified for each statistic to minimize bias from noise. This is the same effect described above for spatial scales.
+    For the former, the noise level can introduce a bias in the measured quantities.  To mitigate this, data can be masked prior to running metrics.  Otherwise, minimum cut-off values can be specified for metrics that utilize the actual intensity values of the data, such as dendrograms and the PDF.  For statistics that are independent of intensity, like a power-law slope or correlation, the fitting range can be specified for each statistic to minimize bias from noise. This is the same effect described above for spatial scales.
 
     For the second case, the VCA index is *expected* to change with spectral resolution depending on the underlying properties of the turbulent fields (see the :ref:`VCA tutorial <vca_tutorial>`).
 
 Data units for distance metrics
 *******************************
 
-Most of the distance metrics will do not depend on the absolute value of the data sets. The exceptions are when values of a statistic are directly compared. This includes `~turbustat.statistics.Cramer_Distance`, the curve distance in `~turbustat.statistics.DeltaVariance_Distance`, and the bins used in the histograms of `~turbustat.statistics.StatMoments_Distance` and `~turbustat.statistics.PDF_Distance`.  While each of these methods applies some normalization scheme to the data, we advise to convert both data sets to a common unit to minimize possible discrepancies.
+Most of the distance metrics will not depend on the absolute value of the data sets. The exceptions are when values of a statistic are directly compared. This includes `~turbustat.statistics.Cramer_Distance`, the curve distance in `~turbustat.statistics.DeltaVariance_Distance`, and the bins used in the histograms of `~turbustat.statistics.StatMoments_Distance` and `~turbustat.statistics.PDF_Distance`.  While each of these methods applies some normalization scheme to the data, we advise converting both data sets to a common unit to minimize possible discrepancies.

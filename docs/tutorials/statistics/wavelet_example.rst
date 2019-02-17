@@ -57,7 +57,7 @@ The default wavelet transform of the zeroth moment is calculated as:
 
 .. image:: images/design4_wavelet.png
 
-The results of the fit and a plot overlaying the fit on the transform are shown with `verbose=True`. The figure shows that the transform (blue diamonds) does not follow a single power-law relation across all of the scales and resulting fit (dashed blue line) is poor. The solid blue lines indicated the range of scales used in the fit. In the case of these simulated data, scales larger than about 25 pixels are affected by the edges of the map in the convolution. The flattening on scales just smaller is describing actual features in the data and may be a manifestation of the periodic box conditions; we see a similar feature with these data with the :ref:`Delta-Variance <delvar_tutorial>` as well. Unlike the Delta-Variance, the deviation from a power-law is more pronounced on scales larger than about 10 pixels. To improve the fit, we can limit the region that is fit to below this scale:
+The results of the fit and a plot overlaying the fit on the transform are shown with `verbose=True`. The figure shows that the transform (blue diamonds) does not follow a single power-law relation across all of the scales and resulting fit (dashed blue line) is poor. The solid blue lines indicate the range of scales used in the fit. In the case of these simulated data, scales larger than about 25 pixels are affected by the edges of the map in the convolution. The flattening on scales just smaller is describing actual features in the data and may be a manifestation of the periodic box conditions; we see a similar feature with these data with the :ref:`Delta-Variance <delvar_tutorial>` as well. Unlike the Delta-Variance, the deviation from a power-law is more pronounced on scales larger than about 10 pixels. To improve the fit, we can limit the region that is fit to below this scale:
 
     >>> wavelet = Wavelet(moment0)  # doctest: +SKIP
     >>> wavelet.run(verbose=True, xlow=1 * u.pix, xhigh=10 * u.pix)  # doctest: +SKIP
@@ -159,7 +159,9 @@ The :math:`+2` discrepancy can be explained by thinking of the Mexican-Hat kerne
 
 .. image:: images/design4_wavelet_unnorm.png
 
-The unnormalized transform appears to follow a power-law relation over all of the scales, and when limited to the same fitting region, the fit appears to be much better. This is deceiving, however, because the extra factors of :math:`\sigma` are increasing the correlation between the x and y variables in the fit! This effectively gives a slope of :math:`+2` for free, regardless of the data. Further, it means that the fit statistics are no longer valid, as the underlying assumption in the model is that the y and x values are uncorrelated. We do **not** recommend using the unnormalized form as it inflates the quality of the fit, hides the deviations (that may be physically relevant!), but provides no additional information or improvements.
+The unnormalized transform appears to follow a power-law relation over all of the scales, and when limited to the same fitting region, the fit appears to be much better. This is deceiving, however, because the extra factors of :math:`\sigma` are increasing the correlation between the x and y variables in the fit! This effectively gives a slope of :math:`+2` for free, regardless of the data. Further, it means that the fit statistics are no longer valid, as the underlying assumption in the model is that the y and x values are uncorrelated.
+
+.. warning:: We do **not** recommend using the unnormalized form as it inflates the quality of the fit, hides the deviations (that may be physically relevant!), but provides no additional information or improvements.
 
 References
 ----------

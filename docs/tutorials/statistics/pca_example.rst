@@ -11,7 +11,7 @@ Principal Component Analysis (PCA) is primarily a dimensionality reduction techn
 
 By ordering the principal components from the largest to smallest eigenvalue, a minimal set of eigenvectors can be found that account for a large portion of the variance within the data. These first N principal components have a (usually) much reduced dimensionality, while still containing the majority of the structure in the data. The `PCA Wikipedia <https://en.wikipedia.org/wiki/Principal_component_analysis>`_ page has a much more thorough explanation.
 
-The use of PCA on spectral-line data cubes was introduced by `Heyer & Schloerb 1997 <https://ui.adsabs.harvard.edu/#abs/1997ApJ...475..173H/abstract>`_, and thoroughly extended in a number of other papers (e.g., `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_, `Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). An analytical derivation is given in `Brunt & Heyer 2013 <https://ui.adsabs.harvard.edu/#abs/2013MNRAS.433..117B/abstract>`_. Briefly, they use the PCA decomposition to measure the associated spectral and spatial width scales associated with each principal component. An eigenvalue can be multiplied by each spectral channel to produce an eigenimage. The autocorrelation function of that eigenimage gives an estimate of the spatial scale of that principal component. The autocorrelation of the eigenvector itself gives an associated spectral width. Using the spatial and spectral widths from the first N principal components give an estimate the size-line width relation.
+The use of PCA on spectral-line data cubes was introduced by `Heyer & Schloerb 1997 <https://ui.adsabs.harvard.edu/#abs/1997ApJ...475..173H/abstract>`_, and thoroughly extended in a number of other papers (e.g., `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_, `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_, `Roman-Duval et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...740..120R/abstract>`_). An analytical derivation is given in `Brunt & Heyer 2013 <https://ui.adsabs.harvard.edu/#abs/2013MNRAS.433..117B/abstract>`_. Briefly, they use the PCA decomposition to measure the associated spectral and spatial width scales associated with each principal component. An eigenvalue can be multiplied by each spectral channel to produce an eigenimage. The autocorrelation function of that eigenimage gives an estimate of the spatial scale of that principal component. The autocorrelation of the eigenvector itself gives an associated spectral width. Using the spatial and spectral widths from the first N principal components give an estimate of the size-line width relation.
 
 Using
 -----
@@ -29,16 +29,11 @@ And we load in the data:
 
     >>> cube = fits.open("Design4_flatrho_0021_00_radmc.fits")[0]  # doctest: +SKIP
 
-The `spectral-cube <http://spectral-cube.readthedocs.io/en/latest/>`_ package can also be used to load in data.
-
-    >>> from spectral_cube import SpectralCube
-    >>> cube = SpectralCube.read("Design4_flatrho_0021_00_radmc.fits")  # doctest: +SKIP
-
 The `~turbustat.statistics.PCA` class is first initialized, and the distance to the region (if desired) can be given:
 
     >>> pca = PCA(cube, distance=250. * u.pc)  # doctest: +SKIP
 
-If the distance is given, you will have the option to convert spatial widths to physical units. *Note that we're using simulated data and the distance of 250 pc has no special meaning.*
+If the distance is given, you will have the option to convert spatial widths to physical units. *Note that we're using simulated data and the distance of 250 pc has no special meaning in this case.* If no distance is provided, conversions to the physical units will return an error.
 
 The simplest way to run the entire process is using the `~turbustat.statistics.PCA.run` command:
 
@@ -51,10 +46,12 @@ The simplest way to run the entire process is using the `~turbustat.statistics.P
 
 .. image:: images/pca_design4_default.png
 
-Note that we have specified the output units for the both the spectral and spatial units. By default, these would be kept in pixel units.
-The key properties are shown when `verbose=True`: a summary of the results with a plot of the covariance matrix (top left), the variance described by the principal components (bottom left) and the size-line width relation (right). The proportion of variance is the variance contained in the N eigenvalues kept. In this case, we consider all eigenvalues with values above 1e-4 to be important. `index` is the slope of the size-line width relation, and `gamma` is the the slope with a correction factor applied (see `~turbustat.statistics.PCA.gamma`). The sonic length is derived from the intercept of the size-line width relation using a default temperature of 10 K (see below on how to change this).
+Note that we have specified the output units for the spectral and spatial units. By default, these would be kept in pixel units.
+The key properties are shown when `verbose=True`: a summary of the results with a plot of the covariance matrix (top left), the variance described by the principal components (bottom left) and the size-line width relation (right). The proportion of variance is the variance contained in the N eigenvalues kept. In this case, we consider all eigenvalues with values above 1e-4 to be important. In observational data, `min_eigval` should be set to the variance of the noise (square of the rms uncertainty).  Typically, only the first :math:`\sim10` eigenvalues contain signal in observational data.
 
-Since this data is simulated, this example does not account for a finite beam size. If it did, however, we would want to deconvolve the spatial widths with the beam. To see this effect, let us assume these data have a 20" circular beam:
+In the output above `index` is the slope of the size-line width relation, and `gamma` is the the slope with a correction factor applied (see `~turbustat.statistics.PCA.gamma`). The sonic length is derived from the intercept of the size-line width relation using a default temperature of 10 K (see below on how to change this).
+
+Since these data are simulated, this example does not account for a finite beam size. If it did, however, we would want to deconvolve the spatial widths with the beam. To see this effect, let us assume these data have a 20" circular beam:
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
@@ -68,7 +65,7 @@ Since this data is simulated, this example does not account for a finite beam si
 
 Since the correction is not linear, the slope changes with the beam correction. If the header of the data has the beam information defined, it will be automatically read in and `beam_fwhm` will not have to be given.
 
-Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_ and `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_ is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean of, how does this affect the index?
+Both of the PCA runs above do *not* subtract the mean of the data before creating the covariance matrix. Technically, this is not how PCA is defined (see Overview above) and the decomposition is not performed on a true covariance matrix. The justification used in `Brunt & Heyer 2002a <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..276B/abstract>`_ and `Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_ is that the mean has a physical meaning in this case: it's the largest spatial scale across the map. If we *do* subtract the mean, how does this affect the index?
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
@@ -150,11 +147,11 @@ Third, we find the spectral widths:
 
 .. image:: images/pca_autocorrspec_Design4.png
 
-The above image shows the 50 components of the first 9 autocorrelation spectra (the data cube has 500 channels in total, but this is the region of interest). The local minima referred to in the next paragraph is the first minimum point in each of the spectra.
+The above image shows the 50 components of the first 9 autocorrelation spectra (the data cube has 500 channels in total, but this is the region of interest). The local minima referred to in the next paragraph are the first minimum points in each of the spectra.
 
-There are three methods available to estimate spectral widths of the autocorrelation spectra. `walk-down` starts from the peak and continues until the 1/e level is reached. The width is estimated by averaging the points before and after this level is reached. This is the method used by Brunt & Heyer. Otherwise, `method` may be set to `fit`, which fits a Gaussian to the data before the fits local minima occurs, and `interpolate`, which does the same, but through interpolating onto a finer grid. As shown in the above figure, the number of oscillations in the autocorrelation spectrum increases with the Nth principal component. The width of interest is determined from the first peak to the first minima.
+There are three methods available to estimate spectral widths of the autocorrelation spectra. `walk-down` starts from the peak and continues until the 1/e level is reached. The width is estimated by averaging the points before and after this level is reached. This is the method used by Brunt & Heyer. Otherwise, `method` may be set to `fit`, which fits a Gaussian to the data before the first local minimum occurs, and `interpolate`, which does the same, but through interpolating onto a finer grid. As shown in the above figure, the number of oscillations in the autocorrelation spectrum increases with the Nth principal component. The width of interest is determined from the first peak to the first minimum.
 
-**Note: If your input data has few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
+**Note: If your input data have few spectral channels, it may be necessary to pad additional channels of zeros onto the data. Otherwise the 1/e level may not be reached. This should not have a significant effect on the results, as the added eigenvalues of these channels will be zero and should not be considered.**
 
 Finally, we fit the size-line width relation. There is no clear independent variable to fit, and significant errors in both dimensions which must be taken into account. This is the *error-in-variables problem*, and an excellent explanation is provided in `Hogg, Bovy & Lang 2010 <https://ui.adsabs.harvard.edu/#abs/2010arXiv1008.4686H/abstract>`_. The Brunt & Heyer works have used the bisector method. In TurbuStat, two fitting methods are available: `Orthogonal Distance Regression (ODR) <http://docs.scipy.org/doc/scipy/reference/odr.html>`_, and a Markov Chain Monte Carlo (MCMC) method. Practically both methods are doing the same thing, but the MCMC provides a direct sampling (assuming uniform priors). The MCMC method requires the `emcee <http://dan.iel.fm/emcee/current/>`_ package to be installed.
 
@@ -180,7 +177,7 @@ The interesting outputs from this analysis are estimates of the slopes of the si
     >>> pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc)  # doctest: +SKIP
     (<Quantity 0.35451525 pc>, <Quantity [0.27522952, 0.45267135] pc>)
 
-Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
+Sonic length is defined as the length at which the fitted line intersects the sounds speed (temperature can be specified with `T_k` above).  Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 
 
 References
@@ -202,4 +199,4 @@ References
 
 `Bertram et al. 2014 <https://ui.adsabs.harvard.edu/#abs/2014MNRAS.440..465B/abstract>`_
 
-`Correia et al. 2016 <`Brunt & Heyer 2002b <https://ui.adsabs.harvard.edu/#abs/2002ApJ...566..289B/abstract>`_>`_
+`Correia et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...818..118C/abstract>`_

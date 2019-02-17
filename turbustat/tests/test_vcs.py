@@ -21,7 +21,10 @@ from ._testing_data import \
 
 def test_VCS_method():
     tester = VCS(dataset1["cube"]).run(high_cut=0.3 / u.pix,
-                                       low_cut=3e-2 / u.pix)
+                                       low_cut=3e-2 / u.pix,
+                                       verbose=True,
+                                       save_name='test.png')
+    os.system("rm test.png")
 
     # Test fitting with bootstrapping
     tester.fit_pspec(bootstrap=True,
@@ -50,7 +53,9 @@ def test_VCS_distance():
         VCS_Distance(dataset1["cube"], dataset2["cube"],
                      fit_kwargs=dict(high_cut=0.3 / u.pix,
                                      low_cut=3e-2 / u.pix))
-    tester_dist = tester_dist.distance_metric()
+    tester_dist = tester_dist.distance_metric(verbose=True,
+                                              save_name='test.png')
+    os.system("rm test.png")
 
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['vcs_distance'])

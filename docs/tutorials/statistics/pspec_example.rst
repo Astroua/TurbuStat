@@ -55,9 +55,17 @@ The power spectrum is computed using:
 
 .. image:: images/design4_pspec.png
 
-The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.PowerSpectrum.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits.
+The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.PowerSpectrum.run` (the default setting), the contours on the two-dimensional power-spectrum are fit using an elliptical power-law model. The dashed red lines (or contours) on both plots are the limits of the data used in the fits.  We use an elliptical power-law model:
 
-The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the limited inertial range in this simulation. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
+.. math::
+
+    A \left[(q^2 \cos^2\theta + \sin^2\theta) x^2 
+    +  2(1 - q^2) \sin\theta \cos\theta xy
+    + (q^2 \sin^2\theta + \cos^2 \theta) y^2 \right]^{\Gamma/2}
+
+Here, the power-law index is :math:`\Gamma`, the orientation angle of the ellipse with respect to the :math:`x,y` coordinate system is given by :math:`\theta` and the ellipticity is :math:`q\in [0,1)`.
+
+The power spectrum of this simulation has a slope of :math:`-3.3\pm0.1`, but the power-spectrum deviates from a single power-law on small scales. This is due to the the :ref:`limited inertial range in this simulation <data_for_tutorial>`. The spatial frequencies used in the fit can be limited by setting `low_cut` and `high_cut`. The inputs should have frequency units in pixels, angle, or physical units. For example,
 
     >>> pspec.run(verbose=True, xunit=u.pix**-1, low_cut=0.025 / u.pix,
     ...           high_cut=0.1 / u.pix)  # doctest: +SKIP
@@ -98,10 +106,10 @@ The fit to the two-dimensional power-spectrum has also changed. These parameters
     >>> print(pspec.theta2D, pspec.theta2D_err)  # doctest: +SKIP
     (1.1364954648370515, 0.09436799399259721)
 
-The slope is moderately steeper than in the 1D model, but within the respective uncertainty ranges. By default, the parameter uncertainties for the 2D model are determined by a bootstrap. After fitting the model, the residuals are added back to the data, and re-fit some number of times (the default is 100). The bootstrap estimation is enabled by the `bootstrap` keyword in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec` and the number of iterations is set with `niters` (the default is 100). These can be set in `~turbustat.statistics.PowerSpectrum.run` by passing a keyword dictionary to `fit_2D_kwargs` (e.g., `fit_2D_kwargs={'bootstrap': False}`). The other parameters are the ellipticity, which is bounded between 0 and 1 (with 1 being circular), and theta, the angle between the x-axis and the semi-major axis of the ellipse. Theta is bounded between 0 and :math:`\pi`. The example data here is moderately anisotropic.
+The slope is moderately steeper than in the 1D model, but within the respective uncertainty ranges. By default, the parameter uncertainties for the 2D model are determined by a bootstrap. After fitting the model, the residuals are resampled and added back to the data. The resampled data are then fit to the model. This procedure is repeated some number of times (the default is 100) to build up distributions for the fit parameters. The bootstrap estimation is enabled in the code by setting the `bootstrap` keyword to `True` in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec` and the number of iterations is set with `niters` (the default is 100). These can be set in `~turbustat.statistics.PowerSpectrum.run` by passing a keyword dictionary to `fit_2D_kwargs` (e.g., `fit_2D_kwargs={'bootstrap': False}`). The other parameters are the ellipticity, which is bounded between 0 and 1 (with 1 being circular), and theta, the angle between the x-axis and the semi-major axis of the ellipse. Theta is bounded between 0 and :math:`\pi`. The 2D power spectrum here is moderately anisotropic.
 
 
-Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
+Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales (e.g., `Swift & Welch 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJS..174..202S/abstract>`_). To capture this behaviour, `PowerSpectrum` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`):
 
     >>> pspec = PowerSpectrum(moment0, distance=250 * u.pc)  # doctest: +SKIP
     >>> pspec.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix, high_cut=0.4 / u.pix,
@@ -133,7 +141,7 @@ Breaks in the power-law behaviour in observations (and higher-resolution simulat
 
 .. image:: images/design4_pspec_breakfit.png
 
-`brk` is the initial guess at where the break point is. Here I've set it to the extent of the inertial range of the simulation. `log_break` should be enabled if the given `brk` is already the log (base-10) value (since the fitting is done in log-space). The segmented linear model iteratively optimizes the location of the break point, trying to minimize the gap between the different components. This is the `x3` parameter above. The slopes of the components are `x1` and `x2`, but the second slope is defined *relative to the first slope* (i.e., if `x2=0`, the slopes of the components would be the same). The true slopes can be accessed through `pspec.slope` and `pspec.slope_err`. The location of the fitted break point is given by `pspec.brk`, and its uncertainty `pspec.brk_err`. If the fit does not find a good break point, it will revert to a linear fit without the break.
+`brk` is the initial guess for where the break point location is. Here I've set it to the extent of the inertial range of the simulation. `log_break` should be enabled if the given `brk` is already the log (base-10) value (since the fitting is done in log-space). The segmented linear model iteratively optimizes the location of the break point, trying to minimize the gap between the different components. This is the `x3` parameter above. The slopes of the components are `x1` and `x2`, but the second slope is defined *relative to the first slope* (i.e., if `x2=0`, the slopes of the components would be the same). The true slopes can be accessed through `pspec.slope` and `pspec.slope_err`. The location of the fitted break point is given by `pspec.brk`, and its uncertainty `pspec.brk_err`. If the fit does not find a good break point, it will revert to a linear fit without the break.
 
 Note that the 2D fitting was disabled in this last example. The 2D model cannot fit a break point, and will instead try to fit a single power-law for the between `low_cut` and `high_cut`, which we know already know is the wrong model. Thus, it has been disabled to avoid confusion. A strategy for fitting the 2D model when the spectrum shows a break is to first fit the 1D model, find the break point, and then fit the 2D spectrum independently using the break point as the `high_cut` in `~turbustat.statistics.PowerSpectrum.fit_2Dpspec`.
 
@@ -202,7 +210,7 @@ The default fit uses Ordinary Least Squares. A Weighted Least Squares can be ena
 
 .. image:: images/design4_pspec_limitedfreq_weightfit.png
 
-The fit has not changed significantly, but may in certain cases.
+The fit has not changed significantly but may in certain cases.
 
 
 If strong emission continues to the edge of the map (and the map does not have periodic boundaries), ringing in the FFT can introduce a cross pattern in the 2D power-spectrum. This effect and the use of apodizing kernels to taper the data is covered :ref:`here <apodkerns>`.
@@ -235,6 +243,8 @@ Many papers have utilized the power spectrum. An incomplete list is provided bel
 
 `Esquivel et al. 2005 <https://ui.adsabs.harvard.edu/#abs/2005ApJ...631..320E/abstract>`_
 
+`Swift & Welch 2008 <https://ui.adsabs.harvard.edu/#abs/2008ApJS..174..202S/abstract>`_
+
 `Miville-Deschenes et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010A&A...518L.104M/abstract>`_
 
 `Zhang et al. 2012 <https://ui.adsabs.harvard.edu/#abs/2012ApJ...754...29Z/abstract>`_
@@ -242,6 +252,8 @@ Many papers have utilized the power spectrum. An incomplete list is provided bel
 `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...771..123B/abstract>`_
 
 `Martin et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...809..153M/abstract>`_
+
+`Bertram et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015MNRAS.446.3777B/abstract>`_
 
 `Kalberla et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016A&A...595A..37K/abstract>`_
 

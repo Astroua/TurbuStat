@@ -93,16 +93,29 @@ class BaseStatisticMixIn(object):
 
             self._data = values.squeeze()
 
-    def input_data_header(self, data, header):
+    def input_data_header(self, data, header, need_copy=False):
         '''
         Check if the header is given separately from the data type.
         '''
 
         if header is not None:
-            self.data = input_data(data, no_header=True)
+            self.data = input_data(data, no_header=True,
+                                   need_copy=need_copy)
             self.header = header
         else:
-            self.data, self.header = input_data(data)
+            # Catch cases with no header and a numpy array
+            # But Projections are u.Quantity that inherit from
+            # np.ndarray... So need to make sure it is not a Quantity
+            # array either.
+            np_not_quant_check = isinstance(data, np.ndarray) \
+                and not isinstance(data, u.Quantity)
+            if np_not_quant_check:
+                raise ValueError("When data is given as a numpy array, a FITS "
+                                 "header must be given using the `header` "
+                                 "keyword argument.")
+
+            self.data, self.header = input_data(data,
+                                                need_copy=need_copy)
 
     def save_results(self, output_name, keep_data=False):
         '''

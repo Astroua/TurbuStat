@@ -57,8 +57,10 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             # Don't pass the header. It will read the new one in reg_cube
             self.input_data_header(reg_cube, None)
 
-        if np.isnan(self.data).any():
-            self.data[np.isnan(self.data)] = 0
+        isnan = np.isnan(self.data)
+        if isnan.any():
+            self.data = self.data.copy()
+            self.data[isnan] = 0.0
 
         if distance is not None:
             self.distance = distance

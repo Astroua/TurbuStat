@@ -7,23 +7,23 @@ Bispectrum
 Overview
 --------
 
-The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly-used two-point statistics, whose autocorrelation function is the Fourier transform of the power spectrum. The bispectrum is computed using:
+The `bispectrum <https://en.wikipedia.org/wiki/Bispectrum>`_ is the Fourier transform of the three-point covariance function. It represents the next higher-order expansion upon the more commonly-used two-point statistics, where the autocorrelation function is the Fourier transform of the power spectrum. The bispectrum is computed using:
 
 .. math::
     B(k_1, k_2) = F^{\ast}(k_1 + k_2)\,F(k_1)\,F(k_2)
 
 where :math:`\ast` denotes the complex conjugate, :math:`F` is the Fourier transform of some signal, and :math:`k_1,\,k_2` are wavenumbers.
 
-The bispectrum retains phase information which is lost in the :ref:`power spectrum <pspec_tutorial>`, and is therefore useful for investigating phase coherence and coupling.
+The bispectrum retains phase information that is lost in the :ref:`power spectrum <pspec_tutorial>` and is therefore useful for investigating phase coherence and coupling.
 
-The use of the bispectrum in the ISM was introduced by `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_, and is further used in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ and `Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_.
+The use of the bispectrum in the ISM was introduced by `Burkhart et al. 2009 <https://ui.adsabs.harvard.edu/#abs/2009ApJ...693..250B/abstract>`_ and is further used in `Burkhart et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...708.1204B/abstract>`_ and `Burkhart et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...827...26B/abstract>`_.
 
 The phase information retained by the bispectrum requires it to be a complex quantity. A real, normalized version can be expressed through the `bicoherence <https://en.wikipedia.org/wiki/Bicoherence>`_. The bicoherence is a measure of phase coupling alone, where the maximal values of 1 and 0 represent complete coupled and uncoupled, respectively. The form that is used here is defined by `Hagihira et al. 2001 <https://www.ncbi.nlm.nih.gov/pubmed/11574365>`_:
 
 .. math::
     b(k_1, k_2) = \frac{|B(k_1, k_2)|}{\sum_{k_1, k_2} |F(k_1)F(k_2)F^{\ast}(k_1 + k_2)|}
 
-The denominator normalizes out the "power" at the modes :math:`k_1,\,k_2`; this is effectively dividing out the value of the power spectrum, leaving a fractional difference that is entirely the result of the phase coupling. Alternatively, the denominator can be thought of as the value attained if the modes :math:`k_1\,k_2` are completely phase coupled, and therefore is the maximal value attainable.
+The denominator normalizes by the "power" at the modes :math:`k_1,\,k_2`; this is effectively dividing out the value of the power spectrum, leaving a fractional difference that is entirely the result of the phase coupling. Alternatively, the denominator can be thought of as the value attained if the modes :math:`k_1\,k_2` are completely phase coupled, and therefore is the maximal value attainable.
 
 Using
 -----
@@ -36,11 +36,11 @@ We need to import the `~turbustat.statistics.Bispectrum` code, along with a few 
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
 
-And we load in the data:
+Next, we load in the data:
 
     >>> moment0 = fits.open("Design4_flatrho_0021_00_radmc_moment0.fits")[0]  # doctest: +SKIP
 
-While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation is performed on an integrated intensity or column density map.
+While the bispectrum can be extended to sample in N-dimensions, the current implementation requires a 2D input. In all previous work, the computation was performed on an integrated intensity or column density map.
 
 First, the `~turbustat.statistics.Bispectrum` class is initialized:
 
@@ -48,19 +48,19 @@ First, the `~turbustat.statistics.Bispectrum` class is initialized:
 
 The bispectrum requires only the image, not a header, so passing any arbitrary 2D array will work.
 
-Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run!**
+Even using a small 2D image (128x128 here), the number of possible combinations for :math:`k_1,\,k_2` is massive (the maximum value of :math:`k_1,\,k_2` is half of the largest dimension size in the image). To save time, we can randomly sample some number of *phases* for each value of :math:`k_1,\,k_2` (so :math:`k_1 + k_2`, the coupling term, changes). This is set by `nsamples`. There is shot noise associated with this random sampling, and the effect of changing `nsamples` should be tested. For this example, structure begins to become apparent with about 1000 samples. The figures here use 10000 samples to make the structure more evident. **This will take about 10 minutes to run on this image!**
 
-The computing the bispectrum and bicoherence maps is performed through `~turbustat.statistics.Bispectrum.run`:
+The bispectrum and bicoherence maps are computed with `~turbustat.statistics.Bispectrum.run`:
 
     >>> bispec.run(verbose=True, nsamples=10000)  # doctest: +SKIP
 
 .. image:: images/bispectrum_design4.png
 
-`~turbustat.statistics.Bispectrum.run` really only performs a single step: `~turbustat.statistics.Bispectrum.compute_bispectrum`. For this, there are two optional inputs that may be set:
+`~turbustat.statistics.Bispectrum.run` only performs a single step: `~turbustat.statistics.Bispectrum.compute_bispectrum`. For this, there are two optional inputs that may be set:
 
     >>> bispec.run(nsamples=10000, mean_subtract=True, seed=4242424)  # doctest: +SKIP
 
-`seed` sets the random seed for the sampling, and `mean_subtract` removes the mean from the data before computing the bispectrum. This removes the "zero frequency" power defined based on the largest scale in the image that provides gives the phase coupling along :math:`k_1 = k_2` line. Removing the mean highlights the non-linear mode interactions:
+`seed` sets the random seed for the sampling, and `mean_subtract` removes the mean from the data before computing the bispectrum. This removes the "zero frequency" power defined based on the largest scale in the image that gives the phase coupling along :math:`k_1 = k_2` line. Removing the mean highlights the non-linear mode interactions.
 
 .. image:: images/bispectrum_w_and_wo_meansub_coherence.png
 
@@ -79,7 +79,7 @@ Both radial and azimuthal slices can be extracted from the bispectrum to examine
 
 .. image:: images/bispectrum_radial_slices.png
 
-Three slices are returned, centered at 30, 45, and 60 degree. The width of each slice is 20 degree. `rad_slices` is a dictionary whose keys are the (rounded to the nearest integer) center angles given. Each entry in the dictionary has the bin centers (`[0]`), values (`[1]`), and standard deviations (`[2]`). The center angles and slice width can be given in any angular unit. By default, the averaging is over the bispectrum amplitudes. By passing `value='bispectrum_logamp'`, the log of the amplitudes are instead averaged over. The bicoherence array can also be averaged over with `value='bicoherence'`. The size of the bins can also be changed by passing `bin_width` to `~Bispectrum.radial_slices`; the default is `1`.
+Three slices are returned, centered at 30, 45, and 60 degrees. The width of each slice is 20 degrees. `rad_slices` is a dictionary whose keys are the (rounded to the nearest integer) center angles given. Each entry in the dictionary has the bin centers (`[0]`), values (`[1]`), and standard deviations (`[2]`). The center angles and slice width can be given in any angular unit. By default, the averaging is over the bispectrum amplitudes. By passing `value='bispectrum_logamp'`, the log of the amplitudes are instead averaged over. The bicoherence array can also be averaged over with `value='bicoherence'`. The size of the bins can also be changed by passing `bin_width` to `~Bispectrum.radial_slices`; the default is `1`.
 
 
 The azimuthal slices are similarly calculated:

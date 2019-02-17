@@ -43,8 +43,8 @@ class SCF(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from spectral_cube import SpectralCube
     >>> from turbustat.statistics import SCF
     >>> cube = SpectralCube.read("Design4.13co.fits")  # doctest: +SKIP
@@ -553,7 +553,7 @@ class SCF(BaseStatisticMixIn):
     def plot_fit(self, save_name=None, show_radial=True,
                  show_residual=True,
                  show_surface=True, contour_color='k',
-                 cmap='viridis', data_color='k', fit_color=None,
+                 cmap='viridis', data_color='r', fit_color='k',
                  xunit=u.pix):
         '''
         Plot the SCF surface, radial profiles, and associated fits.
@@ -666,7 +666,7 @@ class SCF(BaseStatisticMixIn):
 
             ax2.errorbar(lags, self.scf_spectrum,
                          yerr=self.scf_spectrum_stddev,
-                         fmt='D', color=data_color,
+                         fmt='o', color=data_color,
                          markersize=5)
             ax2.set_xscale("log")  # , nonposy='clip')
             ax2.set_yscale("log")  # , nonposy='clip')
@@ -695,7 +695,7 @@ class SCF(BaseStatisticMixIn):
 
                 ax_r.errorbar(lags, resids,
                               yerr=self.scf_spectrum_stddev,
-                              fmt='D', color=data_color,
+                              fmt='o', color=data_color,
                               markersize=5)
 
                 ax_r.axvline(xlow, color='b', alpha=0.5, linestyle='-.')

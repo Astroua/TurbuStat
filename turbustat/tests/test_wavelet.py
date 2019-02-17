@@ -23,7 +23,9 @@ from ..simulator import make_extended
 
 def test_Wavelet_method():
     tester = Wavelet(dataset1["moment0"])
-    tester.run()
+    tester.run(verbose=True, save_name='test.png')
+
+    os.system("rm test.png")
 
     # Test fitting with bootstrapping
     tester.fit_transform(bootstrap=True)
@@ -120,7 +122,10 @@ def test_Wavelet_method_customscales():
 def test_Wavelet_distance():
     tester_dist = \
         Wavelet_Distance(dataset1["moment0"],
-                         dataset2["moment0"]).distance_metric()
+                         dataset2["moment0"])
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['wavelet_distance'])
 

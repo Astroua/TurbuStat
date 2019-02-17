@@ -41,12 +41,13 @@ We need to import the `~turbustat.statistics.PDF_Distance` class, along with a f
     >>> from astropy.io import fits
     >>> import matplotlib.pyplot as plt
 
-And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be given two 2D images or cubes. For this example, we will use two integrated intensity images:
+And we load in the two data sets. `~turbustat.statistics.PDF_Distance` can be given two 2D images or cubes. For this example, we will use two integrated intensity images::
 
     >>> moment0 = fits.open(osjoin(data_path, "Design4_flatrho_0021_00_radmc_moment0.fits"))[0]  # doctest: +SKIP
     >>> moment0_fid = fits.open(osjoin(data_path, "Fiducial0_flatrho_0021_00_radmc_moment0.fits"))[0]  # doctest: +SKIP
 
 These two images are given as the inputs to `~turbustat.statistics.PDF_Distance`. Other parameters can be set here, including the minimum images values to be included in the histograms (`min_val1`/`min_val2`), whether to fit a log-normal distribution (`do_fit`), and what type of normalization to use on the data (`normalization_type`; see the :ref:`PDF tutorial <pdf_tutorial>`):
+
     >>> pdf = PDF_Distance(moment0_fid, moment0, min_val1=0.0, min_val2=0.0,
     ...                    do_fit=True, normalization_type=None)  # doctest: +SKIP
 
@@ -114,3 +115,12 @@ By default, all three distance metrics are run. For these images, the distances 
 Each distance metric can be run separately by running its function in `~turbustat.statistics.PDF_Distance`, or by setting the `statistic` keyword in `~turbustat.statistics.PDF_Distance.distance_metric`.
 
 Because of the Hellinger distance requires that the PDF histograms have the same bins, there is no input to give a pre-computed fiducial `~turbustat.statistics.PDF`, unlike most of the other distance metric classes.
+
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_

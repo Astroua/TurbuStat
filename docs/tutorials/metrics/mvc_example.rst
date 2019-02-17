@@ -6,7 +6,7 @@ MVC Distance
 
 See :ref:`the tutorial <mvc_tutorial>` for a description of Modified Velocity Centroids (MVC).
 
-The distance metric for MVC is based on the t-statistics of teh difference between the power spectrum slopes:
+The distance metric for MVC is based on the t-statistics of the difference between the power spectrum slopes:
 
 .. math::
     d_{\rm MVC} = \frac{\left| \beta_1 - \beta_2 \right|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
@@ -106,7 +106,7 @@ The MVC spectra are plotted in the figure and the fit summaries are printed out.
     >>> mvc.distance  # doctest: +SKIP
     0.3988169606167437
 
-This is an awful fit. We want to limit where the spectra are fit to. Keywords for `~turbustat.statistics.MVC` can be passed with `low_cut`, `high_cut`, `breaks`, `pspec_kwargs` and `pspec2_kwargs`. If separate parameters need to be set, a two-element list or array can be given to `low_cut`, `high_cut` and `breaks`; the second element will be used for the second data set. For example, limiting the fit region can be done with:
+This is an awful fit. We want to limit where the spectra are fit. Keywords for `~turbustat.statistics.MVC` can be passed with `low_cut`, `high_cut`, `breaks`, `pspec_kwargs` and `pspec2_kwargs`. If separate parameters need to be set, a two-element list or array can be given to `low_cut`, `high_cut` and `breaks`; the second element will be used for the second data set. For example, limiting the fit region can be done with:
 
     >>> mvc = MVC_Distance(data_fid, data, low_cut=0.02 / u.pix,
     ...                    high_cut=0.4 / u.pix)  # doctest: +SKIP
@@ -171,4 +171,11 @@ If many data sets are being compared to a fiducial, a pre-computed `~turbustat.s
     >>> mvc_fid.run()  # doctest: +SKIP
     >>> mvc = MVC_Distance(data_fid, data, fiducial_model=mvc_fid)  # doctest: +SKIP
 
-Note that the data still needs to be passed to `~turbustat.statistics.MVC_Distance`.
+Note that the data still need to be passed to `~turbustat.statistics.MVC_Distance`.
+
+References
+----------
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_

@@ -148,7 +148,7 @@ Since, in this regime, both components only rely on the velocity field, they sho
     >>> - 6 / vcs.slope[1]  # doctest: +SKIP
     0.2780262190776282
 
-Each component does give a similar estimate for :math:`m`. There is the additional issue with the simulated data as to how the inertial range should be handled. Certainly the slope at smaller scales is made steeper if portions are outside the spatial inertial range.
+Each component does give a similar estimate for :math:`m`. There is the additional issue with the simulated data as to how the :ref:`inertial range <data_for_tutorial>` should be handled. Certainly the slope at smaller scales is made steeper if portions are outside the spatial inertial range.
 
 While we find a good fit to the data, the VCS transition between the two regimes is smoothed over.  This is a break down of assuming the asymptotic regimes, and is a break down of the simplified segmented linear model that has been used. The model presented in `Chepurnov et al. 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...714.1398C/abstract>`_ and `Chepurnov et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...810...33C/abstract>`_, which account for a smooth transition over the entire spectrum, will be a more effective and useful choice. This model will be included in a future release of TurbuStat.
 

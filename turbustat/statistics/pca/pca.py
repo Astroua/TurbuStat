@@ -54,7 +54,8 @@ class PCA(BaseStatisticMixIn):
         # We need to check for completely empty channels. These cause
         # issues for the decomposition of the covariance matrix (eigenvectors
         # will have significant imaginary components).
-        self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
+        # Now doing this on a per-channel basis in var_cov_cube
+        # self._data[np.isnan(self.data)] = np.finfo(self.data.dtype).eps
 
         self.spectral_shape = self.data.shape[0]
 
@@ -64,10 +65,6 @@ class PCA(BaseStatisticMixIn):
 
         if distance is not None:
             self.distance = distance
-
-        # Try loading in the beam from the header
-
-
 
     @property
     def n_eigs(self):
@@ -700,7 +697,8 @@ class PCA(BaseStatisticMixIn):
         return lambd, lambd_error_range
 
     def plot_fit(self, save_name=None, show_cov_bar=True, show_sl_fit=True,
-                 n_eigs=None, color='r', fit_color='k', cov_cmap='viridis',
+                 n_eigs=None, color='r', fit_color='k', symbol='o',
+                 cov_cmap='viridis',
                  spatial_unit=u.pix, spectral_unit=u.pix, show_residual=True):
         '''
         Plot the covariance matrix, bar plot of eigenvalues, and the fitted
@@ -722,6 +720,8 @@ class PCA(BaseStatisticMixIn):
         fit_color : {str, RBG tuple}, optional
             Colour to show the fit line in. Defaults to `color` when `None` is
             given.
+        symbol : str, optional
+            Marker shape to plot the data.
         cov_cmap : {str, matplotlib colormap}, optional
             Colormap to show the covariance matrix in.
         show_residual : bool, optional
@@ -791,7 +791,7 @@ class PCA(BaseStatisticMixIn):
                          xerr=0.434 * spatial_width_error /
                          spatial_width,
                          yerr=0.434 * spectral_width_error /
-                         spectral_width, fmt='o', color=color)
+                         spectral_width, fmt=symbol, color=color)
             plt.ylabel("log Linewidth / "
                        "{}".format(spectral_width.unit.to_string()))
             plt.grid()
@@ -1013,8 +1013,10 @@ class PCA_Distance(object):
         self._mean_sub = mean_sub
         self._n_eigs = n_eigs
 
-    def distance_metric(self, verbose=False, label1="Cube 1", label2="Cube 2",
-                        save_name=None):
+    def distance_metric(self, verbose=False, save_name=None,
+                        plot_kwargs1={},
+                        plot_kwargs2={},
+                        cmap='viridis'):
         '''
         Computes the distance between the cubes.
 
@@ -1022,13 +1024,15 @@ class PCA_Distance(object):
         ----------
         verbose : bool, optional
             Enables plotting.
-        label1 : str, optional
-            Object or region name for cube1
-        label2 : str, optional
-            Object or region name for cube2
         save_name : str, optional
             Save the figure when a file name is given.
-
+        plot_kwargs1 : dict, optional
+            Set the color, symbol, and label for dataset1
+            (e.g., plot_kwargs1={'color': 'b', 'symbol': 'D', 'label': '1'}).
+        plot_kwargs2 : dict, optional
+            Set the color, symbol, and label for dataset2.
+        cmap : str, optional
+            The colormap to use when plotting the covariance matrices.
         '''
 
         # The eigenvalues need to be normalized before being compared. If
@@ -1046,42 +1050,61 @@ class PCA_Distance(object):
         self.distance = np.linalg.norm(eigvals1 - eigvals2)
 
         if verbose:
-            import matplotlib.pyplot as p
+            import matplotlib.pyplot as plt
+
+            defaults1 = {'color': 'b', 'symbol': 'D', 'label': '1'}
+            defaults2 = {'color': 'g', 'symbol': 'o', 'label': '2'}
+
+            for key in defaults1:
+                if key not in plot_kwargs1:
+                    plot_kwargs1[key] = defaults1[key]
+
+            for key in defaults2:
+                if key not in plot_kwargs2:
+                    plot_kwargs2[key] = defaults2[key]
+
+            if 'xunit' in plot_kwargs1:
+                del plot_kwargs1['xunit']
+            if 'xunit' in plot_kwargs2:
+                del plot_kwargs2['xunit']
 
             print("Proportions of total variance: 1 - %0.3f, 2 - %0.3f" %
                   (self.pca1.var_proportion, self.pca2.var_proportion))
 
-            p.subplot(2, 2, 1)
-            p.imshow(
-                self.pca1.cov_matrix, origin="lower", interpolation="nearest",
-                vmin=np.median(self.pca1.cov_matrix))
-            p.colorbar()
-            p.title(label1)
-            p.subplot(2, 2, 3)
-            p.bar(np.arange(1, len(eigvals1) + 1), eigvals1, 0.5,
-                  color='r')
-            p.xlim([0, self.pca1.n_eigs + 1])
-            p.xlabel('Eigenvalues')
-            p.ylabel("Proportion of Variance")
-            p.subplot(2, 2, 2)
-            p.imshow(
+            plt.subplot(2, 2, 1)
+            plt.imshow(self.pca1.cov_matrix,
+                       cmap=cmap,
+                       origin="lower", interpolation="nearest",
+                       vmin=np.median(self.pca1.cov_matrix))
+            plt.colorbar()
+            plt.title(plot_kwargs1['label'])
+
+            plt.subplot(2, 2, 3)
+            plt.bar(np.arange(1, len(eigvals1) + 1), eigvals1, 0.5,
+                    color=plot_kwargs1['color'])
+            plt.xlim([0, self.pca1.n_eigs + 1])
+            plt.xlabel('Eigenvalues')
+            plt.ylabel("Proportion of Variance")
+
+            plt.subplot(2, 2, 2)
+            plt.imshow(
                 self.pca2.cov_matrix, origin="lower", interpolation="nearest",
                 vmin=np.median(self.pca2.cov_matrix))
-            p.colorbar()
-            p.title(label2)
-            p.subplot(2, 2, 4)
-            p.bar(np.arange(1, len(eigvals2) + 1), eigvals2, 0.5,
-                  color='r')
-            p.xlim([0, self.pca2.n_eigs + 1])
-            p.xlabel('Eigenvalues')
+            plt.colorbar()
+            plt.title(plot_kwargs2['label'])
+            plt.subplot(2, 2, 4)
+            plt.bar(np.arange(1, len(eigvals2) + 1), eigvals2, 0.5,
+                    color=plot_kwargs2['color'])
+            plt.xlim([0, self.pca2.n_eigs + 1])
+            plt.xlabel('Eigenvalues')
 
-            p.tight_layout()
+            plt.tight_layout()
 
             if save_name is not None:
-                p.savefig(save_name)
-                p.close()
+                plt.savefig(save_name)
+                plt.close()
             else:
-                p.show()
+                plt.show()
 
         return self
 

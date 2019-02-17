@@ -16,7 +16,9 @@ from ._testing_data import \
 def test_Tsallis():
     tester = Tsallis(dataset1["moment0"],
                      lags=[1, 2, 4, 8, 16] * u.pix)
-    tester.run(num_bins=100, periodic=True)
+    tester.run(num_bins=100, periodic=True, verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_allclose(tester.tsallis_params,
                         computed_data['tsallis_val'], atol=0.01)
 

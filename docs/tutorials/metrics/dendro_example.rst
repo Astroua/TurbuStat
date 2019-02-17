@@ -6,17 +6,19 @@ Dendrogram Distance
 
 See :ref:`the tutorial <dendro_tutorial>` for a description of the dendrogram statistics.
 
-**Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
+.. warning:: **Requires the optional astrodendro package to be installed. See the** `documentation <http://dendrograms.org/>`_
 
 Using the two comparisons defined by `Burkhart et al. 2013 <https://ui.adsabs.harvard.edu/#abs/2013ApJ...770..141B/abstract>`_, `~turbustat.statistics.Dendro_Distance` provides two distance metrics:
 
 1. The distance between histograms of peak intensity in the leaves of the dendrogram, measured over a range of minimum branch heights, is:
+
     .. math::
         d_{\mathrm{Hist}} = \left[\sum H(p_{1,\delta_I},p_{2,\delta_I})\right]/N_\delta
 
     :math:`p_{i,\delta_I}` are the histograms with minimum branch height of :math:`\delta_I`, :math:`H(i, j)` is the `Hellinger distance <https://en.wikipedia.org/wiki/Hellinger_distance#Discrete_distributions>`_, and :math:`N_{\delta}` is the number of branch heights (and histograms) that the dendrogram was computed for.
 
 2. The slopes of the linear relation fit to the log of the number of features in the tree as a function of minimum branch height:
+
     .. math::
         d_{\rm slope} = \frac{|\beta_1 - \beta_2|}{\sqrt{\sigma_{\beta_1}^2 + \sigma_{\beta_1}^2}}
 
@@ -54,6 +56,8 @@ If additional parameters need to be set to create the dendrograms, `dendro_kwarg
 
 To calculate the two dendrogram distances, we run:
     >>> dend_dist.distance_metric(verbose=True)  # doctest: +SKIP
+
+The distance computation is very fast for both methods so both distance metrics are always computed.
 
 Verbose mode creates two plots, which can be saved by specifying `save_name` in the call above. The first plot shows the histograms used in the Hellinger distance.
 
@@ -94,7 +98,7 @@ For large data sets, creating the dendrogram can be slow. Particularly when comp
     ...                                                "min_npix": 50},
     ...                                 fiducial_model=dend_stat)  # doctest: +SKIP
 
-    Note that the data (`cube_fid`) still needs to be given to `~turbustat.statistics.Dendrogram_Distance`.
+    Note that the data (`cube_fid`) still need to be given to `~turbustat.statistics.Dendrogram_Distance`.
 
     .. warning:: The object given to `fiducial_model` should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
 
@@ -110,3 +114,11 @@ For large data sets, creating the dendrogram can be slow. Particularly when comp
 
 .. warning:: In both cases, the saved dendrograms should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
 
+References
+----------
+
+`Boyden et al. 2016 <https://ui.adsabs.harvard.edu/#abs/2016ApJ...833..233B/abstract>`_
+
+`Boyden et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018ApJ...860..157B/abstract>`_
+
+`Koch et al. 2017 <https://ui.adsabs.harvard.edu/#abs/2017MNRAS.471.1506K/abstract>`_

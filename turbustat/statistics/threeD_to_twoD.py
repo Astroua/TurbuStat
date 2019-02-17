@@ -134,6 +134,9 @@ def var_cov_cube(cube, mean_sub=False, progress_bar=True):
         bar = ProgressBar(n_velchan)
 
     for i, chan in enumerate(_iter_2D(cube)):
+        # Set the nans to tiny values
+        chan[np.isnan(chan)] = np.finfo(chan.dtype).eps
+
         norm_chan = chan
         if mean_sub:
             norm_chan -= np.nanmean(chan)

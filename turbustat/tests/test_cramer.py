@@ -7,6 +7,7 @@ Test functions for Cramer
 '''
 
 import numpy.testing as npt
+import os
 
 from ..statistics import Cramer_Distance
 from ._testing_data import \
@@ -18,7 +19,10 @@ def test_cramer():
         Cramer_Distance(dataset1["cube"],
                         dataset2["cube"],
                         noise_value1=0.1,
-                        noise_value2=0.1).distance_metric(normalize=False)
+                        noise_value2=0.1).distance_metric(normalize=False,
+                                                          verbose=True,
+                                                          save_name='test.png')
+    os.system("rm test.png")
 
     npt.assert_allclose(tester.data_matrix1,
                         computed_data["cramer_val"])

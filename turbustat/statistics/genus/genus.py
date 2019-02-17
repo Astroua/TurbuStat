@@ -51,8 +51,8 @@ class Genus(BaseStatisticMixIn):
     distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from turbustat.statistics import Genus
     >>> from astropy.io import fits
     >>> import astropy.units as u
@@ -77,10 +77,6 @@ class Genus(BaseStatisticMixIn):
         else:
             self.need_header_flag = True
             self.data, self.header = input_data(img, no_header=False)
-
-        self.nanflag = False
-        if np.isnan(self.data).any():
-            self.nanflag = True
 
         if distance is not None:
             self.distance = distance
@@ -212,7 +208,8 @@ class Genus(BaseStatisticMixIn):
             major, minor = find_beam_properties(self.header)[:2]
             major = self._to_pixel(major)
             minor = self._to_pixel(minor)
-            pix_area = np.pi * major * minor
+            # the area of a Gaussian beam is 2 pi sigma^2, and major/minor are FWHMs
+            pix_area = 2 * np.pi * major * minor / np.sqrt(8*np.log(2))
             min_size = int(np.floor(pix_area.value))
         else:
             if isinstance(min_size, u.Quantity):
@@ -262,7 +259,7 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
-    def plot_fit(self, save_name=None, color='b'):
+    def plot_fit(self, save_name=None, color='r', symbol='o'):
         '''
         Plot the Genus curves.
 
@@ -277,7 +274,7 @@ class Genus(BaseStatisticMixIn):
         import matplotlib.pyplot as plt
 
         num = len(self.smoothing_radii)
-        num_cols = num / 2 if num % 2 == 0 else (num / 2) + 1
+        num_cols = num // 2 if num % 2 == 0 else (num // 2) + 1
 
         for i in range(1, num + 1):
             if num == 1:
@@ -288,10 +285,16 @@ class Genus(BaseStatisticMixIn):
             ax.text(0.3, 0.1,
                     "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
                     transform=ax.transAxes, fontsize=12)
-            plt.plot(self.thresholds, self.genus_stats[i - 1], "D-",
+            plt.plot(self.thresholds, self.genus_stats[i - 1],
+                     "{}-".format(symbol),
                      color=color)
-            plt.xlabel("Intensity")
+
             plt.grid(True)
+
+            if (num - i + 1) <= 2:
+                plt.xlabel("Intensity")
+            else:
+                plt.setp(ax.get_xticklabels(), visible=False)
 
         plt.tight_layout()
 
@@ -302,7 +305,7 @@ class Genus(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, save_name=None,
-            color='b', **kwargs):
+            color='r', symbol='o', **kwargs):
         '''
         Run the whole statistic.
 
@@ -319,7 +322,7 @@ class Genus(BaseStatisticMixIn):
         self.make_genus_curve(**kwargs)
 
         if verbose:
-            self.plot_fit(save_name=save_name, color=color)
+            self.plot_fit(save_name=save_name, color=color, symbol=symbol)
 
         return self
 
@@ -479,8 +482,8 @@ class Genus_Distance(object):
             plt.plot(self.genus2.thresholds, genus2, color=color2,
                      marker=marker2,
                      label=label2)
-            plt.plot(points, interp1(points), "b")
-            plt.plot(points, interp2(points), "g")
+            plt.plot(points, interp1(points), color1)
+            plt.plot(points, interp2(points), color2)
             plt.xlabel("z-score")
             plt.ylabel("Genus Score")
             plt.grid(True)

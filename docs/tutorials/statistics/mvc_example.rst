@@ -8,15 +8,19 @@ Modified Velocity Centroids
 Overview
 --------
 
-Centroid statistics have been used to study molecular clouds for decades. For example, `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_ created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. One small scales, however, the contribution from density fluctuations can dominate, and the normalized centroids of the form
+Centroid statistics have been used to study molecular clouds for decades. For example, `Miesch & Bally 1994 <https://ui.adsabs.harvard.edu/#abs/1994ApJ...429..645M/abstract>`_ created structure functions of the centroid surfaces from CO data in a number of nearby clouds. The slope of the structure function is one way to measure the size-line width relation of a region. The normalized centroids take the form
+
+.. edit comment by AG: including the `\delta v`'s in the equation below is strange since these are strict sums; the delta-v should only be included if these are integrals, right?
 
 .. math::
-    M_1 = \frac{\Sigma_{v}\, v \,I(x, v)\, \delta v}{\Sigma_{v}\, I(x, v)\,  \delta v} = \frac{\Sigma_{v}\, v\, I(x, v)\, \delta v}{M_0},
+    M_1 = \frac{\Sigma_{v}\, v \,I(x, v)}{\Sigma_{v}\, I(x, v)} = \frac{\Sigma_{v}\, v\, I(x, v)}{M_0},
 
-where :math:`I(x, v)` is a PPV cube and :math:`M_0` is the integrated intensity, are contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
+where :math:`I(x, v)` is a PPV cube with :math:`x` representing the spatial coordinate, :math:`v` the velocity coordinate, and :math:`M_0` the integrated intensity (moment zero).   On small scales, however, the contribution from density fluctuations can dominate, and the first moment is contaminated on these small scales. These centroids make sense intuitively, however, since this is simply the mean weighted by the intensity. `Lazarian & Esquivel 2003 <https://ui.adsabs.harvard.edu/#abs/2003ApJ...592L..37L/abstract>`_ proposed Modified Velocity Centroids (MVC) as a technique to remove the small scale density contamination. This involves an unnormalized centroid
 
 .. math::
-    \Sigma_{v}\, v I(x, v)\, \delta v.
+    \Sigma_{v}\, v I(x, v)
+
+.. consider writing out the text below in math?
 
 The structure function of the modified velocity centroid is then the squared difference of the unnormalized centroid with the squared difference of :math:`M_0` times the velocity dispersion (:math:`<v^2>`) subtracted to remove the density contribution. This is both easier to express and compute in the Fourier domain, which yields a two-dimensional power spectrum:
 
@@ -78,7 +82,7 @@ Calculating the power spectrum, radially averaging, and fitting a power-law are 
 
 The code returns a summary of the one-dimensional fit and a figure showing the one-dimensional spectrum and model on the left, and the two-dimensional power-spectrum on the right. If `fit_2D=True` is set in `~turbustat.statistics.MVC.run` (the default setting), the contours on the two-dimensional power-spectrum are the fit using an elliptical power-law model. We will discuss the models in more detail below. The dashed red lines (or contours) on both plots are the limits of the data used in the fits. See the :ref:`PowerSpectrum tutorial <pspec_tutorial>` for a discussion of the two-dimensional fitting.
 
-The fit here is not very good since the spectrum deviates from a single power-law on small scales. In this case, the deviation is caused by the limited inertial range in the simulation from which this spectral-line data cube was created. We can specify `low_cut` and `high_cut` in frequency units to limit the fitting to the inertial range:
+The fit here is not very good since the spectrum deviates from a single power-law on small scales. In this case, the deviation is caused by the :ref:`limited inertial range in the simulation <data_for_tutorial>` from which this spectral-line data cube was created. We can specify `low_cut` and `high_cut` in frequency units to limit the fitting to the inertial range:
 
     >>> mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix, high_cut=0.1 / u.pix)  # doctest: +SKIP
                                 OLS Regression Results
@@ -106,11 +110,11 @@ The fit here is not very good since the spectrum deviates from a single power-la
 
 .. image:: images/mvc_design4_limitedfreq.png
 
-Note the drastic change in the slope! Specifying the correct fit region for the data you're using is critical for interpreting the results of the method. This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with `weighted_fit=True` (this cannot be used for the segmented model described below).
+Note the drastic change in the slope! Specifying the correct fit region for the data you are using is critical for interpreting the results of the method. This example has used the default ordinary least-squares fitting. A weighted least-squares can be enabled with `weighted_fit=True` (this cannot be used for the segmented model described below).
 
-Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
+Breaks in the power-law behaviour in observations (and higher-resolution simulations) can result from differences in the physical processes dominating at those scales. To capture this behaviour, `MVC` can be passed a break point to enable fitting with a segmented linear model (`~turbustat.statistics.Lm_Seg`). Note that the 2D fitting is disabled for this section as it does not handle fitting break points. From the above plot, we can estimate the break point to be near `0.1 / u.pix`:
 
-    >>> mvc.run(verbose=True, xunit=u.pc**-1, low_cut=0.02 / u.pix,
+    >>> mvc.run(verbose=True, xunit=u.pix**-1, low_cut=0.02 / u.pix,
     ...         high_cut=0.4 / u.pix,
     ...         fit_kwargs=dict(brk=0.1 / u.pix), fit_2D=False)  # doctest: +SKIP
                                 OLS Regression Results

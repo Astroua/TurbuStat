@@ -36,8 +36,11 @@ class VCS(BaseStatisticMixIn):
         self.input_data_header(cube, header)
 
         self._has_nan_flag = False
-        if np.isnan(self.data).any():
-            self.data[np.isnan(self.data)] = 0
+
+        isnan = np.isnan(self.data)
+        if isnan.any():
+            self.data = self.data.copy()
+            self.data[isnan] = 0.
             self._has_nan_flag = True
 
         self.vel_channels = np.arange(1, self.data.shape[0], 1)
@@ -246,7 +249,7 @@ class VCS(BaseStatisticMixIn):
         return self.fit.brk_err
 
     def plot_fit(self, save_name=None, xunit=u.pix**-1, color='r',
-                 symbol='D', fit_color=None, label=None, show_residual=True):
+                 symbol='o', fit_color='k', label=None, show_residual=True):
         '''
         Plot the VCS curve and the associated fit.
 

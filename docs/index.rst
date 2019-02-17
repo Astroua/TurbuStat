@@ -6,13 +6,17 @@
 TurbuStat
 =========
 
-TurbuStat provides a set of analysis tools for comparing astronomical radio datacubes, as well as column density, integrated intensity or cube moment maps. Each statistic returns a measure of "distance" between the two datasets.
+TurbuStat implements a 14 turbulence-based statistics described in the astronomical literature. TurbuStat also defines a distance metrics for each statistic to quantitatively compare spectral-line data cubes, as well as column density, integrated intensity, or other moment maps.
 
 The source code is hosted `here <https://github.com/Astroua/TurbuStat>`_. Contributions to the code base are very much welcome! If you find any issues in the package, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
 
 To be notified of future releases and updates to TurbuStat, please join the mailing list: https://groups.google.com/forum/#!forum/turbustat
 
 If you make use of this package in a publication, please cite our accompanying paper::
+
+  UPCOMING
+
+If your work makes use of the distance metrics, please cite the following::
 
     @ARTICLE{Koch2017,
      author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and {Rosolowsky}, E.~W.},
@@ -30,7 +34,36 @@ If you make use of this package in a publication, please cite our accompanying p
      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
     }
 
-Citation courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
+Citations courtesy of `ADS <https://ui.adsabs.harvard.edu/#>`_
+
+
+Papers using TurbuStat
+----------------------
+
+* `Boyden et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJ...833..233B>`_
+* `Koch et al. (2017) <https://ui.adsabs.harvard.edu/#abs/2017arXiv170705415K/abstract>`_
+* `Boyden et al. (2018) <https://ui.adsabs.harvard.edu/#abs/2018arXiv180509775B/abstract>`_
+
+
+TurbuStat Developers
+--------------------
+
+* `Eric Koch <https://github.com/e-koch>`_
+* `Erik Rosolowsky <https://github.com/low-sky>`_
+* Ryan Boyden
+* Blakesley Burkhart
+* `Adam Ginsburg <https://github.com/keflavich>`_
+* `Jason Loeppky <https://github.com/jloeppky>`_
+* Stella Offner
+* `Caleb Ward <https://github.com/Astrolebs>`_
+
+Many thanks to everyone who has reported bugs and given feedback on TurbuStat!
+
+* Dario Colombo
+* Jesse Feddersen
+* Simon Glover
+* Jonathan Henshaw
+* Sac Medina
 
 
 Contents:
@@ -46,29 +79,7 @@ Contents:
    tutorials/index
    generating_test_data.rst
    statistics.rst
-   helper_scripts.rst
    contributing.rst
-
-Papers using TurbuStat
-----------------------
-
-* `Boyden et al. (2016) <http://adsabs.harvard.edu/abs/2016ApJ...833..233B>`_
-* `Koch et al. (2017 <https://ui.adsabs.harvard.edu/#abs/2017arXiv170705415K/abstract>`_
-* `Boyden et al. (2018) <https://ui.adsabs.harvard.edu/#abs/2018arXiv180509775B/abstract>`_
-
-
-TurbuStat Developers
---------------------
-
-* `Eric Koch <https://github.com/e-koch>`_
-* `Erik Rosolowsky <https://github.com/low-sky>`_
-* Ryan Boyden
-* Blakesley Burkhart
-* `Adam Ginsburg <https://github.com/keflavich>`_
-* `Caleb Ward <https://github.com/Astrolebs>`_
-* Stella Offner
-* `Jason Loeppky <https://github.com/jloeppky>`_
-
 
 Indices and tables
 ==================

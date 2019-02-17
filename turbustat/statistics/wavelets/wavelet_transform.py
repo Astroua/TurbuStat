@@ -48,7 +48,10 @@ class Wavelet(BaseStatisticMixIn):
 
         # NOTE: can't use nan_interpolating from astropy
         # until the normalization for sum to zeros kernels is fixed!!!
-        self.data[np.isnan(self.data)] = np.nanmin(self.data)
+        isnan = np.isnan(self.data)
+        if isnan.any():
+            self.data = self.data.copy()
+            self.data[isnan] = 0.
 
         if distance is not None:
             self.distance = distance
@@ -421,7 +424,7 @@ class Wavelet(BaseStatisticMixIn):
             return self.fit.params[0] + self.fit.params[1] * xvals
 
     def plot_transform(self, save_name=None, xunit=u.pix,
-                       color='b', symbol='D', fit_color=None,
+                       color='r', symbol='o', fit_color='k',
                        label=None, show_residual=True):
         '''
         Plot the transform and the fit.

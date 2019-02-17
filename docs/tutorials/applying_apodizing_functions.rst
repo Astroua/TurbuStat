@@ -4,9 +4,9 @@
 Applying Apodizing Kernels to Data
 **********************************
 
-Applying Fourier transforms to images with emission at the edges can lead to severe ringing effects.  This can be an issue for all spatial power-spectra, including the :ref:`PowerSpectrum <pspec_tutorial>`, :ref:`VCA <vca_tutorial>`, and :ref:`MVC <mvc_tutorial>`.
+Applying Fourier transforms to images with emission at the edges can lead to severe ringing effects from the `Gibbs phenomenon <https://en.wikipedia.org/wiki/Gibbs_phenomenon>`_.  This can be an issue for all spatial power-spectra, including the :ref:`PowerSpectrum <pspec_tutorial>`, :ref:`VCA <vca_tutorial>`, and :ref:`MVC <mvc_tutorial>`.
 
-A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero.  However, that shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
+A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero (e.g., ` Stanimirovic et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999MNRAS.302..417S/abstract>`_).  However, the shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
 
 TurbuStat has four built-in apodizing functions based on the implementations from `photutils <https://photutils.readthedocs.io/en/stable/psf_matching.html>`_:
 
@@ -86,7 +86,13 @@ To get an idea of how these apodizing functions affect the data, we can examine 
 
 .. image:: images/1d_apods_pspec.png
 
-The smoothly-varying windows (Hanning and Cosine) have power-spectra that consistently decrease the power. This means that the use of a Hanning or Cosine window will affect the shape of power-spectra FINISH.
+The smoothly-varying windows (Hanning and Cosine) have power-spectra that consistently decrease the power. This means that the use of a Hanning or Cosine window will affect the shape of power-spectra over a larger range of frequencies than the Split-Cosine or Tukey windows.
+
+These apodizing kernels are azimuthally-symmetric. However, as an example, the 2D power-spectrum of the Tukey Window, which is used below, has this structure::
+
+    >>> plt.imshow(np.log10(np.fft.fftshift(np.abs(np.fft.fft2(data4))**2)))  # doctest: +SKIP
+
+.. image:: images/2d_tukey_pspec.png
 
 As an example, we will compare the effect each of the windows has on a red-noise image.
 
@@ -107,7 +113,7 @@ As an example, we will compare the effect each of the windows has on a red-noise
 
 .. image:: images/rednoise_slope3_img.png
 
-The power-spectrum of the image should give a slope of 3:
+The image should have a power-spectrum index of 3 with mean values centred at 0. By running `~turbustat.statistics.PowerSpectrum`, we can confirm that the index is indeed 3 (see the variable `x1` in the output):
 
     >>> from turbustat.statistics import PowerSpectrum
     >>> pspec = PowerSpectrum(plaw_hdu)
@@ -139,7 +145,9 @@ The power-spectrum of the image should give a slope of 3:
 
 .. image:: images/rednoise_pspec_slope3.png
 
-The slope is nearly 3, as expected. Note that we have limited the range of frequencies fit over to avoid the largest scales. From the figure, it is clear that the samples on larger scales deviate from a power-law. This is a result of the lack of samples on these large-scales. This can be avoided by increasing the size of the radial bins, but we will stick with small bins here to highlight the affect of the apodizing kernels on the power-spectrum shape.
+The slope is nearly 3, as expected. Note that we have limited the range of frequencies fit over to avoid the largest scales using the parameter ``low_cut``. Also note that there is a "hole" in the centre of the 2D power-spectrum on the right panel in the image. This is the zero-frequency of the image and scales with the mean value of the image. Since this image is centred at 0, there is no power at the zero-frequency point in the centre of the 2D power-spectrum.
+
+From the figure, it is clear that the samples on larger scales deviate from a power-law. This deviation is a result of the lack of samples on these large-scales. It can be avoided by increasing the size of the radial bins, but we will use small bins here to highlight the effect of the apodizing kernels on the power-spectrum shape.
 
 Before exploring the effect of the apodizing kernels, we can demonstrate the need for an apodizing kernel by taking a slice of the red-noise image, such that the edges are no longer periodic.
 
@@ -150,7 +158,9 @@ Before exploring the effect of the apodizing kernels, we can demonstrate the nee
 
 The ringing at large scales is evident in the cross-shape in the 2D power spectrum. This affects the azimuthally-averaged 1D power-spectrum, and therefore the slope of the power-spectrum.  Tapering the values at the edges can account for this.
 
-We will now compare the how the different apodizing kernels change the power-spectrum shape:
+The power-spectrum also appears noisier than the original, yet no noise has been added to the image.  This is due to the image no longer being fully sampled for a power-spectrum index of :math:`3`. This index has most of its power on large scales, so the most prominent structure is on large scales, and slicing has removed significant portions of the large-scale structure.  Also note that there is no "hole" at the centre of the 2D power-spectrum since the mean of the sliced image is not :math:`0`.
+
+We will now compare the how the different apodizing kernels change the power-spectrum shape. The power-spectra will be fit up to scales of :math:`60` pixels (or a frequency of :math:`0.01667`), avoiding scales that are poorly sampled in the sliced image. The following code computes the power-spectrum of the sliced image using all four of the apodizing kernels shown above.
 
     >>> pspec2 = PowerSpectrum(plaw_hdu)
     >>> pspec2.run(verbose=False, radial_pspec_kwargs={'binsize': 1.0},
@@ -176,6 +186,8 @@ We will now compare the how the different apodizing kernels change the power-spe
     ...            low_cut=1. / (60 * u.pix),
     ...            apodize_kernel='tukey', alpha=0.3)  # doctest: +SKIP
 
+For brevity, we will plot only the 1D power-spectra using the different apodizing kernels.
+
     >>> # Change the colours and comment these lines if you don't use seaborn
     >>> import seaborn as sb  # doctest: +SKIP
     >>> col_pal = sb.color_palette()  # doctest: +SKIP
@@ -190,7 +202,7 @@ We will now compare the how the different apodizing kernels change the power-spe
 
 .. image:: images/rednoise_pspec_slope3_apod_comparisons.png
 
-Comparing the different power spectra with different apodizing kernels, the only variations occur on large scales.  However, as noted above, the large frequencies suffer from a lack of samples and tend to have underestimated errors.  Effectively, the use of apodizing kernels will leave the relevant region of the power spectrum unaffected. This is clear from the fitted slopes:
+Comparing the different power spectra with different apodizing kernels, the only variations occur on large scales.  However, as noted above, the large frequencies suffer from a lack of samples and tend to have underestimated errors.  The well-sampled range of frequencies, from 1 to 60 pixels, have a slope that is relatively unaffected regardless of the apodizing kernel that is used. The fitted slopes are:
 
     >>> print("Original: {0:.2f} \nHanning: {1:.2f} \nCosineBell: {2:.2f} \n"
     ...       "SplitCosineBell: {3:.2f} "
@@ -205,9 +217,8 @@ Comparing the different power spectra with different apodizing kernels, the only
     SplitCosineBell: -3.00
     Tukey: -3.01
 
-
-All of the power spectra with an apodizing kernel applied, fit without the large scale frequencies, yield the correct slope.
+Each of the slopes are close to the expected value of :math:`-3`. The Cosine and Hanning kernels moderately flatten the power-spectra on all scales. This is evident from the figure above comparing the 1D power-spectra of the four kernels.
 
 .. warning:: The range of frequencies affected by the apodizing kernel depends on the properties of the kernel used. The shape of the kernels are controlled by the :math:`\alpha` and/or :math:`\beta` parameters (see above). Narrower shapes will tend to have a larger effect on the power-spectrum. It is prudent to check the effect of the apodizing kernel by comparing different choices for the shape!
 
-
+The optimal choice of apodizing kernel, and the shape parameters for that kernel, will depend on the data that is being used. If there is severe ringing in the power-spectrum, the Hanning or CosineBell kernels are most effective at removing ringing.  However, as shown above, these kernels bias the slope at all frequencies. The SplitCosineBell or Tukey are not as affective at removing ringing in extreme cases but they do only bias the shape of the power-spectrum at large frequencies (:math:`\sim1/2` of the image size and larger).

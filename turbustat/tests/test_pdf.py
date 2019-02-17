@@ -16,7 +16,8 @@ def test_PDF():
                normalization_type="standardize", min_val=0.05,
                weights=dataset1["moment0_error"][0]**-2.,
                bins=computed_data['pdf_bins'])
-    test.run(verbose=False, do_fit=False)
+    test.run(verbose=True, do_fit=False, save_name='test.png')
+    os.system("rm test.png")
 
     npt.assert_almost_equal(test.pdf,
                             computed_data["pdf_val"])
@@ -131,7 +132,8 @@ def test_PDF_lognorm_distance():
                      min_val2=0.05,
                      do_fit=True,
                      normalization_type=None)
-    test_dist.distance_metric()
+    test_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     npt.assert_almost_equal(test_dist.lognormal_distance,
                             computed_distances['pdf_lognorm_distance'],

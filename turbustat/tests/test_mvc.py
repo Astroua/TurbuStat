@@ -33,7 +33,8 @@ def test_MVC_method():
                  dataset1["moment0"],
                  dataset1["linewidth"],
                  dataset1["centroid"][1])
-    tester.run()
+    tester.run(verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     # Test fit with bootstrap resampling
     tester.fit_pspec(bootstrap=True)
@@ -95,7 +96,10 @@ def test_MVC_method_fitlimits():
 
 def test_MVC_distance():
     tester_dist = \
-        MVC_Distance(dataset1, dataset2).distance_metric()
+        MVC_Distance(dataset1, dataset2)
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
     npt.assert_allclose(tester_dist.distance,
                         computed_distances['mvc_distance'],

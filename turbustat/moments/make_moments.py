@@ -35,21 +35,16 @@ class Moments(object):
     A unified approach to deriving the noise level in a cube, applying a
     mask, and deriving moments along with their errors. All the heavy lifting
     is done with
-    `spectral_-ube <http://spectral-cube.readthedocs.org/en/latest/>`_.
+    `spectral_cube <http://spectral-cube.readthedocs.org/en/latest/>`_.
 
     Parameters
     ----------
     cube : SpectralCube or str
         Either a SpectralCube object, or the filename of a cube readable
         by spectral-cube.
-    noise_type : {'constant'}, optional
-        *NO CURRENT FUNCTION* Once implemented, it will set parameters
-        for deriving the noise level.
-    clip : float, optional
-        Sigma level to clip data at.
     scale : `~astropy.units.Quantity`, optional
-        The noise level in the cube. Overrides estimation using
-        `signal_id <https://github.com/radio-astro-tools/signal-id>`_
+        The noise level in the cube. Used to estimate uncertainties of the
+        moment maps.
     moment_method : {'slice', 'cube', 'ray'}, optional
         The method to use for creating the moments. See the spectral-cube
         docs for an explanation of the differences.
@@ -350,7 +345,7 @@ class Moments(object):
         '''
         Load pre-made moment arrays given a cube name. Saved moments must
         match the naming of the cube for the automatic loading to work
-        (e.g. a cube called test.fits will have a moment 0 array solved
+        (e.g. a cube called test.fits will have a moment 0 array with the name
         test_moment0.fits). Otherwise, specify a path to one of the keyword
         arguments.
 

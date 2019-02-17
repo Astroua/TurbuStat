@@ -329,7 +329,7 @@ class StatMoments(BaseStatisticMixIn):
         return self._kurtosis_hist
 
     def plot_histograms(self, new_figure=True, save_name=None,
-                        hist_color='b', face_color='b'):
+                        hist_color='r', face_color='k'):
         '''
         Plot the histograms of each moment.
 

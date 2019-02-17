@@ -4,9 +4,9 @@
 Accounting for the beam shape
 *****************************
 
-The beam size of an observation introduces artifical correlations into the data
-on small scales. This affects the shape of various turbulence statistics that
-measure spatial properties (Spatial Power-Spectrum, MVC, VCA, Delta-Variance, Wavelets, SCF).
+.. warning:: The beam size of an observation introduces artificial correlations into the data
+    on scales near to and below the beam size. This affects the shape of various turbulence statistics that
+    measure spatial properties (Spatial Power-Spectrum, MVC, VCA, Delta-Variance, Wavelets, SCF).
 
 The beam size is typically expressed as the full-width-half-max (FWHM). However, it is
 important to note that the data will still be correlated beyond the FWHM. For example,
@@ -119,8 +119,8 @@ How has smoothing changed the shape of the power-spectrum?
 
 .. image:: images/rednoise_pspec_slope3_smoothed.png
 
-The slope of the power-spectrum is significantly steepened on small scales by the beam.
-And this steepening occurs on scales much larger than the beam size, which is indicated by
+The slope of the power-spectrum is significantly steepened on small scales by the beam (see the reported result in variable ``x1`` above).
+And this steepening occurs on scales much larger than the beam FWHM, which is indicated by
 the thick purple vertical line in the left-hand side of the plot.  The fitting was restricted to scales much larger than three times the beam width. However, the recovered slope is still steeper than the original -3.
 
 Also note that convolving the image with the beam causes some tapering at the edges of the
@@ -168,7 +168,7 @@ The beam correction in TurbuStat requires the optional package `radio_beam <http
 
 .. image:: images/rednoise_pspec_slope3_smoothed_beamcorr.png
 
-The shape of the power-spectrum has been restored and we recover the correct slope. The deviation on small scales (large frequencies) occurs on scales smaller than about the FWHM of the beam where the information has been lost by the spatial smoothing applied to the image. If the beam is over-sampled by a larger factor --- say with a 6-pixel FWHM instead of 3 --- the increase in power on small scales will affect a larger region of the power-spectrum. This region should be avoided when fitting the power-spectrum. A reasonable lower-limit to fit the power-spectrum to is the FWHM of the beam. Additional noise in the image will tend to flatten the power-spectrum to larger scales, so setting the lower fitting limit to a couple times the beam width may be necessary. Always check the quality of the fit to be sure!
+The shape of the power-spectrum has been restored and we recover the correct slope. The deviation on small scales (large frequencies) occurs on scales smaller than about the FWHM of the beam where the information has been lost by the spatial smoothing applied to the image. If the beam is over-sampled by a larger factor --- say with a 6-pixel FWHM instead of 3 --- the increase in power on small scales will affect a larger region of the power-spectrum. This region should be excluded from the power-spectrum fit. A reasonable lower-limit to fit the power-spectrum to is the FWHM of the beam. Additional noise in the image will tend to flatten the power-spectrum to larger scales, so setting the lower fitting limit to a couple times the beam width may be necessary. **We recommend visually examining the quality of the fit.**
 
 Here are the three power-spectra shown above overplotted to highlight the shape changes from spatial smoothing:
 
@@ -182,4 +182,4 @@ Here are the three power-spectra shown above overplotted to highlight the shape 
 
 .. image:: images/rednoise_pspec_slope3_beam_comparisons.png
 
-Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be avoided from any fitting. For example, lag scales smaller than the beam in the :ref:`Delta-Variance <delvar_tutorial>`, :ref:`Wavelets <wavelet_tutorial>`, and :ref:`SCF <scf_tutorial>` should not be fit. The spatial filtering used to measure :ref:`Statistical Moments <statmoments_tutorial>` should be set to a width of at least the beam size.
+Similar fitting restrictions apply to the MVC and VCA, as well. The beam correction can be applied in the same manner as described above. For other spatial methods which do not use the power-spectrum, the scales of the beam should at least be excluded from any fitting. For example, lag scales smaller than the beam in the :ref:`Delta-Variance <delvar_tutorial>`, :ref:`Wavelets <wavelet_tutorial>`, and :ref:`SCF <scf_tutorial>` should not be fit. The spatial filtering used to measure :ref:`Statistical Moments <statmoments_tutorial>` should be set to a width of at least the beam size.

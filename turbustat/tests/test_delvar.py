@@ -27,7 +27,9 @@ def test_DelVar_method():
     tester = \
         DeltaVariance(dataset1["moment0"],
                       weights=dataset1["moment0_error"][0])
-    tester.run(xhigh=11. * u.pix)
+    tester.run(xhigh=11. * u.pix, nan_treatment='interpolate',
+               verbose=True, save_name='test.png')
+    os.system("rm test.png")
 
     # Run the fit again with bootstrap resampling
     tester.fit_plaw(bootstrap=True, xhigh=11. * u.pix)
@@ -57,7 +59,7 @@ def test_DelVar_method_fill():
     tester = \
         DeltaVariance(dataset1["moment0"],
                       weights=dataset1["moment0_error"][0])
-    tester.run(boundary='fill', xhigh=11. * u.pix)
+    tester.run(boundary='fill', xhigh=11. * u.pix, nan_treatment='interpolate')
     # The slice is again to restrict where the convolution functions both give
     # the same value
     npt.assert_allclose(tester.delta_var[:-7],
@@ -109,7 +111,9 @@ def test_DelVar_distance():
                                weights1=dataset1["moment0_error"][0],
                                weights2=dataset2["moment0_error"][0],
                                delvar_kwargs=dict(xhigh=11 * u.pix))
-    tester_dist.distance_metric()
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
+    os.system("rm test.png")
+
     npt.assert_almost_equal(tester_dist.curve_distance,
                             computed_distances['delvar_curve_distance'],
                             decimal=3)

@@ -47,7 +47,7 @@ With default values, the Tsallis distribution fits are calculated using:
 
 .. image:: images/design4_tsallis.png
 
-This returns an astropy table of the fits to each of the parameters, their standard errors, and the reduced :math:`\chi^2` values (`~turbustat.statistics.Tsallis.tsallis_table`). The figure shows the histograms at each lag and their respective fits. The solid black line is the fit and the dashed red lines indicated which data was used to fit the distribution. The x-axis shows the standardized values of the difference maps at each lag, such that the mean is zero and the standard deviation is one. Because of this, there is no mean parameter fit in the Tsallis distribution. Examining the histograms and the fits is useful for showing where the histograms deviate significantly from the model, something that is difficult to determine from the reduced :math:`\chi^2` values alone.
+This returns an astropy table of the fits to each of the parameters, their standard errors, and the reduced :math:`\chi^2` values (`~turbustat.statistics.Tsallis.tsallis_table`). The figure shows the histograms at each lag and their respective fits. The solid black line is the fit and the dashed red lines indicated which data were used to fit the distribution. The x-axis shows the standardized values of the difference maps at each lag, such that the mean is zero and the standard deviation is one. Because of this, there is no mean parameter fit in the Tsallis distribution. Examining the histograms and the fits is useful for showing where the histograms deviate significantly from the model, something that is difficult to determine from the reduced :math:`\chi^2` values alone.
 
 A key to the works of `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#abs/2010ApJ...710..125E/abstract>`_ and `Tofflemire et al. 2011 <https://ui.adsabs.harvard.edu/#abs/2011ApJ...736...60T/abstract>`_ is how the fit parameters vary at the different lags. Plots showing the fit parameters as a function of the lag can be shown by running:
 
@@ -55,9 +55,11 @@ A key to the works of `Esquivel & Lazarian 2010 <https://ui.adsabs.harvard.edu/#
 
 .. image:: images/design4_tsallis_params.png
 
-The amplitude of the fit, shown on the top, simply sets the normalization. The more interesting shape parameters :math:`w^2` and :math:`q` are shown in the second and third panels. As explained in the overview, :math:`w^2` is analogous to the width of a Gaussian curve, while :math:`q` determines how peaked the distribution is and if closely related to the kurtosis. These parameters are not independent in this fit! The plot shows that the two are anti-correlated. This means that their standard errors are grossly underestimated, even if the requirements for the non-linear least squares fit are met by the data. When examining and interpreting the parameter fits, this covariance should be kept in mind.
+The amplitude of the fit, shown on the top, simply sets the normalization. The more interesting shape parameters :math:`w^2` and :math:`q` are shown in the second and third panels. As explained in the overview, :math:`w^2` is analogous to the width of a Gaussian curve, while :math:`q` determines how peaked the distribution is and if closely related to the kurtosis.
 
-The lags size were automatically determined in the previous example. The default lag size, when none are provided, is to use powers of two up to half of the smallest axis size in the image. The example data is a 128-by-128 pixel image and so the lags used are 1, 2, 4, 8, 16, 32, and 64 pixels. If custom values for the lags are given, they must have an attached unit in pixel, angular or physical units. The latter requires passing a distance to `~turbustat.statistics.Tsallis`. For example, assume that the region in the simulated data is located at a distance of 250 pc:
+.. warning:: These parameters are not independent in this fit! The plot shows that the two are anti-correlated. This means that their standard errors are underestimated, even if the requirements for the non-linear least squares fit are met by the data. When examining and interpreting the parameter fits, this covariance should be kept in mind.
+
+The lag values were automatically determined in the previous example. The default lag size, when none are provided, is to use powers of two up to half of the smallest axis size in the image. The example data is a 128-by-128 pixel image and so the lags used are 1, 2, 4, 8, 16, 32, and 64 pixels. If custom values for the lags are given, they must have an attached unit in pixel, angular or physical units. The latter requires passing a distance to `~turbustat.statistics.Tsallis`. For example, assume that the region in the simulated data is located at a distance of 250 pc:
 
     >>> distance = 250 * u.pc
     >>> phys_lags = np.arange(0.025, 0.5, 0.05) * u.pc
@@ -117,13 +119,13 @@ Throughout these examples, the fitting has been limited to :math:`\pm 5` of the 
 
 .. image:: images/design4_tsallis_sigclip.png
 
-Since there are still many points to fit to, the fit qualities have not significantly worsened from lowering the sigma limit. However the fit parameters have changed:
+Since there are still many points to fit, the fit qualities have not significantly worsened from lowering the sigma limit. However the fit parameters have changed:
 
 .. image:: images/design4_tsallis_params_sigclip.png
 
 The same basic trend of the fit parameters with increasing lag size can be seen, but the values have changed by a large amount. This is another example that caution needs to be used when interpreting the fit standard errors and the reduced :math:`\chi^2`.
 
-One final parameter can be changed: the number of bins used to create the histogram. For most images, the number of data points will be large, and so the default bin number is set to be the square-root of the number of data points. This is a good estimate in the limit of many data points, but will become poor is there are less than :math:`\sim 100` data points from the image. To change the number of bins used, `num_bins` can be passed to `~turbustat.statistics.Tsallis.run`.
+One final parameter can be changed: the number of bins used to create the histogram. For most images, the number of data points will be large, and so the default bin number is set to be the square-root of the number of data points. This is a good estimate in the limit of many data points, but will become poor if there are less than :math:`\sim100` data points from the image. To change the number of bins used, `num_bins` can be passed to `~turbustat.statistics.Tsallis.run`.
 
 References
 ----------
@@ -138,4 +140,4 @@ References
 
 `Burkhart et al. 2015 <https://ui.adsabs.harvard.edu/#abs/2015ApJ...808...48B/abstract>`_
 
-`Gonz{\'a}lez-Casanova et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018MNRAS.475.3324G>`_
+`Gonz'alez-Casanova et al. 2018 <https://ui.adsabs.harvard.edu/#abs/2018MNRAS.475.3324G>`_
