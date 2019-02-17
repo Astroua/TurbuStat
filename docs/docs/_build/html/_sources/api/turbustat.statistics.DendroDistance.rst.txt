@@ -1,6 +1,0 @@
-DendroDistance
-==============
-
-.. currentmodule:: turbustat.statistics
-
-.. autofunction:: DendroDistance

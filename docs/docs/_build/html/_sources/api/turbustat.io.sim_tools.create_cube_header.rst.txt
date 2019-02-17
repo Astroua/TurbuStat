@@ -1,6 +1,0 @@
-create_cube_header
-==================
-
-.. currentmodule:: turbustat.io.sim_tools
-
-.. autofunction:: create_cube_header

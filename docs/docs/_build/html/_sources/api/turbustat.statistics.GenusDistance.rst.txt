@@ -1,6 +1,0 @@
-GenusDistance
-=============
-
-.. currentmodule:: turbustat.statistics
-
-.. autofunction:: GenusDistance

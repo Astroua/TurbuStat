@@ -1,6 +1,0 @@
-BiSpectrum_Distance
-===================
-
-.. currentmodule:: turbustat.statistics
-
-.. autofunction:: BiSpectrum_Distance
