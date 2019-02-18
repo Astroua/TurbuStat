@@ -62,6 +62,34 @@ def test_Bispec_distance():
     npt.assert_almost_equal(tester_dist.mean_distance,
                             computed_distances['bispec_mean_distance'])
 
+    # With pre-computed Bispectrum inputs
+
+    tester_dist2 = \
+        Bispectrum_Distance(tester_dist.bispec1,
+                            tester_dist.bispec2)
+    tester_dist2.distance_metric()
+
+    npt.assert_almost_equal(tester_dist2.surface_distance,
+                            computed_distances['bispec_surface_distance'])
+
+    npt.assert_almost_equal(tester_dist2.mean_distance,
+                            computed_distances['bispec_mean_distance'])
+
+    # With fresh Bispectrum instances
+    tester = Bispectrum(dataset1["moment0"])
+    tester2 = Bispectrum(dataset2["moment0"])
+
+    tester_dist3 = \
+        Bispectrum_Distance(tester,
+                            tester2)
+    tester_dist3.distance_metric()
+
+    npt.assert_almost_equal(tester_dist3.surface_distance,
+                            computed_distances['bispec_surface_distance'])
+
+    npt.assert_almost_equal(tester_dist3.mean_distance,
+                            computed_distances['bispec_mean_distance'])
+
 
 def test_bispec_azimuthal_slicing():
 
