@@ -978,9 +978,9 @@ class PCA_Distance(object):
     Parameters
     ----------
     cube1 : %(dtypes)s or `~PCA`
-        Data cube.
+        Data cube. Or a `~PCA` class can be given which may be pre-computed.
     cube2 : %(dtypes)s or `~PCA`
-        Data cube.
+        Data cube. Or a `~PCA` class can be given which may be pre-computed.
     n_eigs : int
         Number of eigenvalues to compute.
     fiducial_model : PCA

@@ -228,10 +228,11 @@ class PSpec_Distance(object):
     Parameters
     ----------
 
-    data1 : %(dtypes)s
-        Data with an associated header.
-    data2 : %(dtypes)s
-        See data1.
+    data1 : %(dtypes)s or `~PowerSpectrum`
+        Data with an associated header. Or a `~PowerSpectrum` class which
+        may be pre-computed.
+    data2 : %(dtypes)s or `~PowerSpectrum`
+        See `data1`.
     weights1 : %(dtypes)s, optional
         Weights to apply to data1
     weights2 : %(dtypes)s, optional
