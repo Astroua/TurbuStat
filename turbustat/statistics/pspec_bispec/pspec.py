@@ -4,7 +4,7 @@ from __future__ import print_function, absolute_import, division
 import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
-
+from warnings import warn
 
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
@@ -239,8 +239,6 @@ class PSpec_Distance(object):
     breaks : `~astropy.units.Quantity`, list or array, optional
         Specify where the break point is with appropriate units.
         If none is given, no break point will be used in the fit.
-    fiducial_model : PowerSpectrum
-        Computed PowerSpectrum object. use to avoid recomputing.
     low_cut : `~astropy.units.Quantity` or np.ndarray, optional
         The lower frequency fitting limit. An array with 2 elements can be
         passed to give separate lower limits for the datasets.
@@ -252,16 +250,14 @@ class PSpec_Distance(object):
     pspec2_kwargs : dict or None, optional
         Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `data2`.
         When `None` is given, setting from `pspec_kwargs` are used for `data2`.
-    phys_distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, data1, data2, weights1=None, weights2=None,
-                 fiducial_model=None, breaks=None, low_cut=None,
+                 breaks=None, low_cut=None,
                  high_cut=0.5 / u.pix, pspec_kwargs={},
-                 pspec2_kwargs=None, phys_distance=None):
+                 pspec2_kwargs=None):
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
@@ -271,22 +267,41 @@ class PSpec_Distance(object):
         if pspec2_kwargs is None:
             pspec2_kwargs = pspec_kwargs
 
-        if fiducial_model is None:
-            self.pspec1 = PowerSpectrum(data1, weights=weights1,
-                                        distance=phys_distance)
+        # if fiducial_model is None:
+        if isinstance(data1, PowerSpectrum):
+            self.pspec1 = data1
+            needs_run = False
+            if not hasattr(self.pspec1, '_slope'):
+                needs_run = True
+                warn("PowerSpectrum given as data1 does not have a fitted"
+                     " slope. Re-running PowerSpectrum.")
+        else:
+            self.pspec1 = PowerSpectrum(data1, weights=weights1)
+            needs_run = True
+
+        if needs_run:
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
                             radial_pspec_kwargs=pspec_kwargs,
                             fit_kwargs={'brk': breaks[0]},
                             fit_2D=False)
+        # else:
+        #     self.pspec1 = fiducial_model
+        if isinstance(data2, PowerSpectrum):
+            self.pspec2 = data2
+            needs_run = False
+            if not hasattr(self.pspec2, '_slope'):
+                needs_run = True
+                warn("PowerSpectrum given as data2 does not have a fitted"
+                     " slope. Re-running PowerSpectrum.")
         else:
-            self.pspec1 = fiducial_model
+            self.pspec2 = PowerSpectrum(data2, weights=weights2)
+            needs_run = True
 
-        self.pspec2 = PowerSpectrum(data2, weights=weights2,
-                                    distance=phys_distance)
-        self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
-                        fit_kwargs={'brk': breaks[1]},
-                        radial_pspec_kwargs=pspec2_kwargs,
-                        fit_2D=False)
+        if needs_run:
+            self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
+                            fit_kwargs={'brk': breaks[1]},
+                            radial_pspec_kwargs=pspec2_kwargs,
+                            fit_2D=False)
 
         self.results = None
         self.distance = None

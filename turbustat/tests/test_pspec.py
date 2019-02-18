@@ -89,6 +89,28 @@ def test_PSpec_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['pspec_distance'])
 
+    # With pre-computed pspec
+
+    tester_dist2 = \
+        PSpec_Distance(tester_dist.pspec1,
+                       tester_dist.pspec2)
+    tester_dist2.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['pspec_distance'])
+
+    # With fresh pspec instances
+    tester = PowerSpectrum(dataset1["moment0"])
+    tester2 = PowerSpectrum(dataset2["moment0"])
+
+    tester_dist3 = \
+        PSpec_Distance(tester,
+                       tester2)
+    tester_dist3.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist3.distance,
+                            computed_distances['pspec_distance'])
+
 
 def test_pspec_nonequal_shape():
 
