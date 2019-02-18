@@ -666,12 +666,18 @@ class DeltaVariance_Distance(object):
     given by the Euclidean distance between the curves weighted by the
     bootstrapped errors.
 
+    .. note:: When passing a computed `~DeltaVariance` class for `dataset1`
+              or `dataset2`, it may be necessary to recompute the
+              delta-variance if `use_common_lags=True` and the existing lags
+              do not match the common lags.
+
     Parameters
     ----------
-    dataset1 : %(dtypes)s
-        Contains the data and header for one dataset.
-    dataset2 : %(dtypes)s
-        See above.
+    dataset1 : %(dtypes)s or `~DeltaVariance` class
+        Contains the data and header for one dataset. Or pass a
+        `~DeltaVariance` class that may be pre-computed.
+    dataset2 : %(dtypes)s or `~DeltaVariance` class
+        See `dataset1` above.
     weights1 : %(dtypes)s
         Weights for dataset1.
     weights2 : %(dtypes)s
@@ -692,19 +698,28 @@ class DeltaVariance_Distance(object):
     delvar2_kwargs : dict, optional
         Pass kwargs to `~DeltaVariance.run` for `dataset2`. When `None` is
         given, the kwargs in `delvar_kwargs` are used for both datasets.
-    fiducial_model : DeltaVariance
-        A computed DeltaVariance model. Used to avoid recomputing.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2, weights1=None, weights2=None,
                  diam_ratio=1.5, lags=None, use_common_lags=True,
-                 delvar_kwargs={}, delvar2_kwargs=None, fiducial_model=None):
+                 delvar_kwargs={}, delvar2_kwargs=None):
         super(DeltaVariance_Distance, self).__init__()
 
-        dataset1 = copy(input_data(dataset1, no_header=False))
-        dataset2 = copy(input_data(dataset2, no_header=False))
+        if isinstance(dataset1, DeltaVariance):
+            _given_data1 = False
+            self.delvar1 = dataset1
+        else:
+            _given_data1 = True
+            dataset1 = copy(input_data(dataset1, no_header=False))
+
+        if isinstance(dataset1, DeltaVariance):
+            _given_data2 = False
+            self.delvar2 = dataset2
+        else:
+            _given_data2 = True
+            dataset2 = copy(input_data(dataset2, no_header=False))
 
         self._common_lags = use_common_lags
 
@@ -713,8 +728,15 @@ class DeltaVariance_Distance(object):
             if lags is None:
                 min_size = 3.0
                 nlags = 25
-                shape1 = dataset1[0].shape
-                shape2 = dataset2[0].shape
+                if _given_data1:
+                    shape1 = dataset1[0].shape
+                else:
+                    shape1 = self.delvar1.data.shape
+                if _given_data2:
+                    shape2 = dataset2[0].shape
+                else:
+                    shape2 = self.delvar2.data.shape
+
                 if min(shape1) > min(shape2):
                     lags = \
                         np.logspace(np.log10(min_size),
@@ -728,7 +750,16 @@ class DeltaVariance_Distance(object):
 
             # Now adjust the lags such they have a common scaling when the
             # datasets are not on a common grid.
-            scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+            if _given_data1:
+                wcs1 = WCS(dataset1[1])
+            else:
+                wcs1 = self.delvar1._wcs
+            if _given_data2:
+                wcs2 = WCS(dataset2[1])
+            else:
+                wcs2 = self.delvar2._wcs
+
+            scale = common_scale(wcs1, wcs2)
 
             if scale == 1.0:
                 lags1 = lags
@@ -748,21 +779,45 @@ class DeltaVariance_Distance(object):
             else:
                 lags1 = None
 
-        if fiducial_model is not None:
-            self.delvar1 = fiducial_model
-        else:
+        # if fiducial_model is not None:
+        #     self.delvar1 = fiducial_model
+        if _given_data1:
             self.delvar1 = DeltaVariance(dataset1,
                                          weights=weights1,
                                          diam_ratio=diam_ratio, lags=lags1)
             self.delvar1.run(**delvar_kwargs)
+        else:
+            # Check if we need to re-run the statistic if the lags are wrong.
+            if lags1 is not None:
+                if not (self.delvar1.lags == lags1).all():
+                    self.delvar1.run(**delvar_kwargs)
+
+            if not hasattr(self.delvar1, "_slope"):
+                warn("DeltaVariance given as dataset1 does not have a fitted"
+                     " slope. Re-running delta variance.")
+                if lags1 is not None:
+                    self.delvar1._lags = lags1
+                self.delvar1.run(**delvar_kwargs)
 
         if delvar2_kwargs is None:
             delvar2_kwargs = delvar_kwargs
 
-        self.delvar2 = DeltaVariance(dataset2,
-                                     weights=weights2,
-                                     diam_ratio=diam_ratio, lags=lags2)
-        self.delvar2.run(**delvar2_kwargs)
+        if _given_data2:
+            self.delvar2 = DeltaVariance(dataset2,
+                                         weights=weights2,
+                                         diam_ratio=diam_ratio, lags=lags2)
+            self.delvar2.run(**delvar2_kwargs)
+        else:
+            if lags2 is not None:
+                if not (self.delvar2.lags == lags2).all():
+                    self.delvar2.run(**delvar2_kwargs)
+
+            if not hasattr(self.delvar2, "_slope"):
+                warn("DeltaVariance given as dataset2 does not have a fitted"
+                     " slope. Re-running delta variance.")
+                if lags2 is not None:
+                    self.delvar2._lags = lags2
+                self.delvar2.run(**delvar_kwargs)
 
     @property
     def curve_distance(self):
