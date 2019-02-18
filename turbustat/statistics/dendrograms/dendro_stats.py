@@ -339,8 +339,6 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         self = Dendrogram_Stats(dendro.data, min_deltas=min_deltas,
                                 dendro_params=dendro.params)
 
-        self.compute_dendro(dendro_obj=dendro)
-
         return self
 
     def plot_fit(self, save_name=None, show_hists=True, color='r',
@@ -456,23 +454,24 @@ class Dendrogram_Distance(object):
     """
     Calculate the distance between 2 cubes using dendrograms. The number of
     features vs. minimum delta is fit to a linear model, with an interaction
-    term o gauge the difference. The distance is the t-statistic of that
+    term to gauge the difference. The distance is the t-statistic of that
     parameter. The Hellinger distance is computed for the histograms at each
     minimum delta value. The distance is the average of the Hellinger
     distances.
 
+    .. note:: When passing a computed `~DeltaVariance` class for `dataset1`
+              or `dataset2`, it may be necessary to recompute the
+              dendrogram if `~Dendrogram_Stats.min_deltas` does not equal
+              `min_deltas` generated here (or passed as kwarg).
+
     Parameters
     ----------
-    dataset1 : %(dtypes)s or str
-        Data cube or 2D image. When a string is given it should be the
-        filename of a pickle file saved using
-        `~turbustat.statistics.Dendrogram_Stats`,
+    dataset1 : %(dtypes)s or `~Dendrogram_Stats`
+        Data cube or 2D image. Or pass a
+        `~Dendrogram_Stats` class that may be pre-computed.
         where the dendrogram statistics are saved.
-    dataset2 : %(dtypes)s or str
-        Data cube or 2D image to compare. When a string is given it should be
-        the filename of a pickle file saved using
-        `~turbustat.statistics.Dendrogram_Stats`,
-        where the dendrogram statistics are saved.
+    dataset2 : %(dtypes)s or `~Dendrogram_Stats`
+        See `dataset1` above.
     min_deltas : numpy.ndarray or list
         Minimum deltas (branch heights) of leaves in the dendrogram. The set
         of dendrograms must be computed with the same minimum branch heights.
@@ -484,18 +483,12 @@ class Dendrogram_Distance(object):
     min_features : int, optional
         The minimum number of features (branches and leaves) for the histogram
         be used in the histogram distance.
-    fiducial_model : Dendrogram_Stats
-        Computed dendrogram and statistic values. Use to avoid
-        re-computing.
     dendro_params : dict or list of dicts, optional
         Further parameters for the dendrogram algorithm
-        (see www.dendrograms.org for more info). If a list of dictionaries is
+        (see the `astrodendro documentation <dendrograms.readthedocs.io>`_
+        for more info). If a list of dictionaries is
         given, the first list entry should be the dictionary for `dataset1`,
         and the second for `dataset2`.
-    periodic_bounds : bool or list, optional
-        Enable when the data is periodic in the spatial dimensions. Passing
-        a two-element list can be used to individually set how the boundaries
-        are treated for the datasets.
     dendro_kwargs : dict, optional
         Passed to `~turbustat.statistics.Dendrogram_Stats.run`.
     dendro2_kwargs : None, dict, optional
@@ -508,7 +501,7 @@ class Dendrogram_Distance(object):
                                       threed_types)}
 
     def __init__(self, dataset1, dataset2, min_deltas=None, nbins="best",
-                 min_features=100, fiducial_model=None, dendro_params=None,
+                 min_features=100, dendro_params=None,
                  dendro_kwargs={}, dendro2_kwargs=None):
 
         if not astrodendro_flag:
@@ -543,10 +536,23 @@ class Dendrogram_Distance(object):
         if dendro2_kwargs is None:
             dendro2_kwargs = dendro_kwargs
 
-        if fiducial_model is not None:
-            self.dendro1 = fiducial_model
-        elif isinstance(dataset1, str):
-            self.dendro1 = Dendrogram_Stats.load_results(dataset1)
+        # if fiducial_model is not None:
+        #     self.dendro1 = fiducial_model
+        # elif isinstance(dataset1, str):
+        #     self.dendro1 = Dendrogram_Stats.load_results(dataset1)
+        if isinstance(dataset1, Dendrogram_Stats):
+            self.dendro1 = dataset1
+            # Check if we need to re-run the stat
+            has_slope = hasattr(self.dendro1, "_tail_slope")
+            match_deltas = (self.dendro1.min_deltas == min_deltas).all()
+            if not has_slope or not match_deltas:
+                warn("Dendrogram_Stats needs to be re-run for dataset1 "
+                     "to compute the slope or have the same set of "
+                     "`min_deltas`.")
+                dendro_kwargs.pop('make_hists', None)
+                dendro_kwargs.pop('verbose', None)
+                self.dendro1.run(verbose=False, make_hists=False,
+                                 **dendro_kwargs)
         else:
             self.dendro1 = Dendrogram_Stats(dataset1, min_deltas=min_deltas,
                                             dendro_params=dendro_params1)
@@ -555,8 +561,21 @@ class Dendrogram_Distance(object):
             self.dendro1.run(verbose=False, make_hists=False,
                              **dendro_kwargs)
 
-        if isinstance(dataset2, str):
-            self.dendro2 = Dendrogram_Stats.load_results(dataset2)
+        # if isinstance(dataset2, str):
+        #     self.dendro2 = Dendrogram_Stats.load_results(dataset2)
+        if isinstance(dataset2, Dendrogram_Stats):
+            self.dendro2 = dataset2
+            # Check if we need to re-run the stat
+            has_slope = hasattr(self.dendro2, "_tail_slope")
+            match_deltas = (self.dendro2.min_deltas == min_deltas).all()
+            if not has_slope or not match_deltas:
+                warn("Dendrogram_Stats needs to be re-run for dataset2 "
+                     "to compute the slope or have the same set of "
+                     "`min_deltas`.")
+                dendro_kwargs.pop('make_hists', None)
+                dendro_kwargs.pop('verbose', None)
+                self.dendro2.run(verbose=False, make_hists=False,
+                                 **dendro2_kwargs)
         else:
             self.dendro2 = \
                 Dendrogram_Stats(dataset2, min_deltas=min_deltas,
