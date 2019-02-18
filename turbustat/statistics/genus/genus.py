@@ -332,6 +332,9 @@ class Genus_Distance(object):
     """
     Distance Metric for the Genus Statistic.
 
+    .. note:: Since the data need to be normalized for the distance metrics,
+              there is no option to pass a pre-compute `~Genus` statistic.
+
     Parameters
     ----------
     img1 : %(dtypes)s
@@ -363,8 +366,6 @@ class Genus_Distance(object):
     genus2_kwargs : None or dict, optional
         Dictionary passed to `~Genus.run` for `img2`. When `None` is given,
         settings from `genus_kwargs` are used  for `img2`.
-    fiducial_model : Genus
-        Computed Genus object. Use to avoid recomputing.
     """
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
@@ -372,8 +373,7 @@ class Genus_Distance(object):
     def __init__(self, img1, img2, smoothing_radii=None, numpts=100,
                  min_value=None, max_value=None, lowdens_percent=0,
                  highdens_percent=100,
-                 genus_kwargs={}, genus2_kwargs=None,
-                 fiducial_model=None):
+                 genus_kwargs={}, genus2_kwargs=None):
 
         # Check if list for inputs, where first is for img1 and second is
         # for img2
@@ -400,14 +400,11 @@ class Genus_Distance(object):
         img1 = standardize(img1)
         img2 = standardize(img2)
 
-        if fiducial_model is not None:
-            self.genus1 = fiducial_model
-        else:
-            self.genus1 = Genus(img1, smoothing_radii=smoothing_radii,
-                                min_value=min_value[0], max_value=max_value[0],
-                                lowdens_percent=lowdens_percent[0],
-                                highdens_percent=highdens_percent[0])
-            self.genus1.run(**genus_kwargs)
+        self.genus1 = Genus(img1, smoothing_radii=smoothing_radii,
+                            min_value=min_value[0], max_value=max_value[0],
+                            lowdens_percent=lowdens_percent[0],
+                            highdens_percent=highdens_percent[0])
+        self.genus1.run(**genus_kwargs)
 
         self.genus2 = Genus(img2, smoothing_radii=smoothing_radii,
                             min_value=min_value[1], max_value=max_value[1],
