@@ -171,6 +171,27 @@ def test_PCA_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['pca_distance'])
 
+    # With PCA classes as inputs
+    tester_dist2 = \
+        PCA_Distance(tester_dist.pca1,
+                     tester_dist.pca2)
+    tester_dist2.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['pca_distance'])
+
+    # With fresh PCA classes
+    tester = PCA(dataset1["cube"])
+    tester2 = PCA(dataset2["cube"])
+
+    tester_dist3 = \
+        PCA_Distance(tester,
+                     tester2)
+    tester_dist3.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist3.distance,
+                            computed_distances['pca_distance'])
+
 
 @pytest.mark.parametrize(('method'), ('fit', 'contour', 'interpolate',
                                       'xinterpolate'))

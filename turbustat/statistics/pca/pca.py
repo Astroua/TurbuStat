@@ -977,9 +977,9 @@ class PCA_Distance(object):
 
     Parameters
     ----------
-    cube1 : %(dtypes)s
+    cube1 : %(dtypes)s or `~PCA`
         Data cube.
-    cube2 : %(dtypes)s
+    cube2 : %(dtypes)s or `~PCA`
         Data cube.
     n_eigs : int
         Number of eigenvalues to compute.
@@ -1001,14 +1001,55 @@ class PCA_Distance(object):
                              "computation. The metric requires having the same"
                              " number of eigenvalues to compare.")
 
-        if fiducial_model is not None:
-            self.pca1 = fiducial_model
+        # if fiducial_model is not None:
+        #     self.pca1 = fiducial_model
+        if isinstance(cube1, PCA):
+            self.pca1 = cube1
+            needs_run = False
+            # Set the number of eigvals. This is fine b/c we keep
+            # all of them, even if they're not used.
+
+            if not hasattr(self.pca1, 'eigvals'):
+                needs_run = True
+                warn("PCA given as cube1 does not have eigenvalues"
+                     " defined. Re-running PCA decomposition.")
+            else:
+                self.pca1.n_eigs = n_eigs
+                if n_eigs >= self.pca1.eigvals.size:
+                    raise ValueError("n_eigs exceeds the total number of "
+                                     "spectral channel for the class given "
+                                     "as `cube1`. Choose a smaller `n_eigs`.")
+
         else:
             self.pca1 = PCA(cube1)
+            needs_run = True
+
+        if needs_run:
             self.pca1.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
 
-        self.pca2 = PCA(cube2)
-        self.pca2.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
+        if isinstance(cube2, PCA):
+            self.pca2 = cube2
+            needs_run = False
+            # Set the number of eigvals. This is fine b/c we keep
+            # all of them, even if they're not used.
+
+            if not hasattr(self.pca2, 'eigvals'):
+                needs_run = True
+                warn("PCA given as cube2 does not have eigenvalues"
+                     " defined. Re-running PCA decomposition.")
+            else:
+                self.pca2.n_eigs = n_eigs
+                if n_eigs >= self.pca2.eigvals.size:
+                    raise ValueError("n_eigs exceeds the total number of "
+                                     "spectral channel for the class given "
+                                     "as `cube2`. Choose a smaller `n_eigs`.")
+
+        else:
+            self.pca2 = PCA(cube2)
+            needs_run = True
+
+        if needs_run:
+            self.pca2.run(mean_sub=mean_sub, n_eigs=n_eigs, decomp_only=True)
 
         self._mean_sub = mean_sub
         self._n_eigs = n_eigs
