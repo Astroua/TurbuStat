@@ -627,31 +627,48 @@ class Wavelet_Distance(object):
     fit_kwargs2 : dict, optional
         Passed to `~turbustat.statistics.Wavelet.run` for `dataset2`. When
         `None` is given, `fit_kwargs` is used for `dataset2`.
-    fiducial_model : None or `~turbustat.statistics.Wavelet`
-        A computed Wavelet model. Used to avoid recomputing.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, dataset1, dataset2,
                  scales=None, num=50, xlow=None, xhigh=None,
-                 fit_kwargs={}, fit_kwargs2=None,
-                 fiducial_model=None):
+                 fit_kwargs={}, fit_kwargs2=None):
         super(Wavelet_Distance, self).__init__()
 
         xlow, xhigh = check_fit_limits(xlow, xhigh)
 
-        if fiducial_model is None:
-            self.wt1 = Wavelet(dataset1, scales=scales)
-            self.wt1.run(xlow=xlow[0], xhigh=xhigh[0], **fit_kwargs)
+        # if fiducial_model is None:
+        if isinstance(dataset1, Wavelet):
+            self.wt1 = dataset1
+            needs_run = False
+            if not hasattr(self.wt1, '_slope'):
+                warn("Wavelet class passed as `dataset1` does not have a "
+                     "fitted slope. Computing Wavelet transform.")
+                needs_run = True
         else:
-            self.wt1 = fiducial_model
+            self.wt1 = Wavelet(dataset1, scales=scales)
+            needs_run = True
+
+        if needs_run:
+            self.wt1.run(xlow=xlow[0], xhigh=xhigh[0], **fit_kwargs)
 
         if fit_kwargs2 is None:
             fit_kwargs2 = fit_kwargs
 
-        self.wt2 = Wavelet(dataset2, scales=scales)
-        self.wt2.run(xlow=xlow[1], xhigh=xhigh[1], **fit_kwargs2)
+        if isinstance(dataset2, Wavelet):
+            self.wt2 = dataset2
+            needs_run = False
+            if not hasattr(self.wt2, '_slope'):
+                warn("Wavelet class passed as `dataset2` does not have a "
+                     "fitted slope. Computing Wavelet transform.")
+                needs_run = True
+        else:
+            self.wt2 = Wavelet(dataset2, scales=scales)
+            needs_run = True
+
+        if needs_run:
+            self.wt2.run(xlow=xlow[1], xhigh=xhigh[1], **fit_kwargs2)
 
     def distance_metric(self, verbose=False, xunit=u.pix,
                         save_name=None, plot_kwargs1={},
