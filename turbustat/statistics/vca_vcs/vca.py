@@ -254,8 +254,6 @@ class VCA_Distance(object):
     pspec2_kwargs : dict or None, optional
         Passed to `radial_pspec_kwargs` in `~PowerSpectrum.run` for `cube2`.
         When `None` is given, setting from `pspec_kwargs` are used for `cube2`.
-    fiducial_model : `~turbustat.statistics.VCA`
-        Computed VCA object. use to avoid recomputing.
     phys_distance : `~astropy.units.Quantity`, optional
         Physical distance to the region in the data.
     '''
@@ -275,8 +273,6 @@ class VCA_Distance(object):
         if radial_pspec_kwargs2 is None:
             radial_pspec_kwargs2 = radial_pspec_kwargs
 
-        # if fiducial_model is not None:
-        #     self.vca1 = fiducial_model
         if isinstance(cube1, VCA):
             self.vca1 = cube1
             needs_run = False
