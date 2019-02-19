@@ -53,11 +53,34 @@ def test_VCS_distance():
         VCS_Distance(dataset1["cube"], dataset2["cube"],
                      fit_kwargs=dict(high_cut=0.3 / u.pix,
                                      low_cut=3e-2 / u.pix))
-    tester_dist = tester_dist.distance_metric(verbose=True,
-                                              save_name='test.png')
+    tester_dist.distance_metric(verbose=True, save_name='test.png')
     os.system("rm test.png")
 
     npt.assert_almost_equal(tester_dist.distance,
+                            computed_distances['vcs_distance'])
+
+    # With pre-computed VCS classes as inputs
+
+    tester_dist2 = \
+        VCS_Distance(tester_dist.vcs1, tester_dist.vcs2,
+                     fit_kwargs=dict(high_cut=0.3 / u.pix,
+                                     low_cut=3e-2 / u.pix))
+    tester_dist2.distance_metric()
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['vcs_distance'])
+
+    # With fresh VCS classes as inputs
+    tester = VCS(dataset1["cube"])
+    tester2 = VCS(dataset2["cube"])
+
+    tester_dist3 = \
+        VCS_Distance(tester, tester2,
+                     fit_kwargs=dict(high_cut=0.3 / u.pix,
+                                     low_cut=3e-2 / u.pix))
+    tester_dist3.distance_metric()
+
+    npt.assert_almost_equal(tester_dist3.distance,
                             computed_distances['vcs_distance'])
 
 
