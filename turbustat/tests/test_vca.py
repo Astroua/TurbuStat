@@ -109,6 +109,27 @@ def test_VCA_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['vca_distance'])
 
+    # With pre-computed VCA classes as inputs
+    tester_dist2 = \
+        VCA_Distance(tester_dist.vca1,
+                     tester_dist.vca2)
+    tester_dist2.distance_metric()
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['vca_distance'])
+
+    # With fresh VCA classes as inputs
+    tester = VCA(dataset1["cube"])
+    tester2 = VCA(dataset2["cube"])
+
+    tester_dist3 = \
+        VCA_Distance(tester,
+                     tester2)
+    tester_dist3.distance_metric()
+
+    npt.assert_almost_equal(tester_dist3.distance,
+                            computed_distances['vca_distance'])
+
 
 @pytest.mark.parametrize(("regrid_type", "channel_width"),
                          [['downsample', 2 * u.pix], ['downsample', 2],

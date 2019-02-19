@@ -228,14 +228,18 @@ class VCA_Distance(object):
     is modeled by a linear model. The distance is the t-statistic of the
     interaction between the two slopes.
 
+    .. note:: When a pre-computed `VCA` class is given for `cube1` or `cube2`,
+              if the channel widths are not equal to `channel_width` given to
+              `VCA_Distance`, a ValueError will be raised.
+
     Parameters
     ----------
-    cube1 : %(dtypes)s
-        Data cube.
-    cube2 : %(dtypes)s
-        Data cube.
-    slice_size : `~astropy.units.Quantity`, optional
-        Slice to degrade the cube to.
+    cube1 : %(dtypes)s or `~VCA`
+        Data cube. Or a `~VCA` class can be passed which may be pre-computed.
+    cube2 : %(dtypes)s or `~VCA`
+        See `cube1`.
+    channel_width : `~astropy.units.Quantity`, optional
+        Spectral resolution to degrade the cube to.
     breaks : `~astropy.units.Quantity`, list or array, optional
         Specify where the break point is with appropriate units.
         If none is given, no break point will be used in the fit.
@@ -260,8 +264,7 @@ class VCA_Distance(object):
 
     def __init__(self, cube1, cube2, channel_width=None, breaks=None,
                  low_cut=None, high_cut=None,
-                 radial_pspec_kwargs={}, radial_pspec_kwargs2=None,
-                 fiducial_model=None, phys_distance=None):
+                 radial_pspec_kwargs={}, radial_pspec_kwargs2=None):
         super(VCA_Distance, self).__init__()
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
@@ -272,24 +275,45 @@ class VCA_Distance(object):
         if radial_pspec_kwargs2 is None:
             radial_pspec_kwargs2 = radial_pspec_kwargs
 
-        if fiducial_model is not None:
-            self.vca1 = fiducial_model
+        # if fiducial_model is not None:
+        #     self.vca1 = fiducial_model
+        if isinstance(cube1, VCA):
+            self.vca1 = cube1
+            needs_run = False
+
+            if not hasattr(self.vca1, '_slope'):
+                warnings.warn("VCA class given as `cube1` does not have a"
+                              " fitted slope. Re-running VCA.")
+                needs_run = True
         else:
-            self.vca1 = VCA(cube1, channel_width=channel_width,
-                            distance=phys_distance)
+            self.vca1 = VCA(cube1, channel_width=channel_width)
+            needs_run = True
+
+        if needs_run:
             self.vca1.run(fit_kwargs={'brk': breaks[0]},
                           low_cut=low_cut[0],
                           high_cut=high_cut[0],
                           radial_pspec_kwargs=radial_pspec_kwargs,
                           fit_2D=False)
 
-        self.vca2 = VCA(cube2, channel_width=channel_width,
-                        distance=phys_distance)
+        if isinstance(cube2, VCA):
+            self.vca2 = cube2
+            needs_run = False
 
-        self.vca2.run(fit_kwargs={'brk': breaks[1]},
-                      low_cut=low_cut[1], high_cut=high_cut[1],
-                      radial_pspec_kwargs=radial_pspec_kwargs2,
-                      fit_2D=False)
+            if not hasattr(self.vca2, '_slope'):
+                warnings.warn("VCA class given as `cube2` does not have a"
+                              " fitted slope. Re-running VCA.")
+                needs_run = True
+        else:
+            self.vca2 = VCA(cube2, channel_width=channel_width)
+            needs_run = True
+
+        if needs_run:
+            self.vca2.run(fit_kwargs={'brk': breaks[1]},
+                          low_cut=low_cut[1],
+                          high_cut=high_cut[1],
+                          radial_pspec_kwargs=radial_pspec_kwargs,
+                          fit_2D=False)
 
     def distance_metric(self, verbose=False, xunit=u.pix**-1,
                         save_name=None, plot_kwargs1={},
