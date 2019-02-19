@@ -491,12 +491,19 @@ class StatMoments_Distance(object):
     method. However, the change is fairly transparent, since it is called
     within distance_metric.
 
+    .. note:: When passing `~StatMoments` classes as `image1` or `image2`,
+              if the radius does not match the given radius, or the common
+              angular radius between the two datasets,
+              `~StatMoments.compute_spatial_distrib` will be re-run with a
+              new radius.
+
     Parameters
     ----------
-    image1 : %(dtypes)s
-        2D Image.
-    image2 : %(dtypes)s
-        2D Image.
+    image1 : %(dtypes)s or `~StatMoments`
+        2D image. Or a `~StatMoments` class can be passed which may be
+        pre-computed.
+    image2 : %(dtypes)s or `~StatMoments`
+        See `image1`.
     radius : `~astropy.units.Quantity`, optional
         Radius of circle to use when computing moments. When given in pixel
         units, the radius will be adjusted such that a common *angular* scale
@@ -514,25 +521,34 @@ class StatMoments_Distance(object):
         If image1 is periodic in the spatial boundaries, set to True.
     periodic2 : bool, optional
         If image2 is periodic in the spatial boundaries, set to True.
-    fiducial_model : StatMoments
-        Computed StatMoments object. use to avoid recomputing.
-
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
     def __init__(self, image1, image2, radius=5 * u.pix, min_frac=0.8,
                  weights1=None, weights2=None,
-                 nbins=None, periodic1=True, periodic2=True,
-                 fiducial_model=None):
+                 nbins=None, periodic1=True, periodic2=True):
         super(StatMoments_Distance, self).__init__()
 
-        image1 = input_data(image1, no_header=False)
-        image2 = input_data(image2, no_header=False)
+        if isinstance(image1, StatMoments):
+            self.moments1 = image1
+            _has_data1 = False
+        else:
+            image1 = input_data(image1, no_header=False)
+            _has_data1 = True
+        if isinstance(image2, StatMoments):
+            self.moments2 = image2
+            _has_data2 = False
+        else:
+            image2 = input_data(image2, no_header=False)
+            _has_data2 = True
 
         # Compute the scale so the radius is common between the two datasets
         if radius.unit.is_equivalent(u.pix):
-            scale = common_scale(WCS(image1[1]), WCS(image2[1]))
+
+            wcs1 = WCS(image1[1]) if _has_data1 else self.moments1._wcs
+            wcs2 = WCS(image2[1]) if _has_data2 else self.moments2._wcs
+            scale = common_scale(wcs1, wcs2)
 
             if scale == 1.0:
                 radius1 = radius
@@ -548,23 +564,68 @@ class StatMoments_Distance(object):
             radius2 = radius
 
         if nbins is None:
-            self.nbins = _auto_nbins(image1[0].size, image2[0].size)
+            size1 = image1[0].size if _has_data1 else self.moments1.data.size
+            size2 = image2[0].size if _has_data2 else self.moments2.data.size
+            self.nbins = _auto_nbins(size1, size2)
         else:
             self.nbins = nbins
 
-        if fiducial_model is not None:
-            self.moments1 = fiducial_model
-        else:
+        if _has_data1:
             self.moments1 = StatMoments(image1, radius=radius1,
                                         nbins=self.nbins,
                                         weights=weights1)
+            needs_run = True
+        else:
+            needs_run = False
+            if not hasattr(self.moments1, '_kurtosis_array'):
+                warnings.warn("StatMoments class given as `image1` does not"
+                              " have"
+                              " skewness/kurtosis maps. Computing spatial "
+                              "distributions for `moments1`.")
+                needs_run = True
+
+            pix_rad = self.moments1._to_pixel(self.moments1.radius).value
+            pix_rad1 = self.moments1._to_pixel(radius1).value
+
+            if np.abs(pix_rad - pix_rad1) >= 1.:
+                warnings.warn("Spatial radius differs "
+                              "between the given radius"
+                              " or common radius found by "
+                              "StatMoments_Distance. Recomputing `moments1`.")
+                self.moments1.radius = radius1
+                self.moments1.nbins = nbins
+                needs_run = True
+
+        if needs_run:
             self.moments1.compute_spatial_distrib(periodic=periodic1,
                                                   min_frac=min_frac)
 
-        self.moments2 = StatMoments(image2, radius=radius2, nbins=self.nbins,
-                                    weights=weights2)
-        self.moments2.compute_spatial_distrib(periodic=periodic2,
-                                              min_frac=min_frac)
+        if _has_data2:
+            self.moments2 = StatMoments(image2, radius=radius2,
+                                        nbins=self.nbins,
+                                        weights=weights2)
+            needs_run = True
+        else:
+            needs_run = False
+            if not hasattr(self.moments2, '_kurtosis_array'):
+                warnings.warn("StatMoments class given as `image2` does not"
+                              " have"
+                              " skewness/kurtosis maps. Computing spatial "
+                              "distributions for `moments2`.")
+                needs_run = True
+
+            pix_rad = self.moments2._to_pixel(self.moments2.radius).value
+            pix_rad2 = self.moments2._to_pixel(radius2).value
+            if np.abs(pix_rad - pix_rad2) >= 1.:
+                warnings.warn("Spatial radius differs between the given radius"
+                              " or common radius found by "
+                              "StatMoments_Distance. Recomputing `moments2`.")
+                self.moments2.radius = radius2
+                needs_run = True
+
+        if needs_run:
+            self.moments2.compute_spatial_distrib(periodic=periodic2,
+                                                  min_frac=min_frac)
 
     def create_common_histograms(self, nbins=None):
         '''
