@@ -53,13 +53,8 @@ The distance between the SCF surfaces is:
 
 By default, the distance between the surfaces is weighted by the lag (see equation above). This weighting can be disabled by setting `weighted=False` in `~turbustat.statistics.SCF_Distance.distance_metric`, and the distance metrics reduces to the L2 norm between the surfaces.
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.SCF` class can be passed:
+A pre-computed `~turbustat.statistics.SCF` class can be also passed instead of a data cube. However, the SCF will need to be recomputed if the lags are different from the common set defined in `~turbustat.statistics.SCF_Distance`. See :ref:`the distance metric introduction <runmetrics>`.
 
-    >>> from turbustat.statistics import SCF
-    >>> scf_fid = SCF(cube_fid, size=11).run()  # doctest: +SKIP
-    >>> scf = SCF_Distance(cube_fid, cube, fiducial_model=scf_fid)  # doctest: +SKIP
-
-It is critical that the lags used in `~turbustat.statistics.SCF` match the common set of lags that are used in `~turbustat.statistics.SCF_Distance`. Also note that the data still need to be passed to `~turbustat.statistics.SCF_Distance`.
 
 References
 ----------

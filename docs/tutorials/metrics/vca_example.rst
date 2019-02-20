@@ -160,16 +160,7 @@ The VCA power-spectra with 400 m/s channels have a similar slope to the original
     >>> vca.distance  # doctest: +SKIP
     5.164776059129051
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.VCA` class can be passed:
-
-    >>> from turbustat.statistics import VCA
-    >>> vca_fid = VCA(cube_fid).run(low_cut=0.025 / u.pix,
-    ...                             high_cut=0.1 / u.pix)  # doctest: +SKIP
-    >>> vca = VCA_Distance(cube_fid, cube, fiducial_model=vca_fid,
-    ...                    low_cut=0.025 / u.pix,
-    ...                    high_cut=0.1 / u.pix)  # doctest: +SKIP
-
-Note that the data still need to be passed to `~turbustat.statistics.VCA_Distance`.
+A pre-computed `~turbustat.statistics.VCA` class can be also passed instead of a data cube. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

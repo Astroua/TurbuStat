@@ -163,15 +163,7 @@ The distance is now:
     >>> mvc.distance  # doctest: +SKIP
     0.46621655722371613
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.MVC` class can be passed:
-
-    >>> from turbustat.statistics import MVC
-    >>> mvc_fid = MVC(data_fid['centroid'], data_fid['moment0'],
-    ...               data_fid['linewidth'])  # doctest: +SKIP
-    >>> mvc_fid.run()  # doctest: +SKIP
-    >>> mvc = MVC_Distance(data_fid, data, fiducial_model=mvc_fid)  # doctest: +SKIP
-
-Note that the data still need to be passed to `~turbustat.statistics.MVC_Distance`.
+A pre-computed `~turbustat.statistics.MVC` class can also be passed instead of giving a dataset as the input. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

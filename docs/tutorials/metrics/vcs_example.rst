@@ -131,16 +131,7 @@ The distances between the cubes, as defined above, are:
 
 The difference in the slopes is dominated by `vcs.large_scale_distance`, while the small-scale slopes are quite similar. The break locations are also similar and give a small `vcs.break_distance`.
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.VCS` class can be passed:
-
-    >>> from turbustat.statistics import VCS
-    >>> vcs_fid = VCS(cube_fid).run(low_cut=0.025 / u.pix,
-    ...                             high_cut=0.1 / u.pix)  # doctest: +SKIP
-    >>> vcs = VCS_Distance(cube_fid, cube, fiducial_model=vcs_fid,
-    ...                    fit_kwargs=dict(low_cut=0.025 / u.pix,
-    ...                                    high_cut=0.1 / u.pix)  # doctest: +SKIP
-
-Note that the data still need to be passed to `~turbustat.statistics.VCS_Distance`.
+A pre-computed `~turbustat.statistics.VCS` class can be also passed instead of a data cube. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

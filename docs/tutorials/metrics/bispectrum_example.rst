@@ -68,15 +68,7 @@ The distances between these images are:
     >>> bispec.mean_distance  # doctest: +SKIP
     0.009241794373870557
 
-If a `~turbustat.statistics.Bispectrum` has been previously defined, it can be passed to `~turbustat.statistics.Bispectrum_Distance` without recomputing by passing it as `fiducial_model`:
-
-    >>> from turbustat.statistics import Bispectrum  # doctest: +SKIP
-    >>> bispec_moment0 = Bispectrum(moment0_fid).run()  # doctest: +SKIP
-    >>> bispec = Bispectrum_Distance(moment0_fid, moment0, fiducial_model=bispec_moment0)  # doctest: +SKIP
-
-`fiducial_model` will be set to `~turbustat.statistics.Bispectrum_Distance.bispec1`. This is useful when comparing a number of images to a common (i.e., fiducial) image. Note that the data (`moment0`) must still be passed.
-
-.. warning:: Caution must be used when passing `fiducial_model` as there are no checks to ensure the bispectra were computed the same way (e.g., do both have `mean_sub=True` set?). Ensure that the keyword arguments for `fiducial_model` match those specified to `~turbustat.statistics.Bispectrum_Distance`.
+.. warning:: Caution must be used when passing a pre-computed `~turbustat.statistics.Bispectrum` instead of the data for `moment0` or `moment0_fid` as there are no checks to ensure the bispectra were computed the same way (e.g., do both have `mean_sub=True` set?). Ensure that the keyword arguments for the pre-computed statistic match those specified to `~turbustat.statistics.Bispectrum_Distance`. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

@@ -50,17 +50,7 @@ To find the distance between the images:
 
 This returns a figure that plots the Genus curves of the two images, where the image values are standardized (zero mean and standard deviation of one). Colours, labels, and symbols in the plot can be changed. See `~turbustat.statistics.Genus_Distance.distance_metric`.
 
-When comparing many images to a fiducial image, a pre-computed `~turbustat.statistics.Genus` of the fiducial image can be passed:
-
-    >>> from turbustat.statistics import Genus
-    >>> genus_fid = Genus(moment0_fid, lowdens_percent=15, highdens_percent=85, numpts=100)  # doctest: +SKIP
-    >>> genus_fid.run(min_size=4 * u.pix**2)  # doctest: +SKIP
-    >>> genus = Genus_Distance(moment0_fid, moment0,
-    ...                        lowdens_percent=15, highdens_percent=85, numpts=100,
-    ...                        genus_kwargs=dict(min_size=4 * u.pix**2),
-    ...                        fiducial_model=genus_fid)  # doctest: +SKIP
-
-Note that the data (`moment0_fid`) still need to be given.
+When comparing many images to a fiducial image, a pre-computed `~turbustat.statistics.Genus` can be passed instead of a dataset. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

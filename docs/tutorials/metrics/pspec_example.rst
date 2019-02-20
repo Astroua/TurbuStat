@@ -96,13 +96,7 @@ The distance between these two images is:
     >>> pspec.distance  # doctest: +SKIP
     3.0952798493530262
 
-When comparing many images to a fiducial image, recomputing the power-spectrum of the fiducial can be avoided by passing a pre-computed `~turbustat.statistics.PowerSpectrum` to `fiducial_model`
-
-    >>> from turbustat.statistics import PowerSpectrum
-    >>> pspec_moment0 = PowerSpectrum(moment0_fid).run()  # doctest: +SKIP
-    >>> pspec = PSpec_Distance(moment0_fid, moment0, fiducial_model=pspec_moment0)  # doctest: +SKIP
-
-Note that the data (`moment0_fid`) must still be given.
+Recomputing an already compute power-spectrum can be avoided by passing a pre-computed `~turbustat.statistics.PowerSpectrum` instead of a dataset. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

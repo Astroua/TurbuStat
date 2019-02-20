@@ -98,15 +98,7 @@ The distances between these two datasets are:
     >>> wavelet.curve_distance  # doctest: +SKIP
     9.81949754947785
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.Wavelet` class can be passed:
-
-    >>> from turbustat.statistics import Wavelet
-    >>> wave_fid = Wavelet(moment0_fid).run(xlow=2 * u.pix,
-    ...                                     xhigh=10 * u.pix)  # doctest: +SKIP
-    >>> wavelet = Wavelet_Distance(moment0_fid, moment0, xlow=2 * u.pix,
-    ...                            xhigh=10 * u.pix, fiducial_model=wave_fid)  # doctest: +SKIP
-
-Note that the data still need to be passed to `~turbustat.statistics.Wavelet_Distance`.
+A pre-computed `~turbustat.statistics.Wavelet` class can be also passed instead of a data cube. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

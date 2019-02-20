@@ -56,13 +56,7 @@ The distances for the skewness and kurtosis are:
     >>> print(moments.skewness_distance, moments.kurtosis_distance)  # doctest: +SKIP
     0.01189910501201634 0.019870935761084074
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.StatMoments` class can be passed:
-
-    >>> from turbustat.statistics import StatMoments
-    >>> moments_fid = StatMoments(moment0_fid, size=5 * u.pix).run()  # doctest: +SKIP
-    >>> moments = StatMoments_Distance(moment0_fid, moment0, fiducial_model=moments_fid)  # doctest: +SKIP
-
-It is critical that the `size` used in `~turbustat.statistics.StatMoments` match the common set of lags that are used in `~turbustat.statistics.StatMoments_Distance`. Also note that the data still needs to be passed to `~turbustat.statistics.StatMoments_Distance`.
+A pre-computed `~turbustat.statistics.StatMoments` class can be passed instead of an image. However, the moments will need to be recomputed if the `size` differs from the common scale determined in `~turbustat.statistics.StatMoments_Distance`. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------
