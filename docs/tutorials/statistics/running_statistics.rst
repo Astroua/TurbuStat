@@ -16,7 +16,7 @@ Using most of the statistic classes will involved two steps:
     >>> from astropy.io import fits
     >>> from astropy.units import u
     >>> hdu = fits.open("file.fits")[0]  # doctest: +SKIP
-    >>> spatial_scales = np.linspace(0.1, 1.0, 20) * u.pc
+    >>> spatial_scales = np.linspace(0.1, 1.0, 20) * u.pc   # doctest: +SKIP
     >>> wave = Wavelet(hdu, scales=spatial_scales,
     ...                distance=260 * u.pc)  # doctest: +SKIP
 
