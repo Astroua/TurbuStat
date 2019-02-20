@@ -12,6 +12,7 @@ Using most of the statistic classes will involved two steps:
 1. **Initialization** -- The data, relevant WCS information, and other unchanging properties (like the distance) are specified here. Some of the statistics calculated at specific scales (like `~turbustat.statistics.Wavelet` or `~turbustat.statistics.SCF`) can have those scales set here, too. Below is an example using `~turbustat.statistics.Wavelet`:
 
     >>> from turbustat.statistics import Wavelet
+    >>> import numpy as np
     >>> from astropy.io import fits
     >>> from astropy.units import u
     >>> hdu = fits.open("file.fits")[0]  # doctest: +SKIP
