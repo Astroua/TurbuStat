@@ -2,7 +2,7 @@
 Statistics
 ==========
 
-Along with acting as the base classes for the distance metrics, the statistics can also return useful information about single datasets.
+Along with acting as the base classes for the distance metrics, the statistics can also return useful information about single datasets.  See the :ref:`runmetrics` tutorial for more information on how to use Distance Metrics.
 
 Distance Metrics
 ================
