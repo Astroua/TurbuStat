@@ -2,12 +2,12 @@
 Statistics
 ==========
 
-Along with acting as the base classes for the distance metrics, the statistics can also return useful information about single datasets.  See the :ref:`runmetrics` tutorial for more information on how to use Distance Metrics.
+Along with acting as the base classes for the distance metrics, the statistics can also return useful information about single datasets.  See the :ref:`runstats` tutorial for more information on computing Statistics.
 
 Distance Metrics
 ================
 
-The distance metrics are computed using certain outputs contained in the related statistics class.
+The distance metrics are computed using certain outputs contained in the related statistics class.  See the :ref:`runmetrics` tutorial for more information on how to use Distance Metrics.
 
 Nearly all of the distance metrics are actually `"pseudo" - distance metrics <https://en.wikipedia.org/wiki/Pseudometric_space>`_. They must have the following properties:
 
