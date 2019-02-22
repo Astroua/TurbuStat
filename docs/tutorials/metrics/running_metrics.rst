@@ -28,7 +28,7 @@ The two datasets are given. For the wavelet transform, the distance is the absol
 
 Alternatively, if the wavelet transform has already been computed for one or both of the datasets, the `~turbustat.statistics.Wavelet` can be passed instead of the dataset:
 
-    >>> from turbustat.statistics import Wavelet
+    >>> from turbustat.statistics import Wavelet, Wavelet_Distance
     >>> wave1 = Wavelet(hdu).run()  # doctest: +SKIP
     >>> wave2 = Wavelet(hdu).run()  # doctest: +SKIP
     >>> wave_dist = Wavelet_Distance(wave1, wave2)  # doctest: +SKIP
