@@ -469,7 +469,8 @@ class PCA(BaseStatisticMixIn):
 
         return self._to_spectral(self._spectral_width_error, unit)
 
-    def fit_plaw(self, fit_method='odr', verbose=False, **kwargs):
+    def fit_plaw(self, xlow=None, xhigh=None, fit_method='odr',
+                 verbose=False, **kwargs):
         '''
         Fit the size-linewidth relation. This is done through Orthogonal
         Distance Regression (via scipy), or through MCMC (requires
@@ -477,6 +478,10 @@ class PCA(BaseStatisticMixIn):
 
         Parameters
         ----------
+        xlow : `~astropy.units.Quantity`, optional
+            Lower spatial scale limit to consider in the fit.
+        xhigh : `~astropy.units.Quantity`, optional
+            Upper spatial scale value limit to consider in the fit.
         fit_method : {'odr', 'bayes'}, optional
             Set the type of fitting to perform. Options are 'odr'
             (orthogonal distance regression) or 'bayes' (MCMC). Note that
@@ -503,27 +508,67 @@ class PCA(BaseStatisticMixIn):
         # around, and estimate CIs directly.
         self._fit_method = fit_method
 
+        x = np.log10(self.spatial_width().value)
+
+        # Set limits on scales to consider for the fit
+        if xlow is not None:
+            if not isinstance(xlow, u.Quantity):
+                raise TypeError("xlow must be an astropy.units.Quantity.")
+
+            # Convert xlow into the same units as the lags
+            xlow = self._to_pixel(xlow)
+
+            self._xlow = xlow
+
+            lower_limit = x >= np.log10(xlow.value)
+        else:
+            lower_limit = \
+                np.ones_like(x, dtype=bool)
+            self._xlow = np.abs(self.spatial_width()).min()
+
+        if xhigh is not None:
+            if not isinstance(xhigh, u.Quantity):
+                raise TypeError("xlow must be an astropy.units.Quantity.")
+            # Convert xhigh into the same units as the lags
+            xhigh = self._to_pixel(xhigh)
+
+            self._xhigh = xhigh
+
+            upper_limit = x <= np.log10(xhigh.value)
+        else:
+            upper_limit = \
+                np.ones_like(x, dtype=bool)
+            self._xhigh = np.abs(self.spatial_width()).max()
+
+        within_limits = np.logical_and(lower_limit, upper_limit)
+
+        if not within_limits.any():
+            raise ValueError("Limits have removed all lag values. Make xlow"
+                             " and xhigh less restrictive.")
+
         # Only keep the width estimations that worked
         are_finite = np.isfinite(self.spectral_width()) * \
             np.isfinite(self.spatial_width()) * \
             np.isfinite(self.spatial_width_error()) * \
             np.isfinite(self.spectral_width_error())
 
+        fit_mask = np.logical_and(within_limits, are_finite)
+
         # Check to make sure there are enough points to fit to (minimum 2).
-        num_pts = self.spectral_width().size - (~are_finite).sum()
+        num_pts = self.spectral_width().size - (~fit_mask).sum()
         if num_pts < 2:
             raise Warning("Less then 2 valid points. Cannot fit model.")
         elif num_pts < 5:
             warn("There are less than 5 points to fit to. The fit will not be"
                  " well constrained and results should be closely examined.")
 
-        y = np.log10(self.spectral_width()[are_finite].value)
-        x = np.log10(self.spatial_width()[are_finite].value)
+        y = np.log10(self.spectral_width()[fit_mask].value)
+        x = np.log10(self.spatial_width()[fit_mask].value)
 
-        y_err = 0.434 * self.spectral_width_error()[are_finite].value / \
-            self.spectral_width()[are_finite].value
-        x_err = 0.434 * self.spatial_width_error()[are_finite].value / \
-            self.spatial_width()[are_finite].value
+        y_err = 0.434 * self.spectral_width_error()[fit_mask].value / \
+            self.spectral_width()[fit_mask].value
+        x_err = 0.434 * self.spatial_width_error()[fit_mask].value / \
+            self.spatial_width()[fit_mask].value
 
         if fit_method == 'odr':
             params, errors = leastsq_linear(x, y, x_err, y_err,
@@ -871,7 +916,8 @@ class PCA(BaseStatisticMixIn):
     def run(self, show_progress=True, verbose=False, save_name=None,
             mean_sub=False, decomp_only=False, n_eigs='auto', min_eigval=None,
             eigen_cut_method='value', spatial_method='contour',
-            spectral_method='walk-down', fit_method='odr',
+            spectral_method='walk-down',
+            xlow=None, xhigh=None, fit_method='odr',
             beam_fwhm=None, brunt_beamcorrect=True,
             spatial_output_unit=u.pix, spectral_output_unit=u.pix):
         '''
@@ -902,6 +948,10 @@ class PCA(BaseStatisticMixIn):
             See `~PCA.fit_spatial_widths`.
         spectral_method : str, optional
             See `~PCA.fit_spectral_widths`.
+        xlow : `~astropy.units.Quantity`, optional
+            See `~PCA.fit_plaw`.
+        xhigh : `~astropy.units.Quantity`, optional
+            See `~PCA.fit_plaw`.
         fit_method : str, optional
             See `~PCA.fit_plaw`.
         beam_fwhm : None of `~astropy.units.Quantity`, optional
@@ -943,7 +993,8 @@ class PCA(BaseStatisticMixIn):
                                      beam_fwhm=beam_fwhm,
                                      brunt_beamcorrect=brunt_beamcorrect)
             self.find_spectral_widths(method=spectral_method)
-            self.fit_plaw(fit_method=fit_method)
+            self.fit_plaw(xlow=xlow, xhigh=xhigh,
+                          fit_method=fit_method)
 
         if verbose:
 
