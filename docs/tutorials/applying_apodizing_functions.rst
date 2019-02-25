@@ -6,7 +6,7 @@ Applying Apodizing Kernels to Data
 
 Applying Fourier transforms to images with emission at the edges can lead to severe ringing effects from the `Gibbs phenomenon <https://en.wikipedia.org/wiki/Gibbs_phenomenon>`_.  This can be an issue for all spatial power-spectra, including the :ref:`PowerSpectrum <pspec_tutorial>`, :ref:`VCA <vca_tutorial>`, and :ref:`MVC <mvc_tutorial>`.
 
-A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero (e.g., ` Stanimirovic et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999MNRAS.302..417S/abstract>`_).  However, the shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
+A common way to avoid this issue is to apply a window function that smoothly tapers the values at the edges of the image to zero (e.g., `Stanimirovic et al. 1999 <https://ui.adsabs.harvard.edu/#abs/1999MNRAS.302..417S/abstract>`_).  However, the shape of the window function will also affect some frequencies in the Fourier transform. This page demonstrates these effects for some common window shapes.
 
 TurbuStat has four built-in apodizing functions based on the implementations from `photutils <https://photutils.readthedocs.io/en/stable/psf_matching.html>`_:
 

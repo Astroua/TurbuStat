@@ -50,13 +50,7 @@ And the distance is:
 
 Note that a comparison of the size-line width from PCA as a distance metric is not yet implemented.
 
-If many data sets are being compared to a fiducial, a pre-computed `~turbustat.statistics.PCA` class can be passed:
-
-    >>> from turbustat.statistics import PCA
-    >>> pca_fid = PCA(cube_fid, n_eigs=50).run(decomp_only=True)  # doctest: +SKIP
-    >>> pca = PCA_Distance(cube_fid, cube, fiducial_model=pca_fid)  # doctest: +SKIP
-
-Note that the data still need to be passed to `~turbustat.statistics.PCA_Distance`.
+A pre-computed `~turbustat.statistics.PCA` class can also be passed instead of a dataset. See :ref:`the distance metric introduction <runmetrics>`.
 
 References
 ----------

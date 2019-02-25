@@ -121,6 +121,39 @@ def test_DelVar_distance():
                             computed_distances['delvar_slope_distance'],
                             decimal=3)
 
+    # Try distance metric when giving DeltaVariance classes as inputs
+    tester_dist2 = \
+        DeltaVariance_Distance(tester_dist.delvar1,
+                               tester_dist.delvar2)
+    tester_dist2.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist2.curve_distance,
+                            computed_distances['delvar_curve_distance'],
+                            decimal=3)
+    npt.assert_almost_equal(tester_dist2.slope_distance,
+                            computed_distances['delvar_slope_distance'],
+                            decimal=3)
+
+    # And test when given DeltaVariance classes that haven't been run yet.
+    tester = \
+        DeltaVariance(dataset1["moment0"],
+                      weights=dataset1['moment0_error'][0])
+    tester2 = \
+        DeltaVariance(dataset2["moment0"],
+                      weights=dataset2['moment0_error'][0])
+
+    tester_dist3 = \
+        DeltaVariance_Distance(tester, tester2,
+                               delvar_kwargs=dict(xhigh=11 * u.pix))
+    tester_dist3.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist3.curve_distance,
+                            computed_distances['delvar_curve_distance'],
+                            decimal=3)
+    npt.assert_almost_equal(tester_dist3.slope_distance,
+                            computed_distances['delvar_slope_distance'],
+                            decimal=3)
+
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
 def test_DelVar_method_fftw():

@@ -81,38 +81,9 @@ A line is fit to this relation, and the difference in the slopes of those lines 
 
 For both plots, the plotting labels can be changed from `1` and `2` by setting `label1` and `label2` in `~turbustat.statistics.Dendrogram_Distance.distance_metric`.
 
-For large data sets, creating the dendrogram can be slow. Particularly when comparing many datasets to a fiducial dataset, recomputing the dendrogram each time wastes a lot of time. `~turbustat.statistics.Dendrogram_Distance` can be passed a precomputed `~turbustat.statistics.Dendrogram_Stats` object in two ways:
+For large data sets, creating the dendrogram can be slow. Particularly when comparing many datasets to a fiducial dataset, recomputing the dendrogram each time wastes a lot of time. `~turbustat.statistics.Dendrogram_Distance` can be passed a precomputed `~turbustat.statistics.Dendrogram_Stats` instead of giving a dataset. See :ref:`the distance metric introduction <runmetrics>`.
 
-1. A precomputed `~turbustat.statistics.Dendrogram_Stats` object can be given to `fiducial_model` in `~turbustat.statistics.Dendrogram_Distance`.
-
-    >>> from turbustat.statistics import Dendrogram_Stats
-    >>> dend_stat = Dendrogram_Stats(cube_fid,
-    ...                              min_deltas=np.logspace(-2, 0, 50),
-    ...                              dendro_params={"min_value": 0.005,
-    ...                                             "min_npix": 50})  # doctest: +SKIP
-    >>> dend_stat.run()  # doctest: +SKIP
-    >>> dend_dist = Dendrogram_Distance(cube_fid, cube,
-    ...                                 min_deltas=np.logspace(-2, 0, 50),
-    ...                                 min_features=100,
-    ...                                 dendro_params={"min_value": 0.005,
-    ...                                                "min_npix": 50},
-    ...                                 fiducial_model=dend_stat)  # doctest: +SKIP
-
-    Note that the data (`cube_fid`) still need to be given to `~turbustat.statistics.Dendrogram_Distance`.
-
-    .. warning:: The object given to `fiducial_model` should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
-
-2. `~turbustat.statistics.Dendrogram_Stats` can be saved as pickle files. When `dataset1` and `dataset2` are given to`~turbustat.statistics.Dendrogram_Distance` as strings, it is assumed that these are pickle files:
-
-    >>> dend_stat.save_results(output_name="Fiducial_Dendrogram_Stats.pkl", keep_data=False)  # doctest: +SKIP
-    >>> dend_dist = Dendrogram_Distance("Fiducial_Dendrogram_Stats.pkl", cube,
-    ...                                 min_deltas=np.logspace(-2, 0, 50),
-    ...                                 min_features=100,
-    ...                                 dendro_params={"min_value": 0.005,
-    ...                                                "min_npix": 50},
-    ...                                 fiducial_model=dend_stat)  # doctest: +SKIP
-
-.. warning:: In both cases, the saved dendrograms should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
+.. warning:: The saved dendrograms should be run with the same `min_deltas` given to `~turbustat.statistics.Dendrogram_Stats`. The histogram distance is only valid when comparing dendrograms measured with the same deltas.
 
 References
 ----------

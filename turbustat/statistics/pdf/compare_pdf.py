@@ -544,6 +544,10 @@ class PDF_Distance(object):
     '''
     Calculate the distance between two arrays using their PDFs.
 
+    .. note:: Pre-computed `~PDF` classes cannot be passed to `~PDF_Distance`
+              as the data need to be normalized and the PDFs should use the
+              same set of histogram bins.
+
     Parameters
     ----------
     img1 : %(dtypes)s

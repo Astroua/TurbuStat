@@ -59,6 +59,7 @@ def test_MVC_method():
     npt.assert_allclose(saved_tester.slope2D, computed_data['mvc_slope2D'],
                         rtol=1e-4)
 
+
 def test_MVC_method_fitlimits():
 
     distance = 250 * u.pc
@@ -102,6 +103,34 @@ def test_MVC_distance():
 
     # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
     npt.assert_allclose(tester_dist.distance,
+                        computed_distances['mvc_distance'],
+                        rtol=2e-3)
+
+    # Test with MVC classes as inputs
+    tester_dist2 = \
+        MVC_Distance(tester_dist.mvc1, tester_dist.mvc2)
+    tester_dist2.distance_metric(verbose=False)
+
+    # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
+    npt.assert_allclose(tester_dist2.distance,
+                        computed_distances['mvc_distance'],
+                        rtol=2e-3)
+
+    # Now from fresh MVC classes that need to be computed
+    tester = MVC(dataset1["centroid"],
+                 dataset1["moment0"],
+                 dataset1["linewidth"],
+                 dataset1["centroid"][1])
+    tester2 = MVC(dataset2["centroid"],
+                  dataset2["moment0"],
+                  dataset2["linewidth"],
+                  dataset2["centroid"][1])
+    tester_dist3 = \
+        MVC_Distance(tester, tester2)
+    tester_dist3.distance_metric(verbose=False)
+
+    # Tiny discrepancy introduced when using rfft_to_fft instead of np.fft.fft2
+    npt.assert_allclose(tester_dist3.distance,
                         computed_distances['mvc_distance'],
                         rtol=2e-3)
 

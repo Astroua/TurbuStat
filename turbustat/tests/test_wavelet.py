@@ -129,6 +129,27 @@ def test_Wavelet_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['wavelet_distance'])
 
+    # With pre-computed Wavelet classes as input
+    tester_dist2 = \
+        Wavelet_Distance(tester_dist.wt1,
+                         tester_dist.wt2)
+    tester_dist2.distance_metric()
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['wavelet_distance'])
+
+    # With fresh Wavelet classes as input
+    tester = Wavelet(dataset1["moment0"])
+    tester2 = Wavelet(dataset2["moment0"])
+
+    tester_dist3 = \
+        Wavelet_Distance(tester,
+                         tester2)
+    tester_dist3.distance_metric()
+
+    npt.assert_almost_equal(tester_dist3.distance,
+                            computed_distances['wavelet_distance'])
+
 
 @pytest.mark.skipif("not PYFFTW_INSTALLED")
 def test_Wavelet_method_fftw():

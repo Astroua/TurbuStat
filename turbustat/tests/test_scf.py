@@ -141,6 +141,28 @@ def test_SCF_distance():
     npt.assert_almost_equal(tester_dist.distance,
                             computed_distances['scf_distance'])
 
+    # With pre-computed SCF classes
+
+    tester_dist2 = \
+        SCF_Distance(tester_dist.scf1,
+                     tester_dist.scf2, size=11)
+    tester_dist2.distance_metric()
+
+    npt.assert_almost_equal(tester_dist2.distance,
+                            computed_distances['scf_distance'])
+
+    # With fresh SCF instances
+    tester = SCF(dataset1["cube"], size=11)
+    tester2 = SCF(dataset2["cube"], size=11)
+
+    tester_dist3 = \
+        SCF_Distance(tester,
+                     tester2, size=11)
+    tester_dist3.distance_metric()
+
+    npt.assert_almost_equal(tester_dist3.distance,
+                            computed_distances['scf_distance'])
+
 
 def test_SCF_regrid_distance():
     hdr = dataset1["cube"][1].copy()

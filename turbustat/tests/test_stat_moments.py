@@ -100,3 +100,39 @@ def test_moment_distance():
                             computed_distances['kurtosis_distance'])
     npt.assert_almost_equal(tester_dist.skewness_distance,
                             computed_distances['skewness_distance'])
+
+    # With StatMoments classes as inputs
+
+    tester_dist2 = \
+        StatMoments_Distance(tester_dist.moments1,
+                             tester_dist.moments2)
+    tester_dist2.distance_metric()
+
+    assert np.allclose(tester_dist2.moments1.kurtosis_hist[1],
+                       computed_data['kurtosis_val'])
+    assert np.allclose(tester_dist2.moments1.skewness_hist[1],
+                       computed_data['skewness_val'])
+
+    npt.assert_almost_equal(tester_dist2.kurtosis_distance,
+                            computed_distances['kurtosis_distance'])
+    npt.assert_almost_equal(tester_dist2.skewness_distance,
+                            computed_distances['skewness_distance'])
+
+    # With fresh StatMoments classes
+    tester = StatMoments(dataset1["moment0"])
+    tester2 = StatMoments(dataset2["moment0"])
+
+    tester_dist3 = \
+        StatMoments_Distance(tester,
+                             tester2)
+    tester_dist3.distance_metric()
+
+    assert np.allclose(tester_dist3.moments1.kurtosis_hist[1],
+                       computed_data['kurtosis_val'])
+    assert np.allclose(tester_dist3.moments1.skewness_hist[1],
+                       computed_data['skewness_val'])
+
+    npt.assert_almost_equal(tester_dist3.kurtosis_distance,
+                            computed_distances['kurtosis_distance'])
+    npt.assert_almost_equal(tester_dist3.skewness_distance,
+                            computed_distances['skewness_distance'])

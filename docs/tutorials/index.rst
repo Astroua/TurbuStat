@@ -21,6 +21,7 @@ Statistics
 .. toctree::
     :maxdepth: 2
 
+    statistics/running_statistics
     statistics/bispectrum_example
     statistics/delta_variance_example
     statistics/dendrogram_example
@@ -48,6 +49,7 @@ A distance metric for **Tsallis** statistics has not been explored and is not cu
 .. toctree::
     :maxdepth: 2
 
+    metrics/running_metrics
     metrics/bispectrum_example
     metrics/cramer_example
     metrics/delvar_example

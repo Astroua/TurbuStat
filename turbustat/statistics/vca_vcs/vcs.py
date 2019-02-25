@@ -401,17 +401,15 @@ class VCS_Distance(object):
 
     Parameters
     ----------
-    cube1 : %(dtypes)s
-        Data cube.
-    cube2 : %(dtypes)s
-        Data cube.
+    cube1 : %(dtypes)s or `~VCS`
+        Data cube. Or a `~VCS` class can be passed which may be pre-computed.
+    cube2 : %(dtypes)s or `~VCS`
+        See `data1`.
     slice_size : float, optional
         Slice to degrade the cube to.
     breaks : float, list or array, optional
         Specify where the break point is. If None, attempts to find using
         spline.
-    fiducial_model : VCS
-        Computed VCS object. use to avoid recomputing.
     fit_kwargs : dict, optional
         Passed to `~VCS.run`.
     fit_kwargs2 : dict or None, optional
@@ -421,22 +419,43 @@ class VCS_Distance(object):
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
-    def __init__(self, cube1, cube2, breaks=None, fiducial_model=None,
+    def __init__(self, cube1, cube2, breaks=None,
                  fit_kwargs={}, fit_kwargs2=None):
         super(VCS_Distance, self).__init__()
 
         if not isinstance(breaks, list) and not isinstance(breaks, np.ndarray):
             breaks = [breaks] * 2
 
-        if fiducial_model is not None:
-            self.vcs1 = fiducial_model
+        if isinstance(cube1, VCS):
+            self.vcs1 = cube1
+            needs_run = False
+            if not hasattr(self.vcs1, '_slope'):
+                warnings.warn("VCS class given as `cube1` does not have a "
+                              "fitted slope. Computing VCS.")
+                needs_run = True
         else:
-            self.vcs1 = VCS(cube1).run(breaks=breaks[0], **fit_kwargs)
+            self.vcs1 = VCS(cube1)
+            needs_run = True
+
+        if needs_run:
+            self.vcs1.run(breaks=breaks[0], **fit_kwargs)
 
         if fit_kwargs2 is None:
             fit_kwargs2 = fit_kwargs
 
-        self.vcs2 = VCS(cube2).run(breaks=breaks[1], **fit_kwargs2)
+        if isinstance(cube2, VCS):
+            self.vcs2 = cube2
+            needs_run = False
+            if not hasattr(self.vcs2, '_slope'):
+                warnings.warn("VCS class given as `cube2` does not have a "
+                              "fitted slope. Computing VCS.")
+                needs_run = True
+        else:
+            self.vcs2 = VCS(cube2)
+            needs_run = True
+
+        if needs_run:
+            self.vcs2.run(breaks=breaks[1], **fit_kwargs2)
 
     def distance_metric(self, verbose=False, xunit=u.pix**-1,
                         save_name=None, plot_kwargs1={},

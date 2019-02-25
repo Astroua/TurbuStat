@@ -316,17 +316,16 @@ class MVC_Distance(object):
 
     Parameters
     ----------
-    data1 : dict
+    data1 : dict or `~MVC`
         A dictionary containing the centroid, moment 0, and linewidth arrays
-        of a spectral cube. This output is created by Mask_and_Moments.to_dict.
+        of a spectral cube. This output is created by Moments.to_dict.
         The minimum expected keys are 'centroid', 'moment0' and 'linewidth'. If
         weight_by_error is enabled, the dictionary should also contain the
         error arrays, where the keys are the three above with '_error'
-        appended to the end.
-    data2 : dict
-        See data1.
-    fiducial_model : MVC
-        Computed MVC object. use to avoid recomputing.
+        appended to the end. An `~MVC` class may also be passed which may be
+        pre-computed.
+    data2 : dict or `~MVC`
+        See `data1` above.
     weight_by_error : bool, optional
         When enabled, the property arrays are weighted by the inverse
         squared of the error arrays.
@@ -344,36 +343,45 @@ class MVC_Distance(object):
     pspec2_kwargs : dict or None, optional
         Passed to `radial_pspec_kwargs` in `~MVC.run` for `data2`. When
         `None` is given, setting from `pspec_kwargs` are used for `data2`.
-    phys_distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
     """
 
-    def __init__(self, data1, data2, fiducial_model=None,
+    def __init__(self, data1, data2,
                  weight_by_error=False, low_cut=None, high_cut=0.5 / u.pix,
-                 breaks=None, pspec_kwargs={}, pspec2_kwargs=None,
-                 phys_distance=None):
+                 breaks=None, pspec_kwargs={}, pspec2_kwargs=None):
 
-        # Create weighted or non-weighted versions
-        if weight_by_error:
-            centroid1 = data1["centroid"][0] * \
-                data1["centroid_error"][0] ** -2.
-            moment01 = data1["moment0"][0] * \
-                data1["moment0_error"][0] ** -2.
-            linewidth1 = data1["linewidth"][0] * \
-                data1["linewidth_error"][0] ** -2.
-            centroid2 = data2["centroid"][0] * \
-                data2["centroid_error"][0] ** -2.
-            moment02 = data2["moment0"][0] * \
-                data2["moment0_error"][0] ** -2.
-            linewidth2 = data2["linewidth"][0] * \
-                data2["linewidth_error"][0] ** -2.
+        if isinstance(data1, MVC):
+            self.mvc1 = data1
+            _has_data1 = False
         else:
-            centroid1 = data1["centroid"][0]
-            moment01 = data1["moment0"][0]
-            linewidth1 = data1["linewidth"][0]
-            centroid2 = data2["centroid"][0]
-            moment02 = data2["moment0"][0]
-            linewidth2 = data2["linewidth"][0]
+            _has_data1 = True
+            if weight_by_error:
+                centroid1 = data1["centroid"][0] * \
+                    data1["centroid_error"][0] ** -2.
+                moment01 = data1["moment0"][0] * \
+                    data1["moment0_error"][0] ** -2.
+                linewidth1 = data1["linewidth"][0] * \
+                    data1["linewidth_error"][0] ** -2.
+            else:
+                centroid1 = data1["centroid"][0]
+                moment01 = data1["moment0"][0]
+                linewidth1 = data1["linewidth"][0]
+
+        if isinstance(data2, MVC):
+            self.mvc2 = data2
+            _has_data2 = False
+        else:
+            _has_data2 = True
+            if weight_by_error:
+                centroid2 = data2["centroid"][0] * \
+                    data2["centroid_error"][0] ** -2.
+                moment02 = data2["moment0"][0] * \
+                    data2["moment0_error"][0] ** -2.
+                linewidth2 = data2["linewidth"][0] * \
+                    data2["linewidth_error"][0] ** -2.
+            else:
+                centroid2 = data2["centroid"][0]
+                moment02 = data2["moment0"][0]
+                linewidth2 = data2["linewidth"][0]
 
         low_cut, high_cut = check_fit_limits(low_cut, high_cut)
 
@@ -383,22 +391,41 @@ class MVC_Distance(object):
         if pspec2_kwargs is None:
             pspec2_kwargs = pspec_kwargs
 
-        if fiducial_model is not None:
-            self.mvc1 = fiducial_model
-        else:
+        # if fiducial_model is not None:
+        #     self.mvc1 = fiducial_model
+        if _has_data1:
             self.mvc1 = MVC(centroid1, moment01, linewidth1,
-                            data1["centroid"][1], distance=phys_distance)
+                            data1["centroid"][1])
+            need_run = True
+        else:
+            need_run = False
+            if not hasattr(self.mvc1, '_slope'):
+                need_run = True
+                warn("MVC given as data1 does not have a fitted"
+                     " slope. Re-running MVC.")
+
+        if need_run:
             self.mvc1.run(radial_pspec_kwargs=pspec_kwargs,
                           high_cut=high_cut[0],
                           low_cut=low_cut[0],
                           fit_kwargs={'brk': breaks[0]}, fit_2D=False)
 
-        self.mvc2 = MVC(centroid2, moment02, linewidth2,
-                        data2["centroid"][1], distance=phys_distance)
-        self.mvc2.run(radial_pspec_kwargs=pspec2_kwargs,
-                      high_cut=high_cut[1],
-                      low_cut=low_cut[1],
-                      fit_kwargs={'brk': breaks[1]}, fit_2D=False)
+        if _has_data2:
+            self.mvc2 = MVC(centroid2, moment02, linewidth2,
+                            data2["centroid"][1])
+            need_run = True
+        else:
+            need_run = False
+            if not hasattr(self.mvc2, '_slope'):
+                need_run = True
+                warn("MVC given as data2 does not have a fitted"
+                     " slope. Re-running MVC.")
+
+        if need_run:
+            self.mvc2.run(radial_pspec_kwargs=pspec2_kwargs,
+                          high_cut=high_cut[1],
+                          low_cut=low_cut[1],
+                          fit_kwargs={'brk': breaks[1]}, fit_2D=False)
 
     def distance_metric(self, verbose=False, xunit=u.pix**-1,
                         save_name=None, plot_kwargs1={},

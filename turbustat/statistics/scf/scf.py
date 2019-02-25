@@ -97,6 +97,30 @@ class SCF(BaseStatisticMixIn):
         self._fit2D_flag = False
 
     @property
+    def roll_lags(self):
+        '''
+        Pixel values that the cube is rolled by to compute the SCF correlation
+        surface.
+        '''
+        return self._roll_lags
+
+    @roll_lags.setter
+    def roll_lags(self, value):
+
+        # Needs to be a quantity with a unit
+        if not hasattr(value, "unit"):
+            raise ValueError("roll_lags must be an astropy.units.Quantity.")
+
+        try:
+            self._to_pixel(value)
+        except u.UnitConversionError:
+            raise u.UnitConversionError("Cannot convert given roll lags to "
+                                        "pixel units. `roll_lags` must have"
+                                        " pixel, angular, or physical (if a"
+                                        " distance is given) units.")
+        self._roll_lags = value
+
+    @property
     def scf_surface(self):
         '''
         SCF correlation array
@@ -780,12 +804,17 @@ class SCF_Distance(object):
     The distance is the L2 norm between the surfaces. We weight the surface by
     1/r^2 where r is the distance from the centre.
 
+    .. note:: When a pre-computed `~SCF` class is given for `cube1` or `cube2`,
+              it needs to have the same set of lags between the cubes, defined
+              by as the angular scales based on the FITS header. If the lags
+              are not equivalent, the SCF will be re-computed with new lags.
+
     Parameters
     ----------
-    cube1 : %(dtypes)s
-        Data cube.
-    cube2 : %(dtypes)s
-        Data cube.
+    cube1 : %(dtypes)s or `~SCF`
+        Data cube. Or a `~SCF` class can be passed which may be pre-computed.
+    cube2 : %(dtypes)s or `~SCF`
+        Data cube. Or a `~SCF` class can be passed which may be pre-computed.
     size : int, optional
         Maximum size roll, in pixels, over which SCF will be calculated. If
         the angular scale is different between the data cubes, the lags are
@@ -795,20 +824,26 @@ class SCF_Distance(object):
         beyond the edge (i.e., for most observational data). A two element
         list can also be passed for treating the boundaries differently
         between the given cubes.
-    fiducial_model : SCF
-        Computed SCF object. Use to avoid recomputing.
-    phys_distance : `~astropy.units.Quantity`, optional
-        Physical distance to the region in the data.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + threed_types)}
 
     def __init__(self, cube1, cube2, size=11, boundary='continuous',
-                 fiducial_model=None,
-                 show_progress=True, phys_distance=None):
+                 show_progress=True):
 
-        dataset1 = input_data(cube1, no_header=False)
-        dataset2 = input_data(cube2, no_header=False)
+        if isinstance(cube1, SCF):
+            self.scf1 = cube1
+            _has_data1 = False
+        else:
+            dataset1 = input_data(cube1, no_header=False)
+            _has_data1 = True
+
+        if isinstance(cube2, SCF):
+            self.scf2 = cube2
+            _has_data2 = False
+        else:
+            dataset2 = input_data(cube2, no_header=False)
+            _has_data2 = True
 
         # Create a default set of lags, in pixels
         if size % 2 == 0:
@@ -817,11 +852,13 @@ class SCF_Distance(object):
             size = size - 1
 
         self.size = size
-        roll_lags = np.arange(size) - size // 2
+        roll_lags = (np.arange(size) - size // 2) * u.pix
 
         # Now adjust the lags such they have a common scaling when the datasets
         # are not on a common grid.
-        scale = common_scale(WCS(dataset1[1]), WCS(dataset2[1]))
+        wcs1 = WCS(dataset1[1]) if _has_data1 else self.scf1._wcs
+        wcs2 = WCS(dataset2[1]) if _has_data2 else self.scf2._wcs
+        scale = common_scale(wcs1, wcs2)
 
         if scale == 1.0:
             roll_lags1 = roll_lags
@@ -840,24 +877,59 @@ class SCF_Distance(object):
         else:
             boundary = [boundary, boundary]
 
-        if fiducial_model is not None:
-            self.scf1 = fiducial_model
+        # if fiducial_model is not None:
+        #     self.scf1 = fiducial_model
+        if _has_data1:
+            self.scf1 = SCF(cube1, roll_lags=roll_lags1)
+            needs_run = True
         else:
-            self.scf1 = SCF(cube1, roll_lags=roll_lags1,
-                            distance=phys_distance)
+            needs_run = False
+            lag_check = (roll_lags1 == self.scf1.roll_lags).all()
+            compute_check = hasattr(self.scf1, "_scf_spectrum")
+            if not lag_check:
+                warn("SCF given as cube1 needs to be recomputed as the lags"
+                     " must match the common set of lags between the two data"
+                     " sets. Recomputing SCF.")
+                needs_run = True
+                self.scf1.roll_lags = roll_lags1
+
+            if not compute_check:
+                warn("SCF given as cube1 does not have an SCF"
+                     " spectrum computed. Recomputing SCF.")
+                needs_run = True
+
+        if needs_run:
             self.scf1.compute_surface(boundary=boundary[0],
                                       show_progress=show_progress)
             # This is for the plot, not the distance, so stick with default
             # params
             self.scf1.compute_spectrum()
 
-        self.scf2 = SCF(cube2, roll_lags=roll_lags2,
-                        distance=phys_distance)
-        self.scf2.compute_surface(boundary=boundary[1],
-                                  show_progress=show_progress)
-        # This is for the plot, not the distance, so stick with default
-        # params
-        self.scf2.compute_spectrum()
+        if _has_data2:
+            self.scf2 = SCF(cube2, roll_lags=roll_lags2)
+            needs_run = True
+        else:
+            needs_run = False
+            lag_check = (roll_lags2 == self.scf2.roll_lags).all()
+            compute_check = hasattr(self.scf2, "_scf_spectrum")
+            if not lag_check:
+                warn("SCF given as cube2 needs to be recomputed as the lags"
+                     " must match the common set of lags between the two data"
+                     " sets. Recomputing SCF.")
+                needs_run = True
+                self.scf2.roll_lags = roll_lags2
+
+            if not compute_check:
+                warn("SCF given as cube2 does not have an SCF"
+                     " spectrum computed. Recomputing SCF.")
+                needs_run = True
+
+        if needs_run:
+            self.scf2.compute_surface(boundary=boundary[1],
+                                      show_progress=show_progress)
+            # This is for the plot, not the distance, so stick with default
+            # params
+            self.scf2.compute_spectrum()
 
     def distance_metric(self, weighted=True, verbose=False,
                         plot_kwargs1={'color': 'b', 'marker': 'D',

@@ -64,3 +64,35 @@ def test_DendroDistance():
                             computed_distances["dendrohist_distance"])
     npt.assert_almost_equal(tester_dist.num_distance,
                             computed_distances["dendronum_distance"])
+
+    # With Dendrogram_Stats as inputs
+
+    tester_dist2 = \
+        DendroDistance(tester_dist.dendro1,
+                       tester_dist.dendro2,
+                       min_deltas=min_deltas,
+                       dendro_kwargs=dict(periodic_bounds=False))
+    tester_dist2.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist2.histogram_distance,
+                            computed_distances["dendrohist_distance"])
+    npt.assert_almost_equal(tester_dist2.num_distance,
+                            computed_distances["dendronum_distance"])
+
+    # With uncomputed Dendrogram_Stats
+    tester = Dendrogram_Stats(dataset1["cube"],
+                              min_deltas=min_deltas)
+    tester2 = Dendrogram_Stats(dataset2["cube"],
+                               min_deltas=min_deltas)
+
+    tester_dist3 = \
+        DendroDistance(tester,
+                       tester2,
+                       min_deltas=min_deltas,
+                       dendro_kwargs=dict(periodic_bounds=False))
+    tester_dist3.distance_metric(verbose=False)
+
+    npt.assert_almost_equal(tester_dist3.histogram_distance,
+                            computed_distances["dendrohist_distance"])
+    npt.assert_almost_equal(tester_dist3.num_distance,
+                            computed_distances["dendronum_distance"])

@@ -515,28 +515,50 @@ class Bispectrum_Distance(object):
 
     Parameters
     ----------
-    data1 : %(dtypes)s
-        Contains the data and header of the image.
-    data2 : %(dtypes)s
-        Contains the data and header of the image.
-    nsamples : int, optional
-        Sets the number of samples to take at each vector magnitude.
-    fiducial_model : Bispectrum
-        Computed Bispectrum object. use to avoid recomputing.
+    data1 : %(dtypes)s or `~Bispectrum`
+        Contains the data and header of the image. Or a `~Bispectrum` class may
+        be given which can be pre-computed.
+    data2 : %(dtypes)s or `~Bispectrum`
+        Contains the data and header of the second image. Or a `~Bispectrum`
+        class may be given which can be pre-computed.
+    stat_kwargs : dict, optional
+        Passed to `~Bispectrum.run`.
     '''
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, data1, data2, stat_kwargs={}, fiducial_model=None):
+    def __init__(self, data1, data2, stat_kwargs={}):
 
-        if fiducial_model is not None:
-            self.bispec1 = fiducial_model
+        # if fiducial_model is not None:
+        #     self.bispec1 = fiducial_model
+
+        if isinstance(data1, Bispectrum):
+            self.bispec1 = data1
+            needs_run = False
+            if not hasattr(self.bispec1, '_bicoherence'):
+                needs_run = True
+                warn("Bispectrum given as data1 does not have a"
+                     " bicoherence surface. Re-running Bispectrum.")
         else:
             self.bispec1 = BiSpectrum(data1)
+            needs_run = True
+
+        if needs_run:
             self.bispec1.run(**stat_kwargs)
 
-        self.bispec2 = BiSpectrum(data2)
-        self.bispec2.run(**stat_kwargs)
+        if isinstance(data2, Bispectrum):
+            self.bispec2 = data2
+            needs_run = False
+            if not hasattr(self.bispec2, '_bicoherence'):
+                needs_run = True
+                warn("Bispectrum given as data2 does not have a"
+                     " bicoherence surface. Re-running Bispectrum.")
+        else:
+            self.bispec2 = BiSpectrum(data2)
+            needs_run = True
+
+        if needs_run:
+            self.bispec2.run(**stat_kwargs)
 
     @property
     def surface_distance(self):
