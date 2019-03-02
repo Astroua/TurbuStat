@@ -54,6 +54,22 @@ def test_PCA_method():
                    tester.sonic_length(use_gamma=False)[1][0].value,
                    tester.sonic_length(use_gamma=False)[1][1].value)
 
+    # Try setting fit limits to the max and min and ensure we get the same
+    # values out
+    tester.fit_plaw(xlow=np.nanmin(tester.spatial_width()),
+                    xhigh=np.nanmax(tester.spatial_width()))
+
+    assert_between(fit_values["index"], tester.index_error_range[0],
+                   tester.index_error_range[1])
+    assert_between(fit_values["gamma"], tester.gamma_error_range[0],
+                   tester.gamma_error_range[1])
+    assert_between(fit_values["intercept"],
+                   tester.intercept_error_range(unit=u.pix)[0].value,
+                   tester.intercept_error_range(unit=u.pix)[1].value)
+    assert_between(fit_values["sonic_length"],
+                   tester.sonic_length(use_gamma=False)[1][0].value,
+                   tester.sonic_length(use_gamma=False)[1][1].value)
+
     # Test loading and saving
     tester.save_results("pca_output.pkl", keep_data=False)
 
