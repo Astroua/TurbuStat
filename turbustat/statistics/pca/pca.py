@@ -524,7 +524,7 @@ class PCA(BaseStatisticMixIn):
         else:
             lower_limit = \
                 np.ones_like(x, dtype=bool)
-            self._xlow = np.abs(self.spatial_width()).min()
+            self._xlow = np.nanmin(self.spatial_width())
 
         if xhigh is not None:
             if not isinstance(xhigh, u.Quantity):
@@ -538,7 +538,7 @@ class PCA(BaseStatisticMixIn):
         else:
             upper_limit = \
                 np.ones_like(x, dtype=bool)
-            self._xhigh = np.abs(self.spatial_width()).max()
+            self._xhigh = np.nanmax(self.spatial_width())
 
         within_limits = np.logical_and(lower_limit, upper_limit)
 
@@ -837,6 +837,17 @@ class PCA(BaseStatisticMixIn):
                          spatial_width,
                          yerr=0.434 * spectral_width_error /
                          spectral_width, fmt=symbol, color=color)
+
+            # Show fitting extents
+            xlow = self._spatial_unit_conversion(self._xlow,
+                                                 spatial_unit).value
+            xhigh = self._spatial_unit_conversion(self._xhigh,
+                                                  spatial_unit).value
+            plt.axvline(np.log10(xlow), color=fit_color,
+                        alpha=0.5, linestyle='-.')
+            plt.axvline(np.log10(xhigh), color=fit_color,
+                        alpha=0.5, linestyle='-.')
+
             plt.ylabel("log Linewidth / "
                        "{}".format(spectral_width.unit.to_string()))
             plt.grid()
@@ -893,6 +904,11 @@ class PCA(BaseStatisticMixIn):
                              yerr=0.434 * spectral_width_error /
                              spectral_width, fmt='o', color=color)
                 plt.grid()
+
+                plt.axvline(np.log10(xlow), color=fit_color,
+                            alpha=0.5, linestyle='-.')
+                plt.axvline(np.log10(xhigh), color=fit_color,
+                            alpha=0.5, linestyle='-.')
 
                 plt.axhline(0., color=fit_color)
                 plt.ylabel("Residuals")
