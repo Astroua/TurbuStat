@@ -3,9 +3,19 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from astropy import units as u
-from spectral_cube.spectral_cube import BaseSpectralCube
 from astropy.convolution import Gaussian1DKernel
 from warnings import warn
+
+try:
+    from spectral_cube.version import version as sc_version
+    from distutils.version import LooseVersion
+    if LooseVersion(sc_version) < LooseVersion("0.4.4"):
+        raise ValueError("turbustat requires spectral-cube version 0.4.4."
+                         " Found version {}".format(sc_version))
+    from spectral_cube.spectral_cube import BaseSpectralCube
+    HAS_SC = True
+except ImportError:
+    HAS_SC = False
 
 
 def spectral_regrid_cube(cube, channel_width, method='downsample',
@@ -61,6 +71,10 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
     regridded_cube : `spectral_cube.SpectralCube`
         The regridded or downsampled cube.
     '''
+
+    if not HAS_SC:
+        raise ValueError("spectral-cube v0.4.4 or greater is required for"
+                         " `spectral_regrid_cube`")
 
     if not isinstance(cube, BaseSpectralCube):
         raise TypeError("`cube` must be a SpectralCube object.")

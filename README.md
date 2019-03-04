@@ -58,7 +58,7 @@ Requires:
 
 Recommended:
 
- *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
+ *   [spectral-cube](https://github.com/radio-astro-tools/spectral-cube) (>v0.4.4) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
  *   [astrodendro-development](https://github.com/dendrograms/astrodendro) - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
  *   [radio_beam](https://github.com/radio-astro-tools/radio_beam) - A class for handling radio beams and useful utilities. Required for correcting for the beam shape in spatial power spectra. Automatically installed with spectral-cube.
 

@@ -16,7 +16,7 @@ try:
     from spectral_cube.wcs_utils import drop_axis
     spectral_cube_flag = True
 except ImportError:
-    warn("spectral-cube is not installed. Using Mask_and_Moments requires"
+    warn("spectral-cube is not installed. Using Moments requires"
          " spectral-cube to be installed.")
     spectral_cube_flag = False
 
@@ -53,7 +53,7 @@ class Moments(object):
         super(Moments, self).__init__()
 
         if not spectral_cube_flag:
-            raise ImportError("Mask_and_Moments requires the spectral-cube "
+            raise ImportError("Moments requires the spectral-cube "
                               " to be installed: https://github.com/"
                               "radio-astro-tools/spectral-cube")
 
@@ -376,7 +376,7 @@ class Moments(object):
         '''
 
         if not spectral_cube_flag:
-            raise ImportError("Mask_and_Moments requires the spectral-cube "
+            raise ImportError("Moments requires the spectral-cube "
                               " to be installed: https://github.com/"
                               "radio-astro-tools/spectral-cube")
 
