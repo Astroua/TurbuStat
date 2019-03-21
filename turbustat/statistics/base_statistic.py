@@ -5,6 +5,7 @@ from astropy.io import fits
 import astropy.units as u
 import numpy as np
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales, is_proj_plane_distorted
 from radio_beam import Beam
 from radio_beam.beam import NoBeamException
 from warnings import warn
@@ -75,6 +76,13 @@ class BaseStatisticMixIn(object):
     def _wcs(self):
         if not hasattr(self, "_header"):
             raise AttributeError("No header was found.")
+
+        wcs_obj = WCS(self.header)
+
+        if is_proj_plane_distorted(wcs_obj):
+            raise ValueError("Celestial pixels are not square in the image. "
+                             "The routines in TurbuStat will not give correct"
+                             " results for non-square celestial pixels.")
 
         return WCS(self.header)
 
