@@ -5,6 +5,7 @@ from astropy.io import fits
 import astropy.units as u
 import numpy as np
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales, is_proj_plane_distorted
 from radio_beam import Beam
 from radio_beam.beam import NoBeamException
 from warnings import warn
@@ -75,6 +76,13 @@ class BaseStatisticMixIn(object):
     def _wcs(self):
         if not hasattr(self, "_header"):
             raise AttributeError("No header was found.")
+
+        wcs_obj = WCS(self.header)
+
+        if is_proj_plane_distorted(wcs_obj):
+            raise ValueError("Celestial pixels are not square in the image. "
+                             "The routines in TurbuStat will not give correct"
+                             " results for non-square celestial pixels.")
 
         return WCS(self.header)
 
@@ -154,13 +162,13 @@ class BaseStatisticMixIn(object):
 
         Returns
         -------
-        self : SCF instance
-            SCF instance with saved results.
+        self : Save statistic class
+            Statistic instance with saved results.
 
         Examples
         --------
         Load saved results.
-        >>> scf = SCF.load_results("scf_saved.pkl") # doctest: +SKIP
+        >>> stat = Statistic.load_results("stat_saved.pkl") # doctest: +SKIP
 
         '''
 
@@ -182,7 +190,9 @@ class BaseStatisticMixIn(object):
         if not hasattr(self, "_header"):
             raise AttributeError("No header has not been given.")
 
-        return np.abs(self.header["CDELT2"]) * u.Unit(self._wcs.wcs.cunit[1])
+        pix_scale = np.abs(proj_plane_pixel_scales(self._wcs)[0])
+
+        return pix_scale * u.Unit(self._wcs.wcs.cunit[1])
 
     @property
     def distance(self):
@@ -326,8 +336,10 @@ class BaseStatisticMixIn(object):
         self._has_spectral(raise_error=True)
 
         spec = self._wcs.wcs.spec
-        return np.abs(self._wcs.wcs.cdelt[spec]) * \
-            u.Unit(self._wcs.wcs.cunit[spec])
+
+        mat = self._wcs.pixel_scale_matrix[spec, spec]
+
+        return np.abs(mat) * u.Unit(self._wcs.wcs.cunit[spec])
 
     @property
     def _spectral_equiv(self):
