@@ -192,7 +192,7 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
                 raise AttributeError("Beam correction cannot be applied since"
                                      " no beam object was given.")
 
-            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
+            beam_kern = self._beam.as_kernel(self._ang_size,
                                              y_size=self.centroid.shape[0],
                                              x_size=self.centroid.shape[1])
 

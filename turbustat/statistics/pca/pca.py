@@ -384,7 +384,7 @@ class PCA(BaseStatisticMixIn):
             WidthEstimate2D(acors, noise_ACF=noise_ACF, method=method,
                             brunt_beamcorrect=brunt_beamcorrect,
                             beam_fwhm=beam_fwhm,
-                            spatial_cdelt=self.header['CDELT2'] * u.deg,
+                            spatial_cdelt=self._ang_size,
                             diagnosticplots=diagnosticplots,
                             **fit_kwargs)
 

@@ -118,9 +118,9 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
                 raise AttributeError("Beam correction cannot be applied since"
                                      " no beam object was given.")
 
-            beam_kern = self._beam.as_kernel(self._wcs.wcs.cdelt[0] * u.deg,
-                                             y_size=self.data.shape[1],
-                                             x_size=self.data.shape[2])
+            beam_kern = self._beam.as_kernel(self._ang_size,
+                                             y_size=self.data.shape[0],
+                                             x_size=self.data.shape[1])
 
             beam_fft = fftshift(rfft_to_fft(beam_kern.array))
 
