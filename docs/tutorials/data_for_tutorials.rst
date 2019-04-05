@@ -29,3 +29,5 @@ These data have a limited inertial range, which is evident in the :ref:`Spatial 
 The following image shows the integrated intensity (zeroth moment) maps of the tutorial data::
 
 .. image:: images/design_fiducial_moment0.png
+
+Note how the integrated intensity scale varies between the two data sets.
