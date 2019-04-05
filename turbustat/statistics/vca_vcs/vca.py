@@ -119,8 +119,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
                                      " no beam object was given.")
 
             beam_kern = self._beam.as_kernel(self._ang_size,
-                                             y_size=self.data.shape[0],
-                                             x_size=self.data.shape[1])
+                                             y_size=self.data.shape[1],
+                                             x_size=self.data.shape[2])
 
             beam_fft = fftshift(rfft_to_fft(beam_kern.array))
 
