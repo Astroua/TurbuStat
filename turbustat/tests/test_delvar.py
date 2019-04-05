@@ -103,6 +103,10 @@ def test_DelVar_method_wbrk():
     npt.assert_almost_equal(tester.slope, computed_data['delvar_slope_wbrk'])
     npt.assert_almost_equal(tester.brk.value, computed_data['delvar_brk'])
 
+    # Make sure the break fits have correct units
+    assert tester.brk.unit == u.pix
+    assert tester.brk_err.unit == u.pix
+
 
 def test_DelVar_distance():
     tester_dist = \

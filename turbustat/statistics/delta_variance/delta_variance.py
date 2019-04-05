@@ -370,7 +370,7 @@ class DeltaVariance(BaseStatisticMixIn):
                     x = x[good_pts]
                     y = y[good_pts]
 
-                    self._brk = 10**model.brk / u.pix
+                    self._brk = 10**model.brk * u.pix
 
                     self._slope = model.slopes
 
@@ -380,12 +380,12 @@ class DeltaVariance(BaseStatisticMixIn):
 
                         self._slope_err = stderrs[1:-1]
                         self._brk_err = np.log(10) * self.brk.value * \
-                            stderrs[-1] / u.pix
+                            stderrs[-1] * u.pix
 
                     else:
                         self._slope_err = model.slope_errs
                         self._brk_err = np.log(10) * self.brk.value * \
-                            model.brk_err / u.pix
+                            model.brk_err * u.pix
 
                     self.fit = model.fit
 
