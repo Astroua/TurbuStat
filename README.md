@@ -64,6 +64,7 @@ Recommended:
 
 Optional:
  *   [emcee](http://dan.iel.fm/emcee/current/) - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA and fitting PDFs.
+ *   [pyfftw](https://hgomersall.github.io/pyFFTW/) - Wrapper for the FFTW libraries. Allows FFTs to be run in parallel.
 
 Credits
 -------
@@ -74,7 +75,7 @@ If you make use of this package in a publication, please cite our accompanying p
 UPCOMING
 ```
 
-A description of the distance metrics is provided in this paper:
+Please cite the paper below when using the distance metrics in TurbuStat:
 ```
 @ARTICLE{Koch2017,
    author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and 
