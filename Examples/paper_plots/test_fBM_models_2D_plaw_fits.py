@@ -46,7 +46,7 @@ figsize = (width, height)
 fig = plt.figure(figsize=figsize)
 
 ax1 = plt.subplot(121)
-im1 = ax1.imshow(test_img.data, cmap='viridis', origin='lower')
+im1 = ax1.imshow(test_img.data.T, cmap='viridis', origin='lower')
 
 divider = make_axes_locatable(ax1)
 cax1 = divider.append_axes("left", "5%", pad="3%")
