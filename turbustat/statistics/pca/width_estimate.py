@@ -78,8 +78,9 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
     # set up the x/y grid just once
     z = inList[0]
-    x = fft.fftfreq(z.shape[0]) * z.shape[0] / 2.0
-    y = fft.fftfreq(z.shape[1]) * z.shape[1] / 2.0
+    # NOTE: previous versions were dividing by an extra factor of 2!
+    x = fft.fftfreq(z.shape[0]) * z.shape[0]
+    y = fft.fftfreq(z.shape[1]) * z.shape[1]
     xmat, ymat = np.meshgrid(x, y, indexing='ij')
     xmat = np.fft.fftshift(xmat)
     ymat = np.fft.fftshift(ymat)
