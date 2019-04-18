@@ -306,7 +306,7 @@ def WidthEstimate1D(inList, method='walk-down'):
     scales = np.zeros((inList.shape[1],))
     scale_errors = np.zeros((inList.shape[1],))
     for idx, y in enumerate(inList.T):
-        x = fft.fftfreq(len(y)) * len(y) / 2.0
+        x = np.fft.fftfreq(len(y)) * len(y)
         if method == 'interpolate':
             minima = argrelmin(y)[0]
             if minima[0] > 1:
