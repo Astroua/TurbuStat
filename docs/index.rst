@@ -64,6 +64,7 @@ Many thanks to everyone who has reported bugs and given feedback on TurbuStat!
 * Simon Glover
 * Jonathan Henshaw
 * Sac Medina
+* Andrés Izquierdo
 
 
 Contents:
