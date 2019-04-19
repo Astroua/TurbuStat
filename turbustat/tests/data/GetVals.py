@@ -132,7 +132,8 @@ delvar_brk = delvar_wbrk.brk.value
 delvar_fill = \
     DeltaVariance(dataset1["moment0"],
                   weights=dataset1['moment0_error'][0]).run(xhigh=11 * u.pix,
-                                                            boundary='fill')
+                                                            boundary='fill',
+                                                            nan_treatment='interpolate')
 
 delvar_fill_val = delvar_fill.delta_var
 delvar_fill_slope = delvar_fill.slope

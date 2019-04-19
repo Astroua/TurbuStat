@@ -78,8 +78,9 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
 
     # set up the x/y grid just once
     z = inList[0]
-    x = fft.fftfreq(z.shape[0]) * z.shape[0] / 2.0
-    y = fft.fftfreq(z.shape[1]) * z.shape[1] / 2.0
+    # NOTE: previous versions were dividing by an extra factor of 2!
+    x = fft.fftfreq(z.shape[0]) * z.shape[0]
+    y = fft.fftfreq(z.shape[1]) * z.shape[1]
     xmat, ymat = np.meshgrid(x, y, indexing='ij')
     xmat = np.fft.fftshift(xmat)
     ymat = np.fft.fftshift(ymat)
@@ -305,7 +306,7 @@ def WidthEstimate1D(inList, method='walk-down'):
     scales = np.zeros((inList.shape[1],))
     scale_errors = np.zeros((inList.shape[1],))
     for idx, y in enumerate(inList.T):
-        x = fft.fftfreq(len(y)) * len(y) / 2.0
+        x = np.fft.fftfreq(len(y)) * len(y)
         if method == 'interpolate':
             minima = argrelmin(y)[0]
             if minima[0] > 1:

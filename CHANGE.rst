@@ -1,6 +1,7 @@
 
 Version 1.0 (unreleased)
 ------------------------
+* #216 - Correct the PCA spatial and spectral width definitions. Update unit test data to reflect change.
 * #215 - Generalize WCS pixel conversions. Fixed units for the delta-variance break.
 * #208 - Fix #207; description of NaN handling for the delta-variance tutorial from @keflavich. **Change to requiring astropy >v2!**
 * #171 - Expand PCA tutorial; fix unit conversion error in astropy 3.2dev

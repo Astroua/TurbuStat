@@ -51,8 +51,8 @@ def test_PCA_method():
                    tester.intercept_error_range(unit=u.pix)[0].value,
                    tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
-                   tester.sonic_length(use_gamma=False)[1][0].value,
-                   tester.sonic_length(use_gamma=False)[1][1].value)
+                   tester.sonic_length(use_gamma=True)[1][0].value,
+                   tester.sonic_length(use_gamma=True)[1][1].value)
 
     # Try setting fit limits to the max and min and ensure we get the same
     # values out
@@ -67,8 +67,8 @@ def test_PCA_method():
                    tester.intercept_error_range(unit=u.pix)[0].value,
                    tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
-                   tester.sonic_length(use_gamma=False)[1][0].value,
-                   tester.sonic_length(use_gamma=False)[1][1].value)
+                   tester.sonic_length(use_gamma=True)[1][0].value,
+                   tester.sonic_length(use_gamma=True)[1][1].value)
 
     # Test loading and saving
     tester.save_results("pca_output.pkl", keep_data=False)
@@ -95,8 +95,8 @@ def test_PCA_method():
                    saved_tester.intercept_error_range(unit=u.pix)[0].value,
                    saved_tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length"],
-                   saved_tester.sonic_length(use_gamma=False)[1][0].value,
-                   saved_tester.sonic_length(use_gamma=False)[1][1].value)
+                   saved_tester.sonic_length(use_gamma=True)[1][0].value,
+                   saved_tester.sonic_length(use_gamma=True)[1][1].value)
 
 
 @pytest.mark.skipif("not EMCEE_INSTALLED")
@@ -126,8 +126,8 @@ def test_PCA_method_w_bayes():
                    tester.intercept_error_range(unit=u.pix)[0].value,
                    tester.intercept_error_range(unit=u.pix)[1].value)
     assert_between(fit_values["sonic_length_bayes"],
-                   tester.sonic_length(use_gamma=False)[1][0].value,
-                   tester.sonic_length(use_gamma=False)[1][1].value)
+                   tester.sonic_length(use_gamma=True)[1][0].value,
+                   tester.sonic_length(use_gamma=True)[1][1].value)
 
 
 @pytest.mark.parametrize("method", ['odr', 'bayes'])
@@ -230,11 +230,13 @@ def test_spatial_width_methods(method):
     widths, errors = WidthEstimate2D(model_gauss, method=method,
                                      brunt_beamcorrect=False)
 
-    npt.assert_allclose(widths[0], 10.0 / np.sqrt(2), atol=0.02)
+    # NOTE: previous versions were testing against 10 / 2**0.5
+    # THIS WAS WRONG!
+    npt.assert_allclose(widths[0], 10.0 * np.sqrt(2), rtol=0.02)
     # npt.assert_approx_equal(widths[0], 10.0 / np.sqrt(2), significant=3)
     # I get 0.000449 for the error, but we're in a noiseless case so just
     # ensure that is very small.
-    assert errors[0] < 0.1
+    assert errors[0] < 0.2
 
 
 def test_spatial_with_beam():
@@ -254,7 +256,7 @@ def test_spatial_with_beam():
                                      spatial_cdelt=0.5 * u.deg)
 
     # Using value based on run with given settings.
-    npt.assert_approx_equal(widths[0], 6.749, significant=4)
+    npt.assert_approx_equal(widths[0], 13.9229, significant=4)
 
 
 @pytest.mark.parametrize(('method'), ('fit', 'interpolate', 'walk-down'))
@@ -265,18 +267,14 @@ def test_spectral_width_methods(method):
     '''
 
     model_gauss = generate_1D_array(std=10, mean=100.)
+    # Apply same shift as if taking FFT
+    shiftx = np.fft.fftshift(model_gauss)[:, np.newaxis]
 
-    fftx = np.fft.fft(model_gauss)
-    fftxs = np.conjugate(fftx)
-    acor = np.fft.ifft((fftx - fftx.mean()) * (fftxs - fftxs.mean())).real
+    widths, errors = WidthEstimate1D(shiftx, method=method)
 
-    # Should always be normalized such that the max is 1.
-    acor = acor[:, np.newaxis] / acor.max()
-
-    widths, errors = WidthEstimate1D(acor, method=method)
-
+    # Expected 1/e width is sqrt(2) * sigma
     # Error is at most 1/2 a spectral channel, or just 0.5 in this case
-    npt.assert_allclose(widths[0], 10.0, atol=errors[0])
+    npt.assert_allclose(widths[0], 10.0 * np.sqrt(2), rtol=0.01)
 
 
 @pytest.mark.xfail(raises=Warning)
