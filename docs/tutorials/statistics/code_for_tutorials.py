@@ -254,7 +254,7 @@ if run_pca:
 
     pca.find_spectral_widths(method='walk-down')
     autocorr_spec = pca.autocorr_spec()
-    x = np.fft.rfftfreq(500) * 500 / 2.0
+    x = np.fft.rfftfreq(500) * 500
     fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(10, 8))
     for i, ax in zip(range(9), axes.ravel()):
         ax.plot(x, autocorr_spec[:251, i])

@@ -39,10 +39,10 @@ The simplest way to run the entire process is using the `~turbustat.statistics.P
 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=False)  # doctest: +SKIP
-    Proportion of Variance kept: 0.999693451344
-    Index: 0.64 (0.62, 0.66)
-    Gamma: 0.55 (0.51, 0.59)
-    Sonic length: 1.449e-01 (1.360e-01, 1.538e-01) pc at 10.0 K
+    Proportion of Variance kept: 0.9996934513444623
+    Index: 0.72 (0.70, 0.73)
+    Gamma: 0.90 (0.55, 1.26)
+    Sonic length: 4.419e+00 (3.306e+00, 5.532e+00) pix at 10.0 K
 
 .. image:: images/pca_design4_default.png
 
@@ -56,10 +56,10 @@ Since these data are simulated, this example does not account for a finite beam 
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
     ...         beam_fwhm=10 * u.arcsec)  # doctest: +SKIP
-    Proportion of Variance kept: 0.999693451344
-    Index: 0.54 (0.51, 0.57)
-    Gamma: 0.37 (0.33, 0.42)
-    Sonic length: 8.739e-02 (7.589e-02, 9.888e-01) pc at 10.0 K
+    Proportion of Variance kept: 0.9996934513444623
+    Index: 0.71 (0.70, 0.73)
+    Gamma: 0.89 (0.54, 1.25)
+    Sonic length: 4.394e+00 (3.284e+00, 5.505e+00) pix at 10.0 K
 
 .. image:: images/pca_design4_beamcorr.png
 
@@ -70,10 +70,10 @@ Both of the PCA runs above do *not* subtract the mean of the data before creatin
     >>> pca.run(verbose=True, min_eigval=1e-4, spatial_output_unit=u.pc,
     ...         spectral_output_unit=u.m / u.s, brunt_beamcorrect=True,
     ...         beam_fwhm=10 * u.arcsec, mean_sub=True)  # doctest: +SKIP
-    Proportion of Variance kept: 0.999808532503
-    Index: 0.70 (0.67, 0.74)
-    Gamma: 0.63 (0.59, 0.66)
-    Sonic length: 1.004e-01 (9.384e-02, 1.070e-01) pc at 10.0 K
+    Proportion of Variance kept: 0.9998085325029037
+    Index: 0.86 (0.83, 0.89)
+    Gamma: 1.12 (0.72, 1.53)
+    Sonic length: 3.947e+00 (3.107e+00, 4.787e+00) pix at 10.0 K
 
 .. image:: images/pca_design4_beamcorr.png
 
@@ -133,7 +133,7 @@ Third, we find the spectral widths:
 
     >>> pca.find_spectral_widths(method='walk-down')  # doctest: +SKIP
     >>> autocorr_spec = pca.autocorr_spec()  # doctest: +SKIP
-    >>> x = np.fft.rfftfreq(500) * 500 / 2.0  # doctest: +SKIP
+    >>> x = np.fft.rfftfreq(500) * 500  # doctest: +SKIP
     >>> fig, axes = plt.subplots(3, 3, sharex=True, sharey=True)  # doctest: +SKIP
     >>> for i, ax in zip(range(9), axes.ravel()):  # doctest: +SKIP
     >>>     ax.plot(x, autocorr_spec[:251, i])  # doctest: +SKIP
@@ -173,9 +173,9 @@ Additional arguments for setting the chain properties can be passed as well. See
 The interesting outputs from this analysis are estimates of the slopes of the size-line width relation (:math:`\gamma`) and the sonic length:
 
     >>> pca.gamma  # doctest: +SKIP
-    0.433
+    0.897
     >>> pca.sonic_length(T_k=10 * u.K, mu=1.36, unit=u.pc)  # doctest: +SKIP
-    (<Quantity 0.35451525 pc>, <Quantity [0.27522952, 0.45267135] pc>)
+    (<Quantity 0.10021154 pc>, <Quantity [0.09024886, 0.111332  ] pc>)
 
 Sonic length is defined as the length at which the fitted line intersects the sounds speed (temperature can be specified with `T_k` above).  Since the sonic length depends on temperature and :math:`\mu`, this is a function and not a property like :math:`\gamma`. `PCA.sonic_length` also returns the 1-sigma error bounds. The error bounds in :math:`\gamma` can be accessed with `PCA.gamma_error_range`.
 
