@@ -190,8 +190,8 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
                 ax.contour(z, levels=np.array([np.exp(-1)]) * z.max(),
                            colors='c')
                 full_params = np.array([0, 0,
-                                        ellip.params[2] * 2,
-                                        ellip.params[3] * 2,
+                                        ellip.params[2],
+                                        ellip.params[3],
                                         ellip.params[-1]])
                 pts = ellip.predict_xy(np.linspace(0, 2 * np.pi),
                                        params=full_params)
