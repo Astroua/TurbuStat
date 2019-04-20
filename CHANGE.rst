@@ -1,5 +1,5 @@
 
-Version 1.0 (unreleased)
+Version 1.0 (04-20-2019)
 ------------------------
 * #216 - Correct the PCA spatial and spectral width definitions. Update unit test data to reflect change.
 * #215 - Generalize WCS pixel conversions. Fixed units for the delta-variance break.
