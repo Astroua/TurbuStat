@@ -31,7 +31,12 @@ Not all of the metrics satisfy the idealized properties. A full description of a
 Installing
 ----------
 
-Currently, the only way install TurbuStat is to clone the repository and run
+The newest release of TurbuStat can be installed via pip:
+```
+pip install turbustat
+```
+
+To install from the repository, use
 ```
 python setup.py install
 ```
