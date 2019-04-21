@@ -59,7 +59,6 @@ if not RELEASE:
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
 cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
-cmdclassd['check_deps'] = check_deps
 
 # Adjust the compiler in case the default on this platform is to use a
 # broken one.
