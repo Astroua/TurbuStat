@@ -2,7 +2,11 @@
 Installing TurbuStat
 ====================
 
-TurbuStat is currently only available from the `github repo <https://github.com/Astroua/TurbuStat>`_.
+The newest release of TurbuStat is available on pip::
+
+    >>> pip install turbustat  # doctest: +SKIP
+
+TurbuStat can also be installed from the `github repository <https://github.com/Astroua/TurbuStat>`_.
 
 TurbuStat requires the follow packages:
 
