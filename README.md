@@ -77,10 +77,29 @@ Credits
 If you make use of this package in a publication, please cite our accompanying paper:
 
 ```
-UPCOMING
+@ARTICLE{Koch2019AJ....158....1K,
+       author = {{Koch}, Eric W. and {Rosolowsky}, Erik W. and {Boyden}, Ryan D. and
+         {Burkhart}, Blakesley and {Ginsburg}, Adam and {Loeppky}, Jason L. and
+         {Offner}, Stella S.~R.},
+        title = "{TURBUSTAT: Turbulence Statistics in Python}",
+      journal = {\aj},
+     keywords = {methods: data analysis, methods: statistical, turbulence, Astrophysics - Instrumentation and Methods for Astrophysics},
+         year = "2019",
+        month = "Jul",
+       volume = {158},
+       number = {1},
+          eid = {1},
+        pages = {1},
+          doi = {10.3847/1538-3881/ab1cc0},
+archivePrefix = {arXiv},
+       eprint = {1904.10484},
+ primaryClass = {astro-ph.IM},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2019AJ....158....1K},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
 ```
 
-Please cite the paper below when using the distance metrics in TurbuStat:
+Please cite this paper when using the distance metrics in TurbuStat:
 ```
 @ARTICLE{Koch2017,
    author = {{Koch}, E.~W. and {Ward}, C.~G. and {Offner}, S. and {Loeppky}, J.~L. and 
