@@ -131,8 +131,13 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         elif method == 'xinterpolate':
             warn("Error estimation not implemented for interpolation!")
             output, cov = fit_2D_gaussian(xmat, ymat, z)
-            aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
-            theta = output.theta_0.value[0]
+            try:
+                aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
+                theta = output.theta_0.value[0]
+            except IndexError:  # raised with astropy >v3.3 (current dev.)
+                aspect = output.y_stddev_0.value / output.x_stddev_0.value
+                theta = output.theta_0.value
+
             rmat = ((xmat * np.cos(theta) + ymat * np.sin(theta))**2 +
                     (-xmat * np.sin(theta) + ymat * np.cos(theta))**2 *
                     aspect**2)**0.5
@@ -341,7 +346,10 @@ def WidthEstimate1D(inList, method='walk-down'):
                 continue
 
             errors = np.sqrt(np.abs(fit_g.fit_info['param_cov'].diagonal()))
-            scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            try:
+                scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            except IndexError:  # raised with astropy >v3.3 (current dev.)
+                scales[idx] = np.abs(output.stddev.value) * np.sqrt(2)
             scale_errors[idx] = errors[-1] * np.sqrt(2)
         elif method == "walk-down":
             y /= y.max()
