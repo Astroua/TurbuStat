@@ -131,7 +131,11 @@ def WidthEstimate2D(inList, method='contour', noise_ACF=0,
         elif method == 'xinterpolate':
             warn("Error estimation not implemented for interpolation!")
             output, cov = fit_2D_gaussian(xmat, ymat, z)
-            aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
+            try:
+                aspect = output.y_stddev_0.value[0] / output.x_stddev_0.value[0]
+            except IndexError:  # raised with astropy >v3.3 (current dev.)
+                aspect = output.y_stddev_0.value / output.x_stddev_0.value
+
             theta = output.theta_0.value[0]
             rmat = ((xmat * np.cos(theta) + ymat * np.sin(theta))**2 +
                     (-xmat * np.sin(theta) + ymat * np.cos(theta))**2 *
