@@ -4,7 +4,7 @@ from __future__ import print_function, absolute_import, division
 import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
-from astropy.extern.six import string_types
+from six import string_types
 import statsmodels.api as sm
 from warnings import warn
 from astropy.utils.console import ProgressBar
