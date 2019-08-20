@@ -99,10 +99,10 @@ dataset2 = props2.to_dict()
 # Load in saved comparison data.
 try:
     computed_data = np.load(os.path.join(turb_path, "data/checkVals.npz"),
-                            encoding='latin1')
+                            encoding='latin1', allow_pickle=True)
 
     computed_distances = np.load(os.path.join(turb_path,
                                               "data/computed_distances.npz"),
-                                 encoding='latin1')
+                                 encoding='latin1', allow_pickle=True)
 except IOError:
     warnings.warn("No checkVals or computed_distances files.")
