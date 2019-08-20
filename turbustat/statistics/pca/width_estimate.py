@@ -341,7 +341,10 @@ def WidthEstimate1D(inList, method='walk-down'):
                 continue
 
             errors = np.sqrt(np.abs(fit_g.fit_info['param_cov'].diagonal()))
-            scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            try:
+                scales[idx] = np.abs(output.stddev.value[0]) * np.sqrt(2)
+            except IndexError:  # raised with astropy >v3.3 (current dev.)
+                scales[idx] = np.abs(output.stddev.value) * np.sqrt(2)
             scale_errors[idx] = errors[-1] * np.sqrt(2)
         elif method == "walk-down":
             y /= y.max()
