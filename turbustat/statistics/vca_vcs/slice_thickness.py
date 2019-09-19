@@ -19,7 +19,8 @@ except ImportError:
 
 
 def spectral_regrid_cube(cube, channel_width, method='downsample',
-                         downsamp_function=np.nanmean):
+                         downsamp_function=np.nanmean,
+                         allow_huge_operations=False):
     '''
     Spectrally regrid a SpectralCube to a given channel width. There are two
     options for regridding:
@@ -65,6 +66,10 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
     downsamp_function : {function}, optional
         The operation to apply when downsampling. Defaults to
         `~numpy.nanmean`.
+    allow_huge_operations : bool, optional
+        Set the `SpectralCube.allow_huge_operations` flag.
+        The default is `False` but needs to be set to `True`
+        for large (>GB) cubes.
 
     Returns
     -------
@@ -82,6 +87,8 @@ def spectral_regrid_cube(cube, channel_width, method='downsample',
     if method not in ['regrid', 'downsample']:
         raise ValueError("method must be 'regrid' or 'downsample'. {} was"
                          " given".format(method))
+
+    cube.allow_huge_operations = allow_huge_operations
 
     if method == 'downsample':
 
