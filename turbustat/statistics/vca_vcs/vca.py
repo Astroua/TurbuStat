@@ -30,11 +30,13 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         Physical distance to the region in the data.
     beam : `radio_beam.Beam`, optional
         Beam object for correcting for the effect of a finite beam.
-    channel_width : `~astropy.units.Quantity`, optional
+    channel_width : `~astropy.units.Quantity` or int, optional
         Set the width of channels to compute the VCA with. The channel width
         in the data is used by default. Given widths will be used to
-        spectrally down-sample the data before calculating the VCA. Up-sampling
-        to smaller channel sizes than the original is not supported.
+        spectrally down-sample the data before calculating the VCA. Given an
+        integer value, the spectral axis will be downsampled by the given
+        number of spectral channels. Up-sampling to smaller channel sizes
+        than the original is not supported.
     downsample_kwargs : dict, optional
         Passed to `~turbustat.statistics.vca_vca.slice_thickness.spectral_regrid_cube`.
     '''
