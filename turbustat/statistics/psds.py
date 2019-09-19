@@ -10,7 +10,8 @@ from scipy.stats import t as t_dist
 
 def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
           logspacing=True, max_bin=None, min_bin=None, return_freqs=True,
-          theta_0=None, delta_theta=None, boot_iter=None):
+          theta_0=None, delta_theta=None, boot_iter=None,
+          mean_func=np.nanmean):
     '''
     Calculate the radial profile using scipy.stats.binned_statistic.
 
@@ -42,6 +43,9 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     boot_iter : int, optional
         Number of bootstrap iterations for estimating the standard deviation
         in each bin. Require `return_stddev=True`.
+    mean_func : function, optional
+        Define the function used to create the 1D power spectrum. The default
+        is `np.nanmean`.
 
     Returns
     -------
@@ -128,7 +132,7 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     ps1D, bin_edge, cts = binned_statistic(dist_arr[azim_mask].ravel(),
                                            psd2[azim_mask].ravel(),
                                            bins=bins,
-                                           statistic=np.nanmean)
+                                           statistic=mean_func)
 
     bin_cents = (bin_edge[1:] + bin_edge[:-1]) / 2.
 
