@@ -1,8 +1,8 @@
-Version 1.1 (unreleased)
+Version 1.1 (2019-11-26)
 ------------------------
 * #217 - Add pip install to docs. Clean-up setup script.
 
-Version 1.0 (04-20-2019)
+Version 1.0 (2019-04-20)
 ------------------------
 * #216 - Correct the PCA spatial and spectral width definitions. Update unit test data to reflect change.
 * #215 - Generalize WCS pixel conversions. Fixed units for the delta-variance break.
