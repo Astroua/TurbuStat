@@ -1,3 +1,6 @@
+Version 1.2 (unreleased)
+------------------------
+
 Version 1.1 (2019-11-26)
 ------------------------
 * #217 - Add pip install to docs. Clean-up setup script.
