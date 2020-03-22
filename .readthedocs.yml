@@ -1,7 +1,16 @@
-name: turbustat
+version: 2
 
-channels:
-    - astropy
+build:
+  image: latest
+
+# Install regular dependencies.
+python:
+  version: 3.7
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
 
 dependencies:
     - python=>3
