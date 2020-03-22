@@ -85,56 +85,56 @@ after_success:
 
 
 
-env:
-    global:
-        - PYTHON_VERSION=3.7
-        - NUMPY_VERSION=1.17
-        - ASTROPY_VERSION=stable
-        - MAIN_CMD='python setup.py'
-        - SETUP_CMD='test'
-        - PIP_DEPENDENCIES='git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/radio-beam.git git+https://github.com/radio-astro-tools/spectral-cube.git'
-        - EVENT_TYPE='pull_request push'
+# env:
+#     global:
+#         - PYTHON_VERSION=3.7
+#         - NUMPY_VERSION=1.17
+#         - ASTROPY_VERSION=stable
+#         - MAIN_CMD='python setup.py'
+#         - SETUP_CMD='test'
+#         - PIP_DEPENDENCIES='git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/radio-beam.git git+https://github.com/radio-astro-tools/spectral-cube.git'
+#         - EVENT_TYPE='pull_request push'
 
-        - CONDA_CHANNELS='astropy-ci-extras astropy'
-        - SETUP_XVFB=True
+#         - CONDA_CHANNELS='astropy-ci-extras astropy'
+#         - SETUP_XVFB=True
 
-        - CONDA_DEPENDENCIES='scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
+#         - CONDA_DEPENDENCIES='scipy matplotlib pandas statsmodels scikit-learn scikit-image cython'
 
-        - MPLBACKEND="Agg"
+#         - MPLBACKEND="Agg"
 
-    matrix:
-        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.4 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.6 SETUP_CMD='egg_info'
+#     matrix:
+#         - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
+#         - PYTHON_VERSION=3.4 SETUP_CMD='egg_info'
+#         - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
+#         - PYTHON_VERSION=3.6 SETUP_CMD='egg_info'
 
-matrix:
+# matrix:
 
-    # Don't wait for allowed failures
-    fast_finish: true
+#     # Don't wait for allowed failures
+#     fast_finish: true
 
-    include:
-        # Try MacOS X
-        # - os: osx
-          # env: SETUP_CMD='test'
+#     include:
+#         # Try MacOS X
+#         # - os: osx
+#           # env: SETUP_CMD='test'
 
-        # Do a coverage test.
-        - os: linux
-          env: SETUP_CMD='test --coverage'
-               PIP_DEPENDENCIES='emcee pyfftw git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git git+https://github.com/radio-astro-tools/radio-beam.git'
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - os: linux
-          env: SETUP_CMD='build_docs -w'
-               CONDA_DEPENDENCIES='sip<4.19 pytest<3.9.3 scipy matplotlib pandas statsmodels scikit-learn mock sphinx_bootstrap_theme cython sphinx_astropy'
+#         # Do a coverage test.
+#         - os: linux
+#           env: SETUP_CMD='test --coverage'
+#                PIP_DEPENDENCIES='emcee pyfftw git+https://github.com/dendrograms/astrodendro.git git+https://github.com/radio-astro-tools/spectral-cube.git git+https://github.com/radio-astro-tools/radio-beam.git'
+#         # Check for sphinx doc build warnings - we do this first because it
+#         # may run for a long time
+#         - os: linux
+#           env: SETUP_CMD='build_docs -w'
+#                CONDA_DEPENDENCIES='sip<4.19 pytest<3.9.3 scipy matplotlib pandas statsmodels scikit-learn mock sphinx_bootstrap_theme cython sphinx_astropy'
 
 
-install:
-    - git clone git://github.com/astropy/ci-helpers.git
-    - source ci-helpers/travis/setup_conda.sh
+# install:
+#     - git clone git://github.com/astropy/ci-helpers.git
+#     - source ci-helpers/travis/setup_conda.sh
 
-script:
-   - $MAIN_CMD $SETUP_CMD
+# script:
+#    - $MAIN_CMD $SETUP_CMD
 
-after_success:
-    - if [[ $SETUP_CMD == *coverage* ]]; then coveralls --rcfile='turbustat/tests/coveragerc'; fi
+# after_success:
+#     - if [[ $SETUP_CMD == *coverage* ]]; then coveralls --rcfile='turbustat/tests/coveragerc'; fi
