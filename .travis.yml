@@ -42,7 +42,7 @@ matrix:
         - language: c
           os: osx
           env: PYTHON_VERSION=3.7 TOXENV='py37-test-all'
-          name: "Python 3.7 with all dependencies (except CASA) on MacOS X"
+          name: "Python 3.7 with all dependencies on MacOS X"
 
         - language: c
           os: windows
