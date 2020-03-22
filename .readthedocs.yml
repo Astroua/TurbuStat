@@ -27,3 +27,4 @@ dependencies:
     - pip:
       - git+https://github.com/dendrograms/astrodendro.git
       - git+https://github.com/radio-astro-tools/spectral-cube.git
+      - git+https://github.com/radio-astro-tools/radio-beam.git
