@@ -233,6 +233,9 @@ class Bispectrum(BaseStatisticMixIn):
             raise TypeError("value must be 'bispectrum'"
                             ", 'bispectrum_logamp', or 'bicoherence'")
 
+        # Keep a finite value array for binned_statistic for scipy >1.14
+        finite_mask = np.isfinite(value_arr)
+
         if isinstance(radii, np.ndarray) or isinstance(radii, list):
             if not isinstance(delta_radii, np.ndarray):
                 delta_radii = np.array([delta_radii] * len(radii))
@@ -270,13 +273,13 @@ class Bispectrum(BaseStatisticMixIn):
             mask = np.logical_and(dist >= rad - del_rad / 2.,
                                   dist <= rad + del_rad / 2.)
 
-            vals, bin_edge, cts = binned_statistic(theta[mask].ravel(),
-                                                   value_arr[mask].ravel(),
+            vals, bin_edge, cts = binned_statistic(theta[mask & finite_mask].ravel(),
+                                                   value_arr[mask & finite_mask].ravel(),
                                                    bins=bins,
                                                    statistic=np.nanmean)
 
-            stds, bin_edge, cts = binned_statistic(theta[mask].ravel(),
-                                                   value_arr[mask].ravel(),
+            stds, bin_edge, cts = binned_statistic(theta[mask & finite_mask].ravel(),
+                                                   value_arr[mask & finite_mask].ravel(),
                                                    bins=bins,
                                                    statistic=np.nanstd)
 
@@ -331,6 +334,9 @@ class Bispectrum(BaseStatisticMixIn):
             raise TypeError("value must be 'bispectrum'"
                             ", 'bispectrum_logamp', or 'bicoherence'")
 
+        # Keep a finite value array for binned_statistic for scipy >1.14
+        finite_mask = np.isfinite(value_arr)
+
         orig_thetas = thetas.copy().value
 
         # Check units
@@ -376,13 +382,13 @@ class Bispectrum(BaseStatisticMixIn):
             mask = np.logical_and(theta_arr >= theta - del_theta / 2.,
                                   theta_arr <= theta + del_theta / 2.)
 
-            vals, bin_edge, cts = binned_statistic(dist[mask].ravel(),
-                                                   value_arr[mask].ravel(),
+            vals, bin_edge, cts = binned_statistic(dist[mask & finite_mask].ravel(),
+                                                   value_arr[mask & finite_mask].ravel(),
                                                    bins=bins,
                                                    statistic=np.nanmean)
 
-            stds, bin_edge, cts = binned_statistic(dist[mask].ravel(),
-                                                   value_arr[mask].ravel(),
+            stds, bin_edge, cts = binned_statistic(dist[mask & finite_mask].ravel(),
+                                                   value_arr[mask & finite_mask].ravel(),
                                                    bins=bins,
                                                    statistic=np.nanstd)
 
