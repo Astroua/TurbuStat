@@ -109,20 +109,10 @@ class PowerSpectrum(BaseStatisticMixIn, StatisticBase_PSpec2D):
                                    threads=threads,
                                    **pyfftw_kwargs))
 
-        if beam_correct:
-            if not hasattr(self, '_beam'):
-                raise AttributeError("Beam correction cannot be applied since"
-                                     " no beam object was given.")
-
-            beam_kern = self._beam.as_kernel(self._ang_size,
-                                             y_size=self.data.shape[0],
-                                             x_size=self.data.shape[1])
-
-            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
-
-            self._beam_pow = np.abs(beam_fft**2)
-
         self._ps2D = np.power(fft, 2.)
+
+        if beam_correct:
+            self.compute_beam_pspec()
 
         if beam_correct:
             self._ps2D /= self._beam_pow

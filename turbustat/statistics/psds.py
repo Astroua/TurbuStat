@@ -129,8 +129,12 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
     else:
         azim_mask = None
 
-    ps1D, bin_edge, cts = binned_statistic(dist_arr[azim_mask].ravel(),
-                                           psd2[azim_mask].ravel(),
+    finite_mask = np.isfinite(psd2)
+    if azim_mask is not None:
+        finite_mask = np.logical_and(finite_mask, azim_mask)
+
+    ps1D, bin_edge, cts = binned_statistic(dist_arr[finite_mask].ravel(),
+                                           psd2[finite_mask].ravel(),
                                            bins=bins,
                                            statistic=mean_func)
 
@@ -153,15 +157,15 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
             stat_func = lambda data: np.mean(bootstrap(data, boot_iter,
                                                        bootfunc=np.std))
 
-        ps1D_stddev = binned_statistic(dist_arr[azim_mask].ravel(),
-                                       psd2[azim_mask].ravel(),
+        ps1D_stddev = binned_statistic(dist_arr[finite_mask].ravel(),
+                                       psd2[finite_mask].ravel(),
                                        bins=bins,
                                        statistic=stat_func)[0]
 
         # We're dealing with variations in the number of samples for each bin.
         # Add a correction based on the t distribution
-        bin_cts = binned_statistic(dist_arr[azim_mask].ravel(),
-                                   psd2[azim_mask].ravel(),
+        bin_cts = binned_statistic(dist_arr[finite_mask].ravel(),
+                                   psd2[finite_mask].ravel(),
                                    bins=bins,
                                    statistic='count')[0]
 

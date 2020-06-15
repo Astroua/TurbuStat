@@ -46,24 +46,6 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
 
-# Mock out the imports
-# import mock
-
-# MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
-#                 'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
-#                 'statsmodels.formula', 'statsmodels.distributions',
-#                 'statsmodels.distributions.empirical_distribution',
-#                 'statsmodels.base', 'statsmodels.base.model',
-#                 'astrodendro', 'signal_id'
-#                 'spectral_cube', 'spectral_cube._moments',
-#                 'spectral_cube.wcs_utils', "spectral_cube.cube_utils",
-#                 'spectral_cube.lower_dimensional_structures',
-#                 'spectral_cube.spectral_cube',
-#                 'emcee', 'skimage', 'skimage.measure']
-
-# for mod_name in MOCK_MODULES:
-#     sys.modules[mod_name] = mock.Mock()
-
 # -- General configuration ----------------------------------------------------
 
 # By default, highlight as Python 3.
