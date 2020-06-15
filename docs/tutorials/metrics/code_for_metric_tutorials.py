@@ -11,7 +11,7 @@ if RUN_CODE:
     import os
     from os.path import join as osjoin
     import matplotlib.pyplot as plt
-    import seaborn as sb
+    # import seaborn as sb
     import astropy.units as u
     from astropy.io import fits
     import numpy as np
