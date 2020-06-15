@@ -46,8 +46,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
                  distance=None, beam=None):
 
         # data property not used here
-        self.no_data_flag = True
-        self.data = None
+        # self.no_data_flag = True
+        # self.data = None
 
         if header is None:
             try:
@@ -61,6 +61,8 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         else:
             self._centroid = input_data(centroid, no_header=True)
             self.header = header
+
+        self.data = self.centroid
 
         if distance is not None:
             self.distance = distance
@@ -187,20 +189,10 @@ class MVC(BaseStatisticMixIn, StatisticBase_PSpec2D):
         # Shift to the center
         mvc_fft = fftshift(mvc_fft)
 
-        if beam_correct:
-            if not hasattr(self, '_beam'):
-                raise AttributeError("Beam correction cannot be applied since"
-                                     " no beam object was given.")
-
-            beam_kern = self._beam.as_kernel(self._ang_size,
-                                             y_size=self.centroid.shape[0],
-                                             x_size=self.centroid.shape[1])
-
-            beam_fft = fftshift(rfft_to_fft(beam_kern.array))
-
-            self._beam_pow = np.abs(beam_fft**2)
-
         self._ps2D = np.abs(mvc_fft) ** 2.
+
+        if beam_correct:
+            self.compute_beam_pspec()
 
         if beam_correct:
             self._ps2D /= self._beam_pow

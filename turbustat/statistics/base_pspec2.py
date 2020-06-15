@@ -5,6 +5,7 @@ import numpy as np
 import statsmodels.api as sm
 import warnings
 import astropy.units as u
+from numpy.fft import fftshift
 
 from .lm_seg import Lm_Seg
 from .psds import pspec, make_radial_freq_arrays
@@ -13,6 +14,7 @@ from .elliptical_powerlaw import (fit_elliptical_powerlaw,
                                   inverse_interval_transform,
                                   inverse_interval_transform_stderr)
 from .apodizing_kernels import *
+from .rfft_to_fft import rfft_to_fft
 
 
 class StatisticBase_PSpec2D(object):
@@ -52,6 +54,25 @@ class StatisticBase_PSpec2D(object):
     @property
     def wavenumbers(self):
         return self._freqs * min(self._ps2D.shape)
+
+    def compute_beam_pspec(self):
+        '''
+        Compute the power spectrum of the beam element.
+        '''
+        if not hasattr(self, '_beam'):
+            raise AttributeError("Beam correction cannot be applied since"
+                                 " no beam object was given.")
+
+        beam_kern = self._beam.as_kernel(self._ang_size,
+                                         y_size=self._ps2D.shape[0],
+                                         x_size=self._ps2D.shape[1])
+
+        beam_fft = fftshift(rfft_to_fft(beam_kern.array))
+
+        self._beam_pow = np.abs(beam_fft**2)
+
+        # Avoid infs when dividing out by the beam power spectrum
+        self._beam_pow[self._beam_pow == 0.0] = np.NaN
 
     def compute_radial_pspec(self, logspacing=False, max_bin=None, **kwargs):
         '''
