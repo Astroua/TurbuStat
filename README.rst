@@ -1,9 +1,9 @@
 TurbuStat
 =========
 
-See the documentation at ([http://turbustat.readthedocs.org/](http://turbustat.readthedocs.org/)).
+See the documentation at `http://turbustat.readthedocs.org/ <http://turbustat.readthedocs.org/>`__.
 
-To be notified of future releases and updates to TurbuStat, please join the ([mailing list](https://groups.google.com/forum/#!forum/turbustat)).
+To be notified of future releases and updates to TurbuStat, please join the `mailing list <https://groups.google.com/forum/#!forum/turbustat>`__.
 
 Statistics of Turbulence
 ------------------------
@@ -17,14 +17,13 @@ Distance Metrics
 ----------------
 
 Ideally, we require a distance metric to satisfy several properties. A full description
-is shown in ([Yeremi et al. (2014)](http://adsabs.harvard.edu/abs/2014ApJ...783...93Y)).
+is shown in `Yeremi et al. (2014) <http://adsabs.harvard.edu/abs/2014ApJ...783...93Y>`__.
 The key properties are:
 *   cubes with similar physics should have a small distance
 *   unaffected by coordinate shifts
 *   sensitive to differences in physical scale
 *   independent of noise levels in the data
 
-Not all of the metrics satisfy the idealized properties. A full description of all statistics in this package will be shown in Koch et al. (submitted). The paper results can be reproduced using the scripts in [AstroStat_Results](https://github.com/Astroua/AstroStat_Results).
 
 Installing
 ----------
@@ -54,13 +53,13 @@ Requires:
 
 Recommended:
 
- *   ([spectral-cube](https://github.com/radio-astro-tools/spectral-cube)) (>v0.4.4) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
- *   ([astrodendro-development](https://github.com/dendrograms/astrodendro)) - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
- *   ([radio_beam](https://github.com/radio-astro-tools/radio_beam)) - A class for handling radio beams and useful utilities. Required for correcting for the beam shape in spatial power spectra. Automatically installed with spectral-cube.
+ *   `spectral-cube <https://github.com/radio-astro-tools/spectral-cube>`__ (>v0.4.4) - Efficient handling of PPV cubes. Required for calculating moment arrays in `turbustat.data_reduction.Mask_and_Moments`
+ *   `astrodendro-development <https://github.com/dendrograms/astrodendro>`__ - Required for calculating dendrograms in `turbustat.statistics.dendrograms`
+ *   `radio_beam <https://github.com/radio-astro-tools/radio_beam>`__ - A class for handling radio beams and useful utilities. Required for correcting for the beam shape in spatial power spectra. Automatically installed with spectral-cube.
 
 Optional:
- *   ([emcee](http://dan.iel.fm/emcee/current/)) - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA and fitting PDFs.
- *   ([pyfftw](https://hgomersall.github.io/pyFFTW/)) - Wrapper for the FFTW libraries. Allows FFTs to be run in parallel.
+ *   `emcee <http://dan.iel.fm/emcee/current/>`__ - Affine Invariant MCMC. Used for fitting the size-line width relation in PCA and fitting PDFs.
+ *   `pyfftw <https://hgomersall.github.io/pyFFTW/>`__ - Wrapper for the FFTW libraries. Allows FFTs to be run in parallel.
 
 Credits
 -------
@@ -104,7 +103,7 @@ If your work makes use of the distance metrics, please cite the following::
      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
     }
 
-Citations courtesy of ([ADS](https://ui.adsabs.harvard.edu)).
+Citations courtesy of `ADS <https://ui.adsabs.harvard.edu>`__.
 
 
 Build and coverage status
