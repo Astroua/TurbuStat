@@ -6,10 +6,13 @@ import astropy.units as u
 import os
 from glob import glob
 
+import pytest
+
 from .. import Moments
 from ...tests._testing_data import dataset1, sc1, props1
 
 
+@pytest.mark.openfiles_ignore
 def test_loading():
 
     # Save the files.
