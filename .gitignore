@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.c
 
 # Distribution / packaging
 .Python
@@ -27,6 +28,8 @@ var/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+pip-wheel-metadata/
 
 # Unit test / coverage reports
 htmlcov/

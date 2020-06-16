@@ -396,55 +396,54 @@ class Moments(object):
 
         # Moment 0
         if moment0 is not None:
-            moment0 = fits.open(moment0)
-            self._moment0 = moment0[0].data
-            self._moment0_err = moment0[1].data
+            mom0_name = moment0
         else:
-            try:
-                moment0 = fits.open(os.path.join(moments_path,
-                                                 root_name + "_moment0.fits"))
+            mom0_name = os.path.join(moments_path,
+                                     root_name + "_moment0.fits")
+
+        try:
+            with fits.open(mom0_name) as moment0:
                 self._moment0 = moment0[0].data
                 self._moment0_err = moment0[1].data
-            except IOError as e:
-                self._moment0 = None
-                self._moment0_err = None
-                print(e)
-                print("Moment 0 fits file not found.")
+        except IOError as e:
+            self._moment0 = None
+            self._moment0_err = None
+            print(e)
+            print("Moment 0 fits file not found.")
 
         if centroid is not None:
-            moment1 = fits.open(centroid)
-            self._moment1 = moment1[0].data
-            self._moment1_err = moment1[1].data
+            mom1_name = centroid
+
         else:
-            try:
-                moment1 = fits.open(os.path.join(moments_path,
-                                                 root_name + "_centroid.fits"))
+            mom1_name = os.path.join(moments_path,
+                                     root_name + "_centroid.fits")
+
+        try:
+            with fits.open(mom1_name) as moment1:
                 self._moment1 = moment1[0].data
                 self._moment1_err = moment1[1].data
-            except IOError as e:
-                self._moment1 = None
-                self._moment1_err = None
-                print(e)
-                print("Centroid fits file not found.")
+        except IOError as e:
+            self._moment1 = None
+            self._moment1_err = None
+            print(e)
+            print("Centroid fits file not found.")
 
         if linewidth is not None:
-            linewidth = fits.open(linewidth)
+            lwidth_name = linewidth
 
-            self._linewidth = linewidth[0].data
-            self._linewidth_err = linewidth[1].data
         else:
-            try:
-                linewidth = \
-                    fits.open(os.path.join(moments_path,
-                                           root_name + "_linewidth.fits"))
+            lwidth_name = os.path.join(moments_path,
+                                       root_name + "_linewidth.fits")
 
+        try:
+            with fits.open(lwidth_name) as linewidth:
                 self._linewidth = linewidth[0].data
                 self._linewidth_err = linewidth[1].data
-            except IOError as e:
-                self._linewidth = None
-                self._linewidth_err = None
-                print(e)
-                print("Linewidth fits file not found.")
+        except IOError as e:
+            self._linewidth = None
+            self._linewidth_err = None
+            print(e)
+            print("Linewidth fits file not found.")
 
         return self
 

@@ -6,10 +6,13 @@ import astropy.units as u
 import os
 from glob import glob
 
+import pytest
+
 from .. import Moments
 from ...tests._testing_data import dataset1, sc1, props1
 
 
+@pytest.mark.openfiles_ignore
 def test_loading():
 
     # Save the files.
@@ -30,6 +33,6 @@ def test_loading():
     npt.assert_allclose(test.linewidth_err, dataset1["linewidth_error"][0])
 
     # Clean-up the saved files
-    moment_fits = glob("dataset1*.fits")
-    for file in moment_fits:
-        os.remove(file)
+    # moment_fits = glob("dataset1*.fits")
+    # for file in moment_fits:
+    #     os.remove(file)

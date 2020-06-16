@@ -3,11 +3,19 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 import warnings
-from astropy.convolution import convolve_fft, MexicanHat2DKernel
 import astropy.units as u
 import statsmodels.api as sm
 from warnings import warn
 from astropy.utils.console import ProgressBar
+
+from astropy.convolution import convolve_fft
+# Use updated kernel name.
+try:
+    from astropy.convolution import RickerWavelet2DKernel
+except ImportError:
+    from astropy.convolution import MexicanHat2DKernel
+
+    RickerWavelet2DKernel = MexicanHat2DKernel
 
 try:
     from pyfftw.interfaces.numpy_fft import fftn, ifftn
@@ -164,7 +172,7 @@ class Wavelet(BaseStatisticMixIn):
             bar = ProgressBar(len(pix_scales))
 
         for i, an in enumerate(pix_scales):
-            psi = MexicanHat2DKernel(an)
+            psi = RickerWavelet2DKernel(an)
 
             conv_arr = \
                 convolve_fft(self.data, psi, normalize_kernel=False,

@@ -37,33 +37,12 @@ except ImportError:
     sys.exit(1)
 
 # Get configuration information from setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
-
+# Get configuration information from setup.cfg
+from configparser import ConfigParser
 conf = ConfigParser()
+
 conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
-
-# Mock out the imports
-import mock
-
-MOCK_MODULES = ['sklearn', 'sklearn.metrics', 'sklearn.metrics.pairwise',
-                'statsmodels', 'statsmodels.api', 'statsmodels.formula.api',
-                'statsmodels.formula', 'statsmodels.distributions',
-                'statsmodels.distributions.empirical_distribution',
-                'statsmodels.base', 'statsmodels.base.model',
-                'astrodendro', 'signal_id'
-                'spectral_cube', 'spectral_cube._moments',
-                'spectral_cube.wcs_utils', "spectral_cube.cube_utils",
-                'spectral_cube.lower_dimensional_structures',
-                'spectral_cube.spectral_cube',
-                'emcee', 'skimage', 'skimage.measure',
-                'seaborn']
-
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
 
 # -- General configuration ----------------------------------------------------
 
@@ -89,7 +68,7 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg['package_name']
+project = setup_cfg['name']
 author = setup_cfg['author']
 copyright = '{0}, {1}'.format(
     datetime.datetime.now().year, setup_cfg['author'])
@@ -98,14 +77,8 @@ copyright = '{0}, {1}'.format(
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-__import__(setup_cfg['package_name'])
-package = sys.modules[setup_cfg['package_name']]
-
-# The short X.Y version.
-version = package.__version__.split('-', 1)[0]
-# The full version, including alpha/beta/rc tags.
-release = package.__version__
-
+from pkg_resources import get_distribution
+version = release = get_distribution(setup_cfg['name']).version
 
 # -- Options for HTML output ---------------------------------------------------
 
