@@ -41,12 +41,6 @@ To install from the repository, use
 python setup.py install
 ```
 
-The tests can be run with
-```
-MPLBACKEND='agg' python setup.py test
-```
-
-The matplotlib backend needs to be set to avoid having interactive plots pop up during the tests.
 
 Package Dependencies
 --------------------
