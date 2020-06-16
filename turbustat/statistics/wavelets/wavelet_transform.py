@@ -172,7 +172,7 @@ class Wavelet(BaseStatisticMixIn):
             bar = ProgressBar(len(pix_scales))
 
         for i, an in enumerate(pix_scales):
-            psi = MexicanHat2DKernel(an)
+            psi = RickerWavelet2DKernel(an)
 
             conv_arr = \
                 convolve_fft(self.data, psi, normalize_kernel=False,
