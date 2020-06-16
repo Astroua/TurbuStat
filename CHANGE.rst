@@ -1,9 +1,10 @@
 Version 1.2 (unreleased)
 ------------------------
+* #226 - Update package infrastructure following APE 17.
+* #227 - Fix `binned_statistic` calls for scipy 1.14 (checks for non-finite values).
 
 Version 1.1 (2019-11-26)
 ------------------------
-* #227 - Fix `binned_statistic` calls for scipy 1.14 (checks for non-finite values).
 * #217 - Add pip install to docs. Clean-up setup script.
 
 Version 1.0 (2019-04-20)
