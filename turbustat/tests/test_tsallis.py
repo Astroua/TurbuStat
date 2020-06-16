@@ -45,9 +45,11 @@ def test_Tsallis():
     # Ensure that the output table matched the right inputs by checking a
     # couple columns
     npt.assert_allclose(saved_tester.tsallis_table['logA'],
-                        computed_data['tsallis_val'][:, 0])
+                        computed_data['tsallis_val'][:, 0],
+                        rtol=1e-6)
     npt.assert_allclose(saved_tester.tsallis_table['logA_stderr'],
-                        computed_data['tsallis_stderrs'][:, 0])
+                        computed_data['tsallis_stderrs'][:, 0],
+                        rtol=1e-6)
 
 
 def test_Tsallis_noper():
