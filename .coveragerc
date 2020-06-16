@@ -1,4 +1,4 @@
-[run]
+[coverage:run]
 source = {packagename}
 omit =
    {packagename}/_astropy_init*
@@ -12,7 +12,7 @@ omit =
    {packagename}/*/*/tests/*
    {packagename}/version*
 
-[report]
+[coverage:report]
 exclude_lines =
    # Have to re-enable the standard pragma
    pragma: no cover

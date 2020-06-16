@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, division
 Tests for Dendrogram statistics
 '''
 
+import pytest
 import numpy as np
 import numpy.testing as npt
 import os
@@ -19,6 +20,7 @@ min_deltas = np.logspace(-1.5, 0.5, 40)
 
 
 def test_DendroStat():
+    pytest.importorskip('astrodendro')
 
     tester = Dendrogram_Stats(dataset1["cube"],
                               min_deltas=min_deltas)
@@ -41,6 +43,7 @@ def test_DendroStat():
 
 
 def test_DendroStat_periodic():
+    pytest.importorskip('astrodendro')
 
     tester = Dendrogram_Stats(dataset1["cube"],
                               min_deltas=min_deltas)
@@ -51,6 +54,7 @@ def test_DendroStat_periodic():
 
 
 def test_DendroDistance():
+    pytest.importorskip('astrodendro')
 
     tester_dist = \
         DendroDistance(dataset1["cube"],

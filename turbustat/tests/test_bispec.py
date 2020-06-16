@@ -24,6 +24,7 @@ from ._testing_data import dataset1,\
 from ..simulator import make_extended
 
 
+@pytest.mark.openfiles_ignore
 def test_Bispec_method():
     tester = Bispectrum(dataset1["moment0"])
     tester.run(verbose=True, save_name='test.png')
@@ -49,6 +50,7 @@ def test_Bispec_method_meansub():
                        computed_data['bispec_val_meansub'])
 
 
+@pytest.mark.openfiles_ignore
 def test_Bispec_distance():
     tester_dist = \
         Bispectrum_Distance(dataset1["moment0"],
