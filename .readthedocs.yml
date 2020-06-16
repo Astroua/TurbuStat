@@ -12,19 +12,3 @@ python:
       extra_requirements:
         - docs
 
-dependencies:
-    - python=>3
-    - astropy
-    - Cython
-    - matplotlib
-    - numpy
-    - scipy
-    - statsmodels
-    - scikit-learn
-    - scikit-image
-    - mock
-    - sphinx_bootstrap_theme
-    - pip:
-      - git+https://github.com/dendrograms/astrodendro.git
-      - git+https://github.com/radio-astro-tools/spectral-cube.git
-      - git+https://github.com/radio-astro-tools/radio-beam.git
