@@ -33,6 +33,6 @@ def test_loading():
     npt.assert_allclose(test.linewidth_err, dataset1["linewidth_error"][0])
 
     # Clean-up the saved files
-    moment_fits = glob("dataset1*.fits")
-    for file in moment_fits:
-        os.remove(file)
+    # moment_fits = glob("dataset1*.fits")
+    # for file in moment_fits:
+    #     os.remove(file)
