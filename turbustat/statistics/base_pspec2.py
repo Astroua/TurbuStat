@@ -438,7 +438,7 @@ class StatisticBase_PSpec2D(object):
 
         # Add a warning that if ellip is close to 1 it may be worth fixing that
         # parameter.
-        if self.ellip2D > 0.97:
+        if self.ellip2D > 0.97 and not fix_ellip_params:
             warnings.warn("The elliptical parameter is close to 1. The field "
                           "may be isotropic and the fit is not converging to "
                           "1. Consider fitting with `fix_ellip_params=True`,"
