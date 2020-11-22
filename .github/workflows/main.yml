@@ -34,6 +34,7 @@ jobs:
             python-version: 3.7
             name: Python 3.7 with all dependencies, and dev versions of key dependencies on MacOS X
             toxenv: py37-test-all-dev
+
           # - os: windows-latest
           #   python-version: 3.7
           #   name: Python 3.7, all dependencies, and dev versions of key dependencies on Windows
