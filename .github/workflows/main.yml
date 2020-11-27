@@ -17,7 +17,7 @@ jobs:
 
           - os: ubuntu-18.04
             python-version: 3.6
-            name: Python 3.6 with minimal dependencies and CASA
+            name: Python 3.6 with minimal dependencies
             toxenv: py36-test
 
           - os: ubuntu-latest
