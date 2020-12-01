@@ -1,3 +1,7 @@
+Version 1.3 (unreleased)
+------------------------
+
+
 Version 1.2 (2020-11-30)
 ------------------------
 * #232 - Switch to to github actions
