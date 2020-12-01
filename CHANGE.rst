@@ -1,7 +1,9 @@
-Version 1.2 (unreleased)
+Version 1.2 (2020-11-30)
 ------------------------
-* #226 - Update package infrastructure following APE 17.
+* #232 - Switch to to github actions
+* #228 - Simplify readthedocs builds
 * #227 - Fix `binned_statistic` calls for scipy 1.14 (checks for non-finite values).
+* #226 - Update package infrastructure following APE 17.
 
 Version 1.1 (2019-11-26)
 ------------------------
