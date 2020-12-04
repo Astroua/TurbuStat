@@ -299,7 +299,7 @@ class Moments(object):
             self.prop_headers.append(hdr)
             self.prop_err_headers.append(hdr_err)
 
-    def to_fits(self, save_name=None):
+    def to_fits(self, save_name=None, **kwargs):
         '''
         Save the property arrays as fits files.
 
@@ -308,6 +308,7 @@ class Moments(object):
         save_name : str, optional
             Prefix to use when saving the moment arrays.
             If None is given, 'default' is used.
+        kwargs : Passed to `~astropy.io.fits.HDUList.writeto`.
         '''
 
         if self.prop_headers is None:
@@ -336,7 +337,8 @@ class Moments(object):
             hdu = fits.HDUList([fits.PrimaryHDU(arr, header=hdr),
                                 fits.ImageHDU(err, header=hdr_err)])
 
-            hdu.writeto(self.save_name + labels[i] + ".fits")
+            hdu.writeto(self.save_name + labels[i] + ".fits",
+                        **kwargs)
 
     @staticmethod
     def from_fits(fits_name, moments_prefix=None, moments_path=None,
@@ -962,4 +964,3 @@ def _try_remove_unit(arr):
 #         slab = self.cube.spectral_slab(*self.channel_range)
 
 #         return moment0_error(slab, self.scale, axis=axis, how=self.moment_how)
-
