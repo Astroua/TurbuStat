@@ -21,9 +21,9 @@ def test_PDF():
 
     npt.assert_allclose(test.pdf,
                         computed_data["pdf_val"],
-                        atol=5e-3, rtol=1e-3)
+                        atol=1e-2, rtol=1e-3)
     npt.assert_allclose(test.ecdf, computed_data["pdf_ecdf"],
-                        atol=5e-3, rtol=1e-3)
+                        atol=1e-2, rtol=1e-3)
 
     npt.assert_equal(np.median(test.data),
                      test.find_at_percentile(50))
@@ -41,9 +41,9 @@ def test_PDF():
 
     npt.assert_allclose(saved_test.pdf,
                         computed_data["pdf_val"],
-                        atol=5e-3, rtol=1e-3)
+                        atol=1e-2, rtol=1e-3)
     npt.assert_allclose(saved_test.ecdf, computed_data["pdf_ecdf"],
-                        atol=5e-3, rtol=1e-3)
+                        atol=1e-2, rtol=1e-3)
 
     npt.assert_equal(np.median(saved_test.data),
                      saved_test.find_at_percentile(50))
