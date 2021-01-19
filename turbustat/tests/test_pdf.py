@@ -23,7 +23,7 @@ def test_PDF():
                             computed_data["pdf_val"],
                             decimals=3)
     npt.assert_almost_equal(test.ecdf, computed_data["pdf_ecdf"],
-                            decimals=3))
+                            decimals=3)
 
     npt.assert_equal(np.median(test.data),
                      test.find_at_percentile(50))
@@ -41,9 +41,9 @@ def test_PDF():
 
     npt.assert_almost_equal(saved_test.pdf,
                             computed_data["pdf_val"],
-                            decimals=3))
+                            decimals=3)
     npt.assert_almost_equal(saved_test.ecdf, computed_data["pdf_ecdf"],
-                            decimals=3))
+                            decimals=3)
 
     npt.assert_equal(np.median(saved_test.data),
                      saved_test.find_at_percentile(50))
