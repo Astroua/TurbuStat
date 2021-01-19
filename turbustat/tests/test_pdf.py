@@ -21,9 +21,9 @@ def test_PDF():
 
     npt.assert_almost_equal(test.pdf,
                             computed_data["pdf_val"],
-                            decimals=3)
+                            decimal=3)
     npt.assert_almost_equal(test.ecdf, computed_data["pdf_ecdf"],
-                            decimals=3)
+                            decimal=3)
 
     npt.assert_equal(np.median(test.data),
                      test.find_at_percentile(50))
@@ -41,9 +41,9 @@ def test_PDF():
 
     npt.assert_almost_equal(saved_test.pdf,
                             computed_data["pdf_val"],
-                            decimals=3)
+                            decimal=3)
     npt.assert_almost_equal(saved_test.ecdf, computed_data["pdf_ecdf"],
-                            decimals=3)
+                            decimal=3)
 
     npt.assert_equal(np.median(saved_test.data),
                      saved_test.find_at_percentile(50))
@@ -89,11 +89,11 @@ def test_PDF_distance():
 
     npt.assert_almost_equal(test_dist.hellinger_distance,
                             computed_distances['pdf_hellinger_distance'],
-                            decimals=5)
+                            decimal=5)
 
     npt.assert_almost_equal(test_dist.ks_distance,
                             computed_distances['pdf_ks_distance'],
-                            decimals=5)
+                            decimal=5)
 
     # npt.assert_almost_equal(self.test_dist.ad_distance,
     #                         computed_distances['pdf_ad_distance'])
