@@ -20,8 +20,10 @@ def test_PDF():
     os.system("rm test.png")
 
     npt.assert_almost_equal(test.pdf,
-                            computed_data["pdf_val"])
-    npt.assert_almost_equal(test.ecdf, computed_data["pdf_ecdf"])
+                            computed_data["pdf_val"],
+                            decimals=3)
+    npt.assert_almost_equal(test.ecdf, computed_data["pdf_ecdf"],
+                            decimals=3))
 
     npt.assert_equal(np.median(test.data),
                      test.find_at_percentile(50))
@@ -38,8 +40,10 @@ def test_PDF():
     os.remove("pdf_output.pkl")
 
     npt.assert_almost_equal(saved_test.pdf,
-                            computed_data["pdf_val"])
-    npt.assert_almost_equal(saved_test.ecdf, computed_data["pdf_ecdf"])
+                            computed_data["pdf_val"],
+                            decimals=3))
+    npt.assert_almost_equal(saved_test.ecdf, computed_data["pdf_ecdf"],
+                            decimals=3))
 
     npt.assert_equal(np.median(saved_test.data),
                      saved_test.find_at_percentile(50))
@@ -84,10 +88,12 @@ def test_PDF_distance():
     test_dist.distance_metric()
 
     npt.assert_almost_equal(test_dist.hellinger_distance,
-                            computed_distances['pdf_hellinger_distance'])
+                            computed_distances['pdf_hellinger_distance'],
+                            decimals=5)
 
     npt.assert_almost_equal(test_dist.ks_distance,
-                            computed_distances['pdf_ks_distance'])
+                            computed_distances['pdf_ks_distance'],
+                            decimals=5)
 
     # npt.assert_almost_equal(self.test_dist.ad_distance,
     #                         computed_distances['pdf_ad_distance'])
