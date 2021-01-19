@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from astropy.version import version as astropy_version
 
@@ -14,8 +15,22 @@ else:
     except ImportError:
         ASTROPY_HEADER = False
 
+# Import check for matplotlib
+try:
+    import matplotlib
+except ImportError:
+    HAS_MATPLOTLIB = False
+else:
+    HAS_MATPLOTLIB = True
+
+
 
 def pytest_configure(config):
+
+    if HAS_MATPLOTLIB:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            matplotlib.use('Agg')
 
     if ASTROPY_HEADER:
 
