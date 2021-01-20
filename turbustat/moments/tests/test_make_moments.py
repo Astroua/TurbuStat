@@ -16,7 +16,7 @@ from ...tests._testing_data import dataset1, sc1, props1
 def test_loading():
 
     # Save the files.
-    props1.to_fits(save_name="dataset1")
+    props1.to_fits(save_name="dataset1", overwrite=True)
 
     # Try loading the files.
     # Set the scale to the assumed value.
