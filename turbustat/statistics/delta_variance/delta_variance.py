@@ -157,9 +157,9 @@ class DeltaVariance(BaseStatisticMixIn):
             not guaranteed to! Increase this value if artifacts are
             encountered (this typically results in large spikes in the
             delta-variance curve).
-        nan_treatment : bool, optional
+        nan_treatment : {'interpolate', 'fill'}, optional
             Enable to interpolate over NaNs in the convolution. Default is
-            True.
+            'fill'.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
