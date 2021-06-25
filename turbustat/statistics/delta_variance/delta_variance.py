@@ -243,6 +243,9 @@ class DeltaVariance(BaseStatisticMixIn):
                 (img_annulus / weights_annulus)
             conv_weight = weights_core * weights_annulus
 
+            if preserve_nan:
+                conv_arr[np.isnan(pad_img)] = np.NaN
+
             if keep_convolve_arrays:
                 self._convolved_arrays.append(conv_arr)
                 self._convolved_weights.append(weights_core * weights_annulus)
