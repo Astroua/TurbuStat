@@ -201,7 +201,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
             img_core = \
                 convolution_wrapper(pad_img, core, boundary=boundary,
-                                    fill_value=np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -209,7 +209,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             img_annulus = \
                 convolution_wrapper(pad_img, annulus,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -217,7 +218,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             weights_core = \
                 convolution_wrapper(pad_weights, core,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -225,7 +227,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             weights_annulus = \
                 convolution_wrapper(pad_weights, annulus,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
