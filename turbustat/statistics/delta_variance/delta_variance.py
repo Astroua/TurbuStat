@@ -157,9 +157,9 @@ class DeltaVariance(BaseStatisticMixIn):
             not guaranteed to! Increase this value if artifacts are
             encountered (this typically results in large spikes in the
             delta-variance curve).
-        nan_treatment : bool, optional
+        nan_treatment : {'interpolate', 'fill'}, optional
             Enable to interpolate over NaNs in the convolution. Default is
-            True.
+            'fill'.
         use_pyfftw : bool, optional
             Enable to use pyfftw, if it is installed.
         threads : int, optional
@@ -201,7 +201,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
             img_core = \
                 convolution_wrapper(pad_img, core, boundary=boundary,
-                                    fill_value=np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -209,7 +209,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             img_annulus = \
                 convolution_wrapper(pad_img, annulus,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -217,7 +218,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             weights_core = \
                 convolution_wrapper(pad_weights, core,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -225,7 +227,8 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
             weights_annulus = \
                 convolution_wrapper(pad_weights, annulus,
-                                    boundary=boundary, fill_value=np.NaN,
+                                    boundary=boundary,
+                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -239,6 +242,9 @@ class DeltaVariance(BaseStatisticMixIn):
             conv_arr = (img_core / weights_core) - \
                 (img_annulus / weights_annulus)
             conv_weight = weights_core * weights_annulus
+
+            if preserve_nan:
+                conv_arr[np.isnan(pad_img)] = np.NaN
 
             if keep_convolve_arrays:
                 self._convolved_arrays.append(conv_arr)
