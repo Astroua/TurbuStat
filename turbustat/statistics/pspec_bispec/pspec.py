@@ -5,6 +5,7 @@ import numpy as np
 from numpy.fft import fftshift
 import astropy.units as u
 from warnings import warn
+from copy import copy
 
 from ..rfft_to_fft import rfft_to_fft
 from ..base_pspec2 import StatisticBase_PSpec2D
@@ -271,10 +272,19 @@ class PSpec_Distance(object):
             needs_run = True
 
         if needs_run:
+            this_pspec_kwargs = copy(pspec_kwargs)
+
+            this_pspec_kwargs.pop('low_cut', None)
+            this_pspec_kwargs.pop('high_cut', None)
+            this_pspec_kwargs.pop('fit_2D', None)
+
+            if 'fit_kwargs' in this_pspec_kwargs:
+                this_pspec_kwargs['fit_kwargs'].pop('brk', None)
+
             self.pspec1.run(low_cut=low_cut[0], high_cut=high_cut[0],
-                            radial_pspec_kwargs=pspec_kwargs,
                             fit_kwargs={'brk': breaks[0]},
-                            fit_2D=False)
+                            fit_2D=False,
+                            **this_pspec_kwargs)
         # else:
         #     self.pspec1 = fiducial_model
         if isinstance(data2, PowerSpectrum):
@@ -289,10 +299,20 @@ class PSpec_Distance(object):
             needs_run = True
 
         if needs_run:
+
+            this_pspec2_kwargs = copy(pspec2_kwargs)
+
+            this_pspec2_kwargs.pop('low_cut', None)
+            this_pspec2_kwargs.pop('high_cut', None)
+            this_pspec2_kwargs.pop('fit_2D', None)
+
+            if 'fit_kwargs' in this_pspec2_kwargs:
+                this_pspec2_kwargs['fit_kwargs'].pop('brk', None)
+
             self.pspec2.run(low_cut=low_cut[1], high_cut=high_cut[1],
                             fit_kwargs={'brk': breaks[1]},
-                            radial_pspec_kwargs=pspec2_kwargs,
-                            fit_2D=False)
+                            fit_2D=False,
+                            **this_pspec2_kwargs)
 
         self.results = None
         self.distance = None
