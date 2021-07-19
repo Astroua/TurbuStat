@@ -884,7 +884,7 @@ class SCF_Distance(object):
             needs_run = True
         else:
             needs_run = False
-            lag_check = (roll_lags1 == self.scf1.roll_lags).all()
+            lag_check = (roll_lags1 == self.scf1._to_pixel(self.scf1.roll_lags)).all()
             compute_check = hasattr(self.scf1, "_scf_spectrum")
             if not lag_check:
                 warn("SCF given as cube1 needs to be recomputed as the lags"
@@ -910,7 +910,7 @@ class SCF_Distance(object):
             needs_run = True
         else:
             needs_run = False
-            lag_check = (roll_lags2 == self.scf2.roll_lags).all()
+            lag_check = (roll_lags2 == self.scf2._to_pixel(self.scf2.roll_lags)).all()
             compute_check = hasattr(self.scf2, "_scf_spectrum")
             if not lag_check:
                 warn("SCF given as cube2 needs to be recomputed as the lags"
