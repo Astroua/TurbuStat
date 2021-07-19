@@ -861,8 +861,19 @@ class SCF_Distance(object):
         scale = common_scale(wcs1, wcs2)
 
         if scale == 1.0:
-            roll_lags1 = roll_lags
-            roll_lags2 = roll_lags
+            if not _has_data1:
+                roll_lags1 = self.scf1._to_pixel(self.scf1.roll_lags)
+            else:
+                roll_lags1 = roll_lags
+
+            if not _has_data1:
+                roll_lags2 = self.scf2._to_pixel(self.scf2.roll_lags)
+            else:
+                roll_lags2 = roll_lags
+
+            if not (roll_lags1 == roll_lags2).all():
+                raise ValueError("The roll lags must match when using pre-computed SCFs.")
+
         elif scale > 1.0:
             roll_lags1 = scale * roll_lags
             roll_lags2 = roll_lags
@@ -884,8 +895,12 @@ class SCF_Distance(object):
             needs_run = True
         else:
             needs_run = False
-            lag_check = (roll_lags1 == self.scf1._to_pixel(self.scf1.roll_lags)).all()
-            compute_check = hasattr(self.scf1, "_scf_spectrum")
+
+            if roll_lags1.size != self.scf1.roll_lags.size:
+                lag_check = True
+            else:
+                lag_check = (roll_lags1 == self.scf1._to_pixel(self.scf1.roll_lags)).all()
+
             if not lag_check:
                 warn("SCF given as cube1 needs to be recomputed as the lags"
                      " must match the common set of lags between the two data"
@@ -893,6 +908,7 @@ class SCF_Distance(object):
                 needs_run = True
                 self.scf1.roll_lags = roll_lags1
 
+            compute_check = hasattr(self.scf1, "_scf_spectrum")
             if not compute_check:
                 warn("SCF given as cube1 does not have an SCF"
                      " spectrum computed. Recomputing SCF.")
@@ -910,8 +926,12 @@ class SCF_Distance(object):
             needs_run = True
         else:
             needs_run = False
-            lag_check = (roll_lags2 == self.scf2._to_pixel(self.scf2.roll_lags)).all()
-            compute_check = hasattr(self.scf2, "_scf_spectrum")
+
+            if roll_lags2.size != self.scf2.roll_lags.size:
+                lag_check = True
+            else:
+                lag_check = (roll_lags2 == self.scf2._to_pixel(self.scf2.roll_lags)).all()
+
             if not lag_check:
                 warn("SCF given as cube2 needs to be recomputed as the lags"
                      " must match the common set of lags between the two data"
@@ -919,6 +939,7 @@ class SCF_Distance(object):
                 needs_run = True
                 self.scf2.roll_lags = roll_lags2
 
+            compute_check = hasattr(self.scf2, "_scf_spectrum")
             if not compute_check:
                 warn("SCF given as cube2 does not have an SCF"
                      " spectrum computed. Recomputing SCF.")
