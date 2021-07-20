@@ -861,8 +861,19 @@ class SCF_Distance(object):
         scale = common_scale(wcs1, wcs2)
 
         if scale == 1.0:
-            roll_lags1 = roll_lags
-            roll_lags2 = roll_lags
+            if not _has_data1:
+                roll_lags1 = self.scf1._to_pixel(self.scf1.roll_lags)
+            else:
+                roll_lags1 = roll_lags
+
+            if not _has_data1:
+                roll_lags2 = self.scf2._to_pixel(self.scf2.roll_lags)
+            else:
+                roll_lags2 = roll_lags
+
+            if not (roll_lags1 == roll_lags2).all():
+                raise ValueError("The roll lags must match when using pre-computed SCFs.")
+
         elif scale > 1.0:
             roll_lags1 = scale * roll_lags
             roll_lags2 = roll_lags
@@ -881,24 +892,29 @@ class SCF_Distance(object):
         #     self.scf1 = fiducial_model
         if _has_data1:
             self.scf1 = SCF(cube1, roll_lags=roll_lags1)
-            needs_run = True
+            needs_run1 = True
         else:
-            needs_run = False
-            lag_check = (roll_lags1 == self.scf1.roll_lags).all()
-            compute_check = hasattr(self.scf1, "_scf_spectrum")
+            needs_run1 = False
+
+            if roll_lags1.size != self.scf1.roll_lags.size:
+                lag_check = True
+            else:
+                lag_check = (roll_lags1 == self.scf1._to_pixel(self.scf1.roll_lags)).all()
+
             if not lag_check:
                 warn("SCF given as cube1 needs to be recomputed as the lags"
                      " must match the common set of lags between the two data"
                      " sets. Recomputing SCF.")
-                needs_run = True
+                needs_run1 = True
                 self.scf1.roll_lags = roll_lags1
 
+            compute_check = hasattr(self.scf1, "_scf_spectrum")
             if not compute_check:
                 warn("SCF given as cube1 does not have an SCF"
                      " spectrum computed. Recomputing SCF.")
-                needs_run = True
+                needs_run1 = True
 
-        if needs_run:
+        if needs_run1:
             self.scf1.compute_surface(boundary=boundary[0],
                                       show_progress=show_progress)
             # This is for the plot, not the distance, so stick with default
@@ -907,29 +923,37 @@ class SCF_Distance(object):
 
         if _has_data2:
             self.scf2 = SCF(cube2, roll_lags=roll_lags2)
-            needs_run = True
+            needs_run2 = True
         else:
-            needs_run = False
-            lag_check = (roll_lags2 == self.scf2.roll_lags).all()
-            compute_check = hasattr(self.scf2, "_scf_spectrum")
+            needs_run2 = False
+
+            if roll_lags2.size != self.scf2.roll_lags.size:
+                lag_check = True
+            else:
+                lag_check = (roll_lags2 == self.scf2._to_pixel(self.scf2.roll_lags)).all()
+
             if not lag_check:
                 warn("SCF given as cube2 needs to be recomputed as the lags"
                      " must match the common set of lags between the two data"
                      " sets. Recomputing SCF.")
-                needs_run = True
+                needs_run2 = True
                 self.scf2.roll_lags = roll_lags2
 
+            compute_check = hasattr(self.scf2, "_scf_spectrum")
             if not compute_check:
                 warn("SCF given as cube2 does not have an SCF"
                      " spectrum computed. Recomputing SCF.")
-                needs_run = True
+                needs_run2 = True
 
-        if needs_run:
+        if needs_run2:
             self.scf2.compute_surface(boundary=boundary[1],
                                       show_progress=show_progress)
             # This is for the plot, not the distance, so stick with default
             # params
             self.scf2.compute_spectrum()
+
+        if not needs_run1 and not needs_run2:
+            self.size = self.scf1.size
 
     def distance_metric(self, weighted=True, verbose=False,
                         plot_kwargs1={'color': 'b', 'marker': 'D',
