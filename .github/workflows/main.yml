@@ -40,9 +40,14 @@ jobs:
             toxenv: py38-test-dev
 
           - os: macos-latest
+            python-version: 3.8
+            name: Python 3.8 with all dependencies, and dev versions of key dependencies on MacOS X
+            toxenv: py38-test-all-dev
+
+          - os: macos-latest
             python-version: 3.9
-            name: Python 3.9 with all dependencies, and dev versions of key dependencies on MacOS X
-            toxenv: py39-test-all-dev
+            name: Python 3.9 with minimal dependencies on MacOS X
+            toxenv: py39-test
 
           # - os: windows-latest
           #   python-version: 3.7
