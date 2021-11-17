@@ -22,7 +22,7 @@ jobs:
           - os: ubuntu-latest
             python-version: 3.8
             name: Python 3.8 with minimal dependencies
-            toxenv: py37-test
+            toxenv: py38-test
 
           - os: ubuntu-latest
             python-version: 3.7
