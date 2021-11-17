@@ -17,6 +17,7 @@ jobs:
           python-version: '3.7'
       - name: Install cibuildwheel
         run: |
+          sudo apt-get install libfftw3
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel
       - name: Build wheels
@@ -37,7 +38,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.8'
       - name: Install build
         run: |
           python -m pip install --upgrade pip
