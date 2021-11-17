@@ -60,8 +60,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Installing fftw for py39
-      if: ${{ contains(matrix.toxenv,'py39') }}
+    - name: Installing fftw for py39 - ubuntu
+      if: ${{ contains(matrix.toxenv,'py39') && contains(matrix.os,'ubuntu') }}
       run: sudo apt-get install libfftw3-dev
     - name: Install testing dependencies
       run: python -m pip install tox codecov

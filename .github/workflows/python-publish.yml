@@ -15,9 +15,11 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
+      - name: Installing fftw for py39 - ubuntu
+        if: ${{ contains(matrix.toxenv,'py39') && contains(matrix.os,'ubuntu') }}
+        run: sudo apt-get install libfftw3-dev
       - name: Install cibuildwheel
         run: |
-          sudo apt-get install libfftw3-dev
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel
       - name: Build wheels
