@@ -15,19 +15,24 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            python-version: 3.9
+            name: Python 3.9 with minimal dependencies
+            toxenv: py39-test
+
+          - os: ubuntu-latest
+            python-version: 3.8
+            name: Python 3.8 with minimal dependencies
+            toxenv: py37-test
+
+          - os: ubuntu-latest
             python-version: 3.7
             name: Python 3.7 with minimal dependencies
             toxenv: py37-test
 
-          - os: ubuntu-18.04
-            python-version: 3.6
-            name: Python 3.6 with minimal dependencies
-            toxenv: py36-test
-
           - os: ubuntu-latest
-            python-version: 3.7
-            name: Python 3.7 with all dependencies
-            toxenv: py37-test-all
+            python-version: 3.9
+            name: Python 3.9 with all dependencies
+            toxenv: py39-test-all-cov
 
           - os: ubuntu-latest
             python-version: 3.8
@@ -35,9 +40,9 @@ jobs:
             toxenv: py38-test-dev
 
           - os: macos-latest
-            python-version: 3.7
-            name: Python 3.7 with all dependencies, and dev versions of key dependencies on MacOS X
-            toxenv: py37-test-all-dev
+            python-version: 3.9
+            name: Python 3.9 with all dependencies, and dev versions of key dependencies on MacOS X
+            toxenv: py39-test-all-dev
 
           # - os: windows-latest
           #   python-version: 3.7
@@ -45,7 +50,7 @@ jobs:
           #   toxenv: py37-test-all-dev
 
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             name: Documentation
             toxenv: build_docs
 
@@ -60,6 +65,7 @@ jobs:
     - name: Run tests with ${{ matrix.name }}
       run: tox -v -e ${{ matrix.toxenv }}
     - name: Upload coverage to codecov
+      if: ${{ contains(matrix.toxenv,'-cov') }}
       uses: codecov/codecov-action@v1.0.13
       with:
         file: ./coverage.xml
