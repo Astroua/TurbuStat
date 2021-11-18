@@ -18,7 +18,7 @@ jobs:
       - name: Installing libjpeg and pillow - ubuntu
         if: ${{ contains(matrix.os,'ubuntu') }}
         run: |
-          sudo apt-get installlibjpeg-dev
+          sudo apt-get install libjpeg-dev
           python -m pip install Pillow
       - name: Installing fftw for py39 - ubuntu
         if: ${{ contains(matrix.toxenv,'py39') && contains(matrix.os,'ubuntu') }}
