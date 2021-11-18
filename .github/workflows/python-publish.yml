@@ -20,6 +20,7 @@ jobs:
         run: |
           sudo apt-get install libfftw3-dev
           python -m pip install cython
+          python -m pip install pyfftw
       - name: Install cibuildwheel
         run: |
           python -m pip install --upgrade pip
