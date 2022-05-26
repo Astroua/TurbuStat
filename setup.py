@@ -2,7 +2,11 @@
 
 import os
 import sys
+
+import numpy
+
 from setuptools import setup
+from setuptools.extension import Extension
 
 TEST_HELP = """
 Note: running tests is no longer done using 'python setup.py test'. Instead
@@ -36,4 +40,7 @@ if 'build_docs' in sys.argv or 'build_sphinx' in sys.argv:
     print(DOCS_HELP)
     sys.exit(1)
 
-setup(use_scm_version={'write_to': os.path.join('turbustat', 'version.py')})
+setup(use_scm_version={'write_to': os.path.join('turbustat', 'version.py')},
+      ext_modules=[Extension("turbustat.simulator.spectrum",
+                  [os.path.join('turbustat', 'spectrum', 'spectrum.pyx')],
+                  include_dirs=[numpy.get_include()])])
