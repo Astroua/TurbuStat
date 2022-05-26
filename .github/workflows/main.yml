@@ -49,15 +49,10 @@ jobs:
             name: Python 3.9 with all dependencies, and dev versions of key dependencies on MacOS X
             toxenv: py39-test-all-dev
 
-          - os: macos-latest
+          - os: windows-latest
             python-version: 3.9
-            name: Python 3.9 with minimal dependencies on MacOS X
-            toxenv: py39-test
-
-          # - os: windows-latest
-          #   python-version: 3.7
-          #   name: Python 3.7, all dependencies, and dev versions of key dependencies on Windows
-          #   toxenv: py37-test-all-dev
+            name: Python 3.9, all dependencies, and dev versions of key dependencies on Windows
+            toxenv: py39-test-all-dev
 
           - os: ubuntu-latest
             python-version: 3.9
