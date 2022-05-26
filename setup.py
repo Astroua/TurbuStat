@@ -3,6 +3,8 @@
 import os
 import sys
 
+from setuptools import setup
+
 TEST_HELP = """
 Note: running tests is no longer done using 'python setup.py test'. Instead
 you will need to run:
