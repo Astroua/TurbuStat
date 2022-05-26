@@ -1,11 +1,10 @@
 name: Run tests
 
-# on:
-#   push:
-#   pull_request:
-#   schedule:
-#     - cron: '12 0 * * 1'  # every Monday at 12 pm
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '12 0 * * 1'  # every Monday at 12 pm
 
 jobs:
   tests:
