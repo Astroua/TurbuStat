@@ -29,6 +29,7 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
 
+
   build_wheels_macosx:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -103,7 +104,7 @@ jobs:
 
   upload_pypi:
     name: Upload to PyPI
-    needs: [build_wheels, build_sdist, build_wheels_windows]
+    needs: [build_wheels_linux, build_wheels_macosx, build_wheels_windows, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
