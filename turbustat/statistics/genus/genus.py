@@ -234,7 +234,7 @@ class Genus(BaseStatisticMixIn):
             smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
 
             if keep_smoothed_images:
-                self._keep_smoothed_images.append(smooth_img)
+                self._smoothed_images.append(smooth_img)
 
             for i, thresh in enumerate(self.thresholds):
                 high_density = remove_small_objects(smooth_img > thresh,
