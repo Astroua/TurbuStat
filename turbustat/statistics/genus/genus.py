@@ -82,45 +82,46 @@ class Genus(BaseStatisticMixIn):
             self.distance = distance
 
         if min_value is None:
-            min_value = np.nanmin(self.data)
-        else:
-            if hasattr(self.data, 'unit'):
-                if not hasattr(min_value, 'unit'):
-                    raise TypeError("data has units of {}. 'min_value' must "
-                                    "have equivalent units."
-                                    .format(self.data.unit))
-                if not min_value.unit.is_equivalent(self.data.unit):
-                    raise u.UnitsError("min_value does not have an equivalent "
-                                       "units to the img unit.")
 
-                min_value = min_value.to(self.data.unit)
+            if lowdens_percent == 0.0:
+                min_value = np.nanmin(self.data)
+            else:
+                min_value = np.nanpercentile(self.data, lowdens_percent)
+
+            if not hasattr(min_value, 'unit') and hasattr(self.data, 'unit'):
+                min_value *= self.data.unit
+
+        if hasattr(self.data, 'unit'):
+            if not hasattr(min_value, 'unit'):
+                raise TypeError("data has units of {}. 'min_value' must "
+                                "have equivalent units."
+                                .format(self.data.unit))
+            if not min_value.unit.is_equivalent(self.data.unit):
+                raise u.UnitsError("min_value does not have an equivalent "
+                                    "units to the img unit.")
+
+            min_value = min_value.to(self.data.unit)
 
         if max_value is None:
-            max_value = np.nanmax(self.data)
-        else:
-            if hasattr(self.data, 'unit'):
-                if not hasattr(max_value, 'unit'):
-                    raise TypeError("data has units of {}. 'max_value' must "
-                                    "have equivalent units."
-                                    .format(self.data.unit))
-                if not max_value.unit.is_equivalent(self.data.unit):
-                    raise u.UnitsError("max_value does not have an equivalent "
-                                       "units to the img unit.")
 
-                max_value = max_value.to(self.data.unit)
+            if highdens_percent == 100.0:
+                max_value = np.nanmax(self.data)
+            else:
+                max_value = np.nanpercentile(self.data, highdens_percent)
 
-        min_percent = \
-            np.percentile(self.data[~np.isnan(self.data)],
-                          lowdens_percent)
-        max_percent = \
-            np.percentile(self.data[~np.isnan(self.data)],
-                          highdens_percent)
+            if not hasattr(max_value, 'unit') and hasattr(self.data, 'unit'):
+                max_value *= self.data.unit
 
-        if min_value is None or min_percent > min_value:
-            min_value = min_percent
+        if hasattr(max_value, 'unit') and hasattr(self.data, 'unit'):
+            if not hasattr(max_value, 'unit'):
+                raise TypeError("data has units of {}. 'max_value' must "
+                                "have equivalent units."
+                                .format(self.data.unit))
+            if not max_value.unit.is_equivalent(self.data.unit):
+                raise u.UnitsError("max_value does not have an equivalent "
+                                    "units to the img unit.")
 
-        if max_value is None or max_percent > max_value:
-            max_value = max_percent
+            max_value = max_value.to(self.data.unit)
 
         self._thresholds = np.linspace(min_value, max_value, numpts)
 
