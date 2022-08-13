@@ -260,6 +260,25 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
+    def make_genus_stats_table(self):
+        '''
+        Returns an astropy table with genus curve and thresholds with 1 table per
+        smoothed image.
+        '''
+        from astropy.table import Table, Column
+
+        genus_tables = []
+
+        for ii, radii in enumerate(self.smoothing_radii):
+
+            tab = Table()
+            tab.add_column(Column(self.thresholds, name='thresholds'))
+            tab.add_column(Column(self.genus_stats[ii], name='genus_value'))
+
+            genus_tables.append(tab)
+
+        return genus_tables
+
     def plot_fit(self, save_name=None, color='r', symbol='o'):
         '''
         Plot the Genus curves.
