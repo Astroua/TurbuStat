@@ -57,11 +57,11 @@ def input_data(data, no_header=False, need_copy=False):
     if HAS_SC:
         sc_def = False
         if isinstance(data, SpectralCube):
-            output_data = [make_copy(data.filled_data[:].value, need_copy),
+            output_data = [make_copy(data.filled_data[:], need_copy),
                            data.header]
             sc_def = True
         elif isinstance(data, LowerDimensionalObject):
-            output_data = [make_copy(data.value, need_copy), data.header]
+            output_data = [make_copy(data, need_copy), data.header]
             sc_def = True
     else:
         sc_def = False
