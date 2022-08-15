@@ -356,7 +356,7 @@ class Genus(BaseStatisticMixIn):
 
         genus_tables = []
 
-        for ii, radii in enumerate(self.smoothing_radii):
+        for ii, radius in enumerate(self.smoothing_radius):
 
             tab = Table()
             tab.add_column(Column(self.thresholds, name='thresholds'))
@@ -368,16 +368,27 @@ class Genus(BaseStatisticMixIn):
             else:
                 mean_vals = np.array([mean_val] * len(self.thresholds))
 
+            tab.add_column(Column(mean_vals, name='data_mean'))
+
             std_val = self.smoothed_stds[ii]
             if hasattr(std_val, 'unit'):
                 std_vals = ([std_val.value] * len(self.thresholds)) * std_val.unit
             else:
                 std_vals = np.array([std_val] * len(self.thresholds))
 
-            tab.add_column(Column(mean_vals, name='data_mean'))
             tab.add_column(Column(std_vals, name='data_std'))
 
             genus_tables.append(tab)
+
+            if hasattr(radius, 'unit'):
+                radius_vals = ([radius.value] * len(self.thresholds)) * radius.unit
+            else:
+                radius_vals = np.array([radius] * len(self.thresholds))
+
+            tab.add_column(Column(radius_vals, name='smooth_radius'))
+
+            genus_tables.append(tab)
+
 
         return genus_tables
 
