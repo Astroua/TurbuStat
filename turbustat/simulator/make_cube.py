@@ -254,4 +254,4 @@ def field_slice(y, x, los_axis):
 
     spat_slices.insert(los_axis, los_slice)
 
-    return spat_slices
+    return tuple(spat_slices)
