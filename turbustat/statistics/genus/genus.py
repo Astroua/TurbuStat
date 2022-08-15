@@ -47,6 +47,9 @@ class Genus(BaseStatisticMixIn):
         Pass a custom set of thresholds to compute the Genus statistic at.
         Note that this overrides the `min/max_value`, `low/highdens_percent`,
         and `numpts` keywords.
+    enable_smoothing : bool, optional
+        When `True`, uses the set of `smoothing_radii` to convolve the input data
+        with 2D Gaussian kernels. When `False`, no smoothing is applied to the data.
     smoothing_radii : np.ndarray or `astropy.units.Quantity`, optional
         Kernel radii to smooth data to. If units are not attached, the radii
         are assumed to be in pixels. If no radii are given, 5 smoothing radii
@@ -72,6 +75,7 @@ class Genus(BaseStatisticMixIn):
     def __init__(self, img, min_value=None, max_value=None,
                  lowdens_percent=0, highdens_percent=100, numpts=100,
                  thresholds=None,
+                 enable_smoothing=True,
                  smoothing_radii=None,
                  distance=None):
         super(Genus, self).__init__()
@@ -150,13 +154,18 @@ class Genus(BaseStatisticMixIn):
 
             self._thresholds = np.linspace(min_value, max_value, numpts)
 
-        if smoothing_radii is None:
-            self.smoothing_radii = np.array([1.0])
-        else:
-            if isinstance(smoothing_radii, u.Quantity):
-                self.smoothing_radii = self._to_pixel(smoothing_radii).value
+        self._enable_smoothing = enable_smoothing
+
+        if enable_smoothing:
+            if smoothing_radii is None:
+                self.smoothing_radii = np.array([1.0])
             else:
-                self.smoothing_radii = smoothing_radii
+                if isinstance(smoothing_radii, u.Quantity):
+                    self.smoothing_radii = self._to_pixel(smoothing_radii).value
+                else:
+                    self.smoothing_radii = smoothing_radii
+        else:
+            self.smoothing_radii = []
 
     @property
     def thresholds(self):
@@ -175,15 +184,22 @@ class Genus(BaseStatisticMixIn):
     @smoothing_radii.setter
     def smoothing_radii(self, values):
 
-        if np.any(values < 1.0):
-            raise ValueError("All smoothing radii must be larger than one"
-                             " pixel.")
+        # Allow passing an empty list/array when no smoothing is chosen.
+        if self._enable_smoothing:
 
-        if np.any(values > 0.5 * min(self.data.shape)):
-            raise ValueError("All smoothing radii must be smaller than half of"
-                             " the image shape.")
+            if np.any(values < 1.0):
+                raise ValueError("All smoothing radii must be larger than one"
+                                " pixel.")
 
-        self._smoothing_radii = values
+            if np.any(values > 0.5 * min(self.data.shape)):
+                raise ValueError("All smoothing radii must be smaller than half of"
+                                " the image shape.")
+
+            self._smoothing_radii = values
+
+        else:
+            self._smoothing_radii = [None]
+
 
     @property
     def smoothed_images(self):
@@ -251,13 +267,19 @@ class Genus(BaseStatisticMixIn):
 
         for j, width in enumerate(self.smoothing_radii):
 
-            if match_kernel:
-                kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
-                                          y_size=self.data.shape[1])
-            else:
-                kernel = Gaussian2DKernel(width)
+            # Skip smoothing when none is given
+            if width is None:
 
-            smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
+                smooth_img = self.data
+
+            else:
+                if match_kernel:
+                    kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
+                                            y_size=self.data.shape[1])
+                else:
+                    kernel = Gaussian2DKernel(width)
+
+                smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
 
             if keep_smoothed_images:
                 self._keep_smoothed_images.append(smooth_img)
@@ -327,8 +349,14 @@ class Genus(BaseStatisticMixIn):
             else:
                 ax = plt.subplot(num_cols, 2, i)
             # plt.title("Smooth Size: {0}".format(self.smoothing_radii[i - 1]))
+
+            if self.smoothing_radii[i-1] is not None:
+                textstring = "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1])
+            else:
+                textstring = "No smoothing"
+
             ax.text(0.3, 0.1,
-                    "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
+                    textstring,
                     transform=ax.transAxes, fontsize=12)
             plt.plot(self.thresholds, self.genus_stats[i - 1],
                      "{}-".format(symbol),
