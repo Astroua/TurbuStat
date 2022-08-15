@@ -673,3 +673,30 @@ def remove_small_objects(arr, min_size, connectivity=2):
         arr[posns] = 0
 
     return arr
+
+
+def model_gaussian_genus(x, A, theta_C):
+    '''
+    Analytic Genus model for a Gaussian field using the formalism from
+    Coles (1988) (https://ui.adsabs.harvard.edu/abs/1988MNRAS.234..509C/abstract).
+
+    .. note:: The A and theta_C parameters will be degenerate as they set the
+    normalization of the Genus curve, not its shape.
+
+    Parameters
+    ----------
+    x : numpy.ndarray or float
+        Standardized value ((val - mean) / std).
+    A : float
+        A is the area of the total field. For a 2D image with uncorrelated
+        noise, this is equal to the number of pixels. With correlated values,
+        this will be closer to the number of independent regions.
+    theta_C : float
+        theta_C is the 'coherence angle' and will be close to the width of a
+        2D Gaussian matching the spatial correlation scale (i.e., the beam or
+        PSF width).
+
+    '''
+    return (A / theta_C**2) * x * np.exp(-x**2 / 2.) / (2 * np.pi)**1.5
+
+
