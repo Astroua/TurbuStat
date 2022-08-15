@@ -242,11 +242,12 @@ def _slice0(cube, axis, scale):
 
     for i in range(cube.shape[axis]):
         view[axis] = i
-        plane = cube._mask.include(data=cube._data, wcs=cube._wcs, view=view)
+        plane = cube._mask.include(data=cube._data, wcs=cube._wcs,
+                                   view=tuple(view))
         valid |= plane
 
         if _scale_cube:
-            noise_plane = np.nan_to_num(scale.filled_data[view])
+            noise_plane = np.nan_to_num(scale.filled_data[tuple(view)])
         else:
             noise_plane = scale
 
@@ -305,11 +306,11 @@ def _slice1(cube, axis, scale, moment0, moment1):
     for i in range(cube.shape[axis]):
         view[axis] = i
 
-        term1 = pix_cen[view] / axis_sum
+        term1 = pix_cen[tuple(view)] / axis_sum
 
         if _scale_cube:
             noise_plane = \
-                np.nan_to_num(scale.filled_data[view])
+                np.nan_to_num(scale.filled_data[tuple(view)])
         else:
             noise_plane = scale
 
@@ -365,19 +366,19 @@ def _slice2(cube, axis, scale, moment0, moment1, moment2,
 
     for i in range(cube.shape[axis]):
         view[axis] = i
-        plane = np.nan_to_num(cube.filled_data[view])
+        plane = np.nan_to_num(cube.filled_data[tuple(view)])
 
-        term11 = np.power((pix_cen[view] - moment1), 2) / axis_sum
+        term11 = np.power((pix_cen[tuple(view)] - moment1), 2) / axis_sum
 
         if _scale_cube:
             noise_plane = \
-                np.nan_to_num(scale.filled_data[view])
+                np.nan_to_num(scale.filled_data[tuple(view)])
         else:
             noise_plane = scale
 
         term1 += np.power((term11 - term12) * noise_plane, 2)
 
-        term2 += np.nan_to_num(plane) * (pix_cen[view] - moment1)
+        term2 += np.nan_to_num(plane) * (pix_cen[tuple(view)] - moment1)
 
     term2 = 4 * np.power((moment1_err * term2) / (axis_sum), 2)
 
