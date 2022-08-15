@@ -84,6 +84,7 @@ Many thanks to everyone who has reported bugs and given feedback on TurbuStat!
 * Jonathan Henshaw
 * Sac Medina
 * Andrés Izquierdo
+* Kaya Mori
 
 
 Contents:
