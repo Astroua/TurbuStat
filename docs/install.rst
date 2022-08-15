@@ -26,14 +26,11 @@ The following packages are optional when installing TurbuStat and are required o
  *   `emcee <http://dan.iel.fm/emcee/current/>`_ - MCMC fitting in `~turbustat.statistics.PCA` and `~turbustat.statistics.PDF`.
  *   `pyfftw <https://hgomersall.github.io/pyFFTW/>`_ - Wrapper for the FFTW libraries. Allows FFTs to be run in parallel.
 
-Install TurbuStat with:
 
-    >>> pip install turbustat
-
-Otherwise, clone the repository::
+To install the development version, clone the repository::
     >>> git clone https://github.com/Astroua/TurbuStat # doctest: +SKIP
 
-Change into the TurbuStat directory and run the following to install TurbuStat::
+Change into the TurbuStat directory and run::
     >>> pip install -e . # doctest: +SKIP
 
 If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
