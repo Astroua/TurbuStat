@@ -356,7 +356,7 @@ class Genus(BaseStatisticMixIn):
 
         genus_tables = []
 
-        for ii, radius in enumerate(self.smoothing_radius):
+        for ii, radius in enumerate(self.smoothing_radii):
 
             tab = Table()
             tab.add_column(Column(self.thresholds, name='thresholds'))
