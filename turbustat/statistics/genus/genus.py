@@ -290,6 +290,10 @@ class Genus(BaseStatisticMixIn):
         self._smoothed_means = np.empty(len(self.smoothing_radii))
         self._smoothed_stds = np.empty(len(self.smoothing_radii))
 
+        if hasattr(self.data, 'unit'):
+            self._smoothed_means *= self.data.unit
+            self._smoothed_stds *= self.data.unit
+
         conn_kernel = nd.generate_binary_structure(2, connectivity)
 
         for j, width in enumerate(self.smoothing_radii):
