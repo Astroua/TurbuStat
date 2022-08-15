@@ -230,9 +230,9 @@ class Genus(BaseStatisticMixIn):
         return self._smoothed_stds
 
 
-    def make_genus_curve(self, enable_small_removal=False,
+    def make_genus_curve(self, enable_small_removal=True,
                          use_beam=False, min_size=4,
-                         connectivity=1,
+                         connectivity=2,
                          keep_smoothed_images=False,
                          match_kernel=False,
                          **convolution_kwargs):
