@@ -213,8 +213,27 @@ class Genus(BaseStatisticMixIn):
 
         return self._smoothed_images
 
-    def make_genus_curve(self, use_beam=False, min_size=4,
-                         connectivity=1, keep_smoothed_images=False,
+    @property
+    def smoothed_means(self):
+        '''
+        Means from the smoothed images.
+        Needed to convert the thresholds into standardized values.
+        '''
+        return self._smoothed_means
+
+    @property
+    def smoothed_stds(self):
+        '''
+        Standard deviations from the smoothed images.
+        Needed to convert the thresholds into standardized values.
+        '''
+        return self._smoothed_stds
+
+
+    def make_genus_curve(self, enable_small_removal=False,
+                         use_beam=False, min_size=4,
+                         connectivity=1,
+                         keep_smoothed_images=False,
                          match_kernel=False,
                          **convolution_kwargs):
         '''
@@ -223,6 +242,9 @@ class Genus(BaseStatisticMixIn):
 
         Parameters
         ----------
+        enable_small_removal : bool, optional
+            Make use of the small region removal. Default is `True`. If `False`,
+            the `use_beam` and `min_size` keywords are not used.
         use_beam : bool, optional
             When enabled, will use the given `beam_fwhm` or try to load it from
             the header. When disabled, the minimum size is set by `min_size`.
@@ -265,6 +287,11 @@ class Genus(BaseStatisticMixIn):
         self._genus_stats = np.empty((len(self.smoothing_radii),
                                       len(self.thresholds)))
 
+        self._smoothed_means = np.empty(len(self.smoothing_radii))
+        self._smoothed_stds = np.empty(len(self.smoothing_radii))
+
+        conn_kernel = nd.generate_binary_structure(2, connectivity)
+
         for j, width in enumerate(self.smoothing_radii):
 
             # Skip smoothing when none is given
@@ -274,28 +301,37 @@ class Genus(BaseStatisticMixIn):
 
             else:
                 if match_kernel:
-                    kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
-                                            y_size=self.data.shape[1])
+                    kernel = Gaussian2DKernel(width,
+                                              x_size=self.data.shape[0],
+                                              y_size=self.data.shape[1])
                 else:
                     kernel = Gaussian2DKernel(width)
 
                 smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
 
+            # Append the mean/std from the smoothed image:
+            self._smoothed_means[j] = np.nanmean(smooth_img)
+            self._smoothed_stds[j] = np.nanstd(smooth_img)
+
             if keep_smoothed_images:
-                self._keep_smoothed_images.append(smooth_img)
+                self._smoothed_images.append(smooth_img)
 
             for i, thresh in enumerate(self.thresholds):
-                high_density = remove_small_objects(smooth_img > thresh,
-                                                    min_size=min_size,
-                                                    connectivity=connectivity)
-                low_density = remove_small_objects(smooth_img < thresh,
-                                                   min_size=min_size,
-                                                   connectivity=connectivity)
+                high_density = smooth_img > thresh
+                low_density = smooth_img < thresh
+
+                if enable_small_removal:
+
+                    high_density = remove_small_objects(high_density,
+                                                        min_size=min_size,
+                                                        connectivity=connectivity)
+                    low_density = remove_small_objects(low_density,
+                                                       min_size=min_size,
+                                                       connectivity=connectivity)
+
                 # eight-connectivity to count the regions
-                high_density_labels, high_density_num = \
-                    nd.label(high_density, np.ones((3, 3)))
-                low_density_labels, low_density_num = \
-                    nd.label(low_density, np.ones((3, 3)))
+                high_density_labels, high_density_num = nd.label(high_density, conn_kernel)
+                low_density_labels, low_density_num = nd.label(low_density, conn_kernel)
 
                 self._genus_stats[j, i] = high_density_num - low_density_num
 
@@ -322,11 +358,27 @@ class Genus(BaseStatisticMixIn):
             tab.add_column(Column(self.thresholds, name='thresholds'))
             tab.add_column(Column(self.genus_stats[ii], name='genus_value'))
 
+            mean_val = self.smoothed_means[ii]
+            if hasattr(mean_val, 'unit'):
+                mean_vals = ([mean_val.value] * len(self.thresholds)) * mean_val.unit
+            else:
+                mean_vals = np.array([mean_val] * len(self.thresholds))
+
+            std_val = self.smoothed_stds[ii]
+            if hasattr(std_val, 'unit'):
+                std_vals = ([std_val.value] * len(self.thresholds)) * std_val.unit
+            else:
+                std_vals = np.array([std_val] * len(self.thresholds))
+
+            tab.add_column(Column(mean_vals, name='data_mean'))
+            tab.add_column(Column(std_vals, name='data_std'))
+
             genus_tables.append(tab)
 
         return genus_tables
 
-    def plot_fit(self, save_name=None, color='r', symbol='o'):
+    def plot_fit(self, save_name=None, color='r', symbol='o',
+                 standardize=False):
         '''
         Plot the Genus curves.
 
@@ -348,24 +400,33 @@ class Genus(BaseStatisticMixIn):
                 ax = plt.subplot(111)
             else:
                 ax = plt.subplot(num_cols, 2, i)
-            # plt.title("Smooth Size: {0}".format(self.smoothing_radii[i - 1]))
 
             if self.smoothing_radii[i-1] is not None:
-                textstring = "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1])
+                textstring = "Smooth Size: {0:.2f}".format(self.smoothing_radii[i-1])
             else:
                 textstring = "No smoothing"
 
             ax.text(0.3, 0.1,
                     textstring,
                     transform=ax.transAxes, fontsize=12)
-            plt.plot(self.thresholds, self.genus_stats[i - 1],
+
+            if standardize:
+                thresholds = (self.thresholds - self.smoothed_means[i-1]) / self.smoothed_stds[i-1]
+            else:
+                thresholds = self.thresholds
+
+            plt.plot(thresholds,
+                     self.genus_stats[i - 1],
                      "{}-".format(symbol),
                      color=color)
 
             plt.grid(True)
 
             if (num - i + 1) <= 2:
-                plt.xlabel("Intensity")
+                if standardize:
+                    plt.xlabel("Standardized Intensity")
+                else:
+                    plt.xlabel("Intensity")
             else:
                 plt.setp(ax.get_xticklabels(), visible=False)
 
@@ -378,7 +439,9 @@ class Genus(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, save_name=None,
-            color='r', symbol='o', **kwargs):
+            color='r', symbol='o',
+            standardize_intensity=False,
+            **kwargs):
         '''
         Run the whole statistic.
 
@@ -395,7 +458,8 @@ class Genus(BaseStatisticMixIn):
         self.make_genus_curve(**kwargs)
 
         if verbose:
-            self.plot_fit(save_name=save_name, color=color, symbol=symbol)
+            self.plot_fit(save_name=save_name, color=color, symbol=symbol,
+                          standardize=standardize_intensity)
 
         return self
 
@@ -579,7 +643,7 @@ def GenusDistance(*args, **kwargs):
     return Genus_Distance(*args, **kwargs)
 
 
-def remove_small_objects(arr, min_size, connectivity=8):
+def remove_small_objects(arr, min_size, connectivity=2):
     '''
     Remove objects less than the given size.
     Function is based on skimage.morphology.remove_small_objects
