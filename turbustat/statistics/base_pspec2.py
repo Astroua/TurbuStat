@@ -412,8 +412,12 @@ class StatisticBase_PSpec2D(object):
             ellip_conv = 0
             p0 = (amp_guess, ellip_conv, theta, slope_guess)
 
+        fit_values = np.log10(self.ps2D[mask])
+        if isinstance(fit_values, u.Quantity):
+            fit_values = fit_values.value
+
         params, stderrs, fit_2Dmodel, fitter = \
-            fit_elliptical_powerlaw(np.log10(self.ps2D[mask]),
+            fit_elliptical_powerlaw(fit_values,
                                     xx_freq[mask],
                                     yy_freq[mask], p0,
                                     fit_method=fit_method,

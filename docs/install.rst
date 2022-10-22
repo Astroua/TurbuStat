@@ -10,13 +10,13 @@ TurbuStat can also be installed from the `github repository <https://github.com/
 
 TurbuStat requires the follow packages:
 
- *   astropy>=2.0
- *   numpy>=1.7
- *   matplotlib>=1.2
- *   scipy>=0.12
- *   sklearn>=0.13.0
- *   statsmodels>=0.4.0
- *   scikit-image>=0.12
+ *   astropy
+ *   numpy
+ *   matplotlib
+ *   scipy
+ *   scikit-learn
+ *   statsmodels
+ *   scikit-image
 
 The following packages are optional when installing TurbuStat and are required only for specific functions in TurbuStat:
 
@@ -26,11 +26,12 @@ The following packages are optional when installing TurbuStat and are required o
  *   `emcee <http://dan.iel.fm/emcee/current/>`_ - MCMC fitting in `~turbustat.statistics.PCA` and `~turbustat.statistics.PDF`.
  *   `pyfftw <https://hgomersall.github.io/pyFFTW/>`_ - Wrapper for the FFTW libraries. Allows FFTs to be run in parallel.
 
- To install TurbuStat, clone the repository::
+
+To install the development version, clone the repository::
     >>> git clone https://github.com/Astroua/TurbuStat # doctest: +SKIP
 
-Change into the TurbuStat directory and run the following to install TurbuStat::
-    >>> python setup.py install # doctest: +SKIP
+Change into the TurbuStat directory and run::
+    >>> pip install -e . # doctest: +SKIP
 
 If you find any issues in the installation, please make an `issue on github <https://github.com/Astroua/TurbuStat/issues>`_ or contact the developers at the email on `this page <https://github.com/e-koch>`_. Thank you!
 

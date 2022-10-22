@@ -43,6 +43,13 @@ class Genus(BaseStatisticMixIn):
         `max_value`.
     numpts : int, optional
         Number of thresholds to calculate statistic at.
+    thresholds : numpy.ndarray or `~astropy.units.Quantity`, optional
+        Pass a custom set of thresholds to compute the Genus statistic at.
+        Note that this overrides the `min/max_value`, `low/highdens_percent`,
+        and `numpts` keywords.
+    enable_smoothing : bool, optional
+        When `True`, uses the set of `smoothing_radii` to convolve the input data
+        with 2D Gaussian kernels. When `False`, no smoothing is applied to the data.
     smoothing_radii : np.ndarray or `astropy.units.Quantity`, optional
         Kernel radii to smooth data to. If units are not attached, the radii
         are assumed to be in pixels. If no radii are given, 5 smoothing radii
@@ -65,8 +72,11 @@ class Genus(BaseStatisticMixIn):
 
     __doc__ %= {"dtypes": " or ".join(common_types + twod_types)}
 
-    def __init__(self, img, min_value=None, max_value=None, lowdens_percent=0,
-                 highdens_percent=100, numpts=100, smoothing_radii=None,
+    def __init__(self, img, min_value=None, max_value=None,
+                 lowdens_percent=0, highdens_percent=100, numpts=100,
+                 thresholds=None,
+                 enable_smoothing=True,
+                 smoothing_radii=None,
                  distance=None):
         super(Genus, self).__init__()
 
@@ -81,9 +91,35 @@ class Genus(BaseStatisticMixIn):
         if distance is not None:
             self.distance = distance
 
-        if min_value is None:
-            min_value = np.nanmin(self.data)
+        if thresholds is not None:
+
+            if hasattr(self.data, 'unit'):
+                if not hasattr(thresholds, 'unit'):
+                    raise TypeError("data has units of {}. 'thresholds' must "
+                                    "have equivalent units."
+                                    .format(self.data.unit))
+                if not thresholds.unit.is_equivalent(self.data.unit):
+                    raise u.UnitsError("thresholds does not have an equivalent "
+                                        "units to the img unit.")
+
+                thresholds_match = thresholds.to(self.data.unit)
+            else:
+                thresholds_match = thresholds
+
+            self._thresholds = thresholds_match
+
         else:
+
+            if min_value is None:
+
+                if lowdens_percent == 0.0:
+                    min_value = np.nanmin(self.data)
+                else:
+                    min_value = np.nanpercentile(self.data, lowdens_percent)
+
+                if not hasattr(min_value, 'unit') and hasattr(self.data, 'unit'):
+                    min_value *= self.data.unit
+
             if hasattr(self.data, 'unit'):
                 if not hasattr(min_value, 'unit'):
                     raise TypeError("data has units of {}. 'min_value' must "
@@ -91,46 +127,45 @@ class Genus(BaseStatisticMixIn):
                                     .format(self.data.unit))
                 if not min_value.unit.is_equivalent(self.data.unit):
                     raise u.UnitsError("min_value does not have an equivalent "
-                                       "units to the img unit.")
+                                        "units to the img unit.")
 
                 min_value = min_value.to(self.data.unit)
 
-        if max_value is None:
-            max_value = np.nanmax(self.data)
-        else:
-            if hasattr(self.data, 'unit'):
+            if max_value is None:
+
+                if highdens_percent == 100.0:
+                    max_value = np.nanmax(self.data)
+                else:
+                    max_value = np.nanpercentile(self.data, highdens_percent)
+
+                if not hasattr(max_value, 'unit') and hasattr(self.data, 'unit'):
+                    max_value *= self.data.unit
+
+            if hasattr(max_value, 'unit') and hasattr(self.data, 'unit'):
                 if not hasattr(max_value, 'unit'):
                     raise TypeError("data has units of {}. 'max_value' must "
                                     "have equivalent units."
                                     .format(self.data.unit))
                 if not max_value.unit.is_equivalent(self.data.unit):
                     raise u.UnitsError("max_value does not have an equivalent "
-                                       "units to the img unit.")
+                                        "units to the img unit.")
 
                 max_value = max_value.to(self.data.unit)
 
-        min_percent = \
-            np.percentile(self.data[~np.isnan(self.data)],
-                          lowdens_percent)
-        max_percent = \
-            np.percentile(self.data[~np.isnan(self.data)],
-                          highdens_percent)
+            self._thresholds = np.linspace(min_value, max_value, numpts)
 
-        if min_value is None or min_percent > min_value:
-            min_value = min_percent
+        self._enable_smoothing = enable_smoothing
 
-        if max_value is None or max_percent > max_value:
-            max_value = max_percent
-
-        self._thresholds = np.linspace(min_value, max_value, numpts)
-
-        if smoothing_radii is None:
-            self.smoothing_radii = np.array([1.0])
-        else:
-            if isinstance(smoothing_radii, u.Quantity):
-                self.smoothing_radii = self._to_pixel(smoothing_radii).value
+        if enable_smoothing:
+            if smoothing_radii is None:
+                self.smoothing_radii = np.array([1.0])
             else:
-                self.smoothing_radii = smoothing_radii
+                if isinstance(smoothing_radii, u.Quantity):
+                    self.smoothing_radii = self._to_pixel(smoothing_radii).value
+                else:
+                    self.smoothing_radii = smoothing_radii
+        else:
+            self.smoothing_radii = []
 
     @property
     def thresholds(self):
@@ -149,15 +184,22 @@ class Genus(BaseStatisticMixIn):
     @smoothing_radii.setter
     def smoothing_radii(self, values):
 
-        if np.any(values < 1.0):
-            raise ValueError("All smoothing radii must be larger than one"
-                             " pixel.")
+        # Allow passing an empty list/array when no smoothing is chosen.
+        if self._enable_smoothing:
 
-        if np.any(values > 0.5 * min(self.data.shape)):
-            raise ValueError("All smoothing radii must be smaller than half of"
-                             " the image shape.")
+            if np.any(values < 1.0):
+                raise ValueError("All smoothing radii must be larger than one"
+                                " pixel.")
 
-        self._smoothing_radii = values
+            if np.any(values > 0.5 * min(self.data.shape)):
+                raise ValueError("All smoothing radii must be smaller than half of"
+                                " the image shape.")
+
+            self._smoothing_radii = values
+
+        else:
+            self._smoothing_radii = [None]
+
 
     @property
     def smoothed_images(self):
@@ -171,8 +213,27 @@ class Genus(BaseStatisticMixIn):
 
         return self._smoothed_images
 
-    def make_genus_curve(self, use_beam=False, min_size=4,
-                         connectivity=1, keep_smoothed_images=False,
+    @property
+    def smoothed_means(self):
+        '''
+        Means from the smoothed images.
+        Needed to convert the thresholds into standardized values.
+        '''
+        return self._smoothed_means
+
+    @property
+    def smoothed_stds(self):
+        '''
+        Standard deviations from the smoothed images.
+        Needed to convert the thresholds into standardized values.
+        '''
+        return self._smoothed_stds
+
+
+    def make_genus_curve(self, enable_small_removal=True,
+                         use_beam=False, min_size=4,
+                         connectivity=2,
+                         keep_smoothed_images=False,
                          match_kernel=False,
                          **convolution_kwargs):
         '''
@@ -181,6 +242,9 @@ class Genus(BaseStatisticMixIn):
 
         Parameters
         ----------
+        enable_small_removal : bool, optional
+            Make use of the small region removal. Default is `True`. If `False`,
+            the `use_beam` and `min_size` keywords are not used.
         use_beam : bool, optional
             When enabled, will use the given `beam_fwhm` or try to load it from
             the header. When disabled, the minimum size is set by `min_size`.
@@ -223,31 +287,55 @@ class Genus(BaseStatisticMixIn):
         self._genus_stats = np.empty((len(self.smoothing_radii),
                                       len(self.thresholds)))
 
+        self._smoothed_means = np.empty(len(self.smoothing_radii))
+        self._smoothed_stds = np.empty(len(self.smoothing_radii))
+
+        if hasattr(self.data, 'unit'):
+            self._smoothed_means *= self.data.unit
+            self._smoothed_stds *= self.data.unit
+
+        conn_kernel = nd.generate_binary_structure(2, connectivity)
+
         for j, width in enumerate(self.smoothing_radii):
 
-            if match_kernel:
-                kernel = Gaussian2DKernel(width, x_size=self.data.shape[0],
-                                          y_size=self.data.shape[1])
-            else:
-                kernel = Gaussian2DKernel(width)
+            # Skip smoothing when none is given
+            if width is None:
 
-            smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
+                smooth_img = self.data
+
+            else:
+                if match_kernel:
+                    kernel = Gaussian2DKernel(width,
+                                              x_size=self.data.shape[0],
+                                              y_size=self.data.shape[1])
+                else:
+                    kernel = Gaussian2DKernel(width)
+
+                smooth_img = convolve_fft(self.data, kernel, **convolution_kwargs)
+
+            # Append the mean/std from the smoothed image:
+            self._smoothed_means[j] = np.nanmean(smooth_img)
+            self._smoothed_stds[j] = np.nanstd(smooth_img)
 
             if keep_smoothed_images:
                 self._smoothed_images.append(smooth_img)
 
             for i, thresh in enumerate(self.thresholds):
-                high_density = remove_small_objects(smooth_img > thresh,
-                                                    min_size=min_size,
-                                                    connectivity=connectivity)
-                low_density = remove_small_objects(smooth_img < thresh,
-                                                   min_size=min_size,
-                                                   connectivity=connectivity)
+                high_density = smooth_img > thresh
+                low_density = smooth_img < thresh
+
+                if enable_small_removal:
+
+                    high_density = remove_small_objects(high_density,
+                                                        min_size=min_size,
+                                                        connectivity=connectivity)
+                    low_density = remove_small_objects(low_density,
+                                                       min_size=min_size,
+                                                       connectivity=connectivity)
+
                 # eight-connectivity to count the regions
-                high_density_labels, high_density_num = \
-                    nd.label(high_density, np.ones((3, 3)))
-                low_density_labels, low_density_num = \
-                    nd.label(low_density, np.ones((3, 3)))
+                high_density_labels, high_density_num = nd.label(high_density, conn_kernel)
+                low_density_labels, low_density_num = nd.label(low_density, conn_kernel)
 
                 self._genus_stats[j, i] = high_density_num - low_density_num
 
@@ -259,7 +347,53 @@ class Genus(BaseStatisticMixIn):
         '''
         return self._genus_stats
 
-    def plot_fit(self, save_name=None, color='r', symbol='o'):
+    def make_genus_stats_table(self):
+        '''
+        Returns an astropy table with genus curve and thresholds with 1 table per
+        smoothed image.
+        '''
+        from astropy.table import Table, Column
+
+        genus_tables = []
+
+        for ii, radius in enumerate(self.smoothing_radii):
+
+            tab = Table()
+            tab.add_column(Column(self.thresholds, name='thresholds'))
+            tab.add_column(Column(self.genus_stats[ii], name='genus_value'))
+
+            mean_val = self.smoothed_means[ii]
+            if hasattr(mean_val, 'unit'):
+                mean_vals = ([mean_val.value] * len(self.thresholds)) * mean_val.unit
+            else:
+                mean_vals = np.array([mean_val] * len(self.thresholds))
+
+            tab.add_column(Column(mean_vals, name='data_mean'))
+
+            std_val = self.smoothed_stds[ii]
+            if hasattr(std_val, 'unit'):
+                std_vals = ([std_val.value] * len(self.thresholds)) * std_val.unit
+            else:
+                std_vals = np.array([std_val] * len(self.thresholds))
+
+            tab.add_column(Column(std_vals, name='data_std'))
+
+            genus_tables.append(tab)
+
+            if hasattr(radius, 'unit'):
+                radius_vals = ([radius.value] * len(self.thresholds)) * radius.unit
+            else:
+                radius_vals = np.array([radius] * len(self.thresholds))
+
+            tab.add_column(Column(radius_vals, name='smooth_radius'))
+
+            genus_tables.append(tab)
+
+
+        return genus_tables
+
+    def plot_fit(self, save_name=None, color='r', symbol='o',
+                 standardize=False):
         '''
         Plot the Genus curves.
 
@@ -281,18 +415,33 @@ class Genus(BaseStatisticMixIn):
                 ax = plt.subplot(111)
             else:
                 ax = plt.subplot(num_cols, 2, i)
-            # plt.title("Smooth Size: {0}".format(self.smoothing_radii[i - 1]))
+
+            if self.smoothing_radii[i-1] is not None:
+                textstring = "Smooth Size: {0:.2f}".format(self.smoothing_radii[i-1])
+            else:
+                textstring = "No smoothing"
+
             ax.text(0.3, 0.1,
-                    "Smooth Size: {0:.2f}".format(self.smoothing_radii[i - 1]),
+                    textstring,
                     transform=ax.transAxes, fontsize=12)
-            plt.plot(self.thresholds, self.genus_stats[i - 1],
+
+            if standardize:
+                thresholds = (self.thresholds - self.smoothed_means[i-1]) / self.smoothed_stds[i-1]
+            else:
+                thresholds = self.thresholds
+
+            plt.plot(thresholds,
+                     self.genus_stats[i - 1],
                      "{}-".format(symbol),
                      color=color)
 
             plt.grid(True)
 
             if (num - i + 1) <= 2:
-                plt.xlabel("Intensity")
+                if standardize:
+                    plt.xlabel("Standardized Intensity")
+                else:
+                    plt.xlabel("Intensity")
             else:
                 plt.setp(ax.get_xticklabels(), visible=False)
 
@@ -305,7 +454,9 @@ class Genus(BaseStatisticMixIn):
             plt.show()
 
     def run(self, verbose=False, save_name=None,
-            color='r', symbol='o', **kwargs):
+            color='r', symbol='o',
+            standardize_intensity=False,
+            **kwargs):
         '''
         Run the whole statistic.
 
@@ -322,7 +473,8 @@ class Genus(BaseStatisticMixIn):
         self.make_genus_curve(**kwargs)
 
         if verbose:
-            self.plot_fit(save_name=save_name, color=color, symbol=symbol)
+            self.plot_fit(save_name=save_name, color=color, symbol=symbol,
+                          standardize=standardize_intensity)
 
         return self
 
@@ -506,7 +658,7 @@ def GenusDistance(*args, **kwargs):
     return Genus_Distance(*args, **kwargs)
 
 
-def remove_small_objects(arr, min_size, connectivity=8):
+def remove_small_objects(arr, min_size, connectivity=2):
     '''
     Remove objects less than the given size.
     Function is based on skimage.morphology.remove_small_objects
@@ -536,3 +688,30 @@ def remove_small_objects(arr, min_size, connectivity=8):
         arr[posns] = 0
 
     return arr
+
+
+def model_gaussian_genus(x, A, theta_C):
+    '''
+    Analytic Genus model for a Gaussian field using the formalism from
+    Coles (1988) (https://ui.adsabs.harvard.edu/abs/1988MNRAS.234..509C/abstract).
+
+    .. note:: The A and theta_C parameters will be degenerate as they set the
+    normalization of the Genus curve, not its shape.
+
+    Parameters
+    ----------
+    x : numpy.ndarray or float
+        Standardized value ((val - mean) / std).
+    A : float
+        A is the area of the total field. For a 2D image with uncorrelated
+        noise, this is equal to the number of pixels. With correlated values,
+        this will be closer to the number of independent regions.
+    theta_C : float
+        theta_C is the 'coherence angle' and will be close to the width of a
+        2D Gaussian matching the spatial correlation scale (i.e., the beam or
+        PSF width).
+
+    '''
+    return (A / theta_C**2) * x * np.exp(-x**2 / 2.) / (2 * np.pi)**1.5
+
+

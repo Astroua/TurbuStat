@@ -25,9 +25,10 @@ def test_ppv(axis):
     # Number of samples to take along each non-projected dimension
     size = 16
 
-    twod_slice = [slice(0, size), slice(0, size)]
+    twod_slice = (slice(0, size), slice(0, size))
     threed_slice = [slice(0, size), slice(0, size)]
     threed_slice.insert(axis, slice(None))
+    threed_slice = tuple(threed_slice)
 
     # Need a large enough field to have good statistics
     velocity = make_3dfield(128, powerlaw=3.5, amp=5.e3) * u.m / u.s
@@ -93,9 +94,10 @@ def test_ppv_negative_density():
 
     axis = 0
 
-    twod_slice = [slice(0, size), slice(0, size)]
+    twod_slice = (slice(0, size), slice(0, size))
     threed_slice = [slice(0, size), slice(0, size)]
     threed_slice.insert(axis, slice(None))
+    threed_slice = tuple(threed_slice)
 
     # Need a large enough field to have good statistics
     velocity = make_3dfield(128, powerlaw=3.5, amp=5.e3) * u.m / u.s
