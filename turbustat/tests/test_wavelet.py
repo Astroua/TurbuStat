@@ -67,7 +67,7 @@ def test_Wavelet_method_failbreak():
 
     # No break and only 1 slope
     assert tester.brk is None
-    assert isinstance(tester.slope, np.float)
+    assert isinstance(tester.slope, float)
 
 
 def test_Wavelet_method_fitlimits():
