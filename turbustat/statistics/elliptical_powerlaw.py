@@ -5,6 +5,8 @@ import numpy as np
 from astropy.modeling import Fittable2DModel, Parameter, fitting
 from warnings import warn
 
+log_ten = 2.302585092994046
+
 
 def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
                             bootstrap=False, niters=100, alpha=0.6827,
@@ -99,7 +101,8 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             model.theta.fixed = True
 
         fitter = fitting.LevMarLSQFitter()
-        fit_model = fitter(model, x, y, values, weights=weights)
+        fit_model = fitter(model, x, y, values, weights=weights,
+                           estimate_jacobian=True)
 
         resids = np.sum(np.abs(values - fit_model(x, y)))
 
@@ -111,7 +114,8 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             model_f = LogEllipticalPowerLaw2D(*p0_f)
 
             fitter_f = fitting.LevMarLSQFitter()
-            fit_model_f = fitter(model_f, x, y, values, weights=weights)
+            fit_model_f = fitter(model_f, x, y, values, weights=weights,
+                                 estimate_jacobian=True)
 
             resids_f = np.sum(np.abs(values - fit_model_f(x, y)))
 
@@ -225,10 +229,10 @@ class LogEllipticalPowerLaw2D(Fittable2DModel):
         Power-law index.
     """
 
-    logamplitude = Parameter(default=0, bounds=(-10, None))
-    ellip_transf = Parameter(default=1)
-    theta = Parameter(default=0)
-    gamma = Parameter(default=-1)
+    logamplitude = Parameter(default=0., bounds=(-10, None))
+    ellip_transf = Parameter(default=1, bounds=(-50, 50))
+    theta = Parameter(default=0, bounds=(-np.pi, np.pi))
+    gamma = Parameter(default=-1, bounds=(-20., 20.))
 
     @classmethod
     def evaluate(cls, x, y, logamplitude, ellip_transf, theta, gamma):
@@ -253,6 +257,46 @@ class LogEllipticalPowerLaw2D(Fittable2DModel):
         model[~np.isfinite(model)] = 0.0
 
         return model
+
+
+    # Attempt at numerical implementation for the gradient.
+    # Implementation is not currently stable.
+
+    # def fit_deriv(self, x, y, logamplitude, ellip_transf, theta, gamma):
+    #     """
+    #     Derivatives of the model with respect to parameters
+    #     """
+
+    #     ellip = 1.0 / (1 + np.exp(-ellip_transf))
+
+    #     costhet = np.cos(theta)
+    #     sinthet = np.sin(theta)
+
+    #     q = ellip
+
+    #     term1 = (q * costhet)**2 + sinthet**2
+    #     term2 = 2 * (1 - q**2) * sinthet * costhet
+    #     term3 = (q * sinthet)**2 + costhet**2
+
+    #     r2 = x**2 * term1 + x * y * term2 + y**2 * term3
+
+    #     # print(ellip, costhet, sinthet)
+    #     # print(r2)
+
+    #     d_logamplitude = 0.5 * gamma / (log_ten * r2)
+
+    #     d_ellip_transf = 0.5 * gamma * ellip * (1 - ellip) * (q**2 - 1) * (x**2 * costhet**2 - y**2 * sinthet**2) / r2
+
+    #     d_theta = 0.5 * gamma * ellip * (1 - ellip) * (x**2 - y**2) * sinthet * costhet / r2
+
+    #     d_gamma = 0.5 * np.log10(r2)
+
+    #     # print(d_logamplitude)
+    #     # print(d_ellip_transf)
+    #     # print(d_theta)
+    #     # print(d_gamma)
+
+    #     return [d_logamplitude, d_ellip_transf, d_theta, d_gamma]
 
 
 def interval_transform(x, a, b):
