@@ -106,7 +106,7 @@ class StatisticBase_PSpec2D(object):
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
-    def fit_pspec(self, fit_unbinned=True,
+    def fit_pspec(self, fit_unbinned=False,
                   brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, weighted_fit=False,
                   bootstrap=False, bootstrap_kwargs={},
@@ -219,6 +219,10 @@ class StatisticBase_PSpec2D(object):
 
             y_err = 0.434 * clipped_stddev / clipped_ps1D
 
+            weights = 1 / y_err**2
+        else:
+            weights = None
+
         if brk is not None:
             # Try the fit with a break in it.
             if not log_break:
@@ -229,11 +233,6 @@ class StatisticBase_PSpec2D(object):
                 if hasattr(brk, "unit"):
                     assert brk.unit == u.dimensionless_unscaled
                     brk = brk.value
-
-            if weighted_fit:
-                weights = 1 / y_err**2
-            else:
-                weights = None
 
             brk_fit = Lm_Seg(x, y, brk, weights=weights)
             brk_fit.fit_model(verbose=verbose, cov_type='HC3')
