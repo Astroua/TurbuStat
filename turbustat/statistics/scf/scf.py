@@ -258,12 +258,12 @@ class SCF(BaseStatisticMixIn):
         if self.scf_surface is None:
             self.compute_surface()
 
-        if kwargs.get("logspacing"):
+        if "logspacing" in kwargs:
             warn("Disabled log-spaced bins. This does not work well for the"
                  " SCF.", TurbuStatMetricWarning)
             kwargs.pop('logspacing')
 
-        if kwargs.get("theta_0"):
+        if "theta_0" in kwargs:
             azim_constraint_flag = True
         else:
             azim_constraint_flag = False
