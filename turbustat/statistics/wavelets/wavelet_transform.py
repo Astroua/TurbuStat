@@ -152,7 +152,7 @@ class Wavelet(BaseStatisticMixIn):
         A = len(self.scales)
 
         if keep_convolved_arrays:
-            self._Wf = np.zeros((A, n0, m0), dtype=np.float)
+            self._Wf = np.zeros((A, n0, m0), dtype=float)
         else:
             self._Wf = None
 

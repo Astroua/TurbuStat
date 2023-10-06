@@ -238,7 +238,7 @@ def _slice0(cube, axis, scale):
     result = np.zeros(shp) * cube.unit ** 2
 
     view = [slice(None)] * 3
-    valid = np.zeros(shp, dtype=np.bool)
+    valid = np.zeros(shp, dtype=bool)
 
     for i in range(cube.shape[axis]):
         view[axis] = i

@@ -114,8 +114,8 @@ class Bispectrum(BaseStatisticMixIn):
 
         bispec_shape = (int(self.shape[0] / 2.), int(self.shape[1] / 2.))
 
-        self._bispectrum = np.zeros(bispec_shape, dtype=np.complex)
-        self._bicoherence = np.zeros(bispec_shape, dtype=np.float)
+        self._bispectrum = np.zeros(bispec_shape, dtype=complex)
+        self._bicoherence = np.zeros(bispec_shape, dtype=float)
         self._tracker = np.zeros(self.shape, dtype=np.int16)
 
         biconorm = np.ones_like(self.bispectrum, dtype=float)

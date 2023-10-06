@@ -10,8 +10,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.9'
@@ -25,7 +25,7 @@ jobs:
           CIBW_BUILD: cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64 cp310-manylinux_x86_64
           CIBW_TEST_EXTRAS: test
           CIBW_TEST_COMMAND: pytest --pyargs turbustat
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -37,8 +37,8 @@ jobs:
       matrix:
         os: [macos-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.9'
@@ -52,7 +52,7 @@ jobs:
           CIBW_BUILD: cp37-* cp38-* cp39-* cp310-*
           CIBW_TEST_EXTRAS: test
           CIBW_TEST_COMMAND: pytest --pyargs turbustat
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -64,8 +64,8 @@ jobs:
       matrix:
         os: [windows-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.9'
@@ -79,7 +79,7 @@ jobs:
           CIBW_BUILD: cp37-* cp38-* cp39-*
           CIBW_TEST_EXTRAS: test
           CIBW_TEST_COMMAND: pytest --pyargs turbustat
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -87,8 +87,8 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.9'
@@ -98,7 +98,7 @@ jobs:
           python -m pip install build
       - name: Build sdist
         run: python -m build --sdist --outdir dist/ .
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
 
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: artifact
           path: dist
