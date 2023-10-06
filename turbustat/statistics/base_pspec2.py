@@ -88,7 +88,7 @@ class StatisticBase_PSpec2D(object):
         '''
 
         # Check if azimuthal constraints are given
-        if kwargs.get("theta_0"):
+        if "theta_0" in kwargs:
             azim_constraint_flag = True
         else:
             azim_constraint_flag = False
