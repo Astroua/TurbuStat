@@ -203,13 +203,13 @@ def test_pspec_unbin_vs_bin(plaw):
                         return_fft=False)
 
     test = PowerSpectrum(fits.PrimaryHDU(img))
-    test.run(fit_kwargs={'fit_unbinned': True},
+    test.run(fit_unbinned=True,
              fit_2D=False)
 
     # Ensure slopes are consistent to within 2%
     npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
-    test.run(fit_kwargs={'fit_unbinned': False},
+    test.run(fit_unbinned=False,
              fit_2D=False)
 
     # Ensure slopes are consistent to within 2%
