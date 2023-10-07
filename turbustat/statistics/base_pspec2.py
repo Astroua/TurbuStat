@@ -88,7 +88,7 @@ class StatisticBase_PSpec2D(object):
         '''
 
         # Check if azimuthal constraints are given
-        if kwargs.get("theta_0"):
+        if "theta_0" in kwargs:
             azim_constraint_flag = True
         else:
             azim_constraint_flag = False
@@ -106,7 +106,8 @@ class StatisticBase_PSpec2D(object):
         # Attach units to freqs
         self._freqs = self.freqs / u.pix
 
-    def fit_pspec(self, brk=None, log_break=False, low_cut=None,
+    def fit_pspec(self, fit_unbinned=False,
+                  brk=None, log_break=False, low_cut=None,
                   high_cut=None, min_fits_pts=10, weighted_fit=False,
                   bootstrap=False, bootstrap_kwargs={},
                   verbose=False):
@@ -118,6 +119,10 @@ class StatisticBase_PSpec2D(object):
 
         Parameters
         ----------
+        fit_unbinned : bool, optional
+            Fits the unbinned 2D power-spectrum to the linear model. Default is True.
+            Use False to fit the binned 1D power-spectrum instead and replicate fitting
+            in earlier TurbuStat versions.
         brk : float or None, optional
             Guesses for the break points. If given as a list, the length of
             the list sets the number of break points to be fit. If a choice is
@@ -150,29 +155,62 @@ class StatisticBase_PSpec2D(object):
 
         self._bootstrap_flag = bootstrap
 
-        # Make the data to fit to
-        if low_cut is None:
-            # Default to the largest frequency, since this is just 1 pixel
-            # in the 2D PSpec.
-            self.low_cut = 1. / (0.5 * float(max(self.ps2D.shape)) * u.pix)
+        if fit_unbinned:
+            yy_freq, xx_freq = make_radial_freq_arrays(self.ps2D.shape)
+
+            freqs_2d = np.sqrt(yy_freq**2 + xx_freq**2) / u.pix
+
+            # Make the data to fit to
+            if low_cut is None:
+                # Default to the largest frequency, since this is just 1 pixel
+                # in the 2D PSpec.
+                self.low_cut = 1. / (0.5 * float(max(self.ps2D.shape)) * u.pix)
+            else:
+                self.low_cut = self._to_pixel_freq(low_cut)
+
+            if high_cut is None:
+                # self.high_cut = self.freqs.max().value / u.pix
+                self.high_cut = freqs_2d.value.max() / u.pix
+            else:
+                self.high_cut = self._to_pixel_freq(high_cut)
+
+
+            clip_mask = clip_func(freqs_2d.value,
+                                self.low_cut.value,
+                                self.high_cut.value)
+
+
+            x = np.log10(freqs_2d.value[clip_mask])
+            y = np.log10(self.ps2D[clip_mask])
+
         else:
-            self.low_cut = self._to_pixel_freq(low_cut)
+            # Make the data to fit to
+            if low_cut is None:
+                # Default to the largest frequency, since this is just 1 pixel
+                # in the 2D PSpec.
+                self.low_cut = 1. / (0.5 * float(max(self.ps2D.shape)) * u.pix)
+            else:
+                self.low_cut = self._to_pixel_freq(low_cut)
 
-        if high_cut is None:
-            self.high_cut = self.freqs.max().value / u.pix
-        else:
-            self.high_cut = self._to_pixel_freq(high_cut)
+            if high_cut is None:
+                self.high_cut = self.freqs.max().value / u.pix
+            else:
+                self.high_cut = self._to_pixel_freq(high_cut)
 
-        x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut.value,
-                                          self.high_cut.value)].value)
+            x = np.log10(self.freqs[clip_func(self.freqs.value, self.low_cut.value,
+                                            self.high_cut.value)].value)
 
-        clipped_ps1D = self.ps1D[clip_func(self.freqs.value,
-                                           self.low_cut.value,
-                                           self.high_cut.value)]
-        y = np.log10(clipped_ps1D)
+            clipped_ps1D = self.ps1D[clip_func(self.freqs.value,
+                                            self.low_cut.value,
+                                            self.high_cut.value)]
+            y = np.log10(clipped_ps1D)
 
         if weighted_fit:
+            if fit_unbinned:
+                raise NotImplementedError("Error propagation for the unbinned modeling is not "
+                                          "implemented yet.")
 
+            # Currently this will run only for the binned fitting.
             clipped_stddev = self.ps1D_stddev[clip_func(self.freqs.value,
                                                         self.low_cut.value,
                                                         self.high_cut.value)]
@@ -180,6 +218,10 @@ class StatisticBase_PSpec2D(object):
             clipped_stddev[clipped_stddev == 0.] = np.NaN
 
             y_err = 0.434 * clipped_stddev / clipped_ps1D
+
+            weights = 1 / y_err**2
+        else:
+            weights = None
 
         if brk is not None:
             # Try the fit with a break in it.
@@ -191,11 +233,6 @@ class StatisticBase_PSpec2D(object):
                 if hasattr(brk, "unit"):
                     assert brk.unit == u.dimensionless_unscaled
                     brk = brk.value
-
-            if weighted_fit:
-                weights = 1 / y_err**2
-            else:
-                weights = None
 
             brk_fit = Lm_Seg(x, y, brk, weights=weights)
             brk_fit.fit_model(verbose=verbose, cov_type='HC3')
@@ -246,7 +283,7 @@ class StatisticBase_PSpec2D(object):
             x = sm.add_constant(x)
 
             if weighted_fit:
-                model = sm.WLS(y, x, missing='drop', weights=1 / y_err**2)
+                model = sm.WLS(y, x, missing='drop', weights=weights)
             else:
                 model = sm.OLS(y, x, missing='drop')
 
@@ -614,8 +651,6 @@ class StatisticBase_PSpec2D(object):
         good_interval = clip_func(self.freqs.value, self.low_cut.value,
                                   self.high_cut.value)
 
-        y_fit = self.fit.fittedvalues
-
         if show_residual:
             if isinstance(self.slope, np.ndarray):
                 # Broken linear model
@@ -679,7 +714,11 @@ class StatisticBase_PSpec2D(object):
                                    fmt=symbol, markersize=5, alpha=0.5,
                                    capsize=10, elinewidth=3)
 
-        ax_1D.plot(np.log10(xvals[fit_index]), y_fit, linestyle='-',
+        xvals_plot = np.log10(xvals[fit_index]).ravel()
+        # y_fit = self.fit.fittedvalues
+        y_fit = self.fit.predict(sm.add_constant(xvals_plot))
+
+        ax_1D.plot(xvals_plot, y_fit, linestyle='-',
                    label=label, linewidth=3, color=fit_color)
 
         if show_residual:

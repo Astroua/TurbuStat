@@ -187,6 +187,35 @@ def test_pspec_weightfit(plaw):
     npt.assert_allclose(-plaw, test.slope, rtol=0.02)
 
 
+@pytest.mark.parametrize('plaw', np.arange(0.5, 5, 0.67))
+def test_pspec_unbin_vs_bin(plaw):
+    '''
+    The slopes with azimuthal constraints should be the same. When elliptical,
+    the power will be different along the different directions, but the slope
+    should remain the same.
+    '''
+
+    imsize = 64
+    theta = 0
+
+    # Generate a red noise model
+    img = make_extended(imsize, powerlaw=plaw, ellip=1., theta=theta,
+                        return_fft=False)
+
+    test = PowerSpectrum(fits.PrimaryHDU(img))
+    test.run(fit_unbinned=True,
+             fit_2D=False)
+
+    # Ensure slopes are consistent to within 2%
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
+
+    test.run(fit_unbinned=False,
+             fit_2D=False)
+
+    # Ensure slopes are consistent to within 2%
+    npt.assert_allclose(-plaw, test.slope, rtol=0.02)
+
+
 @pytest.mark.parametrize('theta',
                          [0., np.pi / 4., np.pi / 2., 7 * np.pi / 8.])
 def test_pspec_fit2D(theta):

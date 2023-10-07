@@ -101,7 +101,7 @@ def test_simple_ellipplaw_2D_anisotropic(plaw, ellip, theta):
     npt.assert_allclose(theta, fit_theta, atol=0.01)
 
 
-@pytest.mark.parametrize('plaw', [2, 3, 4])
+@pytest.mark.parametrize('plaw', [0.5, 1, 1.5, 2, 3, 4, 4.5, 5., 6])
 def test_simple_ellipplaw_2D_isotropic(plaw):
 
     # Must have ellip = 1 for this test. Just be sure...
@@ -176,3 +176,89 @@ def test_simple_ellipplaw_2D_isotropic(plaw):
 
     # And theta should not move
     assert test_stderr[2] == 0.
+
+
+@pytest.mark.parametrize('plaw', [0.5, 1, 1.5, 2, 3, 4, 4.5, 5., 6])
+def test_direct_ellipplaw_2D_isotropic(plaw):
+
+    from astropy.modeling import Fittable2DModel, Parameter, fitting
+
+    # Must have ellip = 1 for this test. Just be sure...
+    # ellip = 1.
+    ellip = 0.99999
+    # ellip = 0.5
+
+    # Theta doesn't matter, but we'll test for what happens when the
+    # elliptical parameters are left free.
+    theta = np.pi / 2.
+
+    imsize = 256
+
+    # Generate a red noise model
+    psd = make_extended(imsize, powerlaw=plaw, ellip=ellip, theta=theta,
+                        return_fft=True)
+
+    psd = np.abs(psd)**2
+
+    # Initial guesses are based on the azimuthally-average spectrum, so it's
+    # valid to give it good initial guesses for the index
+    # Guess it is fairly elliptical. Tends not to be too sensitive to this.
+    ellip_transf = interval_transform(ellip, 0, 1.)
+    # We fit twice w/ thetas offset by pi / 2, so theta also should not be too
+    # sensitive.
+
+    p0 = (3.7,
+          ellip_transf,
+          np.pi / 2.,
+          - (2. + np.random.normal(scale=0.5)))
+
+    yy, xx = np.mgrid[-imsize / 2:imsize / 2, -imsize / 2:imsize / 2]
+
+    # Don't fit the 0, 0 point. It isn't defined by the model.
+    valids = psd != 0.
+
+    assert np.isfinite(psd[valids]).all()
+    assert (psd[valids] > 0.).all()
+
+    model = LogEllipticalPowerLaw2D(*p0)
+
+    # TODO: These are leftover from testing the fit_deriv implementation
+    # there seems to be an instability in how the gradient is calculated.
+    # Return to this in the future.
+
+    # p0_f = list(p0)
+    # p0_f[2] = (p0[2] + np.pi / 2.) % np.pi
+    # model = LogEllipticalPowerLaw2D(*p0_f)
+
+    fitter = fitting.LevMarLSQFitter(calc_uncertainties=True)
+    # fitter = fitting.LevMarLSQFitter(calc_uncertainties=False)
+
+    # fitter = fitting.TRFLSQFitter(calc_uncertainties=True)
+
+    fit_model = fitter(model,
+                       xx[valids],
+                       yy[valids],
+                       np.log10(psd[valids]),
+                       weights=None,
+                       estimate_jacobian=True)
+                    #    estimate_jacobian=False)
+
+    # Do the parameters match?
+
+    params = fit_model.parameters
+
+    # print(f"Init params: {p0}")
+    # print(f"Fit params: {params}")
+    # print(fitter.fit_info)
+
+    # Require the index to be within 0.1 of the actual,
+    # the ellipticity to be within 0.02, and the theta to be within ~3 deg
+
+    npt.assert_allclose(-plaw, params[-1], rtol=0.01, atol=1e-2)
+
+    npt.assert_allclose(1.0, inverse_interval_transform(params[1], 0, 1),
+                        rtol=0.01, atol=1e-2)
+
+    # Theta should be the original
+    assert theta == np.pi / 2.
+

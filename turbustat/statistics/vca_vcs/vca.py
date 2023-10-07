@@ -129,7 +129,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             pyfftw_kwargs={},
             radial_pspec_kwargs={},
             low_cut=None, high_cut=None,
-            fit_2D=True, fit_kwargs={}, fit_2D_kwargs={},
+            fit_kwargs={}, fit_unbinned=False,
+            fit_2D=True,  fit_2D_kwargs={},
             save_name=None, xunit=u.pix**-1, use_wavenumber=False):
         '''
         Full computation of VCA.
@@ -163,10 +164,12 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
             Low frequency cut off in frequencies used in the fitting.
         high_cut : `~astropy.units.Quantity`, optional
             High frequency cut off in frequencies used in the fitting.
-        fit_2D : bool, optional
-            Fit an elliptical power-law model to the 2D power spectrum.
         fit_kwargs : dict, optional
             Passed to `~PowerSpectrum.fit_pspec`.
+        fit_unbinned : bool, optional
+            Passed to `~PowerSpectrum.fit_pspec`. Default is False.
+        fit_2D : bool, optional
+            Fit an elliptical power-law model to the 2D power spectrum.
         fit_2D_kwargs : dict, optional
             Keyword arguments for `~VCA.fit_2Dpspec`. Use the
             `low_cut` and `high_cut` keywords to provide fit limits.
@@ -183,6 +186,10 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
         if pyfftw_kwargs.get('threads') is not None:
             pyfftw_kwargs.pop('threads')
 
+        # Pop fit_unbinned if given as kwarg in dict.
+        if fit_kwargs.get('fit_unbinned') is not None:
+            fit_kwargs.pop('fit_unbinned')
+
         self.compute_pspec(apodize_kernel=apodize_kernel,
                            alpha=alpha, beta=beta,
                            beam_correct=beam_correct,
@@ -190,7 +197,8 @@ class VCA(BaseStatisticMixIn, StatisticBase_PSpec2D):
                            **pyfftw_kwargs)
 
         self.compute_radial_pspec(**radial_pspec_kwargs)
-        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, **fit_kwargs)
+        self.fit_pspec(low_cut=low_cut, high_cut=high_cut, fit_unbinned=fit_unbinned,
+                       **fit_kwargs)
 
         if fit_2D:
             self.fit_2Dpspec(low_cut=low_cut, high_cut=high_cut,

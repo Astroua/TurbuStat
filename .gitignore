@@ -64,6 +64,7 @@ docs/api
 *.pyc
 
 *.DS_Store
+*.ipynb_checkpoints
 
 turbustat/version.py
 turbustat/cython_version.py
