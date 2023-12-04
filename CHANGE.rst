@@ -1,6 +1,12 @@
 Version 1.3 (unreleased)
 ------------------------
-
+* #248 - Add unbinned power spectrum fitting
+* #241 - Updates and fixes to Genus + numpy slice fixes
+* #240 - BUG FIX: Fixed name of smoothed image list
+* #239 - Update testing to drop 3.6 and add 3.9, 3.10
+* #237 - Bug fixes from distance metric classes
+* #236 - Fix for Tsallis chi squared values with scipy 1.7
+* #235 - Fix Delta Variance fill value
 
 Version 1.2 (2020-11-30)
 ------------------------
