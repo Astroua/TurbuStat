@@ -1,5 +1,6 @@
 Version 1.3 (unreleased)
 ------------------------
+* #249 - Fix passing min_deltas dendrogram stats
 * #248 - Add unbinned power spectrum fitting
 * #241 - Updates and fixes to Genus + numpy slice fixes
 * #240 - BUG FIX: Fixed name of smoothed image list
