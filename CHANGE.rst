@@ -1,3 +1,7 @@
+Version 1.4.dev (unreleased)
+------------------------
+*
+
 Version 1.3 (2023-12-05)
 ------------------------
 * #249 - Fix passing min_deltas dendrogram stats
