@@ -1,4 +1,4 @@
-Version 1.3 (unreleased)
+Version 1.3 (2023-12-05)
 ------------------------
 * #249 - Fix passing min_deltas dendrogram stats
 * #248 - Add unbinned power spectrum fitting
