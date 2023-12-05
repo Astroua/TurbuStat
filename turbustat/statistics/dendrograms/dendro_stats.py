@@ -75,8 +75,11 @@ class Dendrogram_Stats(BaseStatisticMixIn):
         else:
             self.dendro_params = dendro_params
 
-        if min_deltas == 'auto':
-            self.autoset_min_deltas(num=num_deltas)
+        if isinstance(min_deltas, str):
+            if min_deltas == 'auto':
+                self.autoset_min_deltas(num=num_deltas)
+            else:
+                raise ValueError("min_deltas must be 'auto' or None.")
         else:
             self.min_deltas = min_deltas
 
