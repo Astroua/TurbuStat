@@ -72,7 +72,7 @@ class StatisticBase_PSpec2D(object):
         self._beam_pow = np.abs(beam_fft**2)
 
         # Avoid infs when dividing out by the beam power spectrum
-        self._beam_pow[self._beam_pow == 0.0] = np.NaN
+        self._beam_pow[self._beam_pow == 0.0] = np.nan
 
     def compute_radial_pspec(self, logspacing=False, max_bin=None, **kwargs):
         '''
@@ -215,7 +215,7 @@ class StatisticBase_PSpec2D(object):
                                                         self.low_cut.value,
                                                         self.high_cut.value)]
 
-            clipped_stddev[clipped_stddev == 0.] = np.NaN
+            clipped_stddev[clipped_stddev == 0.] = np.nan
 
             y_err = 0.434 * clipped_stddev / clipped_ps1D
 

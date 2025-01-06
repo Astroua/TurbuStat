@@ -560,7 +560,7 @@ def fourier_shift(x, shift, axis=0):
     nonan_shift = _shifter(nonan, shift, axis)
     mask_shift = _shifter(mask, shift, axis) > 0.5
 
-    nonan_shift[mask_shift] = np.NaN
+    nonan_shift[mask_shift] = np.nan
 
     return nonan_shift
 
@@ -612,6 +612,6 @@ def padwithzeros(vector, pad_width, iaxis, kwargs):
 
 
 def padwithnans(vector, pad_width, iaxis, kwargs):
-    vector[:pad_width[0]] = np.NaN
-    vector[-pad_width[1]:] = np.NaN
+    vector[:pad_width[0]] = np.nan
+    vector[-pad_width[1]:] = np.nan
     return vector

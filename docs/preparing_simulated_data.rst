@@ -65,7 +65,7 @@ A common observational practice is to mask noise-only regions of an image or dat
     >>> signal_mask = noisy_cube > N * sigma
     >>> # Set all places below the noise threshold to NaN in the cube
     >>> masked_cube = signal_mask.copy()
-    >>> masked_cube[~signal_mask] = np.NaN
+    >>> masked_cube[~signal_mask] = np.nan
 
 TurbuStat does not contain routines to create robust signal masks. Examples of creating signal masks can be found in `Rosolowsky & Leroy 2006 <https://ui.adsabs.harvard.edu/#abs/2006PASP..118..590R/abstract>`_ and `Dame 2011 <https://ui.adsabs.harvard.edu/#abs/2011arXiv1101.1499D/abstract>`_.
 

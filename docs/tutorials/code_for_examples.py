@@ -378,7 +378,7 @@ if RUN_CODE:
         # Mask some of the data out
 
         masked_img = img.copy()
-        masked_img[masked_img < np.percentile(img, 25)] = np.NaN
+        masked_img[masked_img < np.percentile(img, 25)] = np.nan
 
         plt.imshow(masked_img, origin='lower')
         plt.colorbar()
@@ -412,7 +412,7 @@ if RUN_CODE:
         from scipy import ndimage as nd
         labs, num = nd.label(np.isfinite(padded_masked_img), np.ones((3, 3)))
         # Keep the largest regions
-        padded_masked_img[np.where(labs > 1)] = np.NaN
+        padded_masked_img[np.where(labs > 1)] = np.nan
 
         plt.imshow(padded_masked_img, origin='lower')
         plt.colorbar()
@@ -450,7 +450,7 @@ if RUN_CODE:
         plt.close()
 
         # noisy_masked_img = noisy_img.copy()
-        # noisy_masked_img[noisy_masked_img < 5 * noise_rms] = np.NaN
+        # noisy_masked_img[noisy_masked_img < 5 * noise_rms] = np.nan
 
         # pspec_noisy_masked = PowerSpectrum(fits.PrimaryHDU(noisy_masked_img))
         # pspec_noisy_masked.run(verbose=True, high_cut=10**-1.2 / u.pix)

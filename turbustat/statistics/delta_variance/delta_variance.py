@@ -201,7 +201,7 @@ class DeltaVariance(BaseStatisticMixIn):
 
             img_core = \
                 convolution_wrapper(pad_img, core, boundary=boundary,
-                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.nan,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -210,7 +210,7 @@ class DeltaVariance(BaseStatisticMixIn):
             img_annulus = \
                 convolution_wrapper(pad_img, annulus,
                                     boundary=boundary,
-                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.nan,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -219,7 +219,7 @@ class DeltaVariance(BaseStatisticMixIn):
             weights_core = \
                 convolution_wrapper(pad_weights, core,
                                     boundary=boundary,
-                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.nan,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -228,7 +228,7 @@ class DeltaVariance(BaseStatisticMixIn):
             weights_annulus = \
                 convolution_wrapper(pad_weights, annulus,
                                     boundary=boundary,
-                                    fill_value=0. if nan_treatment=='fill' else np.NaN,
+                                    fill_value=0. if nan_treatment=='fill' else np.nan,
                                     allow_huge=allow_huge,
                                     nan_treatment=nan_treatment,
                                     use_pyfftw=use_pyfftw,
@@ -236,15 +236,15 @@ class DeltaVariance(BaseStatisticMixIn):
                                     pyfftw_kwargs=pyfftw_kwargs)
 
             cutoff_val = min_weight_frac * self.weights.max()
-            weights_core[np.where(weights_core <= cutoff_val)] = np.NaN
-            weights_annulus[np.where(weights_annulus <= cutoff_val)] = np.NaN
+            weights_core[np.where(weights_core <= cutoff_val)] = np.nan
+            weights_annulus[np.where(weights_annulus <= cutoff_val)] = np.nan
 
             conv_arr = (img_core / weights_core) - \
                 (img_annulus / weights_annulus)
             conv_weight = weights_core * weights_annulus
 
             if preserve_nan:
-                conv_arr[np.isnan(pad_img)] = np.NaN
+                conv_arr[np.isnan(pad_img)] = np.nan
 
             if keep_convolve_arrays:
                 self._convolved_arrays.append(conv_arr)
@@ -253,8 +253,8 @@ class DeltaVariance(BaseStatisticMixIn):
             val, err = _delvar(conv_arr, conv_weight, lag)
 
             if (val <= 0) or (err <= 0) or np.isnan(val) or np.isnan(err):
-                self._delta_var[i] = np.NaN
-                self._delta_var_error[i] = np.NaN
+                self._delta_var[i] = np.nan
+                self._delta_var_error[i] = np.nan
             else:
                 self._delta_var[i] = val
                 self._delta_var_error[i] = err
@@ -908,9 +908,9 @@ class DeltaVariance_Distance(object):
                      "range and lags for both datasets are equal. "
                      "Setting curve_distance to NaN.", TurbuStatMetricWarning)
 
-                self._curve_distance = np.NaN
+                self._curve_distance = np.nan
         else:
-            self._curve_distance = np.NaN
+            self._curve_distance = np.nan
 
         # Distance between the fitted slopes (combined t-statistic)
         self._slope_distance = \
