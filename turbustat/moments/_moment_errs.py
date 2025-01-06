@@ -444,7 +444,7 @@ def _cube1(cube, axis, scale, moment0, moment1):
 
     good_pix = np.isfinite(moment0) + np.isfinite(moment1)
 
-    result[~good_pix] = np.NaN
+    result[~good_pix] = np.nan
 
     return result
 
@@ -488,9 +488,9 @@ def _cube2(cube, axis, scale, moment0, moment1, moment2,
     good_pix = np.isfinite(moment0) + np.isfinite(moment1) + \
         np.isfinite(moment2)
 
-    result[~good_pix] = np.NaN
+    result[~good_pix] = np.nan
 
-    # result[result == 0] = np.NaN
+    # result[result == 0] = np.nan
 
     return result
 

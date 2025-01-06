@@ -307,7 +307,7 @@ class PDF(BaseStatisticMixIn):
                 cov_calc_failed = False
             except ValueError:
                 warn("Variance calculation failed.")
-                self._model_stderrs = np.ones_like(self.model_params) * np.NaN
+                self._model_stderrs = np.ones_like(self.model_params) * np.nan
                 cov_calc_failed = True
         elif fit_type == 'mcmc':
             chain = emcee_fit(self._model,

@@ -182,10 +182,10 @@ def pspec(psd2, nbins=None, return_stddev=False, binsize=1.0,
         # Mask out bins that have 1 or fewer points
         mask = bin_cts <= 1
 
-        ps1D_stddev[mask] = np.NaN
-        ps1D[mask] = np.NaN
+        ps1D_stddev[mask] = np.nan
+        ps1D[mask] = np.nan
 
-        # ps1D_stddev[ps1D_stddev == 0.] = np.NaN
+        # ps1D_stddev[ps1D_stddev == 0.] = np.nan
 
         if theta_0 is not None:
             return bin_cents, ps1D, ps1D_stddev, azim_mask

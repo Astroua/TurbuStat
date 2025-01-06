@@ -258,7 +258,7 @@ class Wavelet(BaseStatisticMixIn):
 
         if weighted_fit:
             y_err = 0.434 * self.stddev / self.values
-            y_err[y_err == 0.] = np.NaN
+            y_err[y_err == 0.] = np.nan
 
             weights = y_err**-2
         else:

@@ -488,8 +488,8 @@ class VCS_Distance(object):
 
         # A density distance is only found if a break was found
         if self.vcs1.slope.size == 1 or self.vcs2.slope.size == 1:
-            self.small_scale_distance = np.NaN
-            self.break_distance = np.NaN
+            self.small_scale_distance = np.nan
+            self.break_distance = np.nan
         else:
             self.small_scale_distance = \
                 np.abs((self.vcs1.slope[1] - self.vcs2.slope[1]) /

@@ -603,7 +603,7 @@ class Bispectrum_Distance(object):
         else:
             warn("Bicoherence surface must have equal shapes for the surface"
                  " distance metric.")
-            self._surface_distance = np.NaN
+            self._surface_distance = np.nan
 
         self._mean_distance = np.abs(self.bispec1.bicoherence.mean() -
                                      self.bispec2.bicoherence.mean())

@@ -166,10 +166,10 @@ class StatMoments(BaseStatisticMixIn):
                     np.isfinite(wgt_slice).sum() / float(wgt_slice.size)
 
                 if valid_img_frac < min_frac or valid_wgt_frac < min_frac:
-                    self.mean_array[i - pix_rad, j - pix_rad] = np.NaN
-                    self.variance_array[i - pix_rad, j - pix_rad] = np.NaN
-                    self.skewness_array[i - pix_rad, j - pix_rad] = np.NaN
-                    self.kurtosis_array[i - pix_rad, j - pix_rad] = np.NaN
+                    self.mean_array[i - pix_rad, j - pix_rad] = np.nan
+                    self.variance_array[i - pix_rad, j - pix_rad] = np.nan
+                    self.skewness_array[i - pix_rad, j - pix_rad] = np.nan
+                    self.kurtosis_array[i - pix_rad, j - pix_rad] = np.nan
 
                 else:
                     img_slice = img_slice * circle_mask
@@ -762,7 +762,7 @@ def circular_region(radius):
     circle = circle < radius ** 2.
 
     circle = circle.astype(float)
-    circle[np.where(circle == 0.)] = np.NaN
+    circle[np.where(circle == 0.)] = np.nan
 
     return circle
 

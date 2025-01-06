@@ -750,13 +750,13 @@ class Dendrogram_Distance(object):
                                  density=True)[0]
             self.histograms1[n, :] = \
                 np.append(hist1, (np.max(self.nbins) -
-                                  bins.size + 1) * [np.NaN])
+                                  bins.size + 1) * [np.nan])
 
             hist2 = np.histogram(stand_data2, bins=bins,
                                  density=True)[0]
             self.histograms2[n, :] = \
                 np.append(hist2, (np.max(self.nbins) -
-                                  bins.size + 1) * [np.NaN])
+                                  bins.size + 1) * [np.nan])
 
             # Normalize
             self.histograms1[n, :] /= np.nansum(self.histograms1[n, :])

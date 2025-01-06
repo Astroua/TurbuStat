@@ -179,7 +179,7 @@ def fit_elliptical_powerlaw(values, x, y, p0, fit_method='LevMarq',
             if cov_matrix is None:
                 warn("Covariance matrix calculation failed. Check results "
                      "carefully.")
-                stderrs = np.zeros((4,)) * np.NaN
+                stderrs = np.zeros((4,)) * np.nan
             else:
                 stderrs = np.sqrt(np.abs(np.diag(cov_matrix)))
 

@@ -321,7 +321,7 @@ def WidthEstimate1D(inList, method='walk-down'):
                     scales[idx] = interpolator(np.exp(-1))
                 except ValueError:
                     warn("Interpolation failed.")
-                    scales[idx] = np.NaN
+                    scales[idx] = np.nan
                 # scale_errors[idx] = ??
         elif method == 'fit':
             g = models.Gaussian1D(amplitude=y[0], mean=[0], stddev=[10],
@@ -341,8 +341,8 @@ def WidthEstimate1D(inList, method='walk-down'):
             # in NaNs.
             if fit_g.fit_info['param_cov'] is None:
                 warn("Fitting failed.")
-                scales[idx] = np.NaN
-                scale_errors[idx] = np.NaN
+                scales[idx] = np.nan
+                scale_errors[idx] = np.nan
                 continue
 
             errors = np.sqrt(np.abs(fit_g.fit_info['param_cov'].diagonal()))
@@ -367,8 +367,8 @@ def WidthEstimate1D(inList, method='walk-down'):
                     warn("Cannot find width where the 1/e level is"
                          " reached. Ensure the eigenspectra are "
                          "normalized!")
-                    scale_errors[idx] = np.NaN
-                    scales[idx] = np.NaN
+                    scale_errors[idx] = np.nan
+                    scales[idx] = np.nan
 
         else:
             raise ValueError("method must be 'walk-down', 'interpolate' or"
@@ -393,7 +393,7 @@ def fit_2D_ellipse(pts, **bootstrap_kwargs):
         xwidth_err = ellip.param_errs[2] / np.sqrt(2)
         ywidth_err = ellip.param_errs[3] / np.sqrt(2)
     except ValueError:
-        ywidth = xwidth = ywidth_err = xwidth_err = np.NaN
+        ywidth = xwidth = ywidth_err = xwidth_err = np.nan
 
     return ywidth, xwidth, ywidth_err, xwidth_err, ellip
 
@@ -417,7 +417,7 @@ def fit_2D_gaussian(xmat, ymat, z):
 
     if cov is None:
         warn("Fitting failed.")
-        cov = np.zeros((4, 4)) * np.NaN
+        cov = np.zeros((4, 4)) * np.nan
 
     return output, cov
 

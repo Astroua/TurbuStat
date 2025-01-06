@@ -90,7 +90,7 @@ Indeed, we recover the correct slope from the delta-variance.
 To demonstrate how masking affects each of these statistics, we will arbitrarily mask low values below the 25 percentile in the example image and run each statistic::
 
     >>> masked_img = img.copy()
-    >>> masked_img[masked_img < np.percentile(img, 25)] = np.NaN
+    >>> masked_img[masked_img < np.percentile(img, 25)] = np.nan
     >>> plt.imshow(masked_img, origin='lower')  # doctest: +SKIP
     >>> plt.colorbar()  # doctest: +SKIP
 
@@ -165,14 +165,14 @@ Another issue that could be encountered with observational data are large empty 
     ...    vector[:pad_width[0]] = pad_value
     ...    vector[-pad_width[1]:] = pad_value
     ...    return vector
-    >>> padded_masked_img = np.pad(masked_img, 128, pad_with, padder=np.NaN)
+    >>> padded_masked_img = np.pad(masked_img, 128, pad_with, padder=np.nan)
 
 We are also only going to keep the biggest continuous region in the padded image to mimic studying a single object picked from a larger image::
 
     >>> from scipy import ndimage as nd
     >>> labs, num = nd.label(np.isfinite(padded_masked_img), np.ones((3, 3)))
     >>> # Keep the largest region only
-    >>> padded_masked_img[np.where(labs > 1)] = np.NaN
+    >>> padded_masked_img[np.where(labs > 1)] = np.nan
     >>> plt.imshow(padded_masked_img, origin='lower')  # doctest: +SKIP
     >>> plt.colorbar()  # doctest: +SKIP
 
